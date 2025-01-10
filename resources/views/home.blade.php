@@ -37,7 +37,7 @@
                                         Peminjam
                                     </th>
                                     <th style="text-align: center;">
-                                        {{ trans('cruds.kegiatan.fields.deskripsi') }}
+                                        Keterangan
                                     </th>
                                 </tr>
                             </thead>

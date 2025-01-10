@@ -69,7 +69,7 @@ return [
     ],
     'max' => [
         'numeric' => 'Isian :attribute seharusnya tidak lebih dari :max.',
-        'file'    => 'Bidang :attribute seharusnya tidak lebih dari :max kilobytes.',
+        'file'    => 'File :attribute seharusnya tidak lebih dari :max kilobytes.',
         'string'  => 'Isian :attribute seharusnya tidak lebih dari :max karakter.',
         'array'   => 'Isian :attribute seharusnya tidak lebih dari :max item.',
     ],
