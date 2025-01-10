@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Ruangan;
 use App\Models\User;
+use Gate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class SystemCalendarController extends Controller
 {
@@ -24,6 +26,7 @@ class SystemCalendarController extends Controller
 
     public function index(Request $request)
     {
+        abort_if(Gate::denies('calendar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         $events = [];
         $ruangans = Ruangan::all()->pluck('nama', 'id')->prepend(trans('Semua Ruang'), '');
         $users = User::all()->pluck('name', 'id')->prepend(trans('Semua Peminjam'), '');

@@ -83,7 +83,7 @@
                             <td>
                                 {{ $kegiatan->user->name ?? '' }}
                             </td>
-                            <td>
+                            <td style="text-align: center;">
                                 <!-- Menampilkan Status -->
                                 @if($kegiatan->status == 'belum_disetujui')
                                     <span class="badge badge-warning">Belum Disetujui</span>

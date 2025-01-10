@@ -18,6 +18,7 @@ class RuanganController extends Controller
         abort_if(Gate::denies('ruangan_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         $ruangans = Ruangan::all();
+        // $ruangans = Ruangan::orderBy('id', 'asc')->get();
 
         return view('admin.ruangans.index', compact('ruangans'));
     }

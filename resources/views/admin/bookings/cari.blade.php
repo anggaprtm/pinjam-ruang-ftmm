@@ -20,7 +20,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <input class="form-control" type="number" name="kapasitas" id="kapasitas" value="{{ request()->input('kapasitas') }}" placeholder="{{ trans('cruds.ruangan.fields.kapasitas') }}" step="1" required>
+                        <input class="form-control" type="number" name="kapasitas" id="kapasitas" value="{{ request()->input('kapasitas') }}" placeholder="Kapasitas Ruang" step="1" required>
                     </div>
                 </div>
                 <div class="col-md-1">
@@ -38,7 +38,7 @@
                         <thead>
                             <tr>
                                 <th>
-                                    {{ trans('cruds.kegiatan.fields.ruangan') }}
+                                    Ruangan Tersedia
                                 </th>
                                 <th>
                                     {{ trans('cruds.ruangan.fields.kapasitas') }}
@@ -118,7 +118,7 @@
                             </div>
                         @endif
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="display: none;">
                         <label for="berulang_sampai">Berulang sampai</label>
                         <input class="form-control date {{ $errors->has('berulang_sampai') ? 'is-invalid' : '' }}" type="text" name="berulang_sampai" id="berulang_sampai" value="{{ old('berulang_sampai') }}">
                         @if($errors->has('berulang_sampai'))
