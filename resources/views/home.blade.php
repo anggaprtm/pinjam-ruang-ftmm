@@ -8,14 +8,15 @@
                     <div id="current-time"></div>
                 </div>
     <div class="row">
+        @php
+            use Carbon\Carbon;
+        @endphp
+        @can('home_access')
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
                     Kegiatan Hari Ini
                 </div>
-                @php
-                    use Carbon\Carbon;
-                @endphp
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped table-hover datatable datatable-Kegiatan">
@@ -84,6 +85,34 @@
                 </div>
             </div>
         </div>
+        @endcan
+        @can('info_access')
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    Informasi
+                </div>
+                <div class="card-body">
+                    <h2>Cara Melakukan Peminjaman Ruang</h2>
+                    <ol>
+                        <li>Klik "Cari Ruang"</li>
+                        <li>Masukkan waktu mulai dan waktu selesai kegiatan</li>
+                        <li>Ketikkan kapasitas ruang</li>
+                        <li>Kemudian klik "Cari"</li>
+                        <li>Ruang yang tersedia akan muncul dibawahnya</li>
+                        <li>Pilih ruang yang tersedia sesuai kebutuhan, kemudian klik "Pinjam Ruang"</li>
+                        <li>Masukkan nama kegiatan</li>
+                        <li>Masukkan deskripsi/pesan untuk pemroses (opsional)</li>
+                        <li>Upload berkas Surat Peminjaman Ruang dengan dilampiri SIK yang sudah ditandatangani Wadek I</li>
+                        <li>Klik tombol "OK"</li>
+                        <li>Kegiatan berhasil dibuat, dan kegiatan yang sudah diajukan akan muncul di tab "Kegiatan"</li>
+                        <li>Harap tunggu proses verifikasi peminjaman dari Operator -> Verif Akademik -> Verif Sarpras</li>
+                        <li>Ketika kegiatan telah disetujui, maka Peminjam dapat menuju R.Sarpras Lt.10 untuk melakukan peminjaman barang</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        @endcan
     </div>
 </div>
 @endsection

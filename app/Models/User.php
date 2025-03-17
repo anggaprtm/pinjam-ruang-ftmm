@@ -77,13 +77,29 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class);
     }
+
+    public function hasRole($roleName)
+    {
+    return $this->roles()->where('title', $roleName)->exists();
+    }
+
     public function isAdmin()
     {
-        return $this->roles()->where('role_id', 1)->exists(); // ID 1 untuk Admin
+    return $this->hasRole('Admin');
     }
 
     public function isUser()
     {
-        return $this->roles()->where('role_id', 2)->exists(); // ID 2 untuk User
+    return $this->hasRole('User');
     }
+
+    // public function isAdmin()
+    // {
+    //     return $this->roles()->where('role_id', 1)->exists(); 
+    // }
+
+    // public function isUser()
+    // {
+    //     return $this->roles()->where('role_id', 2)->exists(); 
+    // }
 }

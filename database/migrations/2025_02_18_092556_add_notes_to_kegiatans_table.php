@@ -9,17 +9,20 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('kegiatans', function (Blueprint $table) {
-            $table->string('surat_izin')->nullable()->after('status'); // Kolom untuk menyimpan nama file
+            //
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
         Schema::table('kegiatans', function (Blueprint $table) {
-            $table->dropColumn('surat_izin');
+            //
         });
     }
 };

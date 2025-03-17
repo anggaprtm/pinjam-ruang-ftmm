@@ -37,9 +37,9 @@
                     <div class="form-group">
                         <label for="filter_kuliah">Jenis Kegiatan</label>
                         <select class="form-control select2" name="filter_kuliah" id="filter_kuliah">
-                            <option value="">Semua</option>
-                            <option value="kuliah" {{ request('filter_kuliah') == 'kuliah' ? 'selected' : '' }}>Hanya Perkuliahan</option>
                             <option value="non-kuliah" {{ request('filter_kuliah') == 'non-kuliah' ? 'selected' : '' }}>Selain Perkuliahan</option>
+                            <option value="kuliah" {{ request('filter_kuliah') == 'kuliah' ? 'selected' : '' }}>Hanya Perkuliahan</option>
+                            <option value="">Semua</option>
                         </select>
                     </div>
                 </div>

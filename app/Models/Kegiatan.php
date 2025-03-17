@@ -30,12 +30,17 @@ class Kegiatan extends Model
         'deskripsi',
         'user_id',
         'status',
-        'custom_user_name',
+        'nomor_telepon',
         'surat_izin',
         'created_at',
         'updated_at',
         'deleted_at',
     ];
+    
+    protected $casts = [
+        'status' => 'string',
+    ];
+    
 
     protected function serializeDate(DateTimeInterface $date)
     {

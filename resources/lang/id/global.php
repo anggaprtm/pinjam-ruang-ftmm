@@ -203,7 +203,7 @@ return [
     'faq_management'                 => 'Manajemen  FAQ',
     'featured_image'                 => 'Gambar unggulan',
     'fee_percent'                    => 'Persentase fee',
-    'file'                           => 'FIle',
+    'file'                           => 'File',
     'file_contains_header_row'       => 'File mengandung baris awal',
     'first_name'                     => 'Nama Depan',
     'group_by'                       => 'Kelompokkan berdasarkan',

@@ -39,6 +39,10 @@ class KegiatanController extends Controller
         // Eksekusi query
         $kegiatans = $query->get();
 
+        $kegiatans->each(function ($kegiatan) {
+            $kegiatan->is_new = $kegiatan->created_at->gt(now()->subDay()); // True jika dibuat dalam 24 jam terakhir
+        });
+
         return view('admin.kegiatans.index', compact('kegiatans', 'tanggalMulai'));
     }
 
@@ -54,11 +58,7 @@ class KegiatanController extends Controller
 
     public function store(StoreKegiatanRequest $request, EventService $eventService)
     {
-        // if ($eventService->isRoomTaken($request->all())) {
-        //     return redirect()->back()
-        //             ->withInput($request->input())
-        //             ->withErrors('Ruangan ini tidak tersedia pada waktu tersebut.');
-        // }
+  
         {
             $kegiatanBentrok = $eventService->isRoomTaken($request->all());
         
@@ -76,9 +76,9 @@ class KegiatanController extends Controller
             $data['user_id'] = null;  // Set user_id sebagai null
         }
         // Tambahkan status default untuk user biasa
-        if (auth()->user()->role === 'user') {
+        if (auth()->user()->hasRole('User')) {
             $data['status'] = 'belum_disetujui'; // Status default untuk user biasa
-        } else {
+        } elseif (auth()->user()->hasRole('Admin')) {
             $data['status'] = 'disetujui'; // Admin langsung menyetujui
         }
         $kegiatan = Kegiatan::create($data);
@@ -86,7 +86,7 @@ class KegiatanController extends Controller
             $eventService->createRecurringEvents($data);
         }
 
-        return redirect()->route('admin.kegiatans.index');
+        return redirect()->route('admin.kegiatans.index')->with('success', 'Kegiatan berhasil disimpan!');
     }
 
     public function edit(Kegiatan $kegiatan)
@@ -123,24 +123,7 @@ class KegiatanController extends Controller
 
         return redirect()->route('admin.kegiatans.index')->with('success', 'Kegiatan berhasil diperbarui.');
     }
-    // public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan)
-    // {
-    //     $data = $request->all();
-    //     // Proses file surat izin jika ada
-    //     if ($request->hasFile('surat_izin')) {
-    //         // Hapus surat izin lama jika ada
-    //         if ($kegiatan->surat_izin && \Storage::disk('public')->exists($kegiatan->surat_izin)) {
-    //             \Storage::disk('public')->delete($kegiatan->surat_izin);
-    //         }
 
-    //         $data['surat_izin'] = $request->file('surat_izin')->store('surat_izin','public')
-    //     }
-    
-    //     $kegiatan->update($data);
-
-    //     return redirect()->route('admin.kegiatans.index');
-    // }
-    
     public function editSuratIzin(Kegiatan $kegiatan)
     {
         abort_if(Gate::denies('kegiatan_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
@@ -200,17 +183,75 @@ class KegiatanController extends Controller
 
     public function updateStatus(Request $request, Kegiatan $kegiatan)
     {
-        // Validasi input
-        $validated = $request->validate([
-            'status' => 'required|in:belum_disetujui,disetujui,ditolak',
-        ]);
+    // Validasi input
+    $validated = $request->validate([
+        'action' => 'required|in:next,back,reject', // Aksi yang harus dilakukan
+        'notes' => 'nullable|string',              // Validasi notes
+    ]);
 
-        // Perbarui status kegiatan
-        $kegiatan->update([
-            'status' => $validated['status'],
-        ]);
+    // Logika perubahan status berdasarkan aksi
+    $newStatus = $kegiatan->status;
+    $successMessage = ''; // Variabel untuk pesan sukses
 
-        return redirect()->route('admin.kegiatans.index')->with('success', 'Status kegiatan berhasil diperbarui.');
+    switch ($validated['action']) {
+        case 'next':
+            switch ($kegiatan->status) {
+                case 'belum_disetujui':
+                    $newStatus = 'verifikasi_sarpras';
+                    $kegiatan->verifikasi_sarpras_at = now();
+                    $successMessage = 'Verifikasi berhasil, verifikasi selanjutnya ditangguhkan ke pihak Akademik.';
+                    break;
+                case 'verifikasi_sarpras':
+                    $newStatus = 'verifikasi_akademik';
+                    $kegiatan->verifikasi_akademik_at = now();
+                    $successMessage = 'Verifikasi Akademik berhasil, verifikasi selanjutnya ditangguhkan ke pihak Sarpras.';
+                    break;
+                case 'verifikasi_akademik':
+                    $newStatus = 'disetujui';
+                    $kegiatan->disetujui_at = now();
+                    $successMessage = 'Verifikasi berhasil, kegiatan telah disetujui!';
+                    break;
+            }
+            break;
+
+        case 'back':
+            switch ($kegiatan->status) {
+                case 'verifikasi_sarpras':
+                    $newStatus = 'belum_disetujui';
+                    $kegiatan->verifikasi_sarpras_at = null;
+                    $successMessage = 'Verifikasi sarpras dibatalkan, dikembalikan ke Akademik.';
+                    break;
+                case 'verifikasi_akademik':
+                    $newStatus = 'verifikasi_sarpras';
+                    $kegiatan->verifikasi_akademik_at = null;
+                    $successMessage = 'Verifikasi akademik dibatalkan, dikembalikan ke Operator.';
+                    break;
+            }
+            break;
+
+        case 'reject':
+            $newStatus = 'ditolak';
+            $kegiatan->ditolak_at = now();
+            $successMessage = 'Kegiatan ditolak.';
+            break;
+
+        default:
+            return redirect()->back()->with('error', 'Aksi tidak valid!');
     }
+
+    // Simpan perubahan status dan notes
+    $kegiatan->status = $newStatus;
+    if (!empty($validated['notes'])) {
+        $kegiatan->notes = $validated['notes'];
+    }
+    $kegiatan->save();
+
+    // Kirimkan pesan sukses yang sesuai dengan status baru
+    return redirect()
+        ->route('admin.kegiatans.index')
+        ->with('success', $successMessage);
+    }
+
+
 
 }

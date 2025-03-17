@@ -21,6 +21,7 @@ class HomeController
 
         $kegiatans = Kegiatan::whereDate('waktu_mulai', $today)
                     ->orWhereDate('waktu_selesai', $today)
+                    ->where('deskripsi', !'Kuliah')
                     ->with(['ruangan', 'user']) // Relasi ruangan dan user jika dibutuhkan
                     ->orderBy('waktu_mulai', 'asc') // Mengurutkan berdasarkan waktu mulai dari yang paling awal
                     ->get()
@@ -29,13 +30,6 @@ class HomeController
                         $kegiatan->is_ongoing = $now->between($kegiatan->waktu_mulai, $kegiatan->waktu_selesai);
                         return $kegiatan;
                     });
-        // $today = Carbon::today(); // Mendapatkan tanggal hari ini tanpa waktu
-        // $kegiatans = Kegiatan::whereDate('waktu_mulai', $today)
-        //                 ->orWhereDate('waktu_selesai', $today)
-        //                 ->with(['ruangan', 'user']) // Relasi ruangan dan user jika dibutuhkan
-        //                 ->orderBy('waktu_mulai', 'asc')
-        //                 ->get();
-        
         
         return view('home', compact('kegiatans'));
     }

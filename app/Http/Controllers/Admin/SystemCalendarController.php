@@ -35,7 +35,7 @@ class SystemCalendarController extends Controller
         // Ambil nilai filter dari request
         $filterRuangan = $request->input('ruangan_id');
         $filterPeminjam = $request->input('user_id');
-        $filterKuliah = $request->input('filter_kuliah'); // Nilai filter baru untuk jenis kegiatan
+        $filterKuliah = $request->input('filter_kuliah', 'non-kuliah'); // Nilai filter baru untuk jenis kegiatan
 
         // Loop melalui setiap sumber data dan terapkan filter
         foreach ($this->sources as $source) {

@@ -58,7 +58,7 @@
                                         {{ $ruangan->kapasitas ?? '' }}
                                     </td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#bookRuang" data-ruangan-id="{{ $ruangan->id }}">
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#bookRuang" data-ruangan-id="{{ $ruangan->id }}">
                                             Pinjam Ruang
                                         </button>
                                     </td>
@@ -79,7 +79,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Pinjam Ruangan</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -87,8 +87,8 @@
                 <form action="{{ route('admin.bookRuang') }}" method="POST" id="bookingForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="ruangan_id" id="ruangan_id" value="{{ old('ruangan_id') }}">
-                    <input type="hidden" name="waktu_mulai" value="{{ request()->input('waktu_mulai') }}">
-                    <input type="hidden" name="waktu_selesai" value="{{ request()->input('waktu_selesai') }}">
+                    <!-- <input name="waktu_mulai" value="{{ request()->input('waktu_mulai') }}">
+                    <input name="waktu_selesai" value="{{ request()->input('waktu_selesai') }}"> -->
                     <div class="form-group">
                         <label class="required" for="nama_kegiatan">{{ trans('cruds.kegiatan.fields.nama_kegiatan') }}</label>
                         <input class="form-control {{ $errors->has('nama_kegiatan') ? 'is-invalid' : '' }}" type="text" name="nama_kegiatan" id="title" value="{{ old('nama_kegiatan', '') }}" required>
@@ -100,6 +100,18 @@
                         <span class="help-block">{{ trans('cruds.kegiatan.fields.nama_kegiatan_helper') }}</span>
                     </div>
                     <div class="form-group">
+                        <label class="required" for="ruangan_nama">Ruangan</label>
+                        <input type="text" id="ruangan_nama" name="ruangan_nama" value="{{ old('ruangan_nama') }}" readonly class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="required" for="waktu_mulai">Waktu Mulai</label>
+                        <input type="text" id="waktu_mulai" name="waktu_mulai" value="{{ request()->input('waktu_mulai') }}" readonly class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="required" for="waktu_selesai">Waktu Selesai</label>
+                        <input type="text" id="waktu_selesai" name="waktu_selesai" value="{{ request()->input('waktu_selesai') }}" readonly class="form-control">
+                    </div>
+                    <div class="form-group">
                         <label for="description">{{ trans('cruds.kegiatan.fields.deskripsi') }}</label>
                         <textarea class="form-control {{ $errors->has('description') ? 'is-invalid' : '' }}" name="description" id="description">{{ old('description') }}</textarea>
                         @if($errors->has('description'))
@@ -108,6 +120,10 @@
                             </div>
                         @endif
                         <span class="help-block">{{ trans('cruds.kegiatan.fields.deskripsi_helper') }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="nomor_telepon">Nomor Telepon PIC</label>
+                        <input type="text" name="nomor_telepon" id="nomor_telepon" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label for="surat_izin">Upload Surat Izin (PDF)</label>
@@ -132,7 +148,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="submitBooking">OK</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -144,9 +160,12 @@
 $('#bookRuang').on('show.bs.modal', function (kegiatan) {
     var button = $(kegiatan.relatedTarget);
     var ruanganId = button.data('ruangan-id');
+    var ruanganNama = button.closest('tr').find('.nama-ruangan').text().trim();
+
     var modal = $(this);
     modal.find('#ruangan_id').val(ruanganId);
-    modal.find('.modal-title').text('Pinjam Ruangan ' + button.parents('tr').children('.ruangan-nama').text());
+    modal.find('#ruangan_nama').val(ruanganNama);
+    modal.find('.modal-title').text('Pinjam Ruangan ' + ruanganNama);
 
     $('#submitBooking').click(function () {
         $('#bookingForm').submit(); 
