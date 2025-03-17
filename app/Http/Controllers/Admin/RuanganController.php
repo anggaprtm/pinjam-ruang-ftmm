@@ -34,7 +34,7 @@ class RuanganController extends Controller
     {
         $ruangan = Ruangan::create($request->all());
 
-        return redirect()->route('admin.ruangans.index');
+        return redirect()->route('admin.ruangans.index')->with('success','Ruangan berhasil ditambahkan!');
     }
 
     public function edit(Ruangan $ruangan)
@@ -77,4 +77,14 @@ class RuanganController extends Controller
 
         return response(null, Response::HTTP_NO_CONTENT);
     }
+    
+    public function toggle($id)
+    {
+        $ruangan = Ruangan::findOrFail($id);
+        $ruangan->is_active = !$ruangan->is_active;
+        $ruangan->save();
+
+        return back()->with('success', 'Status ruangan berhasil diubah!');
+    }
+
 }

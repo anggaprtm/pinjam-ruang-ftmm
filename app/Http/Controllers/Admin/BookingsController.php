@@ -9,6 +9,8 @@ use App\Models\Ruangan;
 use App\Services\EventService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Mail\KegiatanNotification;
+use Illuminate\Support\Facades\Mail;
 
 class BookingsController extends Controller
 {
@@ -22,6 +24,7 @@ class BookingsController extends Controller
             ];
 
             $ruangans = Ruangan::where('kapasitas', '>=', $request->input('kapasitas'))
+                ->where('is_active', true)
                 ->whereDoesntHave('kegiatans', function ($query) use ($times) {
                     $query->whereBetween('waktu_mulai', $times)
                         ->orWhereBetween('waktu_selesai', $times)
@@ -42,11 +45,22 @@ class BookingsController extends Controller
             'user_id' => auth()->id()
         ]);
 
-        $request->validate([
+        // $request->validate([
+        //     'nama_kegiatan'     => 'required',
+        //     'ruangan_id'        => 'required',
+        //     'surat_izin'        => 'required|file|mimes:pdf|max:2048',
+        // ]);
+        $rules = [
             'nama_kegiatan'     => 'required',
             'ruangan_id'        => 'required',
-            'surat_izin'        => 'required|file|mimes:pdf|max:2048',
-        ]);
+            'nomor_telepon'     => 'required|numeric|digits_between:10,13',
+        ];
+
+        if (!auth()->user()->isAdmin()) {
+            $rules['surat_izin'] = 'required|file|mimes:pdf|max:2048';
+        }
+
+        $request->validate($rules);
 
         $ruangan = Ruangan::findOrFail($request->input('ruangan_id'));
 
@@ -62,9 +76,15 @@ class BookingsController extends Controller
         // Gunakan array data baru
         $data = $request->all();
         $data['surat_izin'] = $suratIzinPath; // Masukkan path file yang benar ke dalam data
-        $data['status'] = 'belum_disetujui'; // Status default untuk user
+        $data['status'] = auth()->user()->hasRole('Admin') ? 'disetujui' : 'belum_disetujui'; // Status default untuk user
         $kegiatan = Kegiatan::create($data);
+   
+        $customEmails = ['angga.iryanto@staf.unair.ac.id']; // Email tambahan
+        
+        if (env('ENABLE_EMAIL_NOTIFICATIONS', true)) {
+            Mail::to($customEmails)->send(new KegiatanNotification($kegiatan));
+        }
 
-        return redirect()->route('admin.kegiatans.index');
+        return redirect()->route('admin.kegiatans.index')->with('success','Proses book ruang berhasil dibuat.');
     }
 }

@@ -13,6 +13,8 @@ Auth::routes(['register' => false]);
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth']], function () {
     Route::get('/', 'HomeController@index')->name('home');
+    Route::patch('kegiatans/{kegiatan}/update-status', 'HomeController@updateStatus')->name('admin.kegiatans.updateStatus');
+
     // Permissions
     Route::delete('permissions/destroy', 'PermissionsController@massDestroy')->name('permissions.massDestroy');
     Route::resource('permissions', 'PermissionsController');
@@ -28,11 +30,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     // Ruangan
     Route::delete('ruangans/destroy', 'RuanganController@massDestroy')->name('ruangans.massDestroy');
     Route::resource('ruangans', 'RuanganController');
+    Route::patch('ruangans/{id}/toggle', 'RuanganController@toggle')->name('ruangans.toggle');
 
     // Kegiatan
     Route::delete('kegiatans/destroy', 'KegiatanController@massDestroy')->name('kegiatans.massDestroy');
     Route::resource('kegiatans', 'KegiatanController');
-    Route::patch('kegiatans/{kegiatan}/status', 'KegiatanController@updateStatus')->name('kegiatans.updateStatus');
+    Route::patch('kegiatans/{kegiatan}/status', 'KegiatanController@updateStatus')
+        ->name('kegiatans.updateStatus')
+        ->middleware('role.verification');
     Route::get('kegiatans/{kegiatan}/edit-surat-izin', 'KegiatanController@editSuratIzin')->name('kegiatans.editSuratIzin');
     Route::patch('kegiatans/{kegiatan}/update-surat-izin', 'KegiatanController@updateSuratIzin')->name('kegiatans.updateSuratIzin');
 

@@ -33,6 +33,16 @@ class UpdateKegiatanRequest extends FormRequest
                 'required',
                 'integer',
             ],
+            // 'nomor_telepon' => [
+            //     'string',
+            //     'nullable',
+            // ],
+            'surat_izin' => [
+                'nullable',
+                'file',
+                'mimes:pdf',
+                'max:2048'
+            ],
         ];
     }
 }
