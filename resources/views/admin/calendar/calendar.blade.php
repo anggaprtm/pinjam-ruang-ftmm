@@ -14,7 +14,7 @@
                     <div class="form-group">
                         <label for="ruangan_id">Ruangan</label> 
                         <select class="form-control select2" name="ruangan_id" id="ruangan_id">
-                            @foreach($ruangans as $id => $ruangan)
+                            @foreach($ruangan as $id => $ruangan)
                                 <option value="{{ $id }}" {{ request()->input('ruangan_id') == $id ? 'selected' : '' }}>{{ $ruangan }}</option>
                             @endforeach
                         </select>

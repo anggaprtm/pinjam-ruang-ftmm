@@ -28,9 +28,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('users', 'UsersController');
 
     // Ruangan
-    Route::delete('ruangans/destroy', 'RuanganController@massDestroy')->name('ruangans.massDestroy');
-    Route::resource('ruangans', 'RuanganController');
-    Route::patch('ruangans/{id}/toggle', 'RuanganController@toggle')->name('ruangans.toggle');
+    Route::delete('ruangan/destroy', 'RuanganController@massDestroy')->name('ruangan.massDestroy');
+    Route::resource('ruangan', 'RuanganController');
+    Route::patch('ruangan/{id}/toggle', 'RuanganController@toggle')->name('ruangan.toggle');
 
     // Kegiatan
     Route::delete('kegiatan/destroy', 'KegiatanController@massDestroy')->name('kegiatan.massDestroy');

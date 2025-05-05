@@ -59,7 +59,7 @@
         @endcan
         @can('ruangan_access')
             <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.ruangans.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/ruangans") || request()->is("admin/ruangans/*") ? "c-active" : "" }}">
+                <a href="{{ route("admin.ruangan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/ruangan") || request()->is("admin/ruangan/*") ? "c-active" : "" }}">
                     <i class="fa-fw fas fa-hotel c-sidebar-nav-icon">
 
                     </i>

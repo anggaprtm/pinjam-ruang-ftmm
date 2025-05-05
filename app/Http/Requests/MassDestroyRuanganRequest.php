@@ -20,7 +20,7 @@ class MassDestroyRuanganRequest extends FormRequest
     {
         return [
             'ids'   => 'required|array',
-            'ids.*' => 'exists:ruangans,id',
+            'ids.*' => 'exists:ruangan,id',
         ];
     }
 }

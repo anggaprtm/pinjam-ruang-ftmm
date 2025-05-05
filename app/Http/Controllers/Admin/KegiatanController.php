@@ -50,10 +50,10 @@ class KegiatanController extends Controller
     {
         abort_if(Gate::denies('kegiatan_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $ruangans = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
+        $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
         $users = User::pluck('name', 'id');
 
-        return view('admin.kegiatan.create', compact('ruangans', 'users'));
+        return view('admin.kegiatan.create', compact('ruangan', 'users'));
     }
 
     public function store(StoreKegiatanRequest $request, EventService $eventService)
@@ -93,13 +93,13 @@ class KegiatanController extends Controller
     {
         abort_if(Gate::denies('kegiatan_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $ruangans = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
+        $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
 
         $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
 
         $kegiatan->load('ruangan', 'user');
 
-        return view('admin.kegiatan.edit', compact('kegiatan', 'ruangans', 'users'));
+        return view('admin.kegiatan.edit', compact('kegiatan', 'ruangan', 'users'));
     }
 
     public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan)
