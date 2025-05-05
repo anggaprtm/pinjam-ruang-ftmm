@@ -11,7 +11,7 @@ class Ruangan extends Model
 {
     use SoftDeletes, HasFactory;
 
-    public $table = 'ruangans';
+    public $table = 'ruangan';
 
     protected $dates = [
         'created_at',

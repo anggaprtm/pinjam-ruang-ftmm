@@ -28,7 +28,7 @@ class SystemCalendarController extends Controller
     {
         abort_if(Gate::denies('calendar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         $events = [];
-        $ruangans = Ruangan::all()->pluck('nama', 'id')->prepend(trans('Semua Ruang'), '');
+        $ruangan = Ruangan::all()->pluck('nama', 'id')->prepend(trans('Semua Ruang'), '');
         $users = User::all()->pluck('name', 'id')->prepend(trans('Semua Peminjam'), '');
         $userColors = [];
 
@@ -87,7 +87,7 @@ class SystemCalendarController extends Controller
             }
         }
 
-        return view('admin.calendar.calendar', compact('events', 'ruangans', 'users', 'userColors'));
+        return view('admin.calendar.calendar', compact('events', 'ruangan', 'users', 'userColors'));
     }
 
     private function getUserColor($userId)

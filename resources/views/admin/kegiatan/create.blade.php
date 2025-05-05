@@ -12,7 +12,7 @@
             <div class="form-group">
                 <label for="ruangan_id">{{ trans('cruds.kegiatan.fields.ruangan') }}</label>
                 <select class="form-control select2 {{ $errors->has('ruangan') ? 'is-invalid' : '' }}" name="ruangan_id" id="ruangan_id" required oninvalid="this.setCustomValidity('Silakan pilih ruangan terlebih dahulu')">
-                    @foreach($ruangans as $id => $entry)
+                    @foreach($ruangan as $id => $entry)
                         <option value="{{ $id }}" {{ old('ruangan_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
                     @endforeach
                 </select>

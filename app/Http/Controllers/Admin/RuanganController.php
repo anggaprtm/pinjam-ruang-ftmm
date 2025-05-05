@@ -17,45 +17,45 @@ class RuanganController extends Controller
     {
         abort_if(Gate::denies('ruangan_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $ruangans = Ruangan::all();
-        // $ruangans = Ruangan::orderBy('id', 'asc')->get();
+        $ruangan = Ruangan::all();
+        // $ruangan = Ruangan::orderBy('id', 'asc')->get();
 
-        return view('admin.ruangans.index', compact('ruangans'));
+        return view('admin.ruangan.index', compact('ruangan'));
     }
 
     public function create()
     {
         abort_if(Gate::denies('ruangan_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.ruangans.create');
+        return view('admin.ruangan.create');
     }
 
     public function store(StoreRuanganRequest $request)
     {
         $ruangan = Ruangan::create($request->all());
 
-        return redirect()->route('admin.ruangans.index')->with('success','Ruangan berhasil ditambahkan!');
+        return redirect()->route('admin.ruangan.index')->with('success','Ruangan berhasil ditambahkan!');
     }
 
     public function edit(Ruangan $ruangan)
     {
         abort_if(Gate::denies('ruangan_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.ruangans.edit', compact('ruangan'));
+        return view('admin.ruangan.edit', compact('ruangan'));
     }
 
     public function update(UpdateRuanganRequest $request, Ruangan $ruangan)
     {
         $ruangan->update($request->all());
 
-        return redirect()->route('admin.ruangans.index');
+        return redirect()->route('admin.ruangan.index');
     }
 
     public function show(Ruangan $ruangan)
     {
         abort_if(Gate::denies('ruangan_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.ruangans.show', compact('ruangan'));
+        return view('admin.ruangan.show', compact('ruangan'));
     }
 
     public function destroy(Ruangan $ruangan)
@@ -69,9 +69,9 @@ class RuanganController extends Controller
 
     public function massDestroy(MassDestroyRuanganRequest $request)
     {
-        $ruangans = Ruangan::find(request('ids'));
+        $ruangan = Ruangan::find(request('ids'));
 
-        foreach ($ruangans as $ruangan) {
+        foreach ($ruangan as $ruangan) {
             $ruangan->delete();
         }
 

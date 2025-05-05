@@ -16,14 +16,14 @@ class BookingsController extends Controller
 {
     public function cariRuang(Request $request)
     {
-        $ruangans = null;
+        $ruangan = null;
         if($request->filled(['waktu_mulai', 'waktu_selesai', 'kapasitas'])) {
             $times = [
                 Carbon::parse($request->input('waktu_mulai')),
                 Carbon::parse($request->input('waktu_selesai')),
             ];
 
-            $ruangans = Ruangan::where('kapasitas', '>=', $request->input('kapasitas'))
+            $ruangan = Ruangan::where('kapasitas', '>=', $request->input('kapasitas'))
                 ->where('is_active', true)
                 ->whereDoesntHave('kegiatan', function ($query) use ($times) {
                     $query->whereBetween('waktu_mulai', $times)
@@ -36,7 +36,7 @@ class BookingsController extends Controller
                 ->get();
         }
 
-        return view('admin.bookings.cari', compact('ruangans'));
+        return view('admin.bookings.cari', compact('ruangan'));
     }
 
     public function bookRuang(Request $request, EventService $eventService)

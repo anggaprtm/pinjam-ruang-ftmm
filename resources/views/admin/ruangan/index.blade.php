@@ -3,7 +3,7 @@
 @can('ruangan_create')
     <div style="margin-bottom: 10px;" class="row">
         <div class="col-lg-12">
-            <a class="btn btn-success" href="{{ route('admin.ruangans.create') }}">
+            <a class="btn btn-success" href="{{ route('admin.ruangan.create') }}">
                 <i class="fas fa-fw fa-plus"></i> &nbsp Tambah Data
             </a>
         </div>
@@ -43,7 +43,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($ruangans as $key => $ruangan)
+                    @foreach($ruangan as $key => $ruangan)
                         <tr data-entry-id="{{ $ruangan->id }}">
                             <td>
 
@@ -61,7 +61,7 @@
                                 {{ $ruangan->kapasitas ?? '' }}
                             </td>
                             <td style="text-align:center;">
-                                <form action="{{ route('admin.ruangans.toggle', $ruangan->id) }}" method="POST">
+                                <form action="{{ route('admin.ruangan.toggle', $ruangan->id) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="btn btn-{{ $ruangan->is_active ? 'success' : 'danger' }}">
@@ -71,19 +71,19 @@
                             </td>
                             <td>
                                 @can('ruangan_show')
-                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.ruangans.show', $ruangan->id) }}">
+                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.ruangan.show', $ruangan->id) }}">
                                         <i class="fas fa-fw fa-search"></i>
                                     </a>
                                 @endcan
 
                                 @can('ruangan_edit')
-                                    <a class="btn btn-xs btn-success" href="{{ route('admin.ruangans.edit', $ruangan->id) }}">
+                                    <a class="btn btn-xs btn-success" href="{{ route('admin.ruangan.edit', $ruangan->id) }}">
                                         <i class="fas fa-fw fa-edit"></i>
                                     </a>
                                 @endcan
 
                                 @can('ruangan_delete')
-                                    <form id="delete-form-{{ $ruangan->id }}" action="{{ route('admin.ruangans.destroy', $ruangan->id) }}" method="POST" style="display: inline-block;">
+                                    <form id="delete-form-{{ $ruangan->id }}" action="{{ route('admin.ruangan.destroy', $ruangan->id) }}" method="POST" style="display: inline-block;">
                                         <input type="hidden" name="_method" value="DELETE">
                                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                         <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete({{ $ruangan->id }})">
@@ -115,7 +115,7 @@
         let deleteButtonTrans = '{{ trans('global.datatables.delete') }}';
         let deleteButton = {
             text: deleteButtonTrans,
-            url: "{{ route('admin.ruangans.massDestroy') }}",
+            url: "{{ route('admin.ruangan.massDestroy') }}",
             className: 'btn-danger',
             action: function (e, dt, node, config) {
                 var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {

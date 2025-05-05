@@ -30,9 +30,9 @@
                 </div>
             </div>
         </form>
-        @if($ruangans !== null)
+        @if($ruangan !== null)
             <hr />
-            @if($ruangans->count())
+            @if($ruangan->count())
                 <div class="table-responsive">
                     <table class=" table table-bordered table-striped table-hover datatable datatable-kegiatan">
                         <thead>
@@ -49,7 +49,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($ruangans as $ruangan)
+                            @foreach($ruangan as $ruangan)
                                 <tr>
                                     <td class="nama-ruangan">
                                         {{ $ruangan->nama ?? '' }}
