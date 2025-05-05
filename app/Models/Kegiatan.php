@@ -12,7 +12,7 @@ class Kegiatan extends Model
 {
     use SoftDeletes, HasFactory;
 
-    public $table = 'kegiatans';
+    public $table = 'kegiatan';
 
     protected $dates = [
         'waktu_mulai',

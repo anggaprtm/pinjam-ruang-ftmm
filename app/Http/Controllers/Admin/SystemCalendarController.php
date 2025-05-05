@@ -20,7 +20,7 @@ class SystemCalendarController extends Controller
             'field'      => 'nama_kegiatan',
             'prefix'     => '',
             'suffix'     => '',
-            'route'      => 'admin.kegiatans.edit',
+            'route'      => 'admin.kegiatan.edit',
         ],
     ];
 

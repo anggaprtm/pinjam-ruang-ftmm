@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('kegiatans', function (Blueprint $table) {
+        Schema::table('kegiatan', function (Blueprint $table) {
             $table->string('surat_izin')->nullable()->after('status'); // Kolom untuk menyimpan nama file
         });
     }
 
     public function down()
     {
-        Schema::table('kegiatans', function (Blueprint $table) {
+        Schema::table('kegiatan', function (Blueprint $table) {
             $table->dropColumn('surat_izin');
         });
     }

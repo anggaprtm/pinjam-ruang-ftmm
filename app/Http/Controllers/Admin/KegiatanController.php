@@ -37,13 +37,13 @@ class KegiatanController extends Controller
         }
 
         // Eksekusi query
-        $kegiatans = $query->get();
+        $kegiatan = $query->get();
 
-        $kegiatans->each(function ($kegiatan) {
+        $kegiatan->each(function ($kegiatan) {
             $kegiatan->is_new = $kegiatan->created_at->gt(now()->subDay()); // True jika dibuat dalam 24 jam terakhir
         });
 
-        return view('admin.kegiatans.index', compact('kegiatans', 'tanggalMulai'));
+        return view('admin.kegiatan.index', compact('kegiatan', 'tanggalMulai'));
     }
 
     public function create()
@@ -53,7 +53,7 @@ class KegiatanController extends Controller
         $ruangans = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
         $users = User::pluck('name', 'id');
 
-        return view('admin.kegiatans.create', compact('ruangans', 'users'));
+        return view('admin.kegiatan.create', compact('ruangans', 'users'));
     }
 
     public function store(StoreKegiatanRequest $request, EventService $eventService)
@@ -86,7 +86,7 @@ class KegiatanController extends Controller
             $eventService->createRecurringEvents($data);
         }
 
-        return redirect()->route('admin.kegiatans.index')->with('success', 'Kegiatan berhasil disimpan!');
+        return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil disimpan!');
     }
 
     public function edit(Kegiatan $kegiatan)
@@ -99,7 +99,7 @@ class KegiatanController extends Controller
 
         $kegiatan->load('ruangan', 'user');
 
-        return view('admin.kegiatans.edit', compact('kegiatan', 'ruangans', 'users'));
+        return view('admin.kegiatan.edit', compact('kegiatan', 'ruangans', 'users'));
     }
 
     public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan)
@@ -121,14 +121,14 @@ class KegiatanController extends Controller
         // Update kegiatan dengan data yang sudah dimodifikasi
         $kegiatan->update($data);
 
-        return redirect()->route('admin.kegiatans.index')->with('success', 'Kegiatan berhasil diperbarui.');
+        return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil diperbarui.');
     }
 
     public function editSuratIzin(Kegiatan $kegiatan)
     {
         abort_if(Gate::denies('kegiatan_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.kegiatans.edit-surat-izin', compact('kegiatan'));
+        return view('admin.kegiatan.edit-surat-izin', compact('kegiatan'));
     }
 
     public function updateSuratIzin(Request $request, Kegiatan $kegiatan)
@@ -149,7 +149,7 @@ class KegiatanController extends Controller
     // Perbarui kolom surat_izin di database
     $kegiatan->update(['surat_izin' => $suratIzinPath]);
 
-    return redirect()->route('admin.kegiatans.index')->with('success', 'Surat izin berhasil diperbarui.');
+    return redirect()->route('admin.kegiatan.index')->with('success', 'Surat izin berhasil diperbarui.');
 }
 
     public function show(Kegiatan $kegiatan)
@@ -158,7 +158,7 @@ class KegiatanController extends Controller
 
         $kegiatan->load('ruangan', 'user');
 
-        return view('admin.kegiatans.show', compact('kegiatan'));
+        return view('admin.kegiatan.show', compact('kegiatan'));
     }
 
     public function destroy(Kegiatan $kegiatan)
@@ -172,9 +172,9 @@ class KegiatanController extends Controller
 
     public function massDestroy(MassDestroyKegiatanRequest $request)
     {
-        $kegiatans = Kegiatan::find(request('ids'));
+        $kegiatan = Kegiatan::find(request('ids'));
 
-        foreach ($kegiatans as $kegiatan) {
+        foreach ($kegiatan as $kegiatan) {
             $kegiatan->delete();
         }
 
@@ -248,7 +248,7 @@ class KegiatanController extends Controller
 
     // Kirimkan pesan sukses yang sesuai dengan status baru
     return redirect()
-        ->route('admin.kegiatans.index')
+        ->route('admin.kegiatan.index')
         ->with('success', $successMessage);
     }
 

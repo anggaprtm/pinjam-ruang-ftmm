@@ -25,7 +25,7 @@ class BookingsController extends Controller
 
             $ruangans = Ruangan::where('kapasitas', '>=', $request->input('kapasitas'))
                 ->where('is_active', true)
-                ->whereDoesntHave('kegiatans', function ($query) use ($times) {
+                ->whereDoesntHave('kegiatan', function ($query) use ($times) {
                     $query->whereBetween('waktu_mulai', $times)
                         ->orWhereBetween('waktu_selesai', $times)
                         ->orWhere(function ($query) use ($times) {
@@ -85,6 +85,6 @@ class BookingsController extends Controller
             Mail::to($customEmails)->send(new KegiatanNotification($kegiatan));
         }
 
-        return redirect()->route('admin.kegiatans.index')->with('success','Proses book ruang berhasil dibuat.');
+        return redirect()->route('admin.kegiatan.index')->with('success','Proses book ruang berhasil dibuat.');
     }
 }
