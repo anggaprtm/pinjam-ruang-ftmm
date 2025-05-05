@@ -141,6 +141,12 @@
         orderable: false,
         searchable: false,
         targets: -1
+    }, {
+      targets: 4, 
+      type: 'date' 
+    }, {
+      targets: 5, 
+      type: 'date' 
     }],
     select: {
       style:    'multi+shift',
@@ -161,7 +167,7 @@
         action: function(e, dt) {
           e.preventDefault()
           dt.rows().deselect();
-          dt.rows({ search: 'applied' }).select();
+          dt.rows({ search: 'applied', page: 'current' }).select();
         }
       },
       {
