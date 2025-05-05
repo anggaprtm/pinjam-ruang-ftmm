@@ -186,7 +186,7 @@
         $.extend(true, $.fn.dataTable.defaults, {
             orderCellsTop: true,
             order: [[1, 'desc']],
-            pageLength: 100,
+            pageLength: 50,
         });
 
         let table = $('.datatable-Ruangan:not(.ajaxTable)').DataTable({ buttons: dtButtons });

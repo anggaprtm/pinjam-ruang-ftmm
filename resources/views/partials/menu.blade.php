@@ -79,7 +79,7 @@
         @endcan
         @can('calendar_access')
         <li class="c-sidebar-nav-item">
-            <a href="{{ route("admin.systemCalendar") }}" class="c-sidebar-nav-link {{ request()->is("admin/system-calendar") || request()->is("admin/system-calendar/*") ? "c-active" : "" }}">
+            <a href="{{ route("admin.systemCalendar") }}" class="c-sidebar-nav-link {{ request()->is("admin/kalender") || request()->is("admin/kalender/*") ? "c-active" : "" }}">
                 <i class="c-sidebar-nav-icon fa-fw fas fa-calendar">
 
                 </i>

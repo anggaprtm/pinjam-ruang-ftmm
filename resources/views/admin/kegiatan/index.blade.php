@@ -421,7 +421,7 @@
         $.extend(true, $.fn.dataTable.defaults, {
             orderCellsTop: true,
             order: [[1, 'desc']],
-            pageLength: 100,
+            pageLength: 50,
         });
 
         let table = $('.datatable-Kegiatan:not(.ajaxTable)').DataTable({ buttons: dtButtons });
