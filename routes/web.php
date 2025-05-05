@@ -41,7 +41,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::get('kegiatan/{kegiatan}/edit-surat-izin', 'KegiatanController@editSuratIzin')->name('kegiatan.editSuratIzin');
     Route::patch('kegiatan/{kegiatan}/update-surat-izin', 'KegiatanController@updateSuratIzin')->name('kegiatan.updateSuratIzin');
 
-    Route::get('system-calendar', 'SystemCalendarController@index')->name('systemCalendar');
+    Route::get('kalender', 'SystemCalendarController@index')->name('systemCalendar');
     Route::get('cari-ruang', 'BookingsController@cariRuang')->name('cariRuang');
     Route::post('book-ruang', 'BookingsController@bookRuang')->name('bookRuang');
 });
