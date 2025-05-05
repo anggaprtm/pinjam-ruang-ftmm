@@ -69,7 +69,7 @@
         @endcan
         @can('kegiatan_access')
             <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.kegiatans.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/kegiatans") || request()->is("admin/kegiatans/*") ? "c-active" : "" }}">
+                <a href="{{ route("admin.kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/kegiatan") || request()->is("admin/kegiatan/*") ? "c-active" : "" }}">
                     <i class="fa-fw fas fa-calendar c-sidebar-nav-icon">
 
                     </i>

@@ -34,7 +34,7 @@ class Ruangan extends Model
         return $date->format('Y-m-d H:i:s');
     }
 
-    public function kegiatans()
+    public function kegiatan()
     {
         return $this->hasMany(Kegiatan::class);
     }

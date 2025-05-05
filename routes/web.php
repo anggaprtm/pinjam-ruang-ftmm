@@ -13,7 +13,7 @@ Auth::routes(['register' => false]);
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth']], function () {
     Route::get('/', 'HomeController@index')->name('home');
-    Route::patch('kegiatans/{kegiatan}/update-status', 'HomeController@updateStatus')->name('admin.kegiatans.updateStatus');
+    Route::patch('kegiatan/{kegiatan}/update-status', 'HomeController@updateStatus')->name('admin.kegiatan.updateStatus');
 
     // Permissions
     Route::delete('permissions/destroy', 'PermissionsController@massDestroy')->name('permissions.massDestroy');
@@ -33,13 +33,13 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::patch('ruangans/{id}/toggle', 'RuanganController@toggle')->name('ruangans.toggle');
 
     // Kegiatan
-    Route::delete('kegiatans/destroy', 'KegiatanController@massDestroy')->name('kegiatans.massDestroy');
-    Route::resource('kegiatans', 'KegiatanController');
-    Route::patch('kegiatans/{kegiatan}/status', 'KegiatanController@updateStatus')
-        ->name('kegiatans.updateStatus')
+    Route::delete('kegiatan/destroy', 'KegiatanController@massDestroy')->name('kegiatan.massDestroy');
+    Route::resource('kegiatan', 'KegiatanController');
+    Route::patch('kegiatan/{kegiatan}/status', 'KegiatanController@updateStatus')
+        ->name('kegiatan.updateStatus')
         ->middleware('role.verification');
-    Route::get('kegiatans/{kegiatan}/edit-surat-izin', 'KegiatanController@editSuratIzin')->name('kegiatans.editSuratIzin');
-    Route::patch('kegiatans/{kegiatan}/update-surat-izin', 'KegiatanController@updateSuratIzin')->name('kegiatans.updateSuratIzin');
+    Route::get('kegiatan/{kegiatan}/edit-surat-izin', 'KegiatanController@editSuratIzin')->name('kegiatan.editSuratIzin');
+    Route::patch('kegiatan/{kegiatan}/update-surat-izin', 'KegiatanController@updateSuratIzin')->name('kegiatan.updateSuratIzin');
 
     Route::get('system-calendar', 'SystemCalendarController@index')->name('systemCalendar');
     Route::get('cari-ruang', 'BookingsController@cariRuang')->name('cariRuang');

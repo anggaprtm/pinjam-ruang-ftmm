@@ -32,7 +32,7 @@
                 </table>
 
                 <div style="text-align: center; margin-top: 10px;">
-                    <a href="http://10.10.10.27/admin/kegiatans" target="_blank" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 14px;">Lihat Kegiatan</a>
+                    <a href="http://10.10.10.27/admin/kegiatan" target="_blank" style="display: inline-block; background-color: #007bff; color: #ffffff; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 14px;">Lihat Kegiatan</a>
                 </div>
 
                 <p style="color: #888; font-size: 12px; margin-top: 10px; text-align: center;">Email ini dikirim otomatis, mohon tidak membalas.</p>

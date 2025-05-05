@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up()
 {
-    Schema::table('kegiatans', function (Blueprint $table) {
+    Schema::table('kegiatan', function (Blueprint $table) {
         $table->enum('status', ['belum_disetujui', 'disetujui', 'ditolak'])->default('belum_disetujui');
     });
 }
 
     public function down()
     {
-    Schema::table('kegiatans', function (Blueprint $table) {
+    Schema::table('kegiatan', function (Blueprint $table) {
         $table->dropColumn('status');
     });
 }

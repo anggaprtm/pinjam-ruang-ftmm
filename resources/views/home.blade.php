@@ -43,12 +43,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            @if($kegiatans->isEmpty())
+                            @if($kegiatan->isEmpty())
                                 <tr>
                                     <td colspan="8" class="text-center">Tidak ada kegiatan hari ini.</td>
                                 </tr>
                             @else
-                                @foreach($kegiatans as $key => $kegiatan)
+                                @foreach($kegiatan as $key => $kegiatan)
                                     <tr class="{{ $kegiatan->is_ongoing ? 'bg-success' : '' }}" data-entry-id="{{ $kegiatan->id }}">
                                         <td style="text-align: center;">
                                             {{ $loop->iteration }}

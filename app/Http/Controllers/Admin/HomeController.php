@@ -19,7 +19,7 @@ class HomeController
         $today = Carbon::today(); // Mendapatkan tanggal hari ini tanpa waktu
         $now = Carbon::now(); // Mendapatkan waktu saat ini
 
-        $kegiatans = Kegiatan::whereDate('waktu_mulai', $today)
+        $kegiatan = Kegiatan::whereDate('waktu_mulai', $today)
                     ->orWhereDate('waktu_selesai', $today)
                     ->where('deskripsi', !'Kuliah')
                     ->with(['ruangan', 'user']) // Relasi ruangan dan user jika dibutuhkan
@@ -31,6 +31,6 @@ class HomeController
                         return $kegiatan;
                     });
         
-        return view('home', compact('kegiatans'));
+        return view('home', compact('kegiatan'));
     }
 }

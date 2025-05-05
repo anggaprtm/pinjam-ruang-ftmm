@@ -3,7 +3,7 @@
 @can('kegiatan_create')
     <div style="margin-bottom: 10px;" class="row">
         <div class="col-lg-12">
-            <a class="btn btn-success" href="{{ route('admin.kegiatans.create') }}">
+            <a class="btn btn-success" href="{{ route('admin.kegiatan.create') }}">
                 <i class="fas fa-fw fa-plus"></i> &nbsp Tambah Kegiatan
             </a>
         </div>
@@ -14,12 +14,12 @@
         Daftar Kegiatan
     </div>
     <div class="d-flex justify-content-start mb-3 filt-keg">
-        <form action="{{ route('admin.kegiatans.index') }}" method="GET" class="d-flex align-items-center gap-2">
+        <form action="{{ route('admin.kegiatan.index') }}" method="GET" class="d-flex align-items-center gap-2">
             <div class="form-group mb-0">
                 <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control" value="{{ request('tanggal_mulai') }}" placeholder="dd/mm/yyyy">
             </div>
             <button type="submit" class="btn btn-primary ms-3">Filter</button>
-            <a href="{{ route('admin.kegiatans.index') }}" class="btn btn-secondary">Reset Filter</a>
+            <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-secondary">Reset Filter</a>
         </form>
     </div>
     <div class="card-body">
@@ -73,7 +73,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($kegiatans as $key => $kegiatan)
+                    @foreach($kegiatan as $key => $kegiatan)
                         <tr data-entry-id="{{ $kegiatan->id }}"
                             @if(\Carbon\Carbon::parse($kegiatan->created_at)->diffInHours(now()) < 24) 
                                 style="background-color:rgba(255, 255, 153, 0.32);" 
@@ -128,7 +128,7 @@
                                         <!-- Modal Verifikasi Sarpras -->
                                         <div class="modal fade" id="modalVerifikasiSarpras{{ $kegiatan->id }}" tabindex="-1" aria-labelledby="modalVerifikasiSarprasLabel{{ $kegiatan->id }}" aria-hidden="true">
                                             <div class="modal-dialog">
-                                                <form action="{{ route('admin.kegiatans.updateStatus', $kegiatan->id) }}" method="POST">
+                                                <form action="{{ route('admin.kegiatan.updateStatus', $kegiatan->id) }}" method="POST">
                                                     @csrf
                                                     @method('PATCH')
                                                     <div class="modal-content">
@@ -160,7 +160,7 @@
                                         <!-- Modal Verifikasi Akademik -->
                                         <div class="modal fade" id="modalVerifikasiAkademik{{ $kegiatan->id }}" tabindex="-1" aria-labelledby="modalVerifikasiAkademikLabel{{ $kegiatan->id }}" aria-hidden="true">
                                             <div class="modal-dialog">
-                                                <form action="{{ route('admin.kegiatans.updateStatus', $kegiatan->id) }}" method="POST">
+                                                <form action="{{ route('admin.kegiatan.updateStatus', $kegiatan->id) }}" method="POST">
                                                     @csrf
                                                     @method('PATCH')
                                                     <div class="modal-content">
@@ -192,7 +192,7 @@
                                         <!-- Modal Penolakan -->
                                         <div class="modal fade" id="modalTolak{{ $kegiatan->id }}" tabindex="-1" aria-labelledby="modalTolakLabel{{ $kegiatan->id }}" aria-hidden="true">
                                             <div class="modal-dialog">
-                                                <form action="{{ route('admin.kegiatans.updateStatus', $kegiatan->id) }}" method="POST">
+                                                <form action="{{ route('admin.kegiatan.updateStatus', $kegiatan->id) }}" method="POST">
                                                     @csrf
                                                     @method('PATCH')
                                                     <div class="modal-content">
@@ -224,7 +224,7 @@
                                         <!-- Modal Setujui -->
                                         <div class="modal fade" id="modalSetujui{{ $kegiatan->id }}" tabindex="-1" aria-labelledby="modalSetujuiLabel{{ $kegiatan->id }}" aria-hidden="true">
                                             <div class="modal-dialog">
-                                                <form action="{{ route('admin.kegiatans.updateStatus', $kegiatan->id) }}" method="POST">
+                                                <form action="{{ route('admin.kegiatan.updateStatus', $kegiatan->id) }}" method="POST">
                                                     @csrf
                                                     @method('PATCH')
                                                     <div class="modal-content">
@@ -256,7 +256,7 @@
                                         <!-- Modal Penolakan -->
                                         <div class="modal fade" id="modalTolak{{ $kegiatan->id }}" tabindex="-1" aria-labelledby="modalTolakLabel{{ $kegiatan->id }}" aria-hidden="true">
                                             <div class="modal-dialog">
-                                                <form action="{{ route('admin.kegiatans.updateStatus', $kegiatan->id) }}" method="POST">
+                                                <form action="{{ route('admin.kegiatan.updateStatus', $kegiatan->id) }}" method="POST">
                                                     @csrf
                                                     @method('PATCH')
                                                     <div class="modal-content">
@@ -306,19 +306,19 @@
                             </td>
                             <td style="text-align:center;">
                                 @can('kegiatan_show')
-                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.kegiatans.show', $kegiatan->id) }}  ">
+                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.kegiatan.show', $kegiatan->id) }}  ">
                                         <i class="fas fa-fw fa-search"></i>
                                     </a>
                                 @endcan
 
                                 @can('kegiatan_edit')
-                                    <a class="btn btn-xs btn-success" href="{{ route('admin.kegiatans.edit', $kegiatan->id) }}">
+                                    <a class="btn btn-xs btn-success" href="{{ route('admin.kegiatan.edit', $kegiatan->id) }}">
                                         <i class="fas fa-fw fa-edit"></i>
                                     </a>
                                 @endcan
 
                                 @can('kegiatan_delete')
-                                    <form id="delete-form-{{ $kegiatan->id }}" action="{{ route('admin.kegiatans.destroy', $kegiatan->id) }}" method="POST" style="display: inline-block;">
+                                    <form id="delete-form-{{ $kegiatan->id }}" action="{{ route('admin.kegiatan.destroy', $kegiatan->id) }}" method="POST" style="display: inline-block;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete({{ $kegiatan->id }})">
@@ -348,7 +348,7 @@
         let deleteButtonTrans = '{{ trans('global.datatables.delete') }}';
         let deleteButton = {
             text: deleteButtonTrans,
-            url: "{{ route('admin.kegiatans.massDestroy') }}",
+            url: "{{ route('admin.kegiatan.massDestroy') }}",
             className: 'btn-danger',
             action: function (e, dt, node, config) {
                 var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {

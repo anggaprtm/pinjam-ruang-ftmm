@@ -61,7 +61,7 @@ class EventService
     //     $recurringUntil = Carbon::parse($requestData['berulang_sampai'])->setTime(23, 59, 59);
     //     $waktu_mulai    = Carbon::parse($requestData['waktu_mulai']);
     //     $waktu_selesai  = Carbon::parse($requestData['waktu_selesai']);
-    //     $kegiatans      = Kegiatan::where('ruangan_id', $requestData['ruangan_id'])->get();
+    //     $kegiatan      = Kegiatan::where('ruangan_id', $requestData['ruangan_id'])->get();
 
     //     do {
     //         if (
@@ -75,9 +75,9 @@ class EventService
     //                       });
     //             })
     //             ->exists()
-    //             // $kegiatans->where('waktu_mulai', '<', $waktu_mulai)->where('waktu_selesai', '>', $waktu_mulai)->count() ||
-    //             // $kegiatans->where('waktu_mulai', '<', $waktu_selesai)->where('waktu_selesai', '>', $waktu_selesai)->count() ||
-    //             // $kegiatans->where('waktu_mulai', '<', $waktu_mulai)->where('waktu_selesai', '>', $waktu_selesai)->count()
+    //             // $kegiatan->where('waktu_mulai', '<', $waktu_mulai)->where('waktu_selesai', '>', $waktu_mulai)->count() ||
+    //             // $kegiatan->where('waktu_mulai', '<', $waktu_selesai)->where('waktu_selesai', '>', $waktu_selesai)->count() ||
+    //             // $kegiatan->where('waktu_mulai', '<', $waktu_mulai)->where('waktu_selesai', '>', $waktu_selesai)->count()
     //         ) {
     //             return true;
     //         }
