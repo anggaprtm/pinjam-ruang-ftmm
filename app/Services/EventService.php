@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Kegiatan;
+use App\Models\JadwalPerkuliahan;
 use App\Models\Ruangan;
 use Carbon\Carbon;
 
@@ -49,6 +50,29 @@ class EventService
     
             if ($kegiatanBentrok) {
                 return $kegiatanBentrok; // Mengembalikan kegiatan yang bentrok
+            }
+
+            // 2. Cek bentrok dengan jadwal perkuliahan
+            $hari = $waktu_mulai->locale('id')->isoFormat('dddd'); // e.g. "Senin"
+            $jamMulai = $waktu_mulai->format('H:i:s');
+            $jamSelesai = $waktu_selesai->format('H:i:s');
+            $tanggal = $waktu_mulai->toDateString();
+
+            $kuliahBentrok = JadwalPerkuliahan::where('ruangan_id', $requestData['ruangan_id'])
+                ->where('hari', $hari)
+                ->whereDate('berlaku_mulai', '<=', $tanggal)
+                ->whereDate('berlaku_sampai', '>=', $tanggal)
+                ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                    $query->where('waktu_mulai', '<', $jamSelesai)
+                        ->where('waktu_selesai', '>', $jamMulai);
+                })
+                ->first();
+
+            if ($kuliahBentrok) {
+                // Bikin dummy object Kegiatan supaya error message tetap konsisten
+                return new Kegiatan([
+                    'nama_kegiatan' => 'Perkuliahan: ' . $kuliahBentrok->mata_kuliah
+                ]);
             }
     
             $waktu_mulai->addWeek();

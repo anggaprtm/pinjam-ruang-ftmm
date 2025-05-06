@@ -10,6 +10,7 @@ use App\Services\EventService;
 use App\Models\Kegiatan;
 use App\Models\Ruangan;
 use App\Models\User;
+use App\Models\JadwalPerkuliahan;
 use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

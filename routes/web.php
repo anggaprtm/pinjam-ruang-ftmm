@@ -32,6 +32,11 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('ruangan', 'RuanganController');
     Route::patch('ruangan/{id}/toggle', 'RuanganController@toggle')->name('ruangan.toggle');
 
+    // Jadwal Perkuliahan
+    Route::delete('jadwal-perkuliahan/destroy', 'JadwalPerkuliahanController@massDestroy')->name('jadwal-perkuliahan.massDestroy');
+    Route::resource('jadwal-perkuliahan', 'JadwalPerkuliahanController');
+    Route::post('jadwal-perkuliahan/import', 'JadwalPerkuliahanController@import')->name('jadwal-perkuliahan.import');
+
     // Kegiatan
     Route::delete('kegiatan/destroy', 'KegiatanController@massDestroy')->name('kegiatan.massDestroy');
     Route::resource('kegiatan', 'KegiatanController');

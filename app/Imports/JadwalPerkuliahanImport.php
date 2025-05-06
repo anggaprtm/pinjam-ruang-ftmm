@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Imports;
+
+use App\Models\JadwalPerkuliahan;
+use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
+
+class JadwalPerkuliahanImport implements ToModel, WithHeadingRow
+{
+    public function model(array $row)
+    {
+        return new JadwalPerkuliahan([
+            'ruangan_id'      => $row['ruangan_id'],
+            'mata_kuliah'     => $row['mata_kuliah'],
+            'dosen'           => $row['dosen'],
+            'hari'            => $row['hari'],
+            'waktu_mulai'     => $this->parseExcelTime($row['waktu_mulai']), // Format: 'HH:MM'
+            'waktu_selesai'   => $this->parseExcelTime($row['waktu_selesai']), // Format: 'HH:MM'
+            'berlaku_mulai'   => Carbon::parse($row['berlaku_mulai'])->format('Y-m-d'),
+            'berlaku_sampai'  => Carbon::parse($row['berlaku_sampai'])->format('Y-m-d'),
+        ]);
+    }
+
+    private function parseExcelTime($value)
+    {
+        if (is_numeric($value)) {
+            return Carbon::instance(Date::excelToDateTimeObject($value))->format('H:i');
+        }
+
+        // kalau string langsung, pastikan bisa diparse
+        try {
+            return Carbon::parse($value)->format('H:i');
+        } catch (\Exception $e) {
+            return '00:00'; // fallback kalau format tidak dikenali
+        }
+    }
+}
+
