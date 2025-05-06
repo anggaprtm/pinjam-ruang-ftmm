@@ -64,12 +64,6 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>
-                            Dosen
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->dosen }}
-                        </td>
                     </tr>
                     <tr>
                         <th>

@@ -95,11 +95,11 @@ class SystemCalendarController extends Controller
         $colors = [
             1 => '#1E90FF', // Admin
             2 => '#9e0142', // HIMATESDA
-            3 => '#d53e4f', // HIMATERA
+            3 => '#095259', // HIMATERA
             4 => '#f46d43', // HIMANO
             5 => '#fdae61', // HMTI
             6 => '#fee08b', // IME
-            7 => '#e6f598', // BEM FTMM
+            7 => '#000000', // BEM FTMM
             8 => '#abdda4', // BLM FTMM
             9 => '#66c2a5', // ATOM
             10 => '#3288bd', // PD FTMM

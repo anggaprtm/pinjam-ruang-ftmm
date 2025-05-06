@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\JadwalPerkuliahan;
+use App\Models\Ruangan;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -12,15 +13,23 @@ class JadwalPerkuliahanImport implements ToModel, WithHeadingRow
 {
     public function model(array $row)
     {
+        if (!isset($row['nama_ruangan'])) {
+            \Log::warning('nama_ruangan tidak ditemukan', $row);
+            return null; // atau throw error jika ingin hentikan
+        }
+        
+        $ruangan = Ruangan::where('nama', $row['nama_ruangan'])->first();
+
         return new JadwalPerkuliahan([
-            'ruangan_id'      => $row['ruangan_id'],
+            'ruangan_id'      => $ruangan ? $ruangan->id : null,
             'mata_kuliah'     => $row['mata_kuliah'],
-            'dosen'           => $row['dosen'],
             'hari'            => $row['hari'],
             'waktu_mulai'     => $this->parseExcelTime($row['waktu_mulai']), // Format: 'HH:MM'
             'waktu_selesai'   => $this->parseExcelTime($row['waktu_selesai']), // Format: 'HH:MM'
             'berlaku_mulai'   => Carbon::parse($row['berlaku_mulai'])->format('Y-m-d'),
             'berlaku_sampai'  => Carbon::parse($row['berlaku_sampai'])->format('Y-m-d'),
+            'tipe'            => $row['tipe'] ?? null,
+            'program_studi'   => $row['program_studi'] ?? null,
         ]);
     }
 

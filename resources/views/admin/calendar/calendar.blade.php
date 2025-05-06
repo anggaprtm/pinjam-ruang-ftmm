@@ -33,7 +33,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                {{-- <div class="col-md-3">
                     <div class="form-group">
                         <label for="filter_kuliah">Jenis Kegiatan</label>
                         <select class="form-control select2" name="filter_kuliah" id="filter_kuliah">
@@ -42,7 +42,7 @@
                             <option value="">Semua</option>
                         </select>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Tombol Filter -->
                 <div class="col-md-3">

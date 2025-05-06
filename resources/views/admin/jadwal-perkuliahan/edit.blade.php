@@ -89,17 +89,6 @@
                     </div>
                 @endif
             </div>
-
-            <div class="form-group">
-                <label for="dosen">Dosen</label>
-                <input class="form-control {{ $errors->has('dosen') ? 'is-invalid' : '' }}" type="text" name="dosen" id="dosen" value="{{ old('dosen', $jadwalPerkuliahan->dosen) }}">
-                @if($errors->has('dosen'))
-                    <div class="invalid-feedback">
-                        {{ $errors->first('dosen') }}
-                    </div>
-                @endif
-            </div>
-
             <div class="form-group">
                 <button class="btn btn-danger" type="submit">
                     {{ trans('global.save') }}
