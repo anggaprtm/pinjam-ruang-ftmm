@@ -77,6 +77,16 @@
                 </a>
             </li>
         @endcan
+        @can('kuliah_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.jadwal-perkuliahan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/jadwal") || request()->is("admin/jadwal/*") ? "c-active" : "" }}">
+                    <i class="fa-fw fas fa-calendar c-sidebar-nav-icon">
+
+                    </i>
+                    Jadwal Perkuliahan
+                </a>
+            </li>
+        @endcan
         @can('calendar_access')
         <li class="c-sidebar-nav-item">
             <a href="{{ route("admin.systemCalendar") }}" class="c-sidebar-nav-link {{ request()->is("admin/kalender") || request()->is("admin/kalender/*") ? "c-active" : "" }}">
