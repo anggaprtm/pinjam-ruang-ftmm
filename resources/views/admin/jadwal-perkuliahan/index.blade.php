@@ -19,6 +19,9 @@
                 <button type="submit" class="btn btn-sm btn-primary">
                     <i class="fas fa-file-import"></i> Import Data Perkuliahan
                 </button>
+                {{-- <a class="btn btn-info" href="{{ route('admin.jadwal-perkuliahan.template') }}">
+                    <i class="fas fa-download"></i> &nbsp; Download Template Excel
+                </a>                 --}}
             </form>
         </div>
     </div>
@@ -26,7 +29,7 @@
 @endcan
 <div class="card">
     <div class="card-header">
-        Daftar Jadwal Perkuliahan
+        Daftar Jadwal Perkuliahan [Semester Genap 2024/2025]
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -35,8 +38,9 @@
                     <tr>
                         <th style="text-align:center;" width="10"></th>
                         <th style="text-align:center;" width="15">ID</th>
+                        <th style="text-align:center;">Tipe</th>
                         <th style="text-align:center;">Mata Kuliah</th>
-                        <th style="text-align:center;">Dosen</th>
+                        <th style="text-align:center;">Prodi</th>
                         <th style="text-align:center;">Ruangan</th>
                         <th style="text-align:center;">Hari</th>
                         <th style="text-align:center;">Waktu Mulai</th>
@@ -56,10 +60,13 @@
                                 {{ $jadwal->id }}
                             </td>
                             <td style="text-align:center;">
+                                {{ $jadwal->tipe }}
+                            </td>
+                            <td style="text-align:center;">
                                 {{ $jadwal->mata_kuliah }}
                             </td>
                             <td style="text-align:center;">
-                                {{ $jadwal->dosen }}
+                                {{ $jadwal->program_studi }}
                             </td>
                             <td style="text-align:center;">
                                 {{ $jadwal->ruangan->nama ?? '' }}

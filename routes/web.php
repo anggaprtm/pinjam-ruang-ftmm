@@ -36,6 +36,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::delete('jadwal-perkuliahan/destroy', 'JadwalPerkuliahanController@massDestroy')->name('jadwal-perkuliahan.massDestroy');
     Route::resource('jadwal-perkuliahan', 'JadwalPerkuliahanController');
     Route::post('jadwal-perkuliahan/import', 'JadwalPerkuliahanController@import')->name('jadwal-perkuliahan.import');
+    Route::get('jadwal-perkuliahan/template', 'JadwalPerkuliahanTemplateExportController@downloadTemplate')->name('jadwal-perkuliahan.template');
 
     // Kegiatan
     Route::delete('kegiatan/destroy', 'KegiatanController@massDestroy')->name('kegiatan.massDestroy');

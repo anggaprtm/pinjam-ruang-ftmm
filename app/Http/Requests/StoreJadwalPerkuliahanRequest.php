@@ -17,8 +17,9 @@ class StoreJadwalPerkuliahanRequest extends FormRequest
         return [
             'ruangan_id' => ['required', 'integer', 'exists:ruangan,id'],
             'mata_kuliah' => ['required', 'string', 'max:255'],
-            'dosen' => ['required', 'string', 'max:255'],
             'hari' => ['required', 'in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu'],
+            'tipe' => ['required', 'in:Kuliah Reguler,Seminar Proposal,Seminar Hasil,PHL'],
+            'program_studi' => ['required', 'in:RN,TRKB,TI,TSD,TE'],
             'waktu_mulai' => [
                 'required', 
                 'date_format:H:i',

@@ -19,7 +19,8 @@ class JadwalPerkuliahan extends Model
         'waktu_selesai',
         'berlaku_mulai',
         'berlaku_sampai',
-        'dosen',
+        'tipe',
+        'program_studi',
     ];
 
     public function ruangan()
