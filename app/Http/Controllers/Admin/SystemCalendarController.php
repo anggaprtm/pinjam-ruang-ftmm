@@ -74,9 +74,16 @@ class SystemCalendarController extends Controller
 
                 $color = $this->getUserColor($model->user_id);
                 $events[] = [
+                    'id' => $model->id,
                     'title' => trim($source['prefix'] . " " . $model->{$source['field']} . " " . $source['suffix']. " | (" . $model->ruangan->nama . ")"),
                     'start' => $startDate,
                     'end' => $endDate,
+                    'extendedProps' => [
+                        'ruangan_nama' => $model->ruangan->nama,
+                        'user_name' => $model->user->name,
+                        'deskripsi' => $model->deskripsi,
+                        'color' => $color,
+                    ],
                     'url' => route($source['route'], $model->id),
                     'color' => $color,  
                 ];
