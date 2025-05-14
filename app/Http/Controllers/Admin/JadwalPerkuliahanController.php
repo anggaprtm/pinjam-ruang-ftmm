@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreJadwalPerkuliahanRequest;
 use App\Http\Requests\UpdateJadwalPerkuliahanRequest;
 use App\Http\Requests\MassDestroyJadwalPerkuliahanRequest;
+use App\Services\EventService;
+use App\Models\Kegiatan;
 use App\Models\JadwalPerkuliahan;
 use App\Models\Ruangan;
 use Gate;
@@ -35,8 +37,24 @@ class JadwalPerkuliahanController extends Controller
         return view('admin.jadwal-perkuliahan.create', compact('ruangan'));
     }
 
-    public function store(StoreJadwalPerkuliahanRequest $request)
+    public function store(StoreJadwalPerkuliahanRequest $request, EventService $eventService)
     {
+        $bentrok = $eventService->isRoomTakenForLecture($request->all());
+
+        if ($bentrok) {
+            return redirect()->back()
+                ->withInput($request->input())
+                ->withErrors('Ruangan bentrok dengan: ' . $bentrok->mata_kuliah);
+        }
+
+        $bentrokKegiatan = $eventService->isRoomTakenByKegiatan($request->all());
+
+        if ($bentrokKegiatan) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['Ruangan bentrok dengan kegiatan: ' . $bentrokKegiatan->nama_kegiatan]);
+        }
+
         $data = $request->all();
 
         // Convert tanggal ke format MySQL
@@ -80,7 +98,7 @@ class JadwalPerkuliahanController extends Controller
     {
         abort_if(Gate::denies('kuliah_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $jadwals->delete();
+        $jadwalPerkuliahan->delete();
 
         return back();
     }

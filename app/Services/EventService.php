@@ -81,35 +81,64 @@ class EventService
     
         return null; // Tidak ada bentrokan
         }
-    // {
-    //     $recurringUntil = Carbon::parse($requestData['berulang_sampai'])->setTime(23, 59, 59);
-    //     $waktu_mulai    = Carbon::parse($requestData['waktu_mulai']);
-    //     $waktu_selesai  = Carbon::parse($requestData['waktu_selesai']);
-    //     $kegiatan      = Kegiatan::where('ruangan_id', $requestData['ruangan_id'])->get();
+    
+        public function isRoomTakenForLecture($requestData)
+        {
+            $tanggalCek = Carbon::parse($requestData['berlaku_mulai']);
+            $hari = $requestData['hari']; // Contoh: "Senin"
+            $jamMulai = $requestData['waktu_mulai']; // format 'H:i:s'
+            $jamSelesai = $requestData['waktu_selesai'];
 
-    //     do {
-    //         if (
-    //             Kegiatan::where('ruangan_id', $requestData['ruangan_id'])
-    //             ->where(function ($query) use ($waktu_mulai, $waktu_selesai) {
-    //                 $query->whereBetween('waktu_mulai', [$waktu_mulai, $waktu_selesai])
-    //                       ->orWhereBetween('waktu_selesai', [$waktu_mulai, $waktu_selesai])
-    //                       ->orWhere(function ($query) use ($waktu_mulai, $waktu_selesai) {
-    //                           $query->where('waktu_mulai', '<=', $waktu_mulai)
-    //                                 ->where('waktu_selesai', '>=', $waktu_selesai);
-    //                       });
-    //             })
-    //             ->exists()
-    //             // $kegiatan->where('waktu_mulai', '<', $waktu_mulai)->where('waktu_selesai', '>', $waktu_mulai)->count() ||
-    //             // $kegiatan->where('waktu_mulai', '<', $waktu_selesai)->where('waktu_selesai', '>', $waktu_selesai)->count() ||
-    //             // $kegiatan->where('waktu_mulai', '<', $waktu_mulai)->where('waktu_selesai', '>', $waktu_selesai)->count()
-    //         ) {
-    //             return true;
-    //         }
+            // 1. Cek bentrok dengan jadwal perkuliahan lain
+            $kuliahBentrok = JadwalPerkuliahan::where('ruangan_id', $requestData['ruangan_id'])
+                ->where('hari', $hari)
+                ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                    $query->where('waktu_mulai', '<', $jamSelesai)
+                        ->where('waktu_selesai', '>', $jamMulai);
+                })
+                ->first();
 
-    //         $waktu_mulai->addWeek();
-    //         $waktu_selesai->addWeek();
-    //     } while ($waktu_selesai->lte($recurringUntil));
+            if ($kuliahBentrok) {
+                return new JadwalPerkuliahan([
+                    'mata_kuliah' => 'Kuliah lain: ' . $kuliahBentrok->mata_kuliah
+                ]);
+            }
 
-    //     return false;
-    // }
+            return null;
+        }
+
+        public function isRoomTakenByKegiatan($data)
+        {
+            $hari = strtolower($data['hari']); // contoh: "rabu"
+            $ruangan_id = $data['ruangan_id'];
+            $jamMulai = $data['waktu_mulai'];
+            $jamSelesai = $data['waktu_selesai'];
+
+            $berlakuMulai = Carbon::parse($data['berlaku_mulai']);
+            $berlakuSampai = Carbon::parse($data['berlaku_sampai']);
+
+            while ($berlakuMulai->lte($berlakuSampai)) {
+                if ($berlakuMulai->locale('id')->isoFormat('dddd') === ucfirst($hari)) {
+                    $tanggal = $berlakuMulai->toDateString();
+
+                    $bentrok = \App\Models\Kegiatan::where('ruangan_id', $ruangan_id)
+                        ->whereDate('waktu_mulai', '=', $tanggal)
+                        ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                            $query->whereTime('waktu_mulai', '<', $jamSelesai)
+                                ->whereTime('waktu_selesai', '>', $jamMulai);
+                        })
+                        ->first();
+
+                    if ($bentrok) {
+                        return $bentrok;
+                    }
+                }
+
+                $berlakuMulai->addDay();
+            }
+
+            return null;
+        }
+
+
 }

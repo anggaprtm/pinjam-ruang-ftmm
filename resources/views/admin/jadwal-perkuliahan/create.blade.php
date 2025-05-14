@@ -21,6 +21,36 @@
                         {{ $errors->first('ruangan') }}
                     </div>
                 @endif
+            </div>  
+
+            <div class="form-group">
+                <label class="required" for="hari">Tipe</label>
+                <select class="form-control {{ $errors->has('tipe') ? 'is-invalid' : '' }}" name="tipe" id="tipe" required>
+                    <option value="">-- Pilih Tipe --</option>
+                    @foreach(['Kuliah Reguler', 'Seminar Proposal', 'Seminar Hasil', 'PHL'] as $tipe)
+                        <option value="{{ $tipe }}" {{ old('tipe') == $tipe ? 'selected' : '' }}>{{ $tipe }}</option>
+                    @endforeach
+                </select>
+                @if($errors->has('tipe'))
+                    <div class="invalid-feedback">
+                        {{ $errors->first('tipe') }}
+                    </div>
+                @endif
+            </div>
+
+            <div class="form-group">
+                <label class="required" for="hari">Program Studi</label>
+                <select class="form-control {{ $errors->has('program_studi') ? 'is-invalid' : '' }}" name="program_studi" id="program_studi" required>
+                    <option value="">-- Pilih Program Studi --</option>
+                    @foreach(['TSD', 'TI', 'RN', 'TRKB', 'TE'] as $program_studi)
+                        <option value="{{ $program_studi }}" {{ old('program_studi') == $program_studi ? 'selected' : '' }}>{{ $program_studi }}</option>
+                    @endforeach
+                </select>
+                @if($errors->has('program_studi'))
+                    <div class="invalid-feedback">
+                        {{ $errors->first('program_studi') }}
+                    </div>
+                @endif
             </div>
 
             <div class="form-group">
