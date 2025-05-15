@@ -33,6 +33,18 @@
                     </div>
                 </div>
 
+                <!-- Filter Tipe -->
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="tipe">Tipe Kegiatan</label>
+                        <select class="form-control select2" name="filter_kuliah" onchange="this.form.submit()">
+                            <option value="non-kuliah" {{ request('filter_kuliah') == 'non-kuliah' ? 'selected' : '' }}>Non-Perkuliahan</option>
+                            <option value="kuliah" {{ request('filter_kuliah') == 'kuliah' ? 'selected' : '' }}>Perkuliahan</option>
+                            <option value="semua" {{ request('filter_kuliah') == 'semua' ? 'selected' : '' }}>Semua Kegiatan</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Tombol Filter -->
                 <div class="col-md-3">
                     <div class="form-group d-flex align-items-center">
@@ -134,7 +146,16 @@
                 document.getElementById('preview-ruangan').textContent = props.ruangan_nama ?? '-';
                 document.getElementById('preview-keterangan').textContent = props.keterangan ?? '-';
                 // Edit button link
-                document.getElementById('edit-link').href = `/admin/kegiatan/${event.id}/edit`;
+                const editLink = document.getElementById('edit-link');
+
+                // Cek apakah event.id mengandung "kuliah-" di awal
+                if (event.id.startsWith('kuliah-')) {
+                    const kuliahId = event.id.replace('kuliah-', '');
+                    editLink.href = `/admin/jadwal-perkuliahan/${kuliahId}/edit`;
+                } else {
+                    editLink.href = `/admin/kegiatan/${event.id}/edit`;
+                }
+
 
                 // Tampilkan modal
                 new bootstrap.Modal(document.getElementById('previewModal')).show();
