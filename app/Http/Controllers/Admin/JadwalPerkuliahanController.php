@@ -19,14 +19,24 @@ use App\Imports\JadwalPerkuliahanImport;
 
 class JadwalPerkuliahanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         abort_if(Gate::denies('kuliah_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $jadwals = JadwalPerkuliahan::with('ruangan')->get();
+        $hari = $request->input('hari');
 
-        return view('admin.jadwal-perkuliahan.index', compact('jadwals'));
+        $query = JadwalPerkuliahan::with('ruangan');
+
+        if ($hari) {
+            $query->where('hari', $hari);
+        }
+
+        // Gunakan query yang sudah difilter
+        $jadwals = $query->get();
+
+        return view('admin.jadwal-perkuliahan.index', compact('jadwals', 'hari'));
     }
+
 
     public function create()
     {

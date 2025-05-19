@@ -31,6 +31,26 @@
     <div class="card-header">
         Daftar Jadwal Perkuliahan [Semester Genap 2024/2025]
     </div>
+    <div class="d-flex justify-content-start mb-3 filt-keg">
+        <form action="{{ route('admin.jadwal-perkuliahan.index') }}" method="GET" class="d-flex align-items-center gap-2">
+            <div class="form-group mb-0">
+                <select name="hari" id="hari" class="form-control select2">
+                    <option value="">-- Pilih Hari --</option>
+                    @php
+                        $daftarHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+                    @endphp
+                    @foreach ($daftarHari as $hari)
+                        <option value="{{ $hari }}" {{ request('hari') == $hari ? 'selected' : '' }}>
+                            {{ $hari }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary ms-3">Filter</button>
+            <a href="{{ route('admin.jadwal-perkuliahan.index') }}" class="btn btn-secondary">Reset Filter</a>
+        </form>
+    </div>
+
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-bordered table-striped table-hover datatable datatable-jadwals">
