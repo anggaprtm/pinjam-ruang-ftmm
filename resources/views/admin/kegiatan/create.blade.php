@@ -90,6 +90,13 @@
                 @endif
             </div>
             <div class="form-group">
+                <label for="tipe_berulang">Tipe Pengulangan</label>
+                <select class="form-control" name="tipe_berulang" id="tipe_berulang">
+                    <option value="harian" selected>Harian</option>
+                    <option value="mingguan">Mingguan</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <button class="btn btn-danger" type="submit">
                     {{ trans('global.save') }}
                 </button>
