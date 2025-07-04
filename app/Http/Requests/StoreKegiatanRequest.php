@@ -37,6 +37,17 @@ class StoreKegiatanRequest extends FormRequest
                 'string',
                 'nullable',
             ],
+
+            'berulang_sampai' => [
+                'nullable', // Membolehkan field ini kosong
+                'date_format:' . config('panel.date_format'), // Pastikan formatnya benar
+        ],
+
+        'tipe_berulang' => [
+            'required_with:berulang_sampai', // Wajib diisi jika 'berulang_sampai' ada isinya
+            'string',
+            'in:harian,mingguan', // Pastikan nilainya hanya salah satu dari dua ini
+        ],
         ];
     }
 }

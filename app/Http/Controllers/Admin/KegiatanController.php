@@ -59,33 +59,29 @@ class KegiatanController extends Controller
 
     public function store(StoreKegiatanRequest $request, EventService $eventService)
     {
-  
-        {
-            $kegiatanBentrok = $eventService->isRoomTaken($request->all());
-        
-            if ($kegiatanBentrok) {
-                return redirect()->back()
-                        ->withInput($request->input())
-                        ->withErrors('Ruangan ini tidak tersedia, karena bentrok dengan kegiatan: ' . $kegiatanBentrok->nama_kegiatan);
-            }
-        
-            // Jika tidak ada bentrokan, lanjutkan penyimpanan
+        // Pengecekan bentrok tetap sama
+        $kegiatanBentrok = $eventService->isRoomTaken($request->all());
+    
+        if ($kegiatanBentrok) {
+            return redirect()->back()
+                ->withInput($request->input())
+                ->withErrors('Ruangan ini tidak tersedia, karena bentrok dengan kegiatan: ' . $kegiatanBentrok->nama_kegiatan);
         }
-         // awal perubahan
+    
+        // PERUBAHAN UTAMA DI SINI
         $data = $request->all();
-        if ($data['user_id'] == 'custom') {
-            $data['user_id'] = null;  // Set user_id sebagai null
-        }
-        // Tambahkan status default untuk user biasa
+        
+        // Logika status dan user_id tetap sama
         if (auth()->user()->hasRole('User')) {
-            $data['status'] = 'belum_disetujui'; // Status default untuk user biasa
+            $data['status'] = 'belum_disetujui';
         } elseif (auth()->user()->hasRole('Admin')) {
-            $data['status'] = 'disetujui'; // Admin langsung menyetujui
+            $data['status'] = 'disetujui';
         }
-        $kegiatan = Kegiatan::create($data);
-        if ($request->filled('berulang_sampai')) {
-            $eventService->createRecurringEvents($data);
-        }
+        // Pastikan user_id di-set dengan benar
+        $data['user_id'] = auth()->id();
+    
+        // Panggil method baru yang menangani semuanya
+        $eventService->createEvents($data);
 
         return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil disimpan!');
     }
