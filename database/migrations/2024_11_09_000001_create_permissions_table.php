@@ -15,4 +15,13 @@ class CreatePermissionsTable extends Migration
             $table->softDeletes();
         });
     }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        // Menghapus tabel 'permissions' jika rollback migrasi
+        Schema::dropIfExists('permissions');
+    }
 }

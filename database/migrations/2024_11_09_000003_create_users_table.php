@@ -19,4 +19,13 @@ class CreateUsersTable extends Migration
             $table->softDeletes();
         });
     }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        // Menghapus tabel 'users' jika rollback migrasi
+        Schema::dropIfExists('users');
+    }
 }

@@ -282,21 +282,15 @@ h5 {
     width:150px;
 }
 
-/* .fc-event .fc-title {
-    white-space: nowrap;
-    overflow: hidden;
-    display: inline-block;
-    animation: marquee 10s linear infinite;
-}
 
-@keyframes marquee {
+/* @keyframes marquee {
     0% {
         transform: translateX(0%);
     }
     100% {
         transform: translateX(-100%);
     }
-} */
+}  */
 
 .filt-keg {
     margin-top:20px;

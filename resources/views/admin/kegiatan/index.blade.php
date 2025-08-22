@@ -326,6 +326,12 @@
                                         </button>
                                     </form>
                                 @endcan
+
+                                <div style="margin-top: 5px; white-space: nowrap;">
+                                    <small class="text-muted">
+                                        Dibuat: {{ $kegiatan->created_at->format('d M y') }}
+                                    </small>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
