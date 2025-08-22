@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateruanganTable extends Migration
+class CreateRuangansTable extends Migration
 {
     public function up()
     {
@@ -16,5 +16,14 @@ class CreateruanganTable extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        // Menghapus tabel 'ruangan' jika rollback migrasi
+        Schema::dropIfExists('ruangan');
     }
 }

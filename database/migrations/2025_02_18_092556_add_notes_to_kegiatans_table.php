@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class AddNotesToKegiatansTable extends Migration
 {
     /**
      * Run the migrations.
@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('kegiatan', function (Blueprint $table) {
-            //
+            // Menambahkan kolom 'notes' setelah kolom 'status' dengan tipe data 'text'
+            $table->text('notes')->nullable()->after('status');
         });
     }
 
@@ -22,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('kegiatan', function (Blueprint $table) {
-            //
+            // Menghapus kolom 'notes' jika rollback
+            $table->dropColumn('notes');
         });
     }
 };

@@ -15,4 +15,13 @@ class CreateRolesTable extends Migration
             $table->softDeletes();
         });
     }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        // Menghapus tabel 'roles' jika rollback migrasi
+        Schema::dropIfExists('roles');
+    }
 }

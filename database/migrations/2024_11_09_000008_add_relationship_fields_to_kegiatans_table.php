@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddRelationshipFieldsTokegiatanTable extends Migration
+class AddRelationshipFieldsToKegiatansTable extends Migration
 {
     public function up()
     {
@@ -13,6 +13,22 @@ class AddRelationshipFieldsTokegiatanTable extends Migration
             $table->foreign('ruangan_id', 'ruangan_fk_10251974')->references('id')->on('ruangan');
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id', 'user_fk_10251979')->references('id')->on('users');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        Schema::table('kegiatan', function (Blueprint $table) {
+            // Menghapus foreign key constraints terlebih dahulu
+            $table->dropForeign('ruangan_fk_10251974');
+            $table->dropForeign('user_fk_10251979');
+
+            // Menghapus kolom yang ditambahkan
+            $table->dropColumn('ruangan_id');
+            $table->dropColumn('user_id');
         });
     }
 }
