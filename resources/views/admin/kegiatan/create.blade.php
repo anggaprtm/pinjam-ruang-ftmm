@@ -70,9 +70,7 @@
                     @foreach($users as $id => $entry)
                         <option value="{{ $id }}" {{ old('user_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
                     @endforeach
-                    <!-- <option value="custom">Lainnya...</option> -->
                 </select>   
-                <!-- <input type="text" id="customUserInput" name="custom_user" class="form-control mt-2" placeholder="Isi nama peminjam" style="display: none;"> -->
                 @if($errors->has('user'))
                     <div class="invalid-feedback">
                         {{ $errors->first('user') }}

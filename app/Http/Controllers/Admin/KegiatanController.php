@@ -77,9 +77,7 @@ class KegiatanController extends Controller
         } elseif (auth()->user()->hasRole('Admin')) {
             $data['status'] = 'disetujui';
         }
-        // Pastikan user_id di-set dengan benar
-        $data['user_id'] = auth()->id();
-    
+        
         // Panggil method baru yang menangani semuanya
         $eventService->createEvents($data);
 
