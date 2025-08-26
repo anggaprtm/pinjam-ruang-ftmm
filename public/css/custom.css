@@ -935,3 +935,74 @@ input:checked + .toggle-slider:before {
     font-size: 0.75rem;
     padding: 0.3em 0.6em;
 }
+
+.danger-zone {
+    border-color: #dc3545 !important;
+}
+.danger-zone .card-header {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* ========================================= */
+/* == GAYA MODERN UNTUK HALAMAN CARI RUANG == */
+/* ========================================= */
+
+.search-card {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.results-header {
+    border-bottom: 2px solid #741847;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    color: #741847;
+}
+
+.room-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    background-color: #fff;
+    transition: all 0.2s ease-in-out;
+}
+
+.room-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.07);
+}
+
+.room-info {
+    display: flex;
+    align-items: center;
+}
+
+.room-info .icon {
+    font-size: 1.5rem;
+    color: #741847;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #f1e4e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.room-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #343a40;
+}
+
+.room-capacity {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
