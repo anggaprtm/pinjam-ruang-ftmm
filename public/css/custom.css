@@ -616,7 +616,7 @@ h5 {
 
 /* 1. Perbaiki Warna Baris Terpilih (Selected) */
 .modern-table tbody tr.selected {
-    background-color: #f1e4e9 !important; /* Warna lembut yang konsisten dengan tema */
+    background-color: #e6dddd !important; /* Warna lembut yang konsisten dengan tema */
     box-shadow: 0 6px 15px rgba(116, 24, 71, 0.1); /* Bayangan lebih jelas */
 }
 
@@ -679,4 +679,69 @@ h5 {
 
 .filter-bar .select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 36px !important; /* Posisikan panah di tengah secara vertikal */
+}
+
+.badge-status-aktif {
+    color: #155724;
+    background-color: #d4edda;
+}
+
+.badge-status-tidak-aktif {
+    color: #721c24;
+    background-color: #f8d7da;
+}
+
+/* ========================================= */
+/* == GAYA UNTUK TOMBOL TOGGLE SWITCH == */
+/* ========================================= */
+
+.toggle-switch-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #dc3545; /* Warna default (Tidak Aktif) */
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #28a745; /* Warna saat Aktif */
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(26px);
 }

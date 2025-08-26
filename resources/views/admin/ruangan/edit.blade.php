@@ -1,54 +1,58 @@
 @extends('layouts.admin')
 @section('content')
 
-<div class="card">
+<div class="card form-card">
     <div class="card-header">
-        {{ trans('global.edit') }} {{ trans('cruds.ruangan.title_singular') }}
+        <h4 class="mb-0">{{ trans('global.edit') }} {{ trans('cruds.ruangan.title_singular') }}</h4>
     </div>
 
     <div class="card-body">
         <form method="POST" action="{{ route("admin.ruangan.update", [$ruangan->id]) }}" enctype="multipart/form-data">
             @method('PUT')
             @csrf
-            <div class="form-group">
-                <label class="required" for="nama">{{ trans('cruds.ruangan.fields.nama') }}</label>
+            <div class="form-group mb-3">
+                <label class="form-label required" for="nama">{{ trans('cruds.ruangan.fields.nama') }}</label>
                 <input class="form-control {{ $errors->has('nama') ? 'is-invalid' : '' }}" type="text" name="nama" id="nama" value="{{ old('nama', $ruangan->nama) }}" required>
                 @if($errors->has('nama'))
-                    <div class="invalid-feedback">
-                        {{ $errors->first('nama') }}
-                    </div>
+                    <div class="invalid-feedback">{{ $errors->first('nama') }}</div>
                 @endif
-                <span class="help-block">{{ trans('cruds.ruangan.fields.nama_helper') }}</span>
             </div>
-            <div class="form-group">
-                <label for="deskripsi">{{ trans('cruds.ruangan.fields.deskripsi') }}</label>
+
+            <div class="form-group mb-3">
+                <label class="form-label required" for="kapasitas">{{ trans('cruds.ruangan.fields.kapasitas') }}</label>
+                <input class="form-control {{ $errors->has('kapasitas') ? 'is-invalid' : '' }}" type="number" name="kapasitas" id="kapasitas" value="{{ old('kapasitas', $ruangan->kapasitas) }}" step="1" required>
+                @if($errors->has('kapasitas'))
+                    <div class="invalid-feedback">{{ $errors->first('kapasitas') }}</div>
+                @endif
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="form-label" for="deskripsi">{{ trans('cruds.ruangan.fields.deskripsi') }}</label>
                 <textarea class="form-control {{ $errors->has('deskripsi') ? 'is-invalid' : '' }}" name="deskripsi" id="deskripsi">{{ old('deskripsi', $ruangan->deskripsi) }}</textarea>
                 @if($errors->has('deskripsi'))
-                    <div class="invalid-feedback">
-                        {{ $errors->first('deskripsi') }}
-                    </div>
+                    <div class="invalid-feedback">{{ $errors->first('deskripsi') }}</div>
                 @endif
-                <span class="help-block">{{ trans('cruds.ruangan.fields.deskripsi_helper') }}</span>
             </div>
-            <div class="form-group">
-                <label for="kapasitas">{{ trans('cruds.ruangan.fields.kapasitas') }}</label>
-                <input class="form-control {{ $errors->has('kapasitas') ? 'is-invalid' : '' }}" type="number" name="kapasitas" id="kapasitas" value="{{ old('kapasitas', $ruangan->kapasitas) }}" step="1">
-                @if($errors->has('kapasitas'))
-                    <div class="invalid-feedback">
-                        {{ $errors->first('kapasitas') }}
-                    </div>
+
+            <div class="form-group mb-3">
+                <label class="form-label">Status</label>
+                <div class="form-check {{ $errors->has('is_active') ? 'is-invalid' : '' }}">
+                    <input type="hidden" name="is_active" value="0">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active" value="1" {{ $ruangan->is_active || old('is_active', 0) === 1 ? 'checked' : '' }}>
+                    <label class="form-check-label" for="is_active">Aktif</label>
+                </div>
+                @if($errors->has('is_active'))
+                    <div class="invalid-feedback">{{ $errors->first('is_active') }}</div>
                 @endif
-                <span class="help-block">{{ trans('cruds.ruangan.fields.kapasitas_helper') }}</span>
             </div>
-            <div class="form-group">
-                <button class="btn btn-danger" type="submit">
+
+            <div class="card-footer text-end">
+                <a href="{{ route('admin.ruangan.index') }}" class="btn btn-secondary me-2">Batal</a>
+                <button class="btn btn-primary" type="submit">
                     {{ trans('global.save') }}
                 </button>
             </div>
         </form>
     </div>
 </div>
-
-
-
 @endsection
