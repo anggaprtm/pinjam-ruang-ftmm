@@ -104,77 +104,114 @@ table.dataTable thead .sorting_asc,
 table.dataTable thead .sorting_desc {
     background-image: none;
 }
-.c-sidebar-brand .c-sidebar-brand-full:hover {
-    color: #000;
+.c-header {
+    background-color: #741847;
 }
-.c-sidebar-brand-full{
-    text-decoration: none;
-    letter-spacing: 1.5px;
+
+.c-sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #e9ecef;
+}
+
+.c-sidebar .c-sidebar-brand {
+    background-color: #ffffff;
+    color: #333;
     font-weight: 700;
-    color: #000;
-}
-.c-sidebar .c-sidebar-brand, .c-sidebar .c-sidebar-close {
-    color: white;   
-    background-color: white;
-}
-.c-sidebar .c-sidebar-nav-dropdown-toggle:hover, .c-sidebar .c-sidebar-nav-link:hover {
-    background: rgba(209, 213, 215, .5);
-    color: #78828a;
-}
-.c-sidebar .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon:hover {
-    color: #78828a;
-    font-size: 13px;
-}
-.c-sidebar .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon, .c-sidebar .c-sidebar-nav-link .c-sidebar-nav-icon {
-    color: #78828a;
-    font-size: 13px;
-}
-.c-sidebar .c-active.c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon, .c-sidebar .c-sidebar-nav-link.c-active .c-sidebar-nav-icon {
-    color: #741847;
-    font-size: 13px;
-}
-.c-sidebar .c-active.c-sidebar-nav-dropdown-toggle:hover .c-sidebar-nav-icon, .c-sidebar .c-sidebar-nav-link.c-active:hover .c-sidebar-nav-icon {
-    color: #741847;
-    font-size: 13px;
-}
-.c-sidebar .c-active.c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon, .c-sidebar .c-sidebar-nav-link .c-sidebar-nav-icon {
-    color: #78828a;
-    font-size: 13px;
+    letter-spacing: 1px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
 }
 
-.c-sidebar .c-sidebar-nav-dropdown-toggle:hover .c-sidebar-nav-icon, .c-sidebar .c-sidebar-nav-link:hover .c-sidebar-nav-icon {
-    color: #78828a;
-    font-size: 13px;
-}
-.c-sidebar .c-active.c-sidebar-nav-dropdown-toggle:hover .c-sidebar-nav-icon, .c-sidebar .c-sidebar-nav-link .c-sidebar-nav-icon {
-    color: #78828a;
-    font-size: 13px;
-}
-.c-sidebar .c-active.c-sidebar-nav-dropdown-toggle, .c-sidebar .c-sidebar-nav-link {
-    color: #78828a;
-    font-weight: 550;
-}
-.c-sidebar .c-active.c-sidebar-nav-dropdown-toggle, .c-sidebar .c-sidebar-nav-link.c-active {
-    color: #741847;
-    background-color:rgba(209, 213, 215, .5);
-    font-weight: 550;
-}
-.c-sidebar .c-sidebar-nav-dropdown-toggle, .c-sidebar .c-sidebar-nav-link {
-    color: #78828a;
-    font-weight: 550;
-}
-.c-sidebar .c-sidebar-nav-dropdown.c-show .c-sidebar-nav-dropdown-toggle, .c-sidebar .c-sidebar-nav-dropdown.c-show .c-sidebar-nav-link {
-    color: #78828a;
-    background-color:rgba(209, 213, 215, .5);
-    font-weight: 550;
-}
-.c-sidebar-nav {
-    background-color: rgb(255, 255, 255);
+
+
+/* 2. TAMPILAN ITEM MENU (MODE MAXIMIZED) */
+/* ------------------------------------------------------------------------- */
+.c-sidebar .c-sidebar-nav-link,
+.c-sidebar .c-sidebar-nav-dropdown-toggle {
+    color: #5c6873;
+    font-weight: 500;
+    padding: 0.9rem 1.5rem;
+    border-radius: 8px;
+    margin: 4px 10px;
+    transition: all 0.2s ease-in-out;
 }
 
-.sidebar .nav-item {
-    cursor: pointer;
+.c-sidebar .c-sidebar-nav-link .c-sidebar-nav-icon,
+.c-sidebar .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
+    color: #8a939c;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
 }
+
+.c-sidebar .c-sidebar-nav-link:hover,
+.c-sidebar .c-sidebar-nav-dropdown-toggle:hover {
+    background-color: #f1e4e9;
+    color: #741847;
+}
+
+.c-sidebar .c-sidebar-nav-link:hover .c-sidebar-nav-icon,
+.c-sidebar .c-sidebar-nav-dropdown-toggle:hover .c-sidebar-nav-icon {
+    color: #741847;
+}
+
+.c-sidebar .c-sidebar-nav-link.c-active,
+.c-sidebar .c-sidebar-nav-dropdown.c-show > .c-sidebar-nav-dropdown-toggle {
+    background-color: #741847;
+    color: #ffffff;
+    box-shadow: 0 4px 8px -2px rgba(116, 24, 71, 0.4);
+}
+
+.c-sidebar .c-sidebar-nav-link.c-active .c-sidebar-nav-icon,
+.c-sidebar .c-sidebar-nav-dropdown.c-show > .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
+    color: #ffffff;
+}
+
+#sidebar.c-sidebar-minimized {
+    overflow: visible !important;
+}
+
+#sidebar.c-sidebar-minimized .c-sidebar-nav-link,
+#sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 44px;       
+    height: 44px;    
+    margin: 8px auto;    
+    border-radius: 10px; 
+    padding: 0;
+    font-size: 0;
+    position: relative;
+}
+
+#sidebar.c-sidebar-minimized .c-sidebar-nav-link.c-active,
+#sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown.c-show > .c-sidebar-nav-dropdown-toggle {
+    background-color: #741847 !important;
+}
+
+#sidebar.c-sidebar-minimized .c-sidebar-nav-link:hover,
+#sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown-toggle:hover {
+    background-color: #f1e4e9 !important; 
+    color: #741847;
+}
+
+#sidebar.c-sidebar-minimized .c-sidebar-nav-link:hover .c-sidebar-nav-icon {
+    color: #741847;
+    background-color: #f1e4e9 !important; 
+}
+
+
+#sidebar.c-sidebar-minimized .c-sidebar-nav-icon {
+    font-size: 1.3rem;
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+
+#sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown .c-sidebar-nav-dropdown-items {
+    display: none !important;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #741847;
@@ -203,7 +240,7 @@ table.dataTable thead .sorting_desc {
 
 .btn-default.focus,
 .btn-default:focus {
-    box-shadow: 0 0 0 .2rem rgba(209, 213, 215, .5);
+    box-shadow: 0 0 0 .2rem over(209, 213, 215, .5);
 }
 
 .btn-default:hover {
@@ -229,10 +266,7 @@ table.dataTable thead .sorting_desc {
 .searchable-link {
     padding:0 5px 0 5px;
 }
-.searchable-link:hover   {
-    cursor: pointer;
-    background: #eaeaea;
-}
+
 .select2-results__option {
     padding-left: 0px;
     padding-right: 0px;
@@ -260,14 +294,6 @@ table.dataTable thead .sorting_desc {
     margin: 0 3px;
 }
 
-.page-link:hover {
-    color: rgb(240, 240, 240);
-    font-weight: 500;
-    background-color: #741847;
-    border: none;
-    border-radius: 3px;
-    margin: 0 3px;
-}
 
 .fc-unthemed td.fc-today {
     background: #d7d7d7;
@@ -301,25 +327,344 @@ h5 {
     margin-left:5px;
 }
 
-/* Mode default: Sidebar penuh */
-#sidebar {
-    width: 250px; /* Ukuran normal */
-    transition: width 0.3s ease;
+.tooltip {
+    /* Hapus bayangan default agar sesuai dengan desain kita */
+    --bs-tooltip-box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
-/* Mode collapsed: Sidebar kecil dengan hanya ikon */
-#sidebar.collapsed-sidebar {
-    width: 70px; /* Sidebar lebih kecil */
+.tooltip-inner {
+    background-color: #343a40; /* Warna gelap yang sama seperti sebelumnya */
+    border-radius: 8px;      /* Sudut yang sama */
+    padding: 8px 14px;       /* Padding yang sama */
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
-/* Sembunyikan teks saat collapsed */
-#sidebar.collapsed-sidebar .c-sidebar-nav-link span {
-    display: none;
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: #343a40; /* Samakan warna panah tooltip */
 }
 
-/* Pusatkan ikon */
-#sidebar.collapsed-sidebar .c-sidebar-nav-icon {
-    font-size: 1.5rem; 
+/* ================================================= */
+/* == GAYA MODERN & RINGKAS UNTUK TABEL KEGIATAN == */
+/* ================================================= */
+
+/* Lencana Status (sedikit disesuaikan untuk tabel) */
+.badge-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.4em 0.8em;
+    border-radius: 20px;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+}
+.badge-status-belum-disetujui { color: #856404; background-color: #fff3cd; }
+.badge-status-verifikasi-sarpras { color: #004085; background-color: #cce5ff; }
+.badge-status-verifikasi-akademik { color: #383d41; background-color: #e2e3e5; }
+.badge-status-disetujui { color: #155724; background-color: #d4edda; }
+.badge-status-ditolak { color: #721c24; background-color: #f8d7da; }
+
+/* Filter Bar */
+.filter-bar {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
+}
+
+/* Desain Tabel Modern */
+.modern-table {
     width: 100%;
+    border-collapse: separate; /* Penting untuk border-radius */
+    border-spacing: 0 8px; /* Jarak vertikal antar baris */
+}
+
+.modern-table thead th {
+    background-color: #f8f9fa;
+    border: none;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 12px 15px;
+    text-align: left;
+}
+.modern-table thead th:first-child { border-radius: 8px 0 0 8px; }
+.modern-table thead th:last-child { border-radius: 0 8px 8px 0; }
+
+.modern-table tbody tr {
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.2s ease-in-out;
+}
+
+.modern-table tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.07);
+    z-index: 10;
+    position: relative;
+}
+
+.modern-table tbody td {
+    padding: 15px;
+    vertical-align: middle;
+    border: none;
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+}
+.modern-table tbody tr td:first-child {
+    border-left: 1px solid #e9ecef;
+    border-radius: 8px 0 0 8px;
+}
+.modern-table tbody tr td:last-child {
+    border-right: 1px solid #e9ecef;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Sorotan untuk entri baru */
+.modern-table tbody tr.new-entry {
+    background-color: rgba(255, 255, 153, 0.32);
+}
+
+/* Info utama di dalam sel */
+.kegiatan-title-cell {
+    font-weight: 600;
+    color: #741847;
+}
+.kegiatan-sub-cell {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Aksi Tombol */
+.actions-cell .btn {
+    margin: 0 2px;
+}
+
+.dt-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    flex-wrap: wrap; /* Agar responsif */
+}
+
+/* Atur tampilan "Show X entries" */
+.dataTables_length {
+    margin-right: 1rem;
+}
+
+.dataTables_length label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.dataTables_length select {
+    border-radius: 8px !important;
+    padding: 0.3rem 1.5rem 0.3rem 0.75rem !important;
+}
+
+/* Atur tampilan kotak pencarian */
+.dataTables_filter {
+    margin-left: 1rem;
+}
+.dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.dataTables_filter input {
+    border: 1px solid #ced4da;
+    border-radius: 8px !important;
+    padding: 0.4rem 0.75rem !important;
+    transition: all 0.2s ease;
+}
+.dataTables_filter input:focus {
+    border-color: #741847;
+    box-shadow: 0 0 0 0.25rem rgba(116, 24, 71, 0.25);
+}
+
+/* Atur tampilan tombol ekspor */
+.dt-buttons .btn {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    margin-left: 0.5rem !important;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    color: #333;
+}
+.dt-buttons .btn:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+}
+.btn-danger.dt-button {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+.btn-danger.dt-button:hover {
+    background-color: #f1b0b7;
+    border-color: #ee9ca7;
+}
+
+/* ========================================= */
+/* == GAYA UNTUK HALAMAN DETAIL & FORM == */
+/* ========================================= */
+
+.detail-view-card, .form-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.detail-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.5rem;
+}
+
+.detail-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #741847;
+    margin-bottom: 0.5rem;
+}
+
+.detail-sub-title {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-item .icon {
+    font-size: 1.2rem;
+    color: #8a939c;
+    width: 40px;
     text-align: center;
+    margin-top: 2px;
+}
+
+.detail-item .content .label {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 0.25rem;
+}
+
+.detail-item .content .value {
+    color: #6c757d;
+}
+
+.form-card .card-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+/* ========================================= */
+/* == PENYEMPURNAAN TAMPILAN TABEL INDEKS == */
+/* ========================================= */
+
+/* Badge untuk Nama Ruangan */
+.badge-ruangan {
+    display: inline-block;
+    padding: 0.4em 0.8em;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a5568; /* Warna teks sedikit gelap */
+    background-color: #e2e8f0; /* Warna latar abu-abu muda */
+    border-radius: 20px;
+}
+
+/* Avatar untuk Peminjam (disesuaikan untuk ikon) */
+.user-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #e9ecef; /* Warna latar netral */
+    color: #6c757d; /* Warna ikon */
+    font-size: 0.8rem; /* Ukuran ikon */
+    margin-right: 8px;
+}
+
+/* Teks kecil untuk waktu pembuatan */
+.creation-timestamp {
+    font-size: 0.75rem;
+    color: #a0aec0; /* Warna abu-abu lembut */
+    margin-top: 2px;
+}
+/* Ikon pada Header Tabel */
+.modern-table thead th i {
+    margin-right: 8px;
+    color: #a0aec0; /* Warna ikon lebih lembut */
+}
+
+/* 1. Perbaiki Warna Baris Terpilih (Selected) */
+.modern-table tbody tr.selected {
+    background-color: #f1e4e9 !important; /* Warna lembut yang konsisten dengan tema */
+    box-shadow: 0 6px 15px rgba(116, 24, 71, 0.1); /* Bayangan lebih jelas */
+}
+
+.modern-table tbody tr.selected td {
+    color: #495057; /* Pastikan teks tetap terbaca */
+}
+
+/* 2. Beri Warna pada Tombol DataTables */
+/* Tombol Aksi Umum (Pilih semua, Batal, Kolom) */
+.dt-buttons .btn-primary {
+    background-color: #741847 !important;
+    color: #fff !important;
+    border-color: #741847 !important;
+}
+.dt-buttons .btn-primary:hover {
+    background-color: #5f1339 !important;
+    border-color: #5f1339 !important;
+}
+
+/* Tombol Ekspor (CSV, Excel, PDF, Cetak) */
+.dt-buttons .buttons-csv,
+.dt-buttons .buttons-excel {
+    background-color: #d4edda !important;
+    color: #155724 !important;
+    border-color: #c3e6cb !important;
+}
+.dt-buttons .buttons-csv:hover,
+.dt-buttons .buttons-excel:hover {
+    background-color: #b1dfbb !important;
+}
+
+.dt-buttons .buttons-pdf,
+.dt-buttons .buttons-print {
+    background-color: #d1ecf1 !important;
+    color: #0c5460 !important;
+    border-color: #bee5eb !important;
+}
+.dt-buttons .buttons-pdf:hover,
+.dt-buttons .buttons-print:hover {
+    background-color: #abdde5 !important;
+}
+
+/* Tombol Hapus Data Terpilih (sudah ada, kita pastikan lagi) */
+.dt-buttons .btn-danger {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+    border-color: #f5c6cb !important;
+}
+.dt-buttons .btn-danger:hover {
+    background-color: #f1b0b7 !important;
 }

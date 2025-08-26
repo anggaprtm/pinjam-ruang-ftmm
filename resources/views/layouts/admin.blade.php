@@ -28,6 +28,16 @@
 
 <body class="c-app">
     @include('partials.menu')
+    <script>
+        (function() {
+            if (localStorage.getItem('sidebar_minimized') === 'true') {
+                var sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.add('c-sidebar-minimized');
+                }
+            }
+        })();
+    </script>
     <div class="c-wrapper">
         <header class="c-header c-header-fixed px-3">
             <button class="c-header-toggler c-class-toggler d-lg-none mfe-auto" type="button" data-target="#sidebar" data-class="c-sidebar-show">
