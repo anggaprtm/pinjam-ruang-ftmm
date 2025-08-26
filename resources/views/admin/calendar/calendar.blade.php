@@ -1,169 +1,143 @@
 @extends('layouts.admin')
 @section('content')
-<div class="card">
-    <div class="card-header">
-        {{ trans('global.systemCalendar') }}
-    </div>
 
-    <div class="card-body">
-        <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
-        <form>
-            <div class="row align-items-end">
-                <!-- Filter Ruangan -->
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="ruangan_id">Ruangan</label> 
-                        <select class="form-control select2" name="ruangan_id" id="ruangan_id">
-                            @foreach($ruangan as $id => $ruangan)
-                                <option value="{{ $id }}" {{ request()->input('ruangan_id') == $id ? 'selected' : '' }}>{{ $ruangan }}</option>
-                            @endforeach
-                        </select>
+<h3 class="font-weight-bold mb-4">{{ trans('global.systemCalendar') }}</h3>
+
+<div class="calendar-container">
+    {{-- Kolom Utama untuk Kalender --}}
+    <div class="calendar-main">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                {{-- Form Filter dari kode lama --}}
+                <form method="GET" action="{{ route('admin.systemCalendar') }}">
+                    <div class="row g-3 align-items-end mb-4">
+                        <div class="col-md-3">
+                            <label for="ruangan_id" class="form-label fw-bold">Filter Ruangan:</label>
+                            <select class="form-control select2" name="ruangan_id" id="ruangan_id" onchange="this.form.submit()">
+                                @foreach($ruangan as $id => $ruangan_nama)
+                                    <option value="{{ $id }}" {{ request()->input('ruangan_id') == $id ? 'selected' : '' }}>{{ $ruangan_nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="user_id" class="form-label fw-bold">Filter Peminjam:</label>
+                            <select class="form-control select2" name="user_id" id="user_id" onchange="this.form.submit()">
+                                @foreach($users as $id => $user)
+                                    <option value="{{ $id }}" {{ request()->input('user_id') == $id ? 'selected' : '' }}>{{ $user }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filter_kuliah" class="form-label fw-bold">Tipe Kegiatan:</label>
+                            <select class="form-control select2" name="filter_kuliah" id="filter_kuliah" onchange="this.form.submit()">
+                                <option value="semua" {{ request('filter_kuliah', 'semua') == 'semua' ? 'selected' : '' }}>Semua Kegiatan</option>
+                                <option value="non-kuliah" {{ request('filter_kuliah', 'non-kuliah') == 'non-kuliah' ? 'selected' : '' }}>Non-Perkuliahan</option>
+                                <option value="kuliah" {{ request('filter_kuliah') == 'kuliah' ? 'selected' : '' }}>Perkuliahan</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" type="submit">Terapkan Filter</button>
+                        </div>
                     </div>
-                </div>
+                </form>
+                
+                <div id="calendar"></div>
 
-                <!-- Filter Peminjam -->
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="user_id">Peminjam</label>
-                        <select class="form-control select2" name="user_id" id="user_id">
-                            @foreach($users as $id => $user)
-                                <option value="{{ $id }}" {{ request()->input('user_id') == $id ? 'selected' : '' }}>{{ $user }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Filter Tipe -->
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="tipe">Tipe Kegiatan</label>
-                        <select class="form-control select2" name="filter_kuliah" onchange="this.form.submit()">
-                            <option value="non-kuliah" {{ request('filter_kuliah') == 'non-kuliah' ? 'selected' : '' }}>Non-Perkuliahan</option>
-                            <option value="kuliah" {{ request('filter_kuliah') == 'kuliah' ? 'selected' : '' }}>Perkuliahan</option>
-                            <option value="semua" {{ request('filter_kuliah') == 'semua' ? 'selected' : '' }}>Semua Kegiatan</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Tombol Filter -->
-                <div class="col-md-3">
-                    <div class="form-group d-flex align-items-center">
-                        <button class="btn btn-filter btn-primary">
-                            <i class="fas fa-fw fa-filter"></i>&nbsp Terapkan Filter
-                        </button>
+                {{-- Legenda Warna Dinamis yang Dirapikan --}}
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="fw-bold mb-3">Legenda Warna Peminjam:</h6>
+                    <div class="calendar-legend flex-wrap">
+                        @foreach($userColors as $userName => $color)
+                            <div class="legend-item">
+                                <span class="legend-color-box" style="background-color: {{ $color }};"></span> {{ $userName }}
+                            </div>
+                        @endforeach
+                        <div class="legend-item"><span class="legend-color-box" style="background-color: #17a2b8;"></span> Perkuliahan</div>
                     </div>
                 </div>
             </div>
-        </form>
-        <div id='calendar'></div>
+        </div>
+    </div>
+
+    {{-- Sidebar untuk Detail Event --}}
+    <div class="calendar-sidebar">
+        <div class="card event-details-card" id="event-details">
+            <div class="card-header"><h5 class="mb-0">Detail Acara</h5></div>
+            <div class="card-body">
+                <div class="event-details-placeholder"><i class="fas fa-mouse-pointer"></i><p>Pilih acara untuk melihat detail.</p></div>
+                <div id="event-details-content" class="d-none"></div>
+            </div>
+        </div>
     </div>
 </div>
-
-<div class="calendar-legend" style="margin-top: 20px;">
-    <h5>Pengguna</h5>
-    <ul style="list-style: none; padding: 0; display: flex; gap: 15px;">
-        @foreach($userColors as $userName => $color)
-            <li style="display: flex; align-items: center;">
-                <span style="display: inline-block; width: 10px; height: 10px; background-color: {{ $color }}; margin-right: 5px;"></span>
-                {{ $userName }}
-            </li>
-        @endforeach
-    </ul>
-</div>
-
-<!-- Modal Preview Agenda -->
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 id="preview-title" class="modal-title">Detail Agenda</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p><strong>Waktu:</strong> <span id="preview-tanggal"></span></p>
-        <p><strong>Ruangan:</strong> <span id="preview-ruangan"></span></p>
-        <p><strong>Pengguna:</strong> <span id="preview-pic"></span></p>
-        <p><strong>Keterangan:</strong> <span id="preview-keterangan"></span></p>
-      </div>
-      <div class="modal-footer">
-        <a href="#" id="edit-link" class="btn btn-primary">Edit</a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
 
 @endsection
 
 @section('scripts')
 @parent
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales-all.global.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            locale: 'id',
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
-            },
-            views: {
-                timeGridWeek: { buttonText: 'Minggu' },
-                timeGridDay: { buttonText: 'Hari' },
-                listMonth: { buttonText: 'Daftar' }
-            },
-            buttonText: {
-                today: 'Hari Ini',
-                month: 'Bulan',
-                week: 'Minggu',
-                day: 'Hari',
-                list: 'Daftar'
-            },
-            eventTimeFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                meridiem: false
-            },
-            eventClick: function(info) {
-                info.jsEvent.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const eventDetailsContent = document.getElementById('event-details-content');
+    const eventDetailsPlaceholder = document.querySelector('.event-details-placeholder');
 
-                const event = info.event;
-                const props = event.extendedProps;
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+        },
+        initialView: 'dayGridMonth',
+        locale: 'id',
+        // PERUBAHAN 1: Menerjemahkan tombol
+        buttonText: {
+            today: 'Hari Ini',
+            month: 'Bulan',
+            week: 'Minggu',
+            day: 'Hari',
+            list: 'Daftar'
+        },
+        views: {
+            timeGridWeek: { buttonText: 'Minggu' },
+            timeGridDay: { buttonText: 'Hari' },
+            listMonth: { buttonText: 'Daftar' }
+        },
+        events: {!! json_encode($events) !!},
+        editable: false,
+        
+        eventClick: function(info) {
+            info.jsEvent.preventDefault();
+            const props = info.event.extendedProps;
+            const start = info.event.start;
+            const end = info.event.end;
 
-                // Set isi preview modal
-                document.getElementById('preview-title').textContent = event.title;
-                document.getElementById('preview-tanggal').textContent = new Date(event.start).toLocaleString('id-ID', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                }) + ' | ' + event.start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' - ' +
-                event.end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                document.getElementById('preview-pic').textContent = props.user_name ?? '-';
-                document.getElementById('preview-ruangan').textContent = props.ruangan_nama ?? '-';
-                document.getElementById('preview-keterangan').textContent = props.keterangan ?? '-';
-                // Edit button link
-                const editLink = document.getElementById('edit-link');
+            const timeFormat = { hour: '2-digit', minute: '2-digit', hour12: false };
+            const dateFormat = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-                // Cek apakah event.id mengandung "kuliah-" di awal
-                if (event.id.startsWith('kuliah-')) {
-                    const kuliahId = event.id.replace('kuliah-', '');
-                    editLink.href = `/admin/jadwal-perkuliahan/${kuliahId}/edit`;
-                } else {
-                    editLink.href = `/admin/kegiatan/${event.id}/edit`;
-                }
+            let timeString = `${start.toLocaleTimeString([], timeFormat)} - ${end ? end.toLocaleTimeString([], timeFormat) : ''}`;
 
+            let contentHtml = `<h5 class="detail-title">${info.event.title}</h5><hr>`;
+            contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-calendar-alt"></i></div><div class="content"><div class="label">Tanggal</div><div class="value">${start.toLocaleDateString('id-ID', dateFormat)}</div></div></div>`;
+            contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-clock"></i></div><div class="content"><div class="label">Waktu</div><div class="value">${timeString}</div></div></div>`;
 
-                // Tampilkan modal
-                new bootstrap.Modal(document.getElementById('previewModal')).show();
-            },
-            events: {!! json_encode($events) !!}
-        });
-        calendar.render();
+            if (props.ruangan_nama) {
+                contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-door-open"></i></div><div class="content"><div class="label">Ruangan</div><div class="value">${props.ruangan_nama}</div></div></div>`;
+            }
+            if (props.user_name) {
+                contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-user-circle"></i></div><div class="content"><div class="label">${props.type === 'perkuliahan' ? 'Dosen/Prodi' : 'Peminjam'}</div><div class="value">${props.user_name}</div></div></div>`;
+            }
+            if (props.deskripsi) {
+                contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-info-circle"></i></div><div class="content"><div class="label">Deskripsi</div><div class="value">${props.deskripsi}</div></div></div>`;
+            }
+
+            eventDetailsContent.innerHTML = contentHtml;
+            eventDetailsContent.classList.remove('d-none');
+            eventDetailsPlaceholder.classList.add('d-none');
+        }
     });
-</script>
 
-@stop
+    calendar.render();
+});
+</script>
+@endsection
