@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kegiatan;
+use App\Models\JadwalPerkuliahan;
 use App\Models\Ruangan;
 use App\Models\User;
-use Gate;
 use Carbon\Carbon;
+use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -32,108 +34,98 @@ class SystemCalendarController extends Controller
         $users = User::all()->pluck('name', 'id')->prepend(trans('Semua Peminjam'), '');
         $userColors = [];
 
-        // Ambil nilai filter dari request
         $filterRuangan = $request->input('ruangan_id');
         $filterPeminjam = $request->input('user_id');
-        $filterKuliah = $request->input('filter_kuliah', 'non-kuliah'); // Nilai filter baru untuk jenis kegiatan
+        $filterKuliah = $request->input('filter_kuliah', 'non-kuliah');
 
         if ($filterKuliah == 'kuliah' || $filterKuliah == 'semua') {
-        $this->sources[] = [
-            'model'      => '\App\Models\JadwalPerkuliahan',
-            'date_field' => 'waktu_mulai',
-            'end_field'  => 'waktu_selesai',
-            'field'      => 'mata_kuliah',
-            'prefix'     => '[Kuliah]',
-            'suffix'     => '',
-            'route'      => 'admin.jadwal-perkuliahan.edit',
-        ];
-    }
+            $this->sources[] = [
+                'model'      => '\App\Models\JadwalPerkuliahan',
+                'date_field' => 'waktu_mulai',
+                'end_field'  => 'waktu_selesai',
+                'field'      => 'mata_kuliah',
+                'prefix'     => '[Kuliah]',
+                'suffix'     => '',
+                'route'      => 'admin.jadwal-perkuliahan.edit',
+            ];
+        }
 
         foreach ($this->sources as $source) {
-                $query = $source['model']::query();
+            $query = $source['model']::query();
 
-                // === HANDLE JADWAL KULIAH ===
-                if ($source['model'] == '\App\Models\JadwalPerkuliahan') {
-                    $jadwalList = $query->get();
+            if ($source['model'] == '\App\Models\JadwalPerkuliahan') {
+                $jadwalList = $query->get();
+                foreach ($jadwalList as $model) {
+                    $startDate = Carbon::parse($model->berlaku_mulai);
+                    $endDate = Carbon::parse($model->berlaku_sampai);
+                    $targetDay = strtolower($model->hari);
 
-                    foreach ($jadwalList as $model) {
-                        $startDate = Carbon::parse($model->berlaku_mulai);
-                        $endDate = Carbon::parse($model->berlaku_sampai);
-                        $targetDay = strtolower($model->hari); // misal: 'senin', 'jumat'
-
-                        // Loop dari tanggal mulai ke tanggal akhir
-                        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-                            if (strtolower($date->locale('id')->isoFormat('dddd')) !== $targetDay) {
-                                continue; // skip kalau bukan harinya
-                            }
-
-                            // Gabungkan tanggal dengan waktu
-                            $startDateTime = Carbon::parse($date->toDateString() . ' ' . $model->waktu_mulai);
-                            $endDateTime = Carbon::parse($date->toDateString() . ' ' . $model->waktu_selesai);
-
-                            $events[] = [
-                                'id' => 'kuliah-' . $model->id,
-                                'title' => trim($source['prefix'] . " " . $model->{$source['field']} . " " . $source['suffix'] . " | (" . $model->ruangan->nama . ")"),
-                                'start' => $startDateTime,
-                                'end' => $endDateTime,
-                                'color' => '#4b0082',
-                                'extendedProps' => [
-                                    'ruangan_nama' => $model->ruangan->nama,
-                                    'user_name' => $model->program_studi ?? '',
-                                    'deskripsi' => '',
-                                ],
-                                'url' => route($source['route'], $model->id),
-                            ];
+                    for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                        if (strtolower($date->locale('id')->isoFormat('dddd')) !== $targetDay) {
+                            continue;
                         }
-                    }
+                        $startDateTime = Carbon::parse($date->toDateString() . ' ' . $model->waktu_mulai);
+                        $endDateTime = Carbon::parse($date->toDateString() . ' ' . $model->waktu_selesai);
 
-                    continue; // skip ke source selanjutnya (kegiatan)
-                }
-
-                // === HANDLE KEGIATAN NON-KULIAH ===
-                if ($filterKuliah == 'kuliah') {
-                    continue; // skip kegiatan jika hanya filter kuliah
-                }
-
-                $query->where('status', 'disetujui');
-
-                if ($filterRuangan) {
-                    $query->where('ruangan_id', $filterRuangan);
-                }
-
-                if ($filterPeminjam) {
-                    $query->where('user_id', $filterPeminjam);
-                }
-
-                foreach ($query->get() as $model) {
-                    $startDate = $model->getAttributes()[$source['date_field']];
-                    $endDate = $model->getAttributes()[$source['end_field']];
-                    if (!$startDate || !$endDate) {
-                        continue;
-                    }
-
-                    $color = $this->getUserColor($model->user_id);
-                    $events[] = [
-                        'id' => $model->id,
-                        'title' => trim($source['prefix'] . " " . $model->{$source['field']} . " " . $source['suffix'] . " | (" . $model->ruangan->nama . ")"),
-                        'start' => $startDate,
-                        'end' => $endDate,
-                        'extendedProps' => [
-                            'ruangan_nama' => $model->ruangan->nama,
-                            'user_name' => $model->user->name,
-                            'deskripsi' => $model->deskripsi,
-                            'color' => $color,
-                        ],
-                        'url' => route($source['route'], $model->id),
-                        'color' => $color,
-                    ];
-
-                    if ($model->user && !isset($userColors[$model->user->id])) {
-                        $userColors[$model->user->name] = $this->getUserColor($model->user->id);
+                        $events[] = [
+                            'id' => 'kuliah-' . $model->id,
+                            // PERUBAHAN DI SINI: Menghapus nama ruangan dari judul
+                            'title' => trim($source['prefix'] . " " . $model->{$source['field']} . " " . $source['suffix']),
+                            'start' => $startDateTime,
+                            'end' => $endDateTime,
+                            'color' => '#17a2b8',
+                            'extendedProps' => [
+                                'ruangan_nama' => $model->ruangan->nama,
+                                'user_name' => $model->program_studi ?? '',
+                                'deskripsi' => '',
+                                'type' => 'perkuliahan'
+                            ],
+                            'url' => route($source['route'], $model->id),
+                        ];
                     }
                 }
+                continue;
             }
 
+            if ($filterKuliah == 'kuliah') {
+                continue;
+            }
+
+            $query->where('status', 'disetujui');
+            if ($filterRuangan) {
+                $query->where('ruangan_id', $filterRuangan);
+            }
+            if ($filterPeminjam) {
+                $query->where('user_id', $filterPeminjam);
+            }
+
+            foreach ($query->get() as $model) {
+                $startDate = $model->getAttributes()[$source['date_field']];
+                $endDate = $model->getAttributes()[$source['end_field']];
+                if (!$startDate || !$endDate) {
+                    continue;
+                }
+                $color = $this->getUserColor($model->user_id);
+                $events[] = [
+                    'id' => $model->id,
+                    // PERUBAHAN DI SINI: Menghapus nama ruangan dari judul
+                    'title' => trim($source['prefix'] . " " . $model->{$source['field']} . " " . $source['suffix']),
+                    'start' => $startDate,
+                    'end' => $endDate,
+                    'color' => $color,
+                    'extendedProps' => [
+                        'ruangan_nama' => $model->ruangan->nama,
+                        'user_name' => $model->user->name,
+                        'deskripsi' => $model->deskripsi,
+                        'type' => 'kegiatan'
+                    ],
+                    'url' => route($source['route'], $model->id),
+                ];
+                if ($model->user && !isset($userColors[$model->user->id])) {
+                    $userColors[$model->user->name] = $this->getUserColor($model->user->id);
+                }
+            }
+        }
 
         return view('admin.calendar.calendar', compact('events', 'ruangan', 'users', 'userColors'));
     }
@@ -141,25 +133,11 @@ class SystemCalendarController extends Controller
     private function getUserColor($userId)
     {
         $colors = [
-            1 => '#1E90FF', // Admin
-            2 => '#9e0142', // HIMATESDA
-            3 => '#095259', // HIMATERA
-            4 => '#f46d43', // HIMANO
-            5 => '#fdae61', // HMTI
-            6 => '#fee08b', // IME
-            7 => '#000000', // BEM FTMM
-            8 => '#abdda4', // BLM FTMM
-            9 => '#66c2a5', // ATOM
-            10 => '#3288bd', // PD FTMM
-            11 => '#5e4fa2', // KOMBO UA
-            12 => '#a4c2f4', // TI
-            13 => '#b2b200', // RN
-            14 => '#00ff00', // TE
-            15 => '#d5a6bd', // TSD
-            16 => '#ea9999', // TRKB
+            1 => '#1E90FF', 2 => '#9e0142', 3 => '#095259', 4 => '#f46d43',
+            5 => '#fdae61', 6 => '#fee08b', 7 => '#000000', 8 => '#abdda4',
+            9 => '#66c2a5', 10 => '#3288bd', 11 => '#5e4fa2', 12 => '#a4c2f4',
+            13 => '#b2b200', 14 => '#00ff00', 15 => '#d5a6bd', 16 => '#ea9999',
         ];
-
-        return $colors[$userId] ?? '#aaaaaa'; // Default warna hitam jika user_id tidak ditemukan
+        return $colors[$userId] ?? '#741847';
     }
-
 }

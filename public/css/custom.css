@@ -745,3 +745,104 @@ input:checked + .toggle-slider {
 input:checked + .toggle-slider:before {
     transform: translateX(26px);
 }
+
+/* ========================================= */
+/* == GAYA MODERN UNTUK HALAMAN KALENDER == */
+/* ========================================= */
+
+.calendar-container {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.calendar-main {
+    flex-grow: 1;
+}
+
+.calendar-sidebar {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.calendar-legend {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.legend-color-box {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.event-details-card {
+    position: sticky;
+    top: 20px; /* Agar tetap terlihat saat scroll */
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.event-details-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    text-align: center;
+    color: #a0aec0;
+}
+
+.event-details-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Kustomisasi FullCalendar */
+.fc {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    background-color: #fff;
+    padding: 1rem;
+}
+.fc .fc-toolbar-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+.fc .fc-button {
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+    border: 1px solid #ced4da !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background-color: #741847 !important;
+    border-color: #741847 !important;
+}
+
+/* Warna Event */
+.fc-event-kegiatan {
+    background-color: #741847 !important;
+    border-color: #5f1339 !important;
+}
+.fc-event-perkuliahan {
+    background-color: #17a2b8 !important;
+    border-color: #117a8b !important;
+}
+
+/* Perbaikan warna teks tombol kalender yang aktif */
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    color: #fff !important; /* Membuat teks menjadi putih saat tombol aktif */
+}
