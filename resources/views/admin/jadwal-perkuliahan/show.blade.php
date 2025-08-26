@@ -1,94 +1,62 @@
 @extends('layouts.admin')
 @section('content')
 
-<div class="card">
-    <div class="card-header">
-        {{ trans('global.show') }} {{ trans('cruds.kegiatan.title') }}
-    </div>
-
-    <div class="card-body">
-        <div class="form-group">
-            <div class="form-group">
-                <a class="btn btn-default" href="{{ route('admin.jadwal-perkuliahan.index') }}">
-                    {{ trans('global.back_to_list') }}
-                </a>
+<div class="card detail-view-card">
+    <div class="detail-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="detail-title">{{ $jadwalPerkuliahan->mata_kuliah }}</h2>
+                <p class="detail-sub-title mb-0">Detail untuk jadwal perkuliahan.</p>
             </div>
-            <table class="table table-bordered table-striped">
-                <tbody>
-                    <tr>
-                        <th width="200">
-                            ID
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->id }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            Ruangan
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->ruangan->nama ?? '' }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            Mata Kuliah
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->mata_kuliah }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            Hari
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->hari }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            Waktu Mulai
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->waktu_mulai }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            Waktu Selesai
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->waktu_selesai }}
-                        </td>
-                    </tr>
-                    <tr>
-                    </tr>
-                    <tr>
-                        <th>
-                            Berlaku Mulai
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->berlaku_mulai }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            Berlaku Sampai
-                        </th>
-                        <td>
-                            {{ $jadwalPerkuliahan->berlaku_sampai }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="form-group">
-                <a class="btn btn-default" href="{{ route('admin.jadwal-perkuliahan.index') }}">
-                    {{ trans('global.back_to_list') }}
-                </a>
+            <a href="{{ route('admin.jadwal-perkuliahan.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <div class="detail-item">
+            <div class="icon"><i class="fas fa-id-card"></i></div>
+            <div class="content">
+                <div class="label">ID</div>
+                <div class="value">{{ $jadwalPerkuliahan->id }}</div>
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="icon"><i class="fas fa-book"></i></div>
+            <div class="content">
+                <div class="label">Mata Kuliah</div>
+                <div class="value">{{ $jadwalPerkuliahan->mata_kuliah }}</div>
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="content">
+                <div class="label">Dosen Pengampu</div>
+                <div class="value">{{ $jadwalPerkuliahan->dosen_pengampu }}</div>
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="icon"><i class="fas fa-door-open"></i></div>
+            <div class="content">
+                <div class="label">Ruangan</div>
+                <div class="value">{{ $jadwalPerkuliahan->ruangan->nama ?? '' }}</div>
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="content">
+                <div class="label">Hari</div>
+                <div class="value">{{ $jadwalPerkuliahan->hari }}</div>
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="icon"><i class="fas fa-clock"></i></div>
+            <div class="content">
+                <div class="label">Waktu</div>
+                <div class="value">{{ \Carbon\Carbon::parse($jadwalPerkuliahan->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwalPerkuliahan->jam_selesai)->format('H:i') }}</div>
             </div>
         </div>
     </div>
 </div>
+
 @endsection
