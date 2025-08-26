@@ -38,7 +38,7 @@ class KegiatanController extends Controller
         }
 
         // Eksekusi query
-        $kegiatan = $query->get();
+        $kegiatan = $query->orderBy('id', 'desc')->get();
 
         $kegiatan->each(function ($kegiatan) {
             $kegiatan->is_new = $kegiatan->created_at->gt(now()->subDay()); // True jika dibuat dalam 24 jam terakhir
