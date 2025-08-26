@@ -11,14 +11,37 @@
     @endcan
 </div>
 
+{{-- Filter Bar dengan Tambahan Filter --}}
 <div class="filter-bar">
-    <form action="{{ route('admin.kegiatan.index') }}" method="GET" class="d-flex align-items-center gap-2">
-        <div class="form-group mb-0 flex-grow-1">
-            <label for="tanggal_mulai" class="form-label fw-bold">Filter Tanggal Mulai:</label>
-            <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control" value="{{ request('tanggal_mulai') }}">
+    <form action="{{ route('admin.kegiatan.index') }}" method="GET">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="tanggal_mulai" class="form-label fw-bold">Filter Tanggal Mulai:</label>
+                <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control" value="{{ request('tanggal_mulai') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="user_id" class="form-label fw-bold">Filter Peminjam:</label>
+                <select name="user_id" id="user_id" class="form-control select2">
+                    @foreach($users as $id => $name)
+                        <option value="{{ $id }}" {{ request('user_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="ruangan_id" class="form-label fw-bold">Filter Ruangan:</label>
+                <select name="ruangan_id" id="ruangan_id" class="form-control select2">
+                    @foreach($ruangans as $id => $nama)
+                        <option value="{{ $id }}" {{ request('ruangan_id') == $id ? 'selected' : '' }}>{{ $nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-secondary w-100">Reset</a>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary align-self-end">Filter</button>
-        <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-secondary align-self-end">Reset</a>
     </form>
 </div>
 
