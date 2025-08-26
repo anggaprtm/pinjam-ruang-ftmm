@@ -1,63 +1,53 @@
 @extends('layouts.admin')
 @section('content')
 
-<div class="card">
-    <div class="card-header">
-        {{ trans('global.show') }} {{ trans('cruds.ruangan.title') }}
-    </div>
-
-    <div class="card-body">
-        <div class="form-group">
-            <div class="form-group">
-                <a class="btn btn-default" href="{{ route('admin.ruangan.index') }}">
-                    {{ trans('global.back_to_list') }}
-                </a>
+<div class="card detail-view-card">
+    <div class="detail-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="detail-title">{{ $ruangan->nama }}</h2>
+                <p class="detail-sub-title mb-0">
+                    Detail lengkap untuk ruangan.
+                </p>
             </div>
-            <table class="table table-bordered table-striped">
-                <tbody>
-                    <tr>
-                        <th>
-                            {{ trans('cruds.ruangan.fields.id') }}
-                        </th>
-                        <td>
-                            {{ $ruangan->id }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            {{ trans('cruds.ruangan.fields.nama') }}
-                        </th>
-                        <td>
-                            {{ $ruangan->nama }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            {{ trans('cruds.ruangan.fields.deskripsi') }}
-                        </th>
-                        <td>
-                            {{ $ruangan->deskripsi }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            {{ trans('cruds.ruangan.fields.kapasitas') }}
-                        </th>
-                        <td>
-                            {{ $ruangan->kapasitas }}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="form-group">
-                <a class="btn btn-default" href="{{ route('admin.ruangan.index') }}">
-                    {{ trans('global.back_to_list') }}
-                </a>
+            <a href="{{ route('admin.ruangan.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="detail-item">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <div class="content">
+                        <div class="label">{{ trans('cruds.ruangan.fields.kapasitas') }}</div>
+                        <div class="value">{{ $ruangan->kapasitas }} Orang</div>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="content">
+                        <div class="label">Status</div>
+                        <div class="value">
+                            @if($ruangan->is_active)
+                                <span class="badge-status badge-status-aktif">Aktif</span>
+                            @else
+                                <span class="badge-status badge-status-tidak-aktif">Tidak Aktif</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="icon"><i class="fas fa-file-alt"></i></div>
+                    <div class="content">
+                        <div class="label">{{ trans('cruds.ruangan.fields.deskripsi') }}</div>
+                        <div class="value">{{ $ruangan->deskripsi ?? '-' }}</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-
 
 @endsection
