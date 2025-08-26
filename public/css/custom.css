@@ -846,3 +846,74 @@ input:checked + .toggle-slider:before {
 .fc .fc-button-primary:not(:disabled):active {
     color: #fff !important; /* Membuat teks menjadi putih saat tombol aktif */
 }
+
+/* ========================================= */
+/* == GAYA MODERN UNTUK HALAMAN BERANDA == */
+/* ========================================= */
+
+.welcome-banner {
+    background: linear-gradient(90deg, #741847 0%, #a42e6a 100%);
+    color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.welcome-banner h4 {
+    font-weight: 700;
+}
+
+.welcome-banner p {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease-in-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.stat-card .icon-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.stat-card .info .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #343a40;
+}
+
+.stat-card .info .stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Warna untuk ikon stat card */
+.icon-ruangan { background-color: #e9f5ff; color: #1e90ff; }
+.icon-menunggu { background-color: #fff8e1; color: #ffc107; }
+.icon-disetujui { background-color: #e6f7f2; color: #28a745; }
+.icon-total { background-color: #f3e8ff; color: #8e44ad; }
+
+#current-time {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9); /* Warna diubah menjadi putih semi-transparan */
+    font-size: 1.1rem; /* Ukuran disesuaikan agar lebih serasi */
+}
