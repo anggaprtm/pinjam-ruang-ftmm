@@ -25,7 +25,7 @@ class KegiatanController extends Controller
 
         // Filter berdasarkan tanggal mulai
         if ($request->filled('tanggal_mulai')) {
-            $query->whereDate('waktu_mulai', '>=', $request->tanggal_mulai);
+            $query->whereDate('waktu_mulai', '=', $request->tanggal_mulai);
         }
 
         // Filter berdasarkan peminjam (user_id)
