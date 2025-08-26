@@ -21,30 +21,30 @@ class KegiatanController extends Controller
     {
         abort_if(Gate::denies('kegiatan_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        // Ambil parameter tanggal mulai dari request
-        $tanggalMulai = $request->input('tanggal_mulai');
-
-        // Query kegiatan dengan relasi ruangan dan user
         $query = Kegiatan::with(['ruangan', 'user']);
 
-        // Filter berdasarkan role
-        if (auth()->user()->isUser()) {
-            $query->where('user_id', auth()->id()); // Tampilkan hanya kegiatan milik user yang login
+        // Filter berdasarkan tanggal mulai
+        if ($request->filled('tanggal_mulai')) {
+            $query->whereDate('waktu_mulai', '>=', $request->tanggal_mulai);
         }
 
-        // Filter tanggal mulai jika ada
-        if ($tanggalMulai) {
-            $query->whereDate('waktu_mulai', $tanggalMulai);
+        // Filter berdasarkan peminjam (user_id)
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
         }
 
-        // Eksekusi query
+        // Filter berdasarkan ruangan (ruangan_id)
+        if ($request->filled('ruangan_id')) {
+            $query->where('ruangan_id', $request->ruangan_id);
+        }
+
         $kegiatan = $query->orderBy('id', 'desc')->get();
 
-        $kegiatan->each(function ($kegiatan) {
-            $kegiatan->is_new = $kegiatan->created_at->gt(now()->subDay()); // True jika dibuat dalam 24 jam terakhir
-        });
+        // Ambil data untuk dropdown filter
+        $users = User::pluck('name', 'id')->prepend('Semua Peminjam', '');
+        $ruangans = Ruangan::pluck('nama', 'id')->prepend('Semua Ruangan', '');
 
-        return view('admin.kegiatan.index', compact('kegiatan', 'tanggalMulai'));
+        return view('admin.kegiatan.index', compact('kegiatan', 'users', 'ruangans'));
     }
 
     public function create()
