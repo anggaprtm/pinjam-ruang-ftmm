@@ -10,16 +10,21 @@ class HomeController
 {
     public function index()
     {
+        // Data untuk kartu statistik
         $ruanganCount = Ruangan::count();
         $kegiatanMenungguCount = Kegiatan::whereIn('status', ['belum_disetujui', 'verifikasi_sarpras', 'verifikasi_akademik'])->count();
         $kegiatanDisetujuiCount = Kegiatan::where('status', 'disetujui')->count();
         $kegiatanTotalCount = Kegiatan::count();
 
-        // Mengambil 5 kegiatan terdekat yang akan dimulai dari sekarang
-        $kegiatanTerdekat = Kegiatan::with(['user', 'ruangan'])
-            ->where('waktu_mulai', '>=', Carbon::now())
+        // Data untuk tabel tab
+        $kegiatanHariIni = Kegiatan::with(['user', 'ruangan'])
+            ->whereDate('waktu_mulai', Carbon::today())
             ->orderBy('waktu_mulai', 'asc')
-            ->take(5)
+            ->get();
+
+        $kegiatanBesok = Kegiatan::with(['user', 'ruangan'])
+            ->whereDate('waktu_mulai', Carbon::tomorrow())
+            ->orderBy('waktu_mulai', 'asc')
             ->get();
 
         return view('home', compact(
@@ -27,7 +32,8 @@ class HomeController
             'kegiatanMenungguCount',
             'kegiatanDisetujuiCount',
             'kegiatanTotalCount',
-            'kegiatanTerdekat'
+            'kegiatanHariIni',
+            'kegiatanBesok'
         ));
     }
 }

@@ -1,16 +1,14 @@
 @extends('layouts.admin')
 @section('content')
 <div class="content">
-    {{-- Salam Pembuka & Waktu (Tampil untuk semua) --}}
+    {{-- Salam Pembuka & Waktu --}}
     <div class="welcome-banner">
         <h4>Selamat Datang Kembali, {{ Auth::user()->name }}!</h4>
         <p class="mb-0">Berikut adalah ringkasan aktivitas peminjaman ruangan hari ini.</p>
         <div id="current-time" class="fs-5 mt-2"></div>
     </div>
 
-    {{-- =============================================================== --}}
-    {{-- == TAMPILAN UNTUK ADMIN (DASHBOARD STATISTIK) == --}}
-    {{-- =============================================================== --}}
+    {{-- TAMPILAN UNTUK ADMIN (DASHBOARD STATISTIK) --}}
     @can('home_access')
         {{-- Kartu Statistik --}}
         <div class="row">
@@ -52,60 +50,37 @@
             </div>
         </div>
 
-        {{-- Daftar Kegiatan Terdekat --}}
+        {{-- Daftar Kegiatan dengan Tab --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header">
-                <h5 class="mb-0">Kegiatan Terdekat (5 Berikutnya)</h5>
+                <ul class="nav nav-tabs card-header-tabs" id="kegiatanTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="hari-ini-tab" data-bs-toggle="tab" data-bs-target="#hari-ini" type="button" role="tab">Kegiatan Hari Ini</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="besok-tab" data-bs-toggle="tab" data-bs-target="#besok" type="button" role="tab">Kegiatan Besok</button>
+                    </li>
+                </ul>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Nama Kegiatan</th>
-                                <th>Peminjam</th>
-                                <th>Ruangan</th>
-                                <th>Waktu Mulai</th>
-                                <th class="text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($kegiatanTerdekat as $kegiatan)
-                                <tr>
-                                    <td><strong>{{ $kegiatan->nama_kegiatan }}</strong></td>
-                                    <td>{{ $kegiatan->user->name ?? '-' }}</td>
-                                    <td><span class="badge-ruangan">{{ $kegiatan->ruangan->nama ?? '-' }}</span></td>
-                                    <td>{{ \Carbon\Carbon::parse($kegiatan->waktu_mulai)->translatedFormat('l, d M Y, H:i') }}</td>
-                                    <td class="text-center">
-                                        @php
-                                            $statusClass = str_replace('_', '-', $kegiatan->status);
-                                            $statusText = ucwords(str_replace('_', ' ', $kegiatan->status));
-                                        @endphp
-                                        <span class="badge-status badge-status-{{ $statusClass }}">{{ $statusText }}</span>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        Tidak ada kegiatan yang akan datang.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div class="tab-content" id="kegiatanTabContent">
+                    {{-- Konten Tab Hari Ini --}}
+                    <div class="tab-pane fade show active" id="hari-ini" role="tabpanel">
+                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanHariIni, 'empty_message' => 'Tidak ada kegiatan yang dijadwalkan untuk hari ini.'])
+                    </div>
+                    {{-- Konten Tab Besok --}}
+                    <div class="tab-pane fade" id="besok" role="tabpanel">
+                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanBesok, 'empty_message' => 'Tidak ada kegiatan yang dijadwalkan untuk besok.'])
+                    </div>
                 </div>
             </div>
         </div>
     @endcan
 
-    {{-- =============================================================== --}}
-    {{-- == TAMPILAN UNTUK USER BIASA (INFORMASI) == --}}
-    {{-- =============================================================== --}}
+    {{-- TAMPILAN UNTUK USER BIASA (INFORMASI) --}}
     @can('info_access')
         <div class="card border-0 shadow-sm">
-            <div class="card-header">
-                <h5 class="mb-0">Informasi Peminjaman Ruang</h5>
-            </div>
+            <div class="card-header"><h5 class="mb-0">Informasi Peminjaman Ruang</h5></div>
             <div class="card-body">
                 <h2>Cara Melakukan Peminjaman Ruang</h2>
                 <ol class="list-group list-group-numbered">

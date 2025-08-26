@@ -4,6 +4,9 @@
         <div class="c-sidebar-brand-full" href="#">
             PINJAM-RUANG
         </div>
+        <div class="c-sidebar-brand-minimized">
+            PR
+        </div>
     </div>
 
     <ul class="c-sidebar-nav">
