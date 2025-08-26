@@ -1,121 +1,128 @@
 @extends('layouts.admin')
 @section('content')
 <div class="content">
-    <div class="row">
-    <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <div id="current-time"></div>
+    {{-- Salam Pembuka & Waktu (Tampil untuk semua) --}}
+    <div class="welcome-banner">
+        <h4>Selamat Datang Kembali, {{ Auth::user()->name }}!</h4>
+        <p class="mb-0">Berikut adalah ringkasan aktivitas peminjaman ruangan hari ini.</p>
+        <div id="current-time" class="fs-5 mt-2"></div>
+    </div>
+
+    {{-- =============================================================== --}}
+    {{-- == TAMPILAN UNTUK ADMIN (DASHBOARD STATISTIK) == --}}
+    {{-- =============================================================== --}}
+    @can('home_access')
+        {{-- Kartu Statistik --}}
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="icon-container icon-ruangan"><i class="fas fa-door-open"></i></div>
+                    <div class="info">
+                        <div class="stat-number">{{ $ruanganCount ?? 0 }}</div>
+                        <div class="stat-label">Total Ruangan</div>
+                    </div>
                 </div>
-    <div class="row">
-        @php
-            use Carbon\Carbon;
-        @endphp
-        @can('home_access')
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-header">
-                    Kegiatan Hari Ini
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="icon-container icon-menunggu"><i class="fas fa-clock"></i></div>
+                    <div class="info">
+                        <div class="stat-number">{{ $kegiatanMenungguCount ?? 0 }}</div>
+                        <div class="stat-label">Kegiatan Menunggu</div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover datatable datatable-Kegiatan">
-                            <thead>
-                                <tr>
-                                    <th width="30" style="text-align: center;">
-                                        No
-                                    </th>
-                                    <th style="text-align: center;">
-                                        {{ trans('cruds.kegiatan.fields.nama_kegiatan') }}
-                                    </th>
-                                    <th width="200" style="text-align: center;">
-                                        {{ trans('cruds.kegiatan.fields.ruangan') }}
-                                    </th>
-                                    <th width="150" style="text-align: center;">
-                                        Waktu
-                                    </th>
-                                    <th width="50" style="text-align: center;">
-                                        Peminjam
-                                    </th>
-                                    <th style="text-align: center;">
-                                        Keterangan
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            @if($kegiatan->isEmpty())
-                                <tr>
-                                    <td colspan="8" class="text-center">Tidak ada kegiatan hari ini.</td>
-                                </tr>
-                            @else
-                                @foreach($kegiatan as $key => $kegiatan)
-                                    <tr class="{{ $kegiatan->is_ongoing ? 'bg-success' : '' }}" data-entry-id="{{ $kegiatan->id }}">
-                                        <td style="text-align: center;">
-                                            {{ $loop->iteration }}
-                                        </td>
-                                        <td>
-                                            {{ $kegiatan->nama_kegiatan ?? '' }}
-                                        </td>
-                                        <td style="text-align: center;">
-                                            {{ $kegiatan->ruangan->nama ?? '' }}
-                                        </td>
-                                        <td class="text-center">
-                                            {{ Carbon::parse($kegiatan->waktu_mulai)->format('H:i') }} - {{ Carbon::parse($kegiatan->waktu_selesai)->format('H:i') }}
-                                        </td>
-                                        <td style="text-align: center;">
-                                            {{ $kegiatan->user->name ?? '' }}
-                                        </td>
-                                        <td>
-                                            {{ $kegiatan->deskripsi ?? '' }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            @endif
-                            </tbody>
-                        </table>
-                        <div class="calendar-legend" style="margin-top: 20px;">
-                            <ul style="list-style: none; padding: 0; display: flex; gap: 15px;">
-                                    <li style="display: flex; align-items: center;">
-                                        <span style="display: inline-block; width: 10px; height: 10px; background-color: green; margin-right: 5px;"></span>
-                                        Kegiatan Sedang Berlangsung
-                                    </li>
-                            </ul>
-                        </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="icon-container icon-disetujui"><i class="fas fa-check-circle"></i></div>
+                    <div class="info">
+                        <div class="stat-number">{{ $kegiatanDisetujuiCount ?? 0 }}</div>
+                        <div class="stat-label">Kegiatan Disetujui</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <div class="icon-container icon-total"><i class="fas fa-list-alt"></i></div>
+                    <div class="info">
+                        <div class="stat-number">{{ $kegiatanTotalCount ?? 0 }}</div>
+                        <div class="stat-label">Total Kegiatan</div>
                     </div>
                 </div>
             </div>
         </div>
-        @endcan
-        @can('info_access')
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-header">
-                    Informasi
-                </div>
-                <div class="card-body">
-                    <h2>Cara Melakukan Peminjaman Ruang</h2>
-                    <ol>
-                        <li>Klik "Cari Ruang"</li>
-                        <li>Masukkan waktu mulai dan waktu selesai kegiatan</li>
-                        <li>Ketikkan kapasitas ruang</li>
-                        <li>Kemudian klik "Cari"</li>
-                        <li>Ruang yang tersedia akan muncul dibawahnya</li>
-                        <li>Pilih ruang yang tersedia sesuai kebutuhan, kemudian klik "Pinjam Ruang"</li>
-                        <li>Masukkan nama kegiatan</li>
-                        <li>Masukkan deskripsi/pesan untuk pemroses (opsional)</li>
-                        <li>Upload berkas Surat Peminjaman Ruang dengan dilampiri SIK yang sudah ditandatangani Wadek I</li>
-                        <li>Klik tombol "OK"</li>
-                        <li>Kegiatan berhasil dibuat, dan kegiatan yang sudah diajukan akan muncul di tab "Kegiatan"</li>
-                        <li>Harap tunggu proses verifikasi peminjaman dari Operator -> Verif Akademik -> Verif Sarpras</li>
-                        <li>Ketika kegiatan telah disetujui, maka Peminjam dapat menuju R.Sarpras Lt.10 untuk melakukan peminjaman barang</li>
-                    </ol>
+
+        {{-- Daftar Kegiatan Terdekat --}}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Kegiatan Terdekat (5 Berikutnya)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nama Kegiatan</th>
+                                <th>Peminjam</th>
+                                <th>Ruangan</th>
+                                <th>Waktu Mulai</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($kegiatanTerdekat as $kegiatan)
+                                <tr>
+                                    <td><strong>{{ $kegiatan->nama_kegiatan }}</strong></td>
+                                    <td>{{ $kegiatan->user->name ?? '-' }}</td>
+                                    <td><span class="badge-ruangan">{{ $kegiatan->ruangan->nama ?? '-' }}</span></td>
+                                    <td>{{ \Carbon\Carbon::parse($kegiatan->waktu_mulai)->translatedFormat('l, d M Y, H:i') }}</td>
+                                    <td class="text-center">
+                                        @php
+                                            $statusClass = str_replace('_', '-', $kegiatan->status);
+                                            $statusText = ucwords(str_replace('_', ' ', $kegiatan->status));
+                                        @endphp
+                                        <span class="badge-status badge-status-{{ $statusClass }}">{{ $statusText }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Tidak ada kegiatan yang akan datang.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        @endcan
-    </div>
+    @endcan
+
+    {{-- =============================================================== --}}
+    {{-- == TAMPILAN UNTUK USER BIASA (INFORMASI) == --}}
+    {{-- =============================================================== --}}
+    @can('info_access')
+        <div class="card border-0 shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Informasi Peminjaman Ruang</h5>
+            </div>
+            <div class="card-body">
+                <h2>Cara Melakukan Peminjaman Ruang</h2>
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item">Klik "Cari Ruang" pada menu sidebar.</li>
+                    <li class="list-group-item">Masukkan waktu mulai dan waktu selesai kegiatan.</li>
+                    <li class="list-group-item">Ketikkan kapasitas ruang yang dibutuhkan.</li>
+                    <li class="list-group-item">Kemudian klik "Cari". Ruang yang tersedia akan muncul di bawahnya.</li>
+                    <li class="list-group-item">Pilih ruang yang tersedia, kemudian klik "Pinjam Ruang".</li>
+                    <li class="list-group-item">Isi semua data yang diperlukan pada form peminjaman.</li>
+                    <li class="list-group-item">Upload berkas Surat Peminjaman Ruang jika diperlukan.</li>
+                    <li class="list-group-item">Klik tombol "Save" atau "Simpan".</li>
+                    <li class="list-group-item">Kegiatan berhasil dibuat dan akan muncul di menu "Kegiatan" untuk diproses.</li>
+                    <li class="list-group-item">Harap tunggu proses verifikasi dari pihak terkait.</li>
+                    <li class="list-group-item">Ketika kegiatan telah disetujui, Anda dapat menggunakan ruangan sesuai jadwal.</li>
+                </ol>
+            </div>
+        </div>
+    @endcan
 </div>
-@endsection
-@section('scripts')
-@parent
 @endsection
