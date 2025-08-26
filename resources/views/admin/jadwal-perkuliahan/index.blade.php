@@ -5,7 +5,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="font-weight-bold">Daftar Jadwal Perkuliahan</h3>
     @can('kuliah_create')
-        <a class="btn btn-primary" href="{{ route('admin.jadwal-perkuliahan.create') }}">
+        <a class="btn btn-success" href="{{ route('admin.jadwal-perkuliahan.create') }}">
             <i class="fas fa-plus-circle me-2"></i> Tambah Data
         </a>
     @endcan

@@ -5,7 +5,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="font-weight-bold">Daftar Kegiatan</h3>
     @can('kegiatan_create')
-        <a class="btn btn-primary" href="{{ route('admin.kegiatan.create') }}">
+        <a class="btn btn-success" href="{{ route('admin.kegiatan.create') }}">
             <i class="fas fa-plus-circle me-2"></i> Tambah Kegiatan
         </a>
     @endcan

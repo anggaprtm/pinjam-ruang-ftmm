@@ -5,7 +5,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="font-weight-bold">{{ trans('cruds.ruangan.title') }}</h3>
     @can('ruangan_create')
-        <a class="btn btn-primary" href="{{ route('admin.ruangan.create') }}">
+        <a class="btn btn-success" href="{{ route('admin.ruangan.create') }}">
             <i class="fas fa-plus-circle me-2"></i> {{ trans('global.add') }} {{ trans('cruds.ruangan.title_singular') }}
         </a>
     @endcan
