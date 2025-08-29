@@ -6,9 +6,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h2 class="detail-title">{{ $ruangan->nama }}</h2>
-                <p class="detail-sub-title mb-0">
-                    Detail lengkap untuk ruangan.
-                </p>
+                <p class="detail-sub-title mb-0">Detail dan Jadwal Penggunaan Ruangan</p>
             </div>
             <a href="{{ route('admin.ruangan.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
@@ -17,7 +15,9 @@
     </div>
     <div class="card-body p-4">
         <div class="row">
-            <div class="col-12">
+            {{-- Kolom Kiri: Detail Info Ruangan --}}
+            <div class="col-lg-5">
+                <h5 class="mb-3 font-weight-bold">Informasi Ruangan</h5>
                 <div class="detail-item">
                     <div class="icon"><i class="fas fa-users"></i></div>
                     <div class="content">
@@ -46,8 +46,44 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Kolom Kanan: Kalender Mini --}}
+            <div class="col-lg-7">
+                <h5 class="mb-3 font-weight-bold">Jadwal Ruangan</h5>
+                <div id="calendar"></div>
+            </div>
         </div>
     </div>
 </div>
 
+@endsection
+
+@section('scripts')
+@parent
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        headerToolbar: {
+            left: 'prev,next',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        initialView: 'dayGridMonth',
+        locale: 'id',
+        buttonText: {
+            month: 'Bulan',
+            week: 'Minggu',
+        },
+        events: {!! json_encode($events) !!},
+        editable: false,
+        // Membuat event tidak bisa diklik karena ini hanya untuk display
+        eventClick: function(info) {
+            info.jsEvent.preventDefault(); 
+        }
+    });
+    calendar.render();
+});
+</script>
 @endsection

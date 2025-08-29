@@ -7,9 +7,12 @@ use App\Http\Requests\MassDestroyRuanganRequest;
 use App\Http\Requests\StoreRuanganRequest;
 use App\Http\Requests\UpdateRuanganRequest;
 use App\Models\Ruangan;
+use App\Models\Kegiatan; // Tambahkan ini
+use App\Models\JadwalPerkuliahan;
 use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Carbon\Carbon;
 
 class RuanganController extends Controller
 {
@@ -51,11 +54,52 @@ class RuanganController extends Controller
         return redirect()->route('admin.ruangan.index');
     }
 
-    public function show(Ruangan $ruangan)
+     public function show(Ruangan $ruangan)
     {
         abort_if(Gate::denies('ruangan_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.ruangan.show', compact('ruangan'));
+        $events = [];
+
+        // 1. Ambil Kegiatan Umum untuk ruangan ini
+        $kegiatans = Kegiatan::where('ruangan_id', $ruangan->id)
+            ->where('status', 'disetujui')
+            ->get();
+
+        foreach ($kegiatans as $kegiatan) {
+            $events[] = [
+                'title' => $kegiatan->nama_kegiatan,
+                'start' => $kegiatan->waktu_mulai,
+                'end'   => $kegiatan->waktu_selesai,
+                'color' => '#741847', // Warna untuk kegiatan umum
+            ];
+        }
+
+        // 2. Ambil Jadwal Perkuliahan untuk ruangan ini
+        $jadwals = JadwalPerkuliahan::where('ruangan_id', $ruangan->id)->get();
+
+        foreach ($jadwals as $jadwal) {
+            try {
+                $startDate = Carbon::parse($jadwal->berlaku_mulai);
+                $endDate = Carbon::parse($jadwal->berlaku_sampai);
+            } catch (\Exception $e) { continue; }
+            
+            $targetDay = strtolower($jadwal->hari);
+
+            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                if (strtolower($date->locale('id')->isoFormat('dddd')) !== $targetDay) {
+                    continue;
+                }
+
+                $events[] = [
+                    'title' => $jadwal->nama_mk,
+                    'start' => $date->toDateString() . ' ' . $jadwal->jam_mulai,
+                    'end'   => $date->toDateString() . ' ' . $jadwal->jam_selesai,
+                    'color' => '#17a2b8', // Warna untuk perkuliahan
+                ];
+            }
+        }
+
+        return view('admin.ruangan.show', compact('ruangan', 'events'));
     }
 
     public function destroy(Ruangan $ruangan)
