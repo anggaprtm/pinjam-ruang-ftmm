@@ -25,6 +25,11 @@ $(document).ready(function () {
     // 3. Jalankan fungsi ini saat halaman pertama kali dimuat.
     manageTooltips();
 
+    if (window.innerWidth < 768) {
+        $('#sidebar').addClass('c-sidebar-minimized');
+        manageTooltips();
+    }
+
     // =================== AKHIR PERUBAHAN ===================
 
 
@@ -46,7 +51,6 @@ $(document).ready(function () {
             $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
         }, 400);
     });
-
 
     // --- Sisa kode Anda (tidak perlu diubah) ---
 

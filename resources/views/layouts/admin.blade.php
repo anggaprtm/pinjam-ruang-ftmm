@@ -28,6 +28,7 @@
 
 <body class="c-app">
     @include('partials.menu')
+    <div class="sidebar-backdrop"></div>
     <script>
         (function() {
             if (localStorage.getItem('sidebar_minimized') === 'true') {
@@ -44,7 +45,7 @@
                 <i class="fas fa-fw fa-bars"></i>
             </button>
 
-            <a class="c-header-brand d-lg-none" href="#">{{ trans('panel.site_title') }}</a>
+            <a class="c-header-brand d-lg-none" href="#">PINJAM-RUANG FTMM</a>
 
             <button class="c-header-toggler mfs-3 d-md-down-none" type="button" responsive="true">
                 <i class="fas fa-fw fa-bars"></i>

@@ -71,6 +71,20 @@
     </div>
 </div>
 
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-labelledby="eventDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="eventDetailModalLabel">Detail Acara</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalEventBody">
+        {{-- Konten akan diisi oleh JavaScript --}}
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -81,14 +95,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
     const eventDetailsContent = document.getElementById('event-details-content');
     const eventDetailsPlaceholder = document.querySelector('.event-details-placeholder');
-
+    const modalTitle = document.getElementById('eventDetailModalLabel');
+    const modalBody = document.getElementById('modalEventBody');
+    const eventModal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
+    const isMobile = window.innerWidth < 768;
     const calendar = new FullCalendar.Calendar(calendarEl, {
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+            right: isMobile ? '' : 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
         },
-        initialView: 'dayGridMonth',
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
+        height: isMobile ? 'auto' : 650,
         locale: 'id',
         // PERUBAHAN 1: Menerjemahkan tombol
         buttonText: {
@@ -130,10 +148,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (props.deskripsi) {
                 contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-info-circle"></i></div><div class="content"><div class="label">Deskripsi</div><div class="value">${props.deskripsi}</div></div></div>`;
             }
-
-            eventDetailsContent.innerHTML = contentHtml;
-            eventDetailsContent.classList.remove('d-none');
-            eventDetailsPlaceholder.classList.add('d-none');
+            
+            if (isMobile) {
+                modalTitle.textContent = info.event.title;
+                modalBody.innerHTML = contentHtml;
+                eventModal.show();
+            } else {
+                let desktopContent = `<h5 class="detail-title">${info.event.title}</h5><hr>` + contentHtml;
+                eventDetailsContent.innerHTML = desktopContent;
+                eventDetailsContent.classList.remove('d-none');
+                eventDetailsPlaceholder.classList.add('d-none');
+            }
         }
     });
 

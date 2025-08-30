@@ -29,13 +29,13 @@
                     @foreach($ruangan as $key => $item)
                         <tr data-entry-id="{{ $item->id }}">
                             <td></td> {{-- Checkbox --}}
-                            <td>
+                            <td data-label="Ruangan">
                                 <div class="kegiatan-title-cell">{{ $item->nama ?? '' }}</div>
                             </td>
-                            <td class="text-center">
+                            <td data-label="Kapasitas" class="text-center">
                                 <span class="badge-ruangan">{{ $item->kapasitas ?? '' }} Orang</span>
                             </td>
-                            <td class="text-center">
+                            <td data-label="Status" class="text-center">
                                 {{-- PERUBAHAN DI SINI: Mengganti badge dengan toggle switch --}}
                                 <form action="{{ route('admin.ruangan.toggle', $item->id) }}" method="POST" class="toggle-switch-form">
                                     @csrf
@@ -46,7 +46,7 @@
                                     </label>
                                 </form>
                             </td>
-                            <td class="text-center actions-cell">
+                            <td data-label="Aksi" class="text-center actions-cell">
                                 @can('ruangan_show')
                                     <a class="btn btn-xs btn-info" href="{{ route('admin.ruangan.show', $item->id) }}" title="Detail">
                                         <i class="fas fa-eye"></i>

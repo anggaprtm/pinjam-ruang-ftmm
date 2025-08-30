@@ -1,42 +1,44 @@
 <div class="table-responsive">
-    <table class="table table-hover">
+    {{-- Tambahkan kelas 'modern-table' dan 'home-kegiatan-table' --}}
+    <table class="table table-borderless modern-table home-kegiatan-table">
         <thead>
             <tr>
-                <th>Nama Kegiatan</th>
-                <th>Peminjam</th>
+                <th>Kegiatan</th>
                 <th>Ruangan</th>
                 <th>Waktu</th>
-                <th class="text-center">Status</th>
+                <th>Peminjam</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($kegiatans as $kegiatan)
-                {{-- Hanya tampilkan kegiatan yang waktu selesainya belum lewat --}}
-                @if(\Carbon\Carbon::parse($kegiatan->waktu_selesai)->isFuture())
-                    <tr>
-                        <td><strong>{{ $kegiatan->nama_kegiatan }}</strong></td>
-                        <td>{{ $kegiatan->user->name ?? '-' }}</td>
-                        <td><span class="badge-ruangan">{{ $kegiatan->ruangan->nama ?? '-' }}</span></td>
-                        {{-- Menampilkan rentang waktu mulai dan selesai --}}
-                        <td>
-                            {{ \Carbon\Carbon::parse($kegiatan->waktu_mulai)->translatedFormat('H:i') }} - {{ \Carbon\Carbon::parse($kegiatan->waktu_selesai)->translatedFormat('H:i') }}
-                        </td>
-                        <td class="text-center">
-                            @php
-                                $statusClass = str_replace('_', '-', $kegiatan->status);
-                                $statusText = ucwords(str_replace('_', ' ', $kegiatan->status));
-                            @endphp
-                            <span class="badge-status badge-status-{{ $statusClass }}">{{ $statusText }}</span>
-                        </td>
-                    </tr>
-                @endif
+                <tr>
+                    {{-- Tambahkan data-label pada setiap <td> --}}
+                    <td data-label="Kegiatan">
+                        <div class="kegiatan-title-cell">{{ $kegiatan->nama_kegiatan }}</div>
+                    </td>
+                    <td data-label="Ruangan">
+                        <span class="badge-ruangan">{{ $kegiatan->ruangan->nama ?? '' }}</span>
+                    </td>
+                    <td data-label="Waktu">
+                        <div class="kegiatan-sub-cell">
+                            {{ \Carbon\Carbon::parse($kegiatan->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($kegiatan->waktu_selesai)->format('H:i') }}
+                        </div>
+                    </td>
+                    <td data-label="Peminjam">
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar"><i class="fas fa-user"></i></div>
+                            <span class="kegiatan-sub-cell">{{ $kegiatan->user->name ?? '' }}</span>
+                        </div>
+                    </td>
+                </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
-                        {{ $empty_message }}
+                    <td colspan="4" class="text-center py-4">
+                        <p class="mb-0 text-muted">Tidak ada kegiatan yang dijadwalkan.</p>
                     </td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 </div>
+

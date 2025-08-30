@@ -240,7 +240,7 @@ table.dataTable thead .sorting_desc {
 
 .btn-default.focus,
 .btn-default:focus {
-    box-shadow: 0 0 0 .2rem over(209, 213, 215, .5);
+    box-shadow: 0 0 0 .2rem rgba(209, 213, 215, .5);
 }
 
 .btn-default:hover {
@@ -600,6 +600,7 @@ h5 {
     color: #6c757d; /* Warna ikon */
     font-size: 0.8rem; /* Ukuran ikon */
     margin-right: 8px;
+    flex-shrink: 0.5;
 }
 
 /* Teks kecil untuk waktu pembuatan */
@@ -668,6 +669,7 @@ h5 {
 .dt-buttons .btn-danger:hover {
     background-color: #f1b0b7 !important;
 }
+
 
 .filter-bar .select2-container .select2-selection--single {
     height: 38px !important; /* Menyamakan tinggi dengan input standar Bootstrap */
@@ -1005,4 +1007,276 @@ input:checked + .toggle-slider:before {
 .room-capacity {
     font-size: 0.9rem;
     color: #6c757d;
+}
+
+/* ================================================= */
+/* == GAYA RESPONSIVE UNTUK TAMPILAN MOBILE == */
+/* ================================================= */
+@media screen and (max-width: 992px) { 
+
+    /* 1. Tata Letak Umum */
+    .c-main {
+        padding: 1rem !important; /* Kurangi padding di perangkat mobile */
+    }
+
+    /* 2. Kalender */
+    .calendar-container {
+        flex-direction: column; /* Pindahkan sidebar detail ke bawah */
+    }
+    .calendar-sidebar {
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+    .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .dataTables_wrapper table.dataTable {
+        width: 100% !important;
+        border-collapse: collapse !important; /* Mencegah gaya tabel default */
+    }
+    .dataTables_wrapper table.dataTable thead {
+        display: none !important;
+    }
+    .dataTables_wrapper table.dataTable tbody,
+    .dataTables_wrapper table.dataTable tr,
+    .dataTables_wrapper table.dataTable td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .dataTables_wrapper table.dataTable tr {
+        margin-bottom: 1rem !important;
+        border: 1px solid #e9ecef !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+    }
+    .dataTables_wrapper table.dataTable td {
+        border: none !important;
+        border-bottom: 1px solid #f1f1f1 !important;
+        padding: 1rem 1rem 1rem 130px !important;
+        position: relative !important;
+        text-align: right !important;
+        min-height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }
+    
+    .dataTables_wrapper table.dataTable td:first-child {
+        border-radius: 12px 12px 0 0 !important;
+    }
+    .dataTables_wrapper table.dataTable td:last-child {
+        border-bottom: none !important;
+        border-radius: 0 0 12px 12px !important;
+    }
+    .dataTables_wrapper table.dataTable td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 110px; 
+        text-align: left;
+        font-weight: 600;
+        color: #343a40;
+    }
+
+    .dataTables_wrapper table.dataTable td > *,
+    .dataTables_wrapper table.dataTable td > div {
+        text-align: left;
+        width: 100%;
+    }
+    
+    /* Atur layout khusus untuk sel yang berisi avatar */
+    .dataTables_wrapper table.dataTable td .d-flex {
+        flex-direction: row !important; /* Avatar dan teks tetap berdampingan */
+        align-items: flex-start !important; /* Rata atas */
+    }
+    
+    /* Atur blok teks di sebelah avatar agar tersusun vertikal */
+    .dataTables_wrapper table.dataTable td .d-flex > div:last-child {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Atur layout khusus untuk sel Jadwal */
+    .dataTables_wrapper table.dataTable td[data-label="Jadwal"] {
+        flex-direction: column;
+        align-items: flex-start; /* Konten jadwal rata kiri */
+    }
+    
+    /* FIX: Atur perataan untuk sel dengan satu item */
+    .dataTables_wrapper table.dataTable td[data-label="Ruangan"],
+    .dataTables_wrapper table.dataTable td[data-label="Status"],
+    .dataTables_wrapper table.dataTable td[data-label="Aksi"],
+    .dataTables_wrapper table.dataTable td[data-label="Kapasitas"] {
+        justify-content: flex-start !important; /* Rata kiri, bukan memanjang */
+    }
+    
+    /* FIX: Override lebar untuk item tunggal agar tidak memanjang */
+    .dataTables_wrapper table.dataTable td[data-label="Ruangan"] > *,
+    .dataTables_wrapper table.dataTable td[data-label="Status"] > *,
+    .dataTables_wrapper table.dataTable td[data-label="Aksi"] > *,
+    .dataTables_wrapper table.dataTable td[data-label="Kapasitas"] > * {
+        width: auto; /* Biarkan lebarnya menyesuaikan kontennya sendiri */
+    }
+
+
+    /* Beri jarak antar baris teks agar tidak mepet */
+    .dataTables_wrapper table.dataTable .kegiatan-sub-cell {
+        margin-top: 0.25rem;
+    }
+    .dataTables_wrapper table.dataTable .creation-timestamp {
+        margin-top: 0.6rem;
+    }
+
+    .dataTables_wrapper table.dataTable .actions-cell,
+    .dataTables_wrapper table.dataTable .toggle-switch-form {
+        justify-content: flex-start !important; /* Tombol aksi dimulai dari kiri */
+        height: 100%;
+    }
+
+    .dataTables_wrapper table.dataTable .actions-cell,
+    .dataTables_wrapper table.dataTable .toggle-switch-form {
+        justify-content: flex-end !important;
+    }
+    .dataTables_wrapper table.dataTable td > div {
+        word-break: break-word;
+    }
+
+    div.dt-buttons {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr); /* 2 kolom */
+        gap: 0.5rem; /* jarak antar tombol */
+        max-width: 400px; /* biar gak terlalu melebar, optional */
+        gap: 0.3rem; 
+    }
+
+    /* Biar tombol full lebar di grid cell */
+    div.dt-buttons .dt-button {
+        width: 100%;
+        text-align: center;
+        font-size: 12px;   /* perkecil teks */
+        padding: 6px 8px;  /* biar tombol lebih slim */
+    }
+
+    /* 3. Transformasi Tabel Modern menjadi Kartu */
+    .modern-table thead {
+        display: none; /* Sembunyikan header tabel di mobile */
+    }
+    .modern-table, .modern-table tbody, .modern-table tr, .modern-table td {
+        display: block;
+        width: 100%;
+    }
+    .modern-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .modern-table td {
+        border: none;
+        padding: 1rem 1rem 1rem 130px !important;
+        border-bottom: 1px solid #f1f1f1;
+        padding-left: 50% !important; /* Ruang untuk label */
+        position: relative;
+        text-align: right !important;
+    }
+    .modern-table td:first-child {
+        border-radius: 12px 12px 0 0 !important;
+    }
+    .modern-table td:last-child {
+        border-bottom: none;
+        border-radius: 0 0 12px 12px !important;
+    }
+    .modern-table td::before {
+        content: attr(data-label); /* Ambil teks dari atribut data-label */
+        position: absolute;
+        left: 1rem;
+        top: 50%; /* Posisikan label di tengah vertikal */
+        transform: translateY(-50%);
+        width: 110px; 
+        text-align: left;
+        font-weight: 600;
+        color: #343a40;
+    }
+    .modern-table .actions-cell,
+    .modern-table .toggle-switch-form {
+        justify-content: flex-end; /* Ratakan kanan untuk tombol aksi */
+    }
+    
+    .modern-table td > div {
+        word-break: break-word;
+    }
+    /* 4. Filter Bar */
+    .filter-bar form {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .filter-bar .form-group {
+        width: 100%;
+    }
+    .filter-bar button, .filter-bar a {
+        width: 100%;
+    }
+    
+    /* 5. Kontrol DataTables */
+    .dt-controls-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1040; /* Harus di bawah sidebar (z-index sidebar CoreUI adalah 1041) */
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    .sidebar-backdrop.show {
+        opacity: 1;
+        visibility: visible;
+    }
+     .c-sidebar.c-sidebar-show .c-sidebar-nav .nav-link span,
+    .c-sidebar.c-sidebar-show .c-sidebar-nav .nav-link-text {
+        display: none !important;
+    }
+
+    /* Biar sidebar lebih ramping */
+    .c-sidebar.c-sidebar-show {
+        width: 70px; /* sesuaikan dengan ukuran icon */
+    }
+    .calendar-container {
+        flex-direction: column; /* Susun kalender dan sidebar secara vertikal */
+    }
+    .calendar-sidebar {
+        display: none; /* Sembunyikan sidebar detail di mobile */
+    }
+    .fc .fc-toolbar.fc-header-toolbar {
+        flex-direction: column; /* Toolbar juga vertikal */
+        gap: 1rem;
+    }
+
+    .stat-card {
+        margin-bottom: 1rem; /* Beri jarak antar kartu statistik saat tersusun vertikal */
+    }
+
+    .c-header-brand.d-lg-none {
+        justify-content: center;
+        color: white !important;
+    }
+
+    /* Terapkan transformasi tabel ke kartu pada tabel di beranda */
+    .home-kegiatan-table {
+        margin-top: 1rem;
+    }
+
+
 }

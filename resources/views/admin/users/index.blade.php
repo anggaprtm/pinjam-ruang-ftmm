@@ -30,28 +30,28 @@
                     @foreach($users as $key => $user)
                         <tr data-entry-id="{{ $user->id }}">
                             <td></td> {{-- Checkbox --}}
-                            <td>
+                            <td data-label="User">
                                 <div class="kegiatan-title-cell">{{ $user->name ?? '' }}</div>
                                 <div class="kegiatan-sub-cell">ID: {{ $user->id ?? '' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Email">
                                 <div class="kegiatan-sub-cell">{{ $user->email ?? '' }}</div>
                             </td>
-                            <td class="text-center">
+                            <td data-label="Status" class="text-center">
                                 @if($user->email_verified_at)
                                     <span class="badge-status badge-status-aktif">Terverifikasi</span>
                                 @else
                                     <span class="badge-status badge-status-tidak-aktif">Belum</span>
                                 @endif
                             </td>
-                            <td>
+                            <td data-label="Peranan">
                                 <div class="permission-badges-container">
                                     @foreach($user->roles as $key => $item)
                                         <span class="badge badge-permission">{{ $item->title }}</span>
                                     @endforeach
                                 </div>
                             </td>
-                            <td class="text-center actions-cell">
+                            <td data-label="Aksi" class="text-center actions-cell">
                                 @can('user_show')
                                     <a class="btn btn-xs btn-info" href="{{ route('admin.users.show', $user->id) }}" title="Detail">
                                         <i class="fas fa-eye"></i>

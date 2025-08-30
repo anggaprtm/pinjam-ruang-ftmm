@@ -51,26 +51,31 @@
         </div>
 
         {{-- Daftar Kegiatan dengan Tab --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" id="kegiatanTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="hari-ini-tab" data-bs-toggle="tab" data-bs-target="#hari-ini" type="button" role="tab">Kegiatan Hari Ini</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="besok-tab" data-bs-toggle="tab" data-bs-target="#besok" type="button" role="tab">Kegiatan Besok</button>
-                    </li>
-                </ul>
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="kegiatan-title-cell">Rekap Kegiatan</h5>
             </div>
             <div class="card-body">
-                <div class="tab-content" id="kegiatanTabContent">
-                    {{-- Konten Tab Hari Ini --}}
-                    <div class="tab-pane fade show active" id="hari-ini" role="tabpanel">
-                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanHariIni, 'empty_message' => 'Tidak ada kegiatan yang dijadwalkan untuk hari ini.'])
+                <ul class="nav nav-tabs kegiatan-title-cell" id="kegiatanTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        {{-- PERUBAHAN DI SINI --}}
+                        <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab" aria-controls="today" aria-selected="true">
+                            <span class="d-none d-md-inline">Kegiatan </span>Hari Ini
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        {{-- PERUBAHAN DI SINI --}}
+                        <button class="nav-link" id="tomorrow-tab" data-bs-toggle="tab" data-bs-target="#tomorrow" type="button" role="tab" aria-controls="tomorrow" aria-selected="false">
+                            <span class="d-none d-md-inline">Kegiatan </span>Besok
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content pt-3" id="kegiatanTabContent">
+                    <div class="tab-pane fade show active" id="today" role="tabpanel" aria-labelledby="today-tab">
+                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanHariIni])
                     </div>
-                    {{-- Konten Tab Besok --}}
-                    <div class="tab-pane fade" id="besok" role="tabpanel">
-                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanBesok, 'empty_message' => 'Tidak ada kegiatan yang dijadwalkan untuk besok.'])
+                    <div class="tab-pane fade" id="tomorrow" role="tabpanel" aria-labelledby="tomorrow-tab">
+                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanBesok])
                     </div>
                 </div>
             </div>

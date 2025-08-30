@@ -29,18 +29,18 @@
                     @foreach($roles as $key => $role)
                         <tr data-entry-id="{{ $role->id }}">
                             <td></td> {{-- Checkbox --}}
-                            <td>{{ $role->id ?? '' }}</td>
-                            <td>
+                            <td data-label="ID">{{ $role->id ?? '' }}</td>
+                            <td data-label="Role">
                                 <div class="kegiatan-title-cell">{{ $role->title ?? '' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Akses">
                                 <div class="permission-badges-container">
                                     @foreach($role->permissions as $key => $item)
                                         <span class="badge badge-permission">{{ $item->title }}</span>
                                     @endforeach
                                 </div>
                             </td>
-                            <td class="text-center actions-cell">
+                            <td data-label="Aksi" class="text-center actions-cell">
                                 @can('role_show')
                                     <a class="btn btn-xs btn-info" href="{{ route('admin.roles.show', $role->id) }}" title="Detail">
                                         <i class="fas fa-eye"></i>

@@ -64,24 +64,22 @@
                     @foreach ($kegiatan as $item)
                         <tr data-entry-id="{{ $item->id }}">
                             <td></td> {{-- Checkbox --}}
-                            <td>
+                            <td data-label="Kegiatan">
                                 <div class="kegiatan-title-cell">{{ $item->nama_kegiatan }}</div>
                                 <div class="d-flex align-items-center mt-1">
-                                    {{-- PERUBAHAN 1: Avatar menjadi ikon --}}
                                     <div class="user-avatar"><i class="fas fa-user"></i></div>
                                     <div>
                                         <div class="kegiatan-sub-cell">{{ $item->user->name ?? '-' }}</div>
-                                        {{-- PERUBAHAN 2: Menambahkan waktu pembuatan --}}
                                         <div class="creation-timestamp" title="{{ $item->created_at->format('d M Y, H:i:s') }}">
                                             Dibuat: {{ $item->created_at->diffForHumans() }}
                                         </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Ruangan">
                                 <span class="badge-ruangan">{{ $item->ruangan->nama ?? '-' }}</span>
                             </td>
-                            <td>
+                            <td data-label="Jadwal">
                                 <div class="kegiatan-sub-cell">
                                     Mulai: {{ \Carbon\Carbon::parse($item->waktu_mulai)->translatedFormat('d M Y, H:i') }}
                                 </div>
@@ -89,7 +87,7 @@
                                     Selesai: {{ \Carbon\Carbon::parse($item->waktu_selesai)->translatedFormat('d M Y, H:i') }}
                                 </div>
                             </td>
-                            <td class="text-center">
+                            <td data-label="Status" class="text-center">
                                 @php
                                     $statusClass = str_replace('_', '-', $item->status);
                                     $statusText = '';
@@ -106,7 +104,7 @@
                                     {{ $statusText }}
                                 </span>
                             </td>
-                            <td class="text-center actions-cell">
+                            <td data-label="Aksi" class="text-center actions-cell">
                                 @can('kegiatan_show')
                                     <a class="btn btn-xs btn-info" href="{{ route('admin.kegiatan.show', $item->id) }}" title="Detail"><i class="fas fa-eye"></i></a>
                                 @endcan
