@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let timeString = `${start.toLocaleTimeString([], timeFormat)} - ${end ? end.toLocaleTimeString([], timeFormat) : ''}`;
 
-            let contentHtml = `<h5 class="detail-title">${info.event.title}</h5><hr>`;
+            let contentHtml = ``;
             contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-calendar-alt"></i></div><div class="content"><div class="label">Tanggal</div><div class="value">${start.toLocaleDateString('id-ID', dateFormat)}</div></div></div>`;
             contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-clock"></i></div><div class="content"><div class="label">Waktu</div><div class="value">${timeString}</div></div></div>`;
 

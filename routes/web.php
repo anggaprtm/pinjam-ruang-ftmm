@@ -50,6 +50,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::get('kalender', 'SystemCalendarController@index')->name('systemCalendar');
     Route::get('cari-ruang', 'BookingsController@cariRuang')->name('cariRuang');
     Route::post('book-ruang', 'BookingsController@bookRuang')->name('bookRuang');
+
+    Route::get('api/holidays', 'CalendarViewController@getHolidays')->name('api.holidays');
 });
 Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth']], function () {
     // Change password
