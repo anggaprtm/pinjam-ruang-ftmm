@@ -35,27 +35,41 @@
                 <a href="{{ route('admin.jadwal-perkuliahan.index') }}" class="btn btn-secondary">Reset</a>
             </form>
         </div>
+        
         {{-- Fitur Import --}}
         <div class="col-md-6">
             @can('kuliah_create')
-            <form action="{{ route('admin.jadwal-perkuliahan.import') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-end gap-2">
-                @csrf
-                <div class="flex-grow-1">
-                    <label for="import_file" class="form-label fw-bold">Import dari Excel:</label>
-                    <input type="file" name="file" id="import_file" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-file-import"></i> Import
+            <div class="d-flex align-items-end gap-2">
+                <form action="{{ route('admin.jadwal-perkuliahan.import') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-end gap-2 flex-grow-1">
+                    @csrf
+                    <div class="flex-grow-1">
+                        <label for="import_file" class="form-label fw-bold">Import dari Excel:</label>
+                        <div class="input-group">
+                            {{-- Hidden file input --}}
+                            <input type="file" name="file" id="import_file" class="d-none" required>
+                            
+                            {{-- Custom button --}}
+                            <label for="import_file" class="btn btn-outline-primary mb-0 rounded-end-0"><i class="fas fa-folder-open me-2"></i>Pilih File</label>
+                            
+                            {{-- File name display --}}
+                            <span class="form-control rounded-start-0" id="file-name-display">Tidak ada file yang dipilih</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                </form>
+                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importInstructionsModal">
+                    <i class="fas fa-info-circle"></i> Petunjuk
                 </button>
-            </form>
+            </div>
             @endcan
         </div>
     </div>
 </div>
 
-
 {{-- Tabel Modern --}}
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm mt-4">
     <div class="card-body">
         <div class="table-responsive">
             <table class="modern-table datatable datatable-jadwals">
@@ -87,7 +101,7 @@
                             <td>
                                 <div class="kegiatan-sub-cell"><strong>{{ $jadwal->hari }}</strong></div>
                                 <div class="kegiatan-sub-cell">
-                                    {{ \Carbon\Carbon::parse($jadwal->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->jam_selesai)->format('H:i') }}
+                                    {{ \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H:i') }}
                                 </div>
                             </td>
                             <td class="text-center actions-cell">
@@ -113,6 +127,39 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Petunjuk Import -->
+<div class="modal fade" id="importInstructionsModal" tabindex="-1" aria-labelledby="importInstructionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importInstructionsModalLabel"><i class="fas fa-info-circle me-2"></i> Petunjuk Import Data Jadwal Perkuliahan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Untuk mengimpor data jadwal perkuliahan, silakan gunakan template yang telah disediakan. Pastikan format data sesuai dengan petunjuk berikut:</p>
+                <ul>
+                    <li>Kolom <strong>nama_ruangan</strong>: Wajib diisi dan harus sesuai dengan nama ruangan yang sudah terdaftar di sistem.</li>
+                    <li>Kolom <strong>mata_kuliah</strong>: Wajib diisi.</li>
+                    <li>Kolom <strong>hari</strong>: Wajib diisi (Contoh: Senin, Selasa, dst.).</li>
+                    <li>Kolom <strong>waktu_mulai</strong> dan <strong>waktu_selesai</strong>: Gunakan format Jam:Menit (Contoh: 08:00, 13:30).</li>
+                    <li>Kolom <strong>berlaku_mulai</strong> dan <strong>berlaku_sampai</strong>: Gunakan format Tahun-Bulan-Tanggal (Contoh: 2024-09-01).</li>
+                    <li>Kolom <strong>tipe</strong>: Opsional, bisa diisi dengan 'Teori' atau 'Praktikum'.</li>
+                    <li>Kolom <strong>program_studi</strong>: Opsional (Contoh: S1 Teknik Robotika dan Kecerdasan Buatan).</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <strong>Penting:</strong> Pastikan tidak ada jadwal yang bentrok (ruangan, hari, dan jam yang sama) dengan data yang sudah ada di sistem untuk menghindari kegagalan import.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <a href="{{ route('admin.jadwal-perkuliahan.template') }}" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i> Unduh Template Excel
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -208,6 +255,17 @@
       });
 
       table.draw();
+
+      // Custom file input
+      $('#import_file').on('change', function() {
+        let fileName = $(this).val().split('\\').pop();
+        if (fileName) {
+          $('#file-name-display').text(fileName);
+        } else {
+          $('#file-name-display').text('Tidak ada file yang dipilih');
+        }
+      });
     });
 </script>
 @endsection
+

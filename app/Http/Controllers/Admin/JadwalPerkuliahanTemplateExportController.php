@@ -54,4 +54,9 @@ class JadwalPerkuliahanTemplateExportController extends Controller
         $validation->setShowDropDown(true);
         $validation->setFormula1('"' . implode(',', $options) . '"');
     }
+
+    public function export()
+    {
+        return Excel::download(new JadwalPerkuliahanTemplateExport, 'template_jadwal_perkuliahan.xlsx');
+    }
 }
