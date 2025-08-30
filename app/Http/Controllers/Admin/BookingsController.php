@@ -45,11 +45,6 @@ class BookingsController extends Controller
             'user_id' => auth()->id()
         ]);
 
-        // $request->validate([
-        //     'nama_kegiatan'     => 'required',
-        //     'ruangan_id'        => 'required',
-        //     'surat_izin'        => 'required|file|mimes:pdf|max:2048',
-        // ]);
         $rules = [
             'nama_kegiatan'     => 'required',
             'ruangan_id'        => 'required',
@@ -73,10 +68,10 @@ class BookingsController extends Controller
         if ($request->hasFile('surat_izin')) {
             $suratIzinPath = $request->file('surat_izin')->store('surat_izin', 'public');
         }
-        // Gunakan array data baru
+
         $data = $request->all();
-        $data['surat_izin'] = $suratIzinPath; // Masukkan path file yang benar ke dalam data
-        $data['status'] = auth()->user()->hasRole('Admin') ? 'disetujui' : 'belum_disetujui'; // Status default untuk user
+        $data['surat_izin'] = $suratIzinPath; 
+        $data['status'] = auth()->user()->hasRole('Admin') ? 'disetujui' : 'belum_disetujui'; 
         $kegiatan = Kegiatan::create($data);
    
         $customEmails = ['angga.iryanto@staf.unair.ac.id']; // Email tambahan

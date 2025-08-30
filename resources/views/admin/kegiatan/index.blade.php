@@ -19,6 +19,8 @@
                 <label for="tanggal_mulai" class="form-label fw-bold">Filter Tanggal Mulai:</label>
                 <input type="date" name="tanggal_mulai" id="tanggal_mulai" class="form-control" value="{{ request('tanggal_mulai') }}">
             </div>
+                               
+            @if(!auth()->user()->hasRole('User'))
             <div class="col-md-3">
                 <label for="user_id" class="form-label fw-bold">Filter Peminjam:</label>
                 <select name="user_id" id="user_id" class="form-control select2">
@@ -27,6 +29,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
             <div class="col-md-3">
                 <label for="ruangan_id" class="form-label fw-bold">Filter Ruangan:</label>
                 <select name="ruangan_id" id="ruangan_id" class="form-control select2">
@@ -57,6 +60,9 @@
                         <th><i class="fas fa-door-open"></i>Ruangan</th>
                         <th><i class="fas fa-calendar-alt"></i>Jadwal</th>
                         <th class="text-center"><i class="fas fa-info-circle"></i>Status</th>
+                        @can('persetujuan_access')
+                            <th class="text-center"><i class="fas fa-tasks"></i> Persetujuan</th>
+                        @endcan
                         <th class="text-center" style="width: 150px;"><i class="fas fa-cogs"></i>Aksi</th>
                     </tr>
                 </thead>
@@ -92,9 +98,9 @@
                                     $statusClass = str_replace('_', '-', $item->status);
                                     $statusText = '';
                                     switch ($item->status) {
-                                        case 'belum_disetujui': $statusText = 'Menunggu Operator'; break;
-                                        case 'verifikasi_sarpras': $statusText = 'Menunggu Akademik'; break;
-                                        case 'verifikasi_akademik': $statusText = 'Menunggu Sarpras'; break;
+                                        case 'belum_disetujui': $statusText = 'Menunggu Verifikasi Operator'; break;
+                                        case 'verifikasi_sarpras': $statusText = 'Menunggu Verifikasi Akademik'; break;
+                                        case 'verifikasi_akademik': $statusText = 'Menunggu Verifikasi Sarpras'; break;
                                         case 'disetujui': $statusText = 'Disetujui'; break;
                                         case 'ditolak': $statusText = 'Ditolak'; break;
                                         default: $statusText = $item->status; break;
@@ -104,19 +110,45 @@
                                     {{ $statusText }}
                                 </span>
                             </td>
+                            @can('persetujuan_access')
+                                <td data-label="Persetujuan" class="text-center">
+                                    @can('kegiatan_edit_status')
+                                        @if ($item->status == 'belum_disetujui')
+                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasiSarpras{{ $item->id }}">Verifikasi</button>
+                                        @elseif ($item->status == 'verifikasi_sarpras')
+                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasiAkademik{{ $item->id }}">Verifikasi</button>
+                                        @elseif ($item->status == 'verifikasi_akademik')
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalSetujui{{ $item->id }}">Setujui</button>
+                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalTolak{{ $item->id }}">Tolak</button>
+                                        @elseif (in_array($item->status, ['disetujui', 'ditolak']))
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    @endcan
+                                </td>
+                            @endcan
                             <td data-label="Aksi" class="text-center actions-cell">
                                 @can('kegiatan_show')
                                     <a class="btn btn-xs btn-info" href="{{ route('admin.kegiatan.show', $item->id) }}" title="Detail"><i class="fas fa-eye"></i></a>
                                 @endcan
-                                @can('kegiatan_edit')
-                                    <a class="btn btn-xs btn-success" href="{{ route('admin.kegiatan.edit', $item->id) }}" title="Edit"><i class="fas fa-edit"></i></a>
-                                @endcan
-                                @can('kegiatan_delete')
-                                    <form id="delete-form-{{ $item->id }}" action="{{ route('admin.kegiatan.destroy', $item->id) }}" method="POST" style="display: inline-block;">
-                                        @csrf @method('DELETE')
-                                        <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete({{ $item->id }})" title="Hapus"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                @endcan
+                                @if(
+                                    !auth()->user()->hasRole('User') ||  // Admin atau role lain selalu bisa
+                                    (auth()->user()->hasRole('User') && !in_array($item->status, ['disetujui', 'ditolak'])) // User biasa cuma bisa jika status bukan disetujui/ditolak
+                                )
+                                    @can('kegiatan_edit')
+                                        <a class="btn btn-xs btn-success" href="{{ route('admin.kegiatan.edit', $item->id) }}" title="Edit"><i class="fas fa-edit"></i></a>
+                                    @endcan
+                                @endif
+                                @if(
+                                    !auth()->user()->hasRole('User') ||  // Admin atau role lain selalu bisa
+                                    (auth()->user()->hasRole('User') && !in_array($item->status, ['disetujui', 'ditolak'])) // User biasa cuma bisa jika status bukan disetujui/ditolak
+                                )
+                                    @can('kegiatan_delete')
+                                        <form id="delete-form-{{ $item->id }}" action="{{ route('admin.kegiatan.destroy', $item->id) }}" method="POST" style="display: inline-block;">
+                                            @csrf @method('DELETE')
+                                            <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete({{ $item->id }})" title="Hapus"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    @endcan
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -125,6 +157,78 @@
         </div>
     </div>
 </div>
+
+@foreach($kegiatan as $item)
+    {{-- Modal Verifikasi Sarpras --}}
+    <div class="modal fade" id="modalVerifikasiSarpras{{ $item->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
+                @csrf @method('PATCH')
+                <div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Verifikasi Kegiatan</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="next">
+                        <div class="form-group"><label for="notes">Catatan (opsional)</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Kirim</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal Verifikasi Akademik --}}
+    <div class="modal fade" id="modalVerifikasiAkademik{{ $item->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
+                @csrf @method('PATCH')
+                <div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Verifikasi Akademik</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="next">
+                        <div class="form-group"><label for="notes">Catatan (opsional)</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Kirim & Verifikasi</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal Setujui --}}
+    <div class="modal fade" id="modalSetujui{{ $item->id }}" tabindex="-1" aria-hidden="true">
+         <div class="modal-dialog">
+            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
+                @csrf @method('PATCH')
+                <div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Setujui Kegiatan</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="next">
+                        <p>Apakah Anda yakin ingin menyetujui kegiatan ini?</p>
+                        <div class="form-group"><label for="notes">Catatan (opsional)</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Ya, Setujui</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal Tolak --}}
+    <div class="modal fade" id="modalTolak{{ $item->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
+                @csrf @method('PATCH')
+                <div class="modal-content">
+                    <div class="modal-header"><h5 class="modal-title">Tolak Kegiatan</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="reject">
+                        <div class="form-group"><label for="notes">Alasan Penolakan (wajib diisi)</label><textarea name="notes" class="form-control" rows="3" required></textarea></div>
+                    </div>
+                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Tolak Kegiatan</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+
 
 @endsection
 

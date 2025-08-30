@@ -19,7 +19,7 @@
                 </div>
                 <div class="col-md-2">
                     <label for="kapasitas" class="form-label fw-bold">Min. Kapasitas</label>
-                    <input class="form-control" type="number" name="kapasitas" id="kapasitas" value="{{ request()->input('kapasitas') }}" placeholder="e.g. 50" step="1" required>
+                    <input class="form-control" type="number" name="kapasitas" id="kapasitas" value="{{ request()->input('kapasitas') }}" placeholder="cth. 50" step="1" required>
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-primary w-100" type="submit">

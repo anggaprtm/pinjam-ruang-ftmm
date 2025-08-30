@@ -38,6 +38,11 @@ class KegiatanController extends Controller
             $query->where('ruangan_id', $request->ruangan_id);
         }
 
+         // 🔒 Filter khusus untuk role User
+        if (auth()->user()->hasRole('User')) {
+            $query->where('user_id', auth()->id());
+        }
+
         $kegiatan = $query->orderBy('id', 'desc')->get();
 
         // Ambil data untuk dropdown filter
@@ -88,6 +93,11 @@ class KegiatanController extends Controller
     {
         abort_if(Gate::denies('kegiatan_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
+        // Tambahan: User tidak bisa edit jika sudah disetujui
+        if (auth()->user()->hasRole('User') && $kegiatan->status === 'disetujui') {
+            abort(Response::HTTP_FORBIDDEN, '403 Forbidden: Anda tidak dapat mengubah data yang sudah disetujui.');
+        }
+
         $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
 
         $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
@@ -100,6 +110,11 @@ class KegiatanController extends Controller
     public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan)
     {
         // Ambil semua data dari request
+        // Tambahan: User tidak bisa update jika sudah disetujui
+        if (auth()->user()->hasRole('User') && $kegiatan->status === 'disetujui') {
+            abort(Response::HTTP_FORBIDDEN, '403 Forbidden: Anda tidak dapat mengubah data yang sudah disetujui.');
+        }
+
         $data = $request->all();
 
         // Proses file surat izin jika ada
@@ -159,6 +174,12 @@ class KegiatanController extends Controller
     public function destroy(Kegiatan $kegiatan)
     {
         abort_if(Gate::denies('kegiatan_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        // Tambahan: User tidak bisa hapus jika sudah disetujui
+        if (auth()->user()->hasRole('User') && $kegiatan->status === 'disetujui') {
+            abort(Response::HTTP_FORBIDDEN, '403 Forbidden: Anda tidak dapat menghapus data yang sudah disetujui.');
+        }
+
 
         $kegiatan->delete();
 

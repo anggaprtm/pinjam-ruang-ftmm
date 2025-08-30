@@ -68,7 +68,7 @@
                     <div class="content">
                         <div class="label">Surat Izin</div>
                         <div class="value">
-                            <a href="{{ $kegiatan->surat_izin->getUrl() }}" target="_blank" class="btn btn-sm btn-info">
+                            <a href="{{ asset('storage/' . $kegiatan->surat_izin) }}" target="_blank" class="btn btn-sm btn-info">
                                 <i class="fas fa-download me-1"></i> Lihat/Unduh Surat
                             </a>
                         </div>
@@ -88,9 +88,31 @@
                             <div class="value">
                                 @php
                                     $statusClass = str_replace('_', '-', $kegiatan->status);
-                                    $statusText = ucwords(str_replace('_', ' ', $kegiatan->status));
+                                    $statusText = '';
+                                    switch ($kegiatan->status) {
+                                        case 'belum_disetujui': 
+                                            $statusText = 'Menunggu Verifikasi Operator'; 
+                                            break;
+                                        case 'verifikasi_sarpras': 
+                                            $statusText = 'Operator Sudah Verifikasi'; 
+                                            break;
+                                        case 'verifikasi_akademik': 
+                                            $statusText = 'Akademik Sudah Verifikasi'; 
+                                            break;
+                                        case 'disetujui': 
+                                            $statusText = 'Kegiatan Disetujui'; 
+                                            break;
+                                        case 'ditolak': 
+                                            $statusText = 'Kegiatan Ditolak'; 
+                                            break;
+                                        default: 
+                                            $statusText = $kegiatan->status; 
+                                            break;
+                                    }
                                 @endphp
-                                <span class="badge-status badge-status-{{ $statusClass }}">{{ $statusText }}</span>
+                                <span class="badge-status badge-status-{{ $statusClass }}">
+                                    {{ $statusText }}
+                                </span>
                             </div>
                         </div>
                     </div>
