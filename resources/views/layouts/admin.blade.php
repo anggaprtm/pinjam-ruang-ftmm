@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ trans('panel.site_title') }}</title>
+    <title>Pinjam-Ruang FTMM</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet" />
     <link href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" rel="stylesheet" />

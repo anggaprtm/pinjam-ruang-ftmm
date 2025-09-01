@@ -67,167 +67,42 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($kegiatan as $item)
-                        <tr data-entry-id="{{ $item->id }}">
-                            <td></td> {{-- Checkbox --}}
-                            <td data-label="Kegiatan">
-                                <div class="kegiatan-title-cell">{{ $item->nama_kegiatan }}</div>
-                                <div class="d-flex align-items-center mt-1">
-                                    <div class="user-avatar"><i class="fas fa-user"></i></div>
-                                    <div>
-                                        <div class="kegiatan-sub-cell">{{ $item->user->name ?? '-' }}</div>
-                                        <div class="creation-timestamp" title="{{ $item->created_at->format('d M Y, H:i:s') }}">
-                                            Dibuat: {{ $item->created_at->diffForHumans() }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td data-label="Ruangan">
-                                <span class="badge-ruangan">{{ $item->ruangan->nama ?? '-' }}</span>
-                            </td>
-                            <td data-label="Jadwal">
-                                <div class="kegiatan-sub-cell">
-                                    Mulai: {{ \Carbon\Carbon::parse($item->waktu_mulai)->translatedFormat('d M Y, H:i') }}
-                                </div>
-                                <div class="kegiatan-sub-cell">
-                                    Selesai: {{ \Carbon\Carbon::parse($item->waktu_selesai)->translatedFormat('d M Y, H:i') }}
-                                </div>
-                            </td>
-                            <td data-label="Status" class="text-center">
-                                @php
-                                    $statusClass = str_replace('_', '-', $item->status);
-                                    $statusText = '';
-                                    switch ($item->status) {
-                                        case 'belum_disetujui': $statusText = 'Menunggu Verifikasi Operator'; break;
-                                        case 'verifikasi_sarpras': $statusText = 'Menunggu Verifikasi Akademik'; break;
-                                        case 'verifikasi_akademik': $statusText = 'Menunggu Verifikasi Sarpras'; break;
-                                        case 'disetujui': $statusText = 'Disetujui'; break;
-                                        case 'ditolak': $statusText = 'Ditolak'; break;
-                                        default: $statusText = $item->status; break;
-                                    }
-                                @endphp
-                                <span class="badge-status badge-status-{{ $statusClass }}">
-                                    {{ $statusText }}
-                                </span>
-                            </td>
-                            @can('persetujuan_access')
-                                <td data-label="Persetujuan" class="text-center">
-                                    @can('kegiatan_edit_status')
-                                        @if ($item->status == 'belum_disetujui')
-                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasiSarpras{{ $item->id }}">Verifikasi</button>
-                                        @elseif ($item->status == 'verifikasi_sarpras')
-                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasiAkademik{{ $item->id }}">Verifikasi</button>
-                                        @elseif ($item->status == 'verifikasi_akademik')
-                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalSetujui{{ $item->id }}">Setujui</button>
-                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalTolak{{ $item->id }}">Tolak</button>
-                                        @elseif (in_array($item->status, ['disetujui', 'ditolak']))
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    @endcan
-                                </td>
-                            @endcan
-                            <td data-label="Aksi" class="text-center actions-cell">
-                                @can('kegiatan_show')
-                                    <a class="btn btn-xs btn-info" href="{{ route('admin.kegiatan.show', $item->id) }}" title="Detail"><i class="fas fa-eye"></i></a>
-                                @endcan
-                                @if(
-                                    !auth()->user()->hasRole('User') ||  // Admin atau role lain selalu bisa
-                                    (auth()->user()->hasRole('User') && !in_array($item->status, ['disetujui', 'ditolak'])) // User biasa cuma bisa jika status bukan disetujui/ditolak
-                                )
-                                    @can('kegiatan_edit')
-                                        <a class="btn btn-xs btn-success" href="{{ route('admin.kegiatan.edit', $item->id) }}" title="Edit"><i class="fas fa-edit"></i></a>
-                                    @endcan
-                                @endif
-                                @if(
-                                    !auth()->user()->hasRole('User') ||  // Admin atau role lain selalu bisa
-                                    (auth()->user()->hasRole('User') && !in_array($item->status, ['disetujui', 'ditolak'])) // User biasa cuma bisa jika status bukan disetujui/ditolak
-                                )
-                                    @can('kegiatan_delete')
-                                        <form id="delete-form-{{ $item->id }}" action="{{ route('admin.kegiatan.destroy', $item->id) }}" method="POST" style="display: inline-block;">
-                                            @csrf @method('DELETE')
-                                            <button type="button" class="btn btn-xs btn-danger" onclick="confirmDelete({{ $item->id }})" title="Hapus"><i class="fas fa-trash"></i></button>
-                                        </form>
-                                    @endcan
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
+                   
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-@foreach($kegiatan as $item)
-    {{-- Modal Verifikasi Sarpras --}}
-    <div class="modal fade" id="modalVerifikasiSarpras{{ $item->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
-                @csrf @method('PATCH')
-                <div class="modal-content">
-                    <div class="modal-header"><h5 class="modal-title">Verifikasi Kegiatan</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="next">
-                        <div class="form-group"><label for="notes">Catatan (opsional)</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
-                    </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Kirim</button></div>
+{{-- SATU MODAL UNTUK SEMUA AKSI PERSETUJUAN --}}
+<div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="modalForm" method="POST" action=""> {{-- Action akan diisi oleh JS --}}
+            @csrf
+            @method('PATCH')
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Konfirmasi Aksi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- Modal Verifikasi Akademik --}}
-    <div class="modal fade" id="modalVerifikasiAkademik{{ $item->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
-                @csrf @method('PATCH')
-                <div class="modal-content">
-                    <div class="modal-header"><h5 class="modal-title">Verifikasi Akademik</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="next">
-                        <div class="form-group"><label for="notes">Catatan (opsional)</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" id="modalActionInput" value=""> {{-- Value akan diisi oleh JS --}}
+                    
+                    <p id="modalBodyText">Apakah Anda yakin ingin melanjutkan aksi ini?</p>
+                    
+                    <div class="form-group">
+                        <label id="modalNotesLabel" for="modalNotesTextarea">Catatan (opsional)</label>
+                        <textarea name="notes" id="modalNotesTextarea" class="form-control" rows="3"></textarea>
                     </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Kirim & Verifikasi</button></div>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- Modal Setujui --}}
-    <div class="modal fade" id="modalSetujui{{ $item->id }}" tabindex="-1" aria-hidden="true">
-         <div class="modal-dialog">
-            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
-                @csrf @method('PATCH')
-                <div class="modal-content">
-                    <div class="modal-header"><h5 class="modal-title">Setujui Kegiatan</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="next">
-                        <p>Apakah Anda yakin ingin menyetujui kegiatan ini?</p>
-                        <div class="form-group"><label for="notes">Catatan (opsional)</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
-                    </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-success">Ya, Setujui</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" id="modalSubmitButton" class="btn btn-primary">Kirim</button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-
-    {{-- Modal Tolak --}}
-    <div class="modal fade" id="modalTolak{{ $item->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form action="{{ route('admin.kegiatan.updateStatus', $item->id) }}" method="POST">
-                @csrf @method('PATCH')
-                <div class="modal-content">
-                    <div class="modal-header"><h5 class="modal-title">Tolak Kegiatan</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="reject">
-                        <div class="form-group"><label for="notes">Alasan Penolakan (wajib diisi)</label><textarea name="notes" class="form-control" rows="3" required></textarea></div>
-                    </div>
-                    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-danger">Tolak Kegiatan</button></div>
-                </div>
-            </form>
-        </div>
-    </div>
-@endforeach
+</div>
 
 
 @endsection
@@ -235,76 +110,303 @@
 @section('scripts')
 @parent
 <script>
-    $(function () {
-      let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-      
-      @can('kegiatan_delete')
-      let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
-      let deleteButton = {
+$(function () {
+
+        $(document).on('click', '.js-open-modal', function () {
+        const actionType = $(this).data('action-type');
+        const kegiatanId = $(this).data('id');
+
+        let config = {};
+        const baseUrl = "{{ url('admin/kegiatan') }}/" + kegiatanId + "/update-status";
+
+        // Reset modal ke default
+        $('#modalNotesTextarea').prop('required', false);
+        $('#modalBodyText').show();
+
+        switch (actionType) {
+            case 'verifikasi_sarpras':
+                config = {
+                    title: 'Verifikasi Kegiatan',
+                    bodyText: 'Lanjutkan untuk memverifikasi kegiatan ini?',
+                    actionValue: 'next',
+                    submitText: 'Kirim',
+                    submitClass: 'btn-primary',
+                    notesLabel: 'Catatan (opsional)'
+                };
+                break;
+            case 'verifikasi_akademik':
+                config = {
+                    title: 'Verifikasi Akademik',
+                    bodyText: 'Lanjutkan untuk memverifikasi kegiatan ini?',
+                    actionValue: 'next',
+                    submitText: 'Kirim & Verifikasi',
+                    submitClass: 'btn-primary',
+                    notesLabel: 'Catatan (opsional)'
+                };
+                break;
+            case 'setujui':
+                config = {
+                    title: 'Setujui Kegiatan',
+                    bodyText: 'Apakah Anda yakin ingin menyetujui kegiatan ini?',
+                    actionValue: 'next',
+                    submitText: 'Ya, Setujui',
+                    submitClass: 'btn-success',
+                    notesLabel: 'Catatan (opsional)'
+                };
+                break;
+            case 'tolak':
+                config = {
+                    title: 'Tolak Kegiatan',
+                    bodyText: 'Mohon isi alasan penolakan di bawah ini.',
+                    actionValue: 'reject',
+                    submitText: 'Tolak Kegiatan',
+                    submitClass: 'btn-danger',
+                    notesLabel: 'Alasan Penolakan (wajib diisi)'
+                };
+                // Jadikan catatan wajib untuk penolakan
+                $('#modalNotesTextarea').prop('required', true);
+                break;
+        }
+
+        // Terapkan konfigurasi ke modal
+        $('#modalForm').attr('action', baseUrl);
+        $('#modalTitle').text(config.title);
+        $('#modalBodyText').text(config.bodyText);
+        $('#modalActionInput').val(config.actionValue);
+        $('#modalNotesLabel').text(config.notesLabel);
+        $('#modalSubmitButton').text(config.submitText)
+            .removeClass('btn-primary btn-success btn-danger')
+            .addClass(config.submitClass);
+        
+        // Tampilkan modal
+        $('#approvalModal').modal('show');
+    });
+    // 1. KITA PERTAHANKAN LOGIKA TOMBOL HAPUS MASSAL DARI SKRIP LAMA ANDA
+    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
+    
+    @can('kegiatan_delete')
+    let deleteButtonTrans = '{{ trans('global.datatables.delete') }}';
+    let deleteButton = {
         text: deleteButtonTrans,
         url: "{{ route('admin.kegiatan.massDestroy') }}",
         className: 'btn-danger',
         action: function (e, dt, node, config) {
-          var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
-              return $(entry).data('entry-id')
-          });
+            var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
+                // Perubahan kecil: Ambil ID dari data baris, bukan dari 'data-entry-id'
+                var rowData = dt.row(entry).data();
+                return rowData.id;
+            });
 
-          if (ids.length === 0) {
-            Swal.fire('Peringatan', 'Tidak ada data yang dipilih', 'warning')
-            return
-          }
-
-          Swal.fire({
-            title: 'Apakah Anda yakin?',
-            text: "Data yang dipilih akan dihapus!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              $.ajax({
-                headers: {'x-csrf-token': _token},
-                method: 'POST',
-                url: config.url,
-                data: { ids: ids, _method: 'DELETE' }})
-                .done(function () { location.reload() })
+            if (ids.length === 0) {
+                Swal.fire('Peringatan', 'Tidak ada data yang dipilih', 'warning');
+                return;
             }
-          })
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data yang dipilih akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        headers: {'x-csrf-token': _token},
+                        method: 'POST',
+                        url: config.url,
+                        data: { ids: ids, _method: 'DELETE' }
+                    }).done(function () { 
+                        // Perbaikan: Gunakan ajax.reload() agar lebih efisien
+                        table.ajax.reload(); 
+                        Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
+                    });
+                }
+            });
         }
-      }
-      dtButtons.push(deleteButton)
-      @endcan
+    };
+    dtButtons.push(deleteButton);
+    @endcan
 
-      $.extend(true, $.fn.dataTable.defaults, {
+    // 2. KITA GUNAKAN INISIALISASI SERVER-SIDE YANG BARU
+    let table = $('.datatable-Kegiatan').DataTable({
+        buttons: dtButtons, // <- Tombol hapus massal dimasukkan di sini
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('admin.kegiatan.index') }}",
+            data: function (d) {
+                // Menambahkan nilai dari form filter ke request
+                d.tanggal_mulai = $('#tanggal_mulai').val();
+                d.user_id = $('#user_id').val();
+                d.ruangan_id = $('#ruangan_id').val();
+            }
+        },
+        columns: [
+            { data: 'placeholder', name: 'placeholder', orderable: false, searchable: false, defaultContent: '' },
+            { 
+                data: 'nama_kegiatan', 
+                name: 'nama_kegiatan',
+                render: function(data, type, row) {
+                    let user_name = row.user ? row.user.name : '-';
+                    let created_at_human = row.created_at_human;
+                    let created_at_title = row.created_at_title;
+                    
+                    return `<div class="kegiatan-title-cell">${data}</div><div class="d-flex align-items-center mt-1"><div class="user-avatar"><i class="fas fa-user"></i></div><div><div class="kegiatan-sub-cell">${user_name}</div><div class="creation-timestamp" title="${created_at_title}">Dibuat: ${created_at_human}</div></div></div>`;
+                },
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Kegiatan'); // 👈 Tambahan untuk mobile
+                }
+            },
+            { 
+                data: 'ruangan.nama', 
+                name: 'ruangan.nama',
+                defaultContent: '-',
+                render: function(data, type, row) {
+                    return `<span class="badge-ruangan">${data || '-'}</span>`;
+                },
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Ruangan'); // 👈 Tambahan untuk mobile
+                }
+            },
+            {
+                data: 'waktu_mulai',
+                name: 'waktu_mulai',
+                render: function(data, type, row) {
+                    return `<div class="kegiatan-sub-cell">Mulai: ${row.waktu_mulai_formatted}</div><div class="kegiatan-sub-cell">Selesai: ${row.waktu_selesai_formatted}</div>`;
+                },
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Jadwal'); // 👈 Tambahan untuk mobile
+                }
+            },
+            {
+                data: 'status',
+                name: 'status',
+                className: 'text-center',
+                render: function(data, type, row) {
+                    let statusClass = data.replace(/_/g, '-');
+                    let statusText = '';
+                    switch (data) {
+                        case 'belum_disetujui': statusText = 'Menunggu Verifikasi Operator'; break;
+                        case 'verifikasi_sarpras': statusText = 'Menunggu Verifikasi Akademik'; break;
+                        case 'verifikasi_akademik': statusText = 'Menunggu Verifikasi Sarpras'; break;
+                        case 'disetujui': statusText = 'Disetujui'; break;
+                        case 'ditolak': statusText = 'Ditolak'; break;
+                        default: statusText = data; break;
+                    }
+                    return `<span class="badge-status badge-status-${statusClass}">${statusText}</span>`;
+                },
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Status'); // 👈 Tambahan untuk mobile
+                }      
+            },
+            @can('persetujuan_access')
+            { data: 'persetujuan', 
+              name: 'persetujuan',
+              className: 'text-center', 
+              orderable: false, 
+              searchable: false,
+              createdCell: function(td, cellData, rowData, row, col) {
+                $(td).attr('data-label', 'Persetujuan'); // 👈 Tambahan untuk mobile
+              }
+            },
+            @endcan
+            { data: 'actions', 
+              name: 'actions', 
+              className: 'text-center actions-cell', 
+              orderable: false, 
+              searchable: false,
+              createdCell: function(td, cellData, rowData, row, col) {
+                $(td).attr('data-label', 'Aksi'); // 👈 Tambahan untuk mobile
+              }
+            }
+            
+            
+        ],
         orderCellsTop: true,
-        // PERUBAHAN DI SINI: Baris 'order' dihapus agar mengikuti urutan dari server
-        pageLength: 50,
-      });
-      let table = $('.datatable-Kegiatan:not(.ajaxTable)').DataTable({ buttons: dtButtons })
-      $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-          $($.fn.dataTable.tables(true)).DataTable()
-              .columns.adjust();
-      });
-      
-      $('.datatable-Kegiatan').on('draw.dt', function () {
-          var wrapper = $(this).closest('.dataTables_wrapper');
-          var length = wrapper.find('.dataTables_length');
-          var filter = wrapper.find('.dataTables_filter');
-          var buttons = wrapper.find('.dt-buttons');
-
-          if (!wrapper.find('.dt-controls-row').length) {
-              var controlsRow = $('<div class="dt-controls-row"></div>');
-              var leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
-              var rightCol = $('<div class="dt-controls-right"></div>').append(filter);
-              controlsRow.append(leftCol).append(rightCol);
-              wrapper.prepend(controlsRow);
-          }
-      });
-
-      table.draw();
+        pageLength: 10,
+        columnDefs: [ {
+            orderable: false,
+            className: 'select-checkbox',
+            targets:   0
+        } ],
+        select: {
+            style:    'os',
+            selector: 'td:first-child'
+        },
     });
+
+    // 3. KITA PERTAHANKAN KODE UNTUK PERBAIKAN TAB
+    $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
+        $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+    });
+    
+    // 4. KITA PERTAHANKAN KODE UNTUK PENYESUAIAN LAYOUT
+    $('.datatable-Kegiatan').on('draw.dt', function () {
+        var wrapper = $(this).closest('.dataTables_wrapper');
+        var length = wrapper.find('.dataTables_length');
+        var filter = wrapper.find('.dataTables_filter');
+        var buttons = wrapper.find('.dt-buttons');
+
+        if (!wrapper.find('.dt-controls-row').length) {
+            var controlsRow = $('<div class="dt-controls-row"></div>');
+            var leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
+            var rightCol = $('<div class="dt-controls-right"></div>').append(filter);
+            controlsRow.append(leftCol).append(rightCol);
+            wrapper.prepend(controlsRow);
+        }
+    });
+
+    // Listener untuk tombol filter
+$('#filter-btn').on('click', function(e) {
+    e.preventDefault();
+    table.draw(); // Muat ulang tabel dengan data filter baru
+});
+
+// Listener untuk tombol reset (opsional, tapi sangat membantu)
+$('#reset-btn').on('click', function(e) {
+    e.preventDefault();
+    // Reset nilai form
+    $('#filter-form').trigger("reset");
+    // Muat ulang tabel
+    table.draw();
+});
+
+$(document).on('click', '.js-delete-btn', function (e) {
+    e.preventDefault();
+    const deleteUrl = $(this).data('url');
+
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: "Data ini akan dihapus secara permanen!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                headers: {'x-csrf-token': _token}, // Pastikan variabel _token ada
+                method: 'POST', // Method tetap POST karena kita akan spoofing DELETE
+                url: deleteUrl,
+                data: { _method: 'DELETE' }
+            })
+            .done(function () { 
+                table.ajax.reload(); // Muat ulang tabel
+                Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                // Opsi: Tampilkan pesan error jika gagal
+                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
+            });
+        }
+    });
+});
+
+});
 </script>
 @endsection

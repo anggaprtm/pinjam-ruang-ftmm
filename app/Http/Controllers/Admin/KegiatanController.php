@@ -14,6 +14,7 @@ use App\Models\JadwalPerkuliahan;
 use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Yajra\DataTables\Facades\DataTables;
 
 class KegiatanController extends Controller
 {
@@ -21,35 +22,110 @@ class KegiatanController extends Controller
     {
         abort_if(Gate::denies('kegiatan_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $query = Kegiatan::with(['ruangan', 'user']);
+        // 👇 2. Ini adalah bagian utama yang menangani permintaan AJAX dari DataTables
+        if ($request->ajax()) {
+            // Kita mulai query seperti kode lama Anda
+            $query = Kegiatan::with(['ruangan', 'user'])->select(sprintf('%s.*', (new Kegiatan())->table));
 
-        // Filter berdasarkan tanggal mulai
-        if ($request->filled('tanggal_mulai')) {
+            // Filter khusus untuk role User (logika lama Anda dipertahankan)
+            if ($request->filled('tanggal_mulai')) {
             $query->whereDate('waktu_mulai', '=', $request->tanggal_mulai);
+            }
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
+            if ($request->filled('ruangan_id')) {
+                $query->where('ruangan_id', $request->ruangan_id);
+            }
+
+            if (auth()->user()->hasRole('User')) {
+                $query->where('kegiatan.user_id', auth()->id());
+            }
+
+            // Di sini kita akan membuat DataTables
+            $table = Datatables::of($query);
+
+            if (empty($request->input('order'))) {
+                $table->order(function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                });
+            }
+            // Menambahkan kolom 'actions' untuk tombol (edit, view, delete)
+            $table->addColumn('placeholder', '&nbsp;');
+            $table->addColumn('actions', '&nbsp;');
+            $table->addColumn('persetujuan', '&nbsp;');
+
+            // Mengedit kolom 'actions' untuk memasukkan HTML tombol
+            $table->editColumn('actions', function ($row) {
+                $buttons = '';
+
+                if (auth()->user()->can('kegiatan_show')) {
+                    $buttons .= '<a class="btn btn-xs btn-info" href="' . route('admin.kegiatan.show', $row->id) . '" title="Detail"><i class="fas fa-eye"></i></a> ';
+                }
+
+                if (!auth()->user()->hasRole('User') || (auth()->user()->hasRole('User') && !in_array($row->status, ['disetujui', 'ditolak']))) {
+                    if (auth()->user()->can('kegiatan_edit')) {
+                        $buttons .= '<a class="btn btn-xs btn-success" href="' . route('admin.kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i></a> ';
+                    }
+
+                    if (auth()->user()->can('kegiatan_delete')) {
+                        $buttons .= '<button type="button" class="btn btn-xs btn-danger js-delete-btn" data-url="' . route('admin.kegiatan.destroy', $row->id) . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                    }
+                }
+
+                return $buttons;
+            });
+
+            // 👇 TAMBAHKAN BLOK INI
+            $table->editColumn('waktu_mulai_formatted', function ($row) {
+                return \Carbon\Carbon::parse($row->waktu_mulai)->translatedFormat('d M Y, H:i');
+            });
+
+            $table->editColumn('waktu_selesai_formatted', function ($row) {
+                return \Carbon\Carbon::parse($row->waktu_selesai)->translatedFormat('d M Y, H:i');
+            });
+
+            $table->editColumn('created_at_human', function ($row) {
+                return $row->created_at->diffForHumans();
+            });
+
+            $table->editColumn('created_at_title', function ($row) {
+                return $row->created_at->format('d M Y, H:i:s');
+            });
+            
+            $table->editColumn('persetujuan', function($row) {
+                if (!auth()->user()->can('persetujuan_access') || !auth()->user()->can('kegiatan_edit_status')) {
+                    return '-';
+                }
+
+                switch ($row->status) {
+                    case 'belum_disetujui':
+                        return '<button type="button" class="btn btn-primary btn-sm js-open-modal" data-action-type="verifikasi_sarpras" data-id="'.$row->id.'">Verifikasi</button>';
+                    case 'verifikasi_sarpras':
+                        return '<button type="button" class="btn btn-primary btn-sm js-open-modal" data-action-type="verifikasi_akademik" data-id="'.$row->id.'">Verifikasi</button>';
+                    case 'verifikasi_akademik':
+                        $setujuiBtn = '<button type="button" class="btn btn-success btn-sm js-open-modal" data-action-type="setujui" data-id="'.$row->id.'">Setujui</button>';
+                        $tolakBtn = '<button type="button" class="btn btn-danger btn-sm js-open-modal ms-1" data-action-type="tolak" data-id="'.$row->id.'">Tolak</button>';
+                        return $setujuiBtn . $tolakBtn;
+                    default:
+                        return '<span class="text-muted">-</span>';
+                }
+            });
+
+            // Di rawColumns, tambahkan 'persetujuan' dan 'placeholder'
+            $table->rawColumns(['actions', 'placeholder', 'persetujuan']);
+
+            // Mengembalikan data dalam format JSON
+            return $table->make(true);
         }
 
-        // Filter berdasarkan peminjam (user_id)
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
-        }
-
-        // Filter berdasarkan ruangan (ruangan_id)
-        if ($request->filled('ruangan_id')) {
-            $query->where('ruangan_id', $request->ruangan_id);
-        }
-
-         // 🔒 Filter khusus untuk role User
-        if (auth()->user()->hasRole('User')) {
-            $query->where('user_id', auth()->id());
-        }
-
-        $kegiatan = $query->orderBy('id', 'desc')->get();
-
-        // Ambil data untuk dropdown filter
+        // 👇 3. Bagian ini hanya untuk saat halaman pertama kali dibuka
+        // Ambil data untuk dropdown filter (logika lama Anda dipertahankan)
         $users = User::pluck('name', 'id')->prepend('Semua Peminjam', '');
         $ruangans = Ruangan::pluck('nama', 'id')->prepend('Semua Ruangan', '');
 
-        return view('admin.kegiatan.index', compact('kegiatan', 'users', 'ruangans'));
+        // Kita tidak mengirim 'kegiatan' lagi, karena akan diambil via AJAX
+        return view('admin.kegiatan.index', compact('users', 'ruangans'));
     }
 
     public function create()
