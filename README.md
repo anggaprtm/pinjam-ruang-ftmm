@@ -21,23 +21,23 @@ Aplikasi Peminjaman Ruang adalah sistem berbasis web yang dirancang untuk memfas
 1. **Clone Repository**
 2. **Install Dependencies**
 
-Pastikan Anda memiliki  dan  terinstal.
+    Pastikan Anda memiliki  dan  terinstal.
 
 3. **Konfigurasi Lingkungan ⚙️**
 
-Salin berkas `.env.example` menjadi `.env` dan sesuaikan konfigurasinya, terutama untuk koneksi database.
+    Salin berkas `.env.example` menjadi `.env` dan sesuaikan konfigurasinya, terutama untuk koneksi database.
 
-Setelah itu, jalankan perintah berikut untuk menghasilkan kunci aplikasi:
+    Setelah itu, jalankan perintah berikut untuk menghasilkan kunci aplikasi:
 
 4. **Migrasi dan Seeding Database 🗄️**
 
-Jalankan migrasi untuk membuat tabel-tabel yang dibutuhkan dan seeder untuk mengisi data awal.
+    Jalankan migrasi untuk membuat tabel-tabel yang dibutuhkan dan seeder untuk mengisi data awal.
 
 5. **Jalankan Aplikasi ▶️**
 
-Jalankan server pengembangan bawaan Laravel.
+    Jalankan server pengembangan bawaan Laravel.
 
-Aplikasi akan berjalan di `http://127.0.0.1:8000`.
+    Aplikasi akan berjalan di `http://127.0.0.1:8000`.
 
 ## 📁 Struktur Proyek
 Proyek ini mengikuti struktur standar dari Laravel. Berikut adalah beberapa direktori penting:
