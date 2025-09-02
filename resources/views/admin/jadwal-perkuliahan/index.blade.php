@@ -49,7 +49,7 @@
                             <input type="file" name="file" id="import_file" class="d-none" required>
                             
                             {{-- Custom button --}}
-                            <label for="import_file" class="btn btn-outline-primary mb-0 rounded-end-0"><i class="fas fa-folder-open me-2"></i>Pilih File</label>
+                            <label for="import_file" class="btn btn-outline-dark mb-0 rounded-end-0"><i class="fas fa-folder-open me-2"></i>Pilih File</label>
                             
                             {{-- File name display --}}
                             <span class="form-control rounded-start-0" id="file-name-display">Tidak ada file yang dipilih</span>
