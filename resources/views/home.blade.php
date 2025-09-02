@@ -4,7 +4,9 @@
     {{-- Salam Pembuka & Waktu --}}
     <div class="welcome-banner">
         <h4>Selamat Datang Kembali, {{ Auth::user()->name }}!</h4>
+    @can('home_access')
         <p class="mb-0">Berikut adalah ringkasan aktivitas peminjaman ruangan hari ini.</p>
+    @endcan
         <div id="current-time" class="fs-5 mt-2"></div>
     </div>
 
@@ -83,13 +85,13 @@
     @endcan
 
     {{-- TAMPILAN UNTUK USER BIASA (INFORMASI) --}}
-    @can('info_access')
+    @can('strict_user_access')
         <div class="card border-0 shadow-sm">
             <div class="card-header"><h5 class="mb-0">Informasi Peminjaman Ruang</h5></div>
             <div class="card-body">
                 <h2>Cara Melakukan Peminjaman Ruang</h2>
                 <ol class="list-group list-group-numbered">
-                    <li class="list-group-item">Klik "Cari Ruang" pada menu sidebar.</li>
+                    <li class="list-group-item">Klik "Cari Ruang" atau icon 🔍 pada menu sidebar.</li>
                     <li class="list-group-item">Masukkan waktu mulai dan waktu selesai kegiatan.</li>
                     <li class="list-group-item">Ketikkan kapasitas ruang yang dibutuhkan.</li>
                     <li class="list-group-item">Kemudian klik "Cari". Ruang yang tersedia akan muncul di bawahnya.</li>
