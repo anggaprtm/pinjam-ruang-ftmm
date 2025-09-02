@@ -32,14 +32,14 @@
 
 							<!-- Email -->
 							<div class="form-group">
-								<label for="email">Email</label>
-								<input id="email" type="email"
-									class="form-control @error('email') is-invalid @enderror"
-									name="email" value="{{ old('email') }}" required autofocus>
-								@error('email')
-									<span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
-								@enderror
-							</div>
+                                <label for="login">Email atau NIP</label>
+                                <input id="login" type="text"
+                                    class="form-control @error('login') is-invalid @enderror"
+                                    name="login" value="{{ old('login') }}" required autofocus>
+                                @error('login')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
 
 							<!-- Password -->
 							<div class="form-group">

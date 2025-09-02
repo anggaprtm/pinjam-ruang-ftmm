@@ -38,8 +38,8 @@
         <div class="detail-item">
             <div class="icon"><i class="fas fa-check-circle"></i></div>
             <div class="content">
-                <div class="label">{{ trans('cruds.user.fields.email_verified_at') }}</div>
-                <div class="value">{{ $user->email_verified_at ?? 'Belum Diverifikasi' }}</div>
+                <div class="label">{{ trans('cruds.user.fields.nip') }}</div>
+                <div class="value">{{ $user->nip }}</div>
             </div>
         </div>
         <div class="detail-item">

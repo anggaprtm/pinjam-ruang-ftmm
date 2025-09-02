@@ -20,7 +20,7 @@
                     <tr>
                         <th width="10"></th> {{-- Checkbox --}}
                         <th width="50"><i class="fas fa-id-card"></i>{{ trans('cruds.role.fields.id') }}</th>
-                        <th><i class="fas fa-briefcase"></i>{{ trans('cruds.role.fields.title') }}</th>
+                        <th width="80"><i class="fas fa-briefcase"></i>{{ trans('cruds.role.fields.title') }}</th>
                         <th><i class="fas fa-unlock-alt"></i>{{ trans('cruds.role.fields.permissions') }}</th>
                         <th class="text-center" style="width: 150px;"><i class="fas fa-cogs"></i>Aksi</th>
                     </tr>

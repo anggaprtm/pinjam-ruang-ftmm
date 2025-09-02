@@ -34,9 +34,16 @@
                                 @endif
                             </div>
                             <div class="form-group mb-3">
-                                <label class="form-label required" for="email">Email (Username)</label>
+                                <label class="form-label required" for="email">Email</label>
                                 <input class="form-control {{ $errors->has('email') ? 'is-invalid' : '' }}" type="email" name="email" id="email" value="{{ old('email', auth()->user()->email) }}" required>
                                 @if($errors->has('email'))
+                                    <div class="invalid-feedback">{{ $errors->first('email') }}</div>
+                                @endif
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="form-label required" for="nip">NIP</label>
+                                <input class="form-control {{ $errors->has('nip') ? 'is-invalid' : '' }}" type="text" name="nip" id="nip" value="{{ old('nip', auth()->user()->nip) }}" required>
+                                @if($errors->has('nip'))
                                     <div class="invalid-feedback">{{ $errors->first('email') }}</div>
                                 @endif
                             </div>

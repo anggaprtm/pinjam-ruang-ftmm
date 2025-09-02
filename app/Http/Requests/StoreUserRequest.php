@@ -25,6 +25,11 @@ class StoreUserRequest extends FormRequest
                 'required',
                 'unique:users',
             ],
+            'nip' => [
+                'nullable',
+                'string',
+                'unique:users',
+            ],
             'password' => [
                 'required',
             ],

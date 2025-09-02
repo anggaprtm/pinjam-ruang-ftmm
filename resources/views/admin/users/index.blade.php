@@ -21,7 +21,7 @@
                         <th width="10"></th> {{-- Checkbox --}}
                         <th><i class="fas fa-user"></i>{{ trans('cruds.user.fields.name') }}</th>
                         <th><i class="fas fa-envelope"></i>{{ trans('cruds.user.fields.email') }}</th>
-                        <th class="text-center"><i class="fas fa-check-circle"></i>{{ trans('cruds.user.fields.email_verified_at') }}</th>
+                        <th><i class="fas fa-check-circle"></i>{{ trans('cruds.user.fields.nip') }}</th>
                         <th><i class="fas fa-briefcase"></i>{{ trans('cruds.user.fields.roles') }}</th>
                         <th class="text-center" style="width: 150px;"><i class="fas fa-cogs"></i>Aksi</th>
                     </tr>
@@ -37,12 +37,8 @@
                             <td data-label="Email">
                                 <div class="kegiatan-sub-cell">{{ $user->email ?? '' }}</div>
                             </td>
-                            <td data-label="Status" class="text-center">
-                                @if($user->email_verified_at)
-                                    <span class="badge-status badge-status-aktif">Terverifikasi</span>
-                                @else
-                                    <span class="badge-status badge-status-tidak-aktif">Belum</span>
-                                @endif
+                            <td data-label="NIP">
+                                <div class="kegiatan-sub-cell">{{ $user->nip ?? '' }}</div>
                             </td>
                             <td data-label="Peranan">
                                 <div class="permission-badges-container">

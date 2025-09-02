@@ -18,6 +18,16 @@
                             <div class="invalid-feedback">{{ $errors->first('name') }}</div>
                         @endif
                     </div>
+                    <div class="form-group">
+                        <label for="nip">{{ trans('cruds.user.fields.nip') }}</label>
+                        <input class="form-control {{ $errors->has('nip') ? 'is-invalid' : '' }}" type="text" name="nip" id="nip" value="{{ old('nip') }}">
+                        @if($errors->has('nip'))
+                            <div class="invalid-feedback">
+                                {{ $errors->first('nip') }}
+                            </div>
+                        @endif
+                        <span class="help-block">{{ trans('cruds.user.fields.nip_helper') }}</span>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group mb-3">

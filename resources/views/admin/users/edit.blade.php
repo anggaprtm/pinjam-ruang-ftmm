@@ -31,6 +31,17 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label for="nip">{{ trans('cruds.user.fields.nip') }}</label>
+                <input class="form-control {{ $errors->has('nip') ? 'is-invalid' : '' }}" type="text" name="nip" id="nip" value="{{ old('nip', $user->nip) }}">
+                @if($errors->has('nip'))
+                    <div class="invalid-feedback">
+                        {{ $errors->first('nip') }}
+                    </div>
+                @endif
+                <span class="help-block">{{ trans('cruds.user.fields.nip_helper') }}</span>
+            </div>
+
             <div class="form-group mb-3">
                 <label class="form-label" for="password">{{ trans('cruds.user.fields.password') }}</label>
                 <input class="form-control {{ $errors->has('password') ? 'is-invalid' : '' }}" type="password" name="password" id="password">

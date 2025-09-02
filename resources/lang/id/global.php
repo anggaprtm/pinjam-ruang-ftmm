@@ -21,6 +21,7 @@ return [
     'list'                           => 'Daftar',
     'login'                          => 'Masuk',
     'login_email'                    => 'Email',
+    'login_email_or_nip'             => 'Email atau NIP',
     'login_password'                 => 'Sandi',
     'login_password_confirmation'    => 'Konfirmasi Sandi',
     'logout'                         => 'Keluar',

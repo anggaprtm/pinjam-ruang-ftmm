@@ -95,7 +95,7 @@
 
             <footer class="c-footer">
                 <div>
-                    <span>Made with ❤️ and lots of coffee</span>
+                    <span>Dibuat dengan ❤️ dan kopi FamilyMart.</span>
                 </div>
                 <div class="mfs-auto">
                     <span>&copy; {{ date('Y') }} <strong>FTMM Universitas Airlangga</strong></span>
