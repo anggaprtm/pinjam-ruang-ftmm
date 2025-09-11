@@ -3,7 +3,7 @@
 <div class="content">
     {{-- Salam Pembuka & Waktu --}}
     <div class="welcome-banner">
-        <h4>Selamat Datang Kembali, {{ Auth::user()->name }}!</h4>
+        <h4>Selamat Datang, {{ Auth::user()->name }} !</h4>
     @can('home_access')
         <p class="mb-0">Berikut adalah ringkasan aktivitas peminjaman ruangan hari ini.</p>
     @endcan

@@ -13,7 +13,7 @@ Auth::routes(['register' => false]);
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth']], function () {
     Route::get('/', 'HomeController@index')->name('home');
-    Route::patch('kegiatan/{kegiatan}/update-status', 'HomeController@updateStatus')->name('admin.kegiatan.updateStatus');
+    Route::patch('kegiatan/{kegiatan}/update-status', 'KegiatanController@updateStatus')->name('admin.kegiatan.updateStatus');
 
     // Permissions
     Route::delete('permissions/destroy', 'PermissionsController@massDestroy')->name('permissions.massDestroy');

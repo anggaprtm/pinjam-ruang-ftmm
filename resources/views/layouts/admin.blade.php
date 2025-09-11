@@ -109,7 +109,7 @@
     </div>
     
     <!-- Floating Calendar Button -->
-    <button id="floating-calendar-btn" class="btn btn-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#calendarModal" style="position: fixed; bottom: 20px; right: 20px; z-index: 1050; border-radius: 50%; width: 60px; height: 60px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    <button id="floating-calendar-btn" class="btn btn-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#calendarModal" style="position: fixed; bottom: 35px; right: 20px; z-index: 1050; border-radius: 50%; width: 60px; height: 60px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
         <i class="fas fa-calendar-alt"></i>
     </button>
 
