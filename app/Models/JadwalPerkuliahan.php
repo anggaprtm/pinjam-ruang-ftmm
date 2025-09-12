@@ -23,6 +23,11 @@ class JadwalPerkuliahan extends Model
         'program_studi',
     ];
 
+    protected $casts = [
+        'berlaku_mulai' => 'date',
+        'berlaku_sampai' => 'date',
+    ];
+
     public function ruangan()
     {
         return $this->belongsTo(Ruangan::class, 'ruangan_id');

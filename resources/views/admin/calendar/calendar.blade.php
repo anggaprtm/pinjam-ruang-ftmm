@@ -35,9 +35,6 @@
                                 <option value="kuliah" {{ request('filter_kuliah') == 'kuliah' ? 'selected' : '' }}>Perkuliahan</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-success w-100" type="submit">Terapkan Filter</button>
-                        </div>
                     </div>
                 </form>
                 

@@ -11,6 +11,33 @@
             @csrf
             <div class="row">
                 <div class="col-md-6">
+
+                    <div class="form-group mb-3">
+                        <label class="form-label required" for="tipe">Tipe</label>
+                        <select class="form-control {{ $errors->has('tipe') ? 'is-invalid' : '' }}" name="tipe" id="tipe" required>
+                            <option value="">-- Pilih Tipe --</option>
+                            @foreach(['Kuliah Reguler', 'Seminar Proposal', 'Seminar Hasil', 'PHL'] as $tipe)
+                                <option value="{{ $tipe }}" {{ old('tipe') == $tipe ? 'selected' : '' }}>{{ $tipe }}</option>
+                            @endforeach
+                        </select>
+                        @if($errors->has('tipe'))
+                            <div class="invalid-feedback">{{ $errors->first('tipe') }}</div>
+                        @endif
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label required" for="program_studi">Program Studi</label>
+                        <select class="form-control {{ $errors->has('program_studi') ? 'is-invalid' : '' }}" name="program_studi" id="program_studi" required>
+                            <option value="">-- Pilih Program Studi --</option>
+                            @foreach(['TSD', 'TI', 'RN', 'TRKB', 'TE'] as $program_studi)
+                                <option value="{{ $program_studi }}" {{ old('program_studi') == $program_studi ? 'selected' : '' }}>{{ $program_studi }}</option>
+                            @endforeach
+                        </select>
+                        @if($errors->has('program_studi'))
+                            <div class="invalid-feedback">{{ $errors->first('program_studi') }}</div>
+                        @endif
+                    </div>
+
                     <div class="form-group mb-3">
                         <label class="form-label required" for="mata_kuliah">Mata Kuliah</label>
                         <input class="form-control {{ $errors->has('mata_kuliah') ? 'is-invalid' : '' }}" type="text" name="mata_kuliah" id="mata_kuliah" value="{{ old('mata_kuliah', '') }}" required>
@@ -18,13 +45,16 @@
                             <div class="invalid-feedback">{{ $errors->first('mata_kuliah') }}</div>
                         @endif
                     </div>
+
                     <div class="form-group mb-3">
-                        <label class="form-label required" for="dosen_pengampu">Dosen Pengampu</label>
-                        <input class="form-control {{ $errors->has('dosen_pengampu') ? 'is-invalid' : '' }}" type="text" name="dosen_pengampu" id="dosen_pengampu" value="{{ old('dosen_pengampu', '') }}" required>
+                        <label class="form-label" for="dosen_pengampu">Dosen Pengampu (Opsional)</label>
+                        <input class="form-control {{ $errors->has('dosen_pengampu') ? 'is-invalid' : '' }}" type="text" name="dosen_pengampu" id="dosen_pengampu" value="{{ old('dosen_pengampu', '') }}">
                         @if($errors->has('dosen_pengampu'))
                             <div class="invalid-feedback">{{ $errors->first('dosen_pengampu') }}</div>
                         @endif
                     </div>
+
+
                     <div class="form-group mb-3">
                         <label class="form-label required" for="ruangan_id">Ruangan</label>
                         <select class="form-control select2 {{ $errors->has('ruangan_id') ? 'is-invalid' : '' }}" name="ruangan_id" id="ruangan_id" required>
@@ -36,21 +66,23 @@
                             <div class="invalid-feedback">{{ $errors->first('ruangan_id') }}</div>
                         @endif
                     </div>
+
                 </div>
+
                 <div class="col-md-6">
+
                     <div class="form-group mb-3">
                         <label class="form-label required" for="hari">Hari</label>
                         <select class="form-control select2 {{ $errors->has('hari') ? 'is-invalid' : '' }}" name="hari" id="hari" required>
-                            <option value="Senin" {{ old('hari') == 'Senin' ? 'selected' : '' }}>Senin</option>
-                            <option value="Selasa" {{ old('hari') == 'Selasa' ? 'selected' : '' }}>Selasa</option>
-                            <option value="Rabu" {{ old('hari') == 'Rabu' ? 'selected' : '' }}>Rabu</option>
-                            <option value="Kamis" {{ old('hari') == 'Kamis' ? 'selected' : '' }}>Kamis</option>
-                            <option value="Jumat" {{ old('hari') == 'Jumat' ? 'selected' : '' }}>Jumat</option>
+                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as $hari)
+                                <option value="{{ $hari }}" {{ old('hari') == $hari ? 'selected' : '' }}>{{ $hari }}</option>
+                            @endforeach
                         </select>
                         @if($errors->has('hari'))
                             <div class="invalid-feedback">{{ $errors->first('hari') }}</div>
                         @endif
                     </div>
+
                     <div class="form-group mb-3">
                         <label class="form-label required" for="jam_mulai">Jam Mulai</label>
                         <input class="form-control timepicker {{ $errors->has('jam_mulai') ? 'is-invalid' : '' }}" type="text" name="jam_mulai" id="jam_mulai" value="{{ old('jam_mulai') }}" required>
@@ -58,6 +90,7 @@
                             <div class="invalid-feedback">{{ $errors->first('jam_mulai') }}</div>
                         @endif
                     </div>
+
                     <div class="form-group mb-3">
                         <label class="form-label required" for="jam_selesai">Jam Selesai</label>
                         <input class="form-control timepicker {{ $errors->has('jam_selesai') ? 'is-invalid' : '' }}" type="text" name="jam_selesai" id="jam_selesai" value="{{ old('jam_selesai') }}" required>
@@ -65,8 +98,26 @@
                             <div class="invalid-feedback">{{ $errors->first('jam_selesai') }}</div>
                         @endif
                     </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label required" for="berlaku_mulai">Berlaku Mulai</label>
+                        <input class="form-control date {{ $errors->has('berlaku_mulai') ? 'is-invalid' : '' }}" type="text" name="berlaku_mulai" id="berlaku_mulai" value="{{ old('berlaku_mulai') }}" required>
+                        @if($errors->has('berlaku_mulai'))
+                            <div class="invalid-feedback">{{ $errors->first('berlaku_mulai') }}</div>
+                        @endif
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label required" for="berlaku_sampai">Berlaku Sampai</label>
+                        <input class="form-control date {{ $errors->has('berlaku_sampai') ? 'is-invalid' : '' }}" type="text" name="berlaku_sampai" id="berlaku_sampai" value="{{ old('berlaku_sampai') }}" required>
+                        @if($errors->has('berlaku_sampai'))
+                            <div class="invalid-feedback">{{ $errors->first('berlaku_sampai') }}</div>
+                        @endif
+                    </div>
+
                 </div>
             </div>
+
             <div class="card-footer text-end">
                 <a href="{{ route('admin.jadwal-perkuliahan.index') }}" class="btn btn-secondary me-2">Batal</a>
                 <button class="btn btn-primary" type="submit">
@@ -76,4 +127,5 @@
         </form>
     </div>
 </div>
+
 @endsection
