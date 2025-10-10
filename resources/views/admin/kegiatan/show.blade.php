@@ -10,9 +10,18 @@
                     Detail lengkap untuk kegiatan peminjaman ruangan.
                 </p>
             </div>
-            <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
-            </a>
+            
+            <div class="d-flex">
+                @can('kegiatan_edit')
+                    <a href="{{ route('admin.kegiatan.edit', $kegiatan->id) }}" class="btn btn-success me-2">
+                        <i class="fas fa-edit me-2"></i> Edit
+                    </a>
+                @endcan
+
+                <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
+                </a>
+            </div>
         </div>
     </div>
     <div class="card-body p-4">
@@ -135,18 +144,26 @@
                         <div class="content">
                             <div class="label">Riwayat Verifikasi</div>
                             <div class="value small">
-                                @if($kegiatan->verifikasi_sarpras_at)
-                                    <div>Verifikasi Operator: {{ \Carbon\Carbon::parse($kegiatan->verifikasi_sarpras_at)->format('d/m/y H:i') }}</div>
+                                {{-- PERUBAHAN DIMULAI DI SINI --}}
+                                @if ($kegiatan->status == 'disetujui' && !$kegiatan->verifikasi_sarpras_at && !$kegiatan->verifikasi_akademik_at && !$kegiatan->disetujui_at)
+                                    <div class="text-muted fst-italic">
+                                        <i class="fas fa-user-shield me-1"></i> Kegiatan dibuat oleh Admin
+                                    </div>
+                                @else
+                                    @if($kegiatan->verifikasi_sarpras_at)
+                                        <div>Verifikasi Operator: {{ \Carbon\Carbon::parse($kegiatan->verifikasi_sarpras_at)->format('d/m/y H:i') }}</div>
+                                    @endif
+                                    @if($kegiatan->verifikasi_akademik_at)
+                                        <div>Verifikasi Akademik: {{ \Carbon\Carbon::parse($kegiatan->verifikasi_akademik_at)->format('d/m/y H:i') }}</div>
+                                    @endif
+                                    @if($kegiatan->disetujui_at)
+                                        <div>Disetujui: {{ \Carbon\Carbon::parse($kegiatan->disetujui_at)->format('d/m/y H:i') }}</div>
+                                    @endif
+                                    @if($kegiatan->ditolak_at)
+                                        <div>Ditolak: {{ \Carbon\Carbon::parse($kegiatan->ditolak_at)->format('d/m/y H:i') }}</div>
+                                    @endif
                                 @endif
-                                @if($kegiatan->verifikasi_akademik_at)
-                                    <div>Verifikasi Akademik: {{ \Carbon\Carbon::parse($kegiatan->verifikasi_akademik_at)->format('d/m/y H:i') }}</div>
-                                @endif
-                                @if($kegiatan->disetujui_at)
-                                    <div>Disetujui: {{ \Carbon\Carbon::parse($kegiatan->disetujui_at)->format('d/m/y H:i') }}</div>
-                                @endif
-                                @if($kegiatan->ditolak_at)
-                                    <div>Ditolak: {{ \Carbon\Carbon::parse($kegiatan->ditolak_at)->format('d/m/y H:i') }}</div>
-                                @endif
+                                {{-- AKHIR DARI PERUBAHAN --}}
                             </div>
                         </div>
                     </div>
