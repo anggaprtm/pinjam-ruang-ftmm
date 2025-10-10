@@ -37,6 +37,10 @@ class UpdateKegiatanRequest extends FormRequest
             //     'string',
             //     'nullable',
             // ],
+            'nama_pic' => [
+                'string',
+                'nullable', // atau 'required' jika wajib
+            ],
             'surat_izin' => [
                 'nullable',
                 'file',

@@ -21,6 +21,14 @@ class StoreKegiatanRequest extends FormRequest
                 'string',
                 'required',
             ],
+            'nama_pic' => [
+                'string',
+                'nullable', // atau 'required' jika wajib
+            ],
+            'nomor_telepon' => [
+                'string',
+                'required',
+            ],
             'waktu_mulai' => [
                 'required',
                 'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),

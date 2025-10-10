@@ -30,6 +30,7 @@ class Kegiatan extends Model
         'deskripsi',
         'user_id',
         'status',
+        'nama_pic',
         'nomor_telepon',
         'surat_izin',
         'created_at',

@@ -33,6 +33,14 @@
                             <div class="invalid-feedback">{{ $errors->first('ruangan') }}</div>
                         @endif
                     </div>
+                    
+                    <div class="form-group mb-3">
+                        <label class="form-label" for="nama_pic">Nama PIC</label>
+                        <input class="form-control {{ $errors->has('nama_pic') ? 'is-invalid' : '' }}" type="text" name="nama_pic" id="nama_pic" value="{{ old('nama_pic', '') }}">
+                        @if($errors->has('nama_pic'))
+                            <div class="invalid-feedback">{{ $errors->first('nama_pic') }}</div>
+                        @endif
+                    </div>
 
                     <div class="form-group mb-3">
                         <label class="form-label" for="nomor_telepon">Nomor Telepon PIC</label>

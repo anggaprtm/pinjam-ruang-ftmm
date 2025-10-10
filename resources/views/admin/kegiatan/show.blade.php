@@ -56,6 +56,13 @@
                     </div>
                 </div>
                 <div class="detail-item">
+                    <div class="icon"><i class="fas fa-user-tag"></i></div>
+                    <div class="content">
+                        <div class="label">Nama Penanggung Jawab (PIC)</div>
+                        <div class="value">{{ $kegiatan->nama_pic ?? '-' }}</div>
+                    </div>
+                </div>
+                <div class="detail-item">
                     <div class="icon"><i class="fas fa-phone"></i></div>
                     <div class="content">
                         <div class="label">Nomor Telepon Penanggung Jawab</div>
