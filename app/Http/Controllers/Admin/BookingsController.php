@@ -12,28 +12,35 @@ use Illuminate\Http\Request;
 use App\Mail\KegiatanNotification;
 use Illuminate\Support\Facades\Mail;
 
+
 class BookingsController extends Controller
 {
+    protected $eventService;
+
+    public function __construct(EventService $eventService)
+    {
+        $this->eventService = $eventService;
+    }
+
     public function cariRuang(Request $request)
     {
         $ruangan = null;
-        if($request->filled(['waktu_mulai', 'waktu_selesai', 'kapasitas'])) {
-            $times = [
-                Carbon::parse($request->input('waktu_mulai')),
-                Carbon::parse($request->input('waktu_selesai')),
-            ];
 
+        if ($request->filled(['waktu_mulai', 'waktu_selesai', 'kapasitas'])) {
             $ruangan = Ruangan::where('kapasitas', '>=', $request->input('kapasitas'))
                 ->where('is_active', true)
-                ->whereDoesntHave('kegiatan', function ($query) use ($times) {
-                    $query->whereBetween('waktu_mulai', $times)
-                        ->orWhereBetween('waktu_selesai', $times)
-                        ->orWhere(function ($query) use ($times) {
-                            $query->where('waktu_mulai', '<', $times[0])
-                                ->where('waktu_selesai', '>', $times[1]);
-                        });
-                })
-                ->get();
+                ->get()
+                ->filter(function ($r) use ($request) {
+                    $requestData = [
+                        'ruangan_id'      => $r->id,
+                        'waktu_mulai'     => $request->input('waktu_mulai'),
+                        'waktu_selesai'   => $request->input('waktu_selesai'),
+                        'tipe_berulang'   => $request->input('tipe_berulang'),
+                        'berulang_sampai' => $request->input('berulang_sampai'),
+                    ];
+
+                    return !$this->eventService->isRoomTaken($requestData);
+                });
         }
 
         return view('admin.bookings.cari', compact('ruangan'));

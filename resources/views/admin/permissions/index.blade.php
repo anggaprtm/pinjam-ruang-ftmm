@@ -32,7 +32,7 @@
                             <td data-label="Izin">
                                 <div class="kegiatan-title-cell">{{ $permission->title ?? '' }}</div>
                             </td>
-                            <td data-label="Aksi" class="text-center actions-cell">
+                            <td data-label="Aksi" class="actions-cell">
                                 @can('permission_show')
                                     <a class="btn btn-xs btn-info" href="{{ route('admin.permissions.show', $permission->id) }}" title="Detail">
                                         <i class="fas fa-eye"></i>

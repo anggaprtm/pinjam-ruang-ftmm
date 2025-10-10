@@ -60,13 +60,11 @@
             <div class="card-body">
                 <ul class="nav nav-tabs kegiatan-title-cell" id="kegiatanTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        {{-- PERUBAHAN DI SINI --}}
                         <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab" aria-controls="today" aria-selected="true">
                             <span class="d-none d-md-inline">Kegiatan </span>Hari Ini
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        {{-- PERUBAHAN DI SINI --}}
                         <button class="nav-link" id="tomorrow-tab" data-bs-toggle="tab" data-bs-target="#tomorrow" type="button" role="tab" aria-controls="tomorrow" aria-selected="false">
                             <span class="d-none d-md-inline">Kegiatan </span>Besok
                         </button>

@@ -25,7 +25,7 @@
                         </div>
                     </td>
                     <td data-label="Peminjam">
-                        <div class="d-flex align-items-center">
+                        <div class="kegiatan-sub-cell">
                             <div class="user-avatar"><i class="fas fa-user"></i></div>
                             <span class="kegiatan-sub-cell">{{ $kegiatan->user->name ?? '' }}</span>
                         </div>
