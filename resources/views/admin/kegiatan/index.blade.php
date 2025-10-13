@@ -182,52 +182,62 @@ $(function () {
         $('#approvalModal').modal('show');
     });
     // 1. KITA PERTAHANKAN LOGIKA TOMBOL HAPUS MASSAL DARI SKRIP LAMA ANDA
-    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
-    
+    let dtButtons = [];
+    // Tombol Pilih Semua & Batal Pilih
+    dtButtons.push(
+        { extend: 'selectAll', text: '<i class="fas fa-check-double me-2"></i> Pilih Semua', className: 'btn-primary' },
+        { extend: 'selectNone', text: '<i class="fas fa-times me-2"></i> Batal Pilih', className: 'btn-primary' }
+    );
+
+    // Konfigurasi Tombol Ekspor
+    let exportOptions = {
+        columns: ':visible',
+        exportOptions: { modifier: { selected: true } }
+    };
+
+    // Definisikan tombol ekspor dengan properti enabled: false
+    dtButtons.push(
+        $.extend({}, exportOptions, { extend: 'copy', text: '<i class="fas fa-copy me-2"></i> Salin', className: 'btn-secondary', enabled: false }),
+        $.extend({}, exportOptions, { extend: 'csv', text: '<i class="fas fa-file-export me-2"></i> CSV', className: 'btn-secondary', enabled: false }),
+        $.extend({}, exportOptions, { extend: 'excel', text: '<i class="fas fa-file-excel me-2"></i> Excel', className: 'btn-secondary', enabled: false }),
+        $.extend({}, exportOptions, { extend: 'pdf', text: '<i class="fas fa-file-pdf me-2"></i> PDF', className: 'btn-secondary', enabled: false }),
+        $.extend({}, exportOptions, { extend: 'print', text: '<i class="fas fa-print me-2"></i> Cetak', className: 'btn-secondary', enabled: false })
+    );
+
+    // Tombol "Tampilkan Kolom"
+    dtButtons.push({
+        extend: 'colvis',
+        text: '<i class="fas fa-columns me-2"></i> Kolom',
+        className: 'btn-secondary'
+    });
+
     @can('kegiatan_delete')
+    // Tombol Hapus Massal, juga dimulai dengan enabled: false
     let deleteButtonTrans = '{{ trans('global.datatables.delete') }}';
-    let deleteButton = {
-        text: deleteButtonTrans,
+    dtButtons.push({
+        text: '<i class="fas fa-trash-alt me-2"></i>' + deleteButtonTrans,
         url: "{{ route('admin.kegiatan.massDestroy') }}",
         className: 'btn-danger',
+        enabled: false, // <-- Mulai dalam keadaan nonaktif
         action: function (e, dt, node, config) {
             var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
-                // Perubahan kecil: Ambil ID dari data baris, bukan dari 'data-entry-id'
-                var rowData = dt.row(entry).data();
-                return rowData.id;
+                return dt.row(entry).data().id;
             });
-
-            if (ids.length === 0) {
-                Swal.fire('Peringatan', 'Tidak ada data yang dipilih', 'warning');
-                return;
-            }
-
+            if (ids.length === 0) { return; }
             Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: "Data yang dipilih akan dihapus!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
+                title: 'Apakah Anda yakin?', text: "Data yang dipilih akan dihapus!",
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        headers: {'x-csrf-token': _token},
-                        method: 'POST',
-                        url: config.url,
-                        data: { ids: ids, _method: 'DELETE' }
-                    }).done(function () { 
-                        // Perbaikan: Gunakan ajax.reload() agar lebih efisien
-                        table.ajax.reload(); 
-                        Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
-                    });
+                        headers: {'x-csrf-token': _token}, method: 'POST',
+                        url: config.url, data: { ids: ids, _method: 'DELETE' }
+                    }).done(() => { table.ajax.reload(); Swal.fire('Berhasil!', 'Data telah dihapus.', 'success'); });
                 }
             });
         }
-    };
-    dtButtons.push(deleteButton);
+    });
     @endcan
 
     // 2. KITA GUNAKAN INISIALISASI SERVER-SIDE YANG BARU
@@ -336,6 +346,22 @@ $(function () {
             style:    'os',
             selector: 'td:first-child'
         },
+    });
+
+    table.on('select deselect', function () {
+        // Hitung jumlah baris yang dipilih
+        let selectedRows = table.rows({ selected: true }).count();
+
+        // Aktifkan atau nonaktifkan tombol berdasarkan jumlah pilihan
+        // Indeks tombol dimulai dari 2 (setelah Pilih Semua dan Batal Pilih)
+        table.button(2).enable(selectedRows > 0); // Tombol Salin
+        table.button(3).enable(selectedRows > 0); // Tombol CSV
+        table.button(4).enable(selectedRows > 0); // Tombol Excel
+        table.button(5).enable(selectedRows > 0); // Tombol PDF
+        table.button(6).enable(selectedRows > 0); // Tombol Cetak
+        @can('kegiatan_delete')
+        table.button(8).enable(selectedRows > 0); // Tombol Hapus (indeks bisa berbeda)
+        @endcan
     });
 
     // 3. KITA PERTAHANKAN KODE UNTUK PERBAIKAN TAB

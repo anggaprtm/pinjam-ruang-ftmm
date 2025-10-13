@@ -1009,6 +1009,78 @@ input:checked + .toggle-slider:before {
     color: #6c757d;
 }
 
+div.dt-button-collection {
+  width: auto;
+  min-width: 220px; /* Lebar minimum agar tidak terlalu sempit */
+  background-clip: padding-box;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+  padding: 0.5rem !important;
+  margin-top: 5px !important; /* Jarak dari tombol utama */
+}
+
+/* Setiap item/tombol di dalam dropdown */
+div.dt-button-collection .dt-button {
+  display: flex !important; /* Gunakan flexbox untuk alignment */
+  align-items: center !important;
+  position: relative;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #525f7f !important; /* Warna teks lebih lembut */
+  padding: 0.6rem 1.25rem !important;
+  margin-bottom: 2px;
+  border-radius: 0.375rem; /* Sudut tumpul untuk setiap item */
+  transition: all 0.2s ease-in-out;
+  font-weight: 500;
+  text-align: left !important;
+}
+
+/* --- Bagian Ajaibnya Dimulai di Sini --- */
+
+/* Ikon Checkbox (untuk kolom NON-AKTIF) */
+div.dt-button-collection .dt-button::before {
+  font-family: "Font Awesome 5 Free";
+  content: "\f0c8"; /* Kode untuk ikon kotak kosong (far fa-square) */
+  font-weight: 400; /* Menggunakan FontAwesome Regular */
+  margin-right: 12px;
+  color: #adb5bd;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Ikon Checkbox (untuk kolom yang AKTIF) */
+div.dt-button-collection .dt-button.active::before {
+  font-family: "Font Awesome 5 Free";
+  content: "\f14a"; /* Kode untuk ikon kotak tercentang (fas fa-check-square) */
+  font-weight: 900; /* Menggunakan FontAwesome Solid */
+  color: #0d6efd; /* Warna biru primer (sesuaikan jika perlu) */
+}
+
+/* Menghilangkan style background default dari tombol aktif */
+div.dt-button-collection .dt-button.active {
+  background: transparent !important;
+  color: #343a40 !important; /* Warna teks lebih gelap untuk item aktif */
+  font-weight: 600;
+}
+
+/* Efek Hover untuk setiap item */
+div.dt-button-collection .dt-button:hover {
+  background-color: #e9ecef !important; /* Warna latar hover */
+  color: #000 !important;
+}
+
+/* Efek Hover untuk ikon checkbox */
+div.dt-button-collection .dt-button:hover::before {
+  color: #495057;
+}
+
+/* Efek Hover untuk ikon checkbox yang aktif */
+div.dt-button-collection .dt-button.active:hover::before {
+  color: #0b5ed7; /* Warna biru lebih gelap saat hover */
+}
+
 /* ================================================= */
 /* == GAYA RESPONSIVE UNTUK TAMPILAN MOBILE == */
 /* ================================================= */
@@ -1277,6 +1349,52 @@ input:checked + .toggle-slider:before {
     .home-kegiatan-table {
         margin-top: 1rem;
     }
+
+    .detail-header .d-flex.justify-content-between {
+    /* Mengubah layout menjadi tumpukan vertikal di mobile */
+    flex-direction: column;
+    align-items: flex-start; /* Rata kiri */
+  }
+
+  .detail-header .d-flex.justify-content-between > div:last-child {
+    /* Memberi jarak atas pada grup tombol */
+    margin-top: 1rem;
+    width: 100%; /* Memastikan grup tombol memenuhi lebar */
+    display: flex;
+    flex-direction: column; /* Tombol di dalamnya juga ditumpuk */
+  }
+
+  .detail-header .btn {
+    width: 100%; /* Tombol memenuhi lebar penuh */
+    margin-bottom: 0.5rem; /* Jarak antar tombol */
+  }
+
+  .detail-header .btn:last-child {
+    margin-bottom: 0;
+  }
+
+  .c-footer {
+    /* 1. Hapus tata letak kanan-kiri dan tengahkan semua */
+    justify-content: center; 
+    text-align: center;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  /* 2. Target kedua bagian di dalam footer */
+  .c-footer > div {
+    /* Paksa setiap bagian untuk mengambil lebar penuh, agar pindah baris */
+    width: 100%; 
+    
+    /* Hapus margin otomatis dari ".mfs-auto" */
+    margin: 0 !important; 
+  }
+
+  /* 3. Beri jarak antara baris pertama dan kedua */
+  .c-footer > div:first-child {
+    margin-bottom: 0.25rem !important;
+  }
+  
 
 
 }

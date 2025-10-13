@@ -69,7 +69,6 @@ class SystemCalendarController extends Controller
 
                         $events[] = [
                             'id' => 'kuliah-' . $model->id,
-                            // PERUBAHAN DI SINI: Menghapus nama ruangan dari judul
                             'title' => trim($source['prefix'] . " " . $model->{$source['field']} . " " . $source['suffix']),
                             'start' => $startDateTime,
                             'end' => $endDateTime,
@@ -108,7 +107,6 @@ class SystemCalendarController extends Controller
                 $color = $this->getUserColor($model->user_id);
                 $events[] = [
                     'id' => $model->id,
-                    // PERUBAHAN DI SINI: Menghapus nama ruangan dari judul
                     'title' => trim($source['prefix'] . " " . $model->{$source['field']} . " " . $source['suffix']),
                     'start' => $startDate,
                     'end' => $endDate,
@@ -117,6 +115,8 @@ class SystemCalendarController extends Controller
                         'ruangan_nama' => $model->ruangan->nama,
                         'user_name' => $model->user->name,
                         'deskripsi' => $model->deskripsi,
+                        'nama_pic' => $model->nama_pic,
+                        'nomor_telepon' => $model->nomor_telepon,
                         'type' => 'kegiatan'
                     ],
                     'url' => route($source['route'], $model->id),

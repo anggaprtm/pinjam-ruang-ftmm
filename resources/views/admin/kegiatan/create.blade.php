@@ -23,7 +23,6 @@
                     <div class="form-group mb-3">
                         <label class="form-label required" for="ruangan_id">{{ trans('cruds.kegiatan.fields.ruangan') }}</label>
                         <select class="form-control select2 {{ $errors->has('ruangan') ? 'is-invalid' : '' }}" name="ruangan_id" id="ruangan_id" required oninvalid="this.setCustomValidity('Silakan pilih ruangan terlebih dahulu')">
-                            {{-- Menambahkan opsi 'pleaseSelect' sesuai referensi --}}
                             <option value=""></option>
                             @foreach($ruangan as $id => $entry)
                                 <option value="{{ $id }}" {{ old('ruangan_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
@@ -43,8 +42,8 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label" for="nomor_telepon">Nomor Telepon PIC</label>
-                        <input class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" type="text" name="nomor_telepon" id="nomor_telepon" value="{{ old('nomor_telepon', '') }}">
+                        <label class="form-label required" for="nomor_telepon">Nomor Telepon PIC</label>
+                        <input class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" type="text" name="nomor_telepon" id="nomor_telepon" value="{{ old('nomor_telepon', '') }}" required>
                         @if($errors->has('nomor_telepon'))
                             <div class="invalid-feedback">{{ $errors->first('nomor_telepon') }}</div>
                         @endif

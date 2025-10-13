@@ -75,8 +75,14 @@
         <h5 class="modal-title" id="eventDetailModalLabel">Detail Acara</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="modalEventBody">
-        {{-- Konten akan diisi oleh JavaScript --}}
+      <div class="modal-body">
+            <div id="event-details">
+                {{-- Detail akan diisi oleh JavaScript --}}
+            </div>
+      </div>
+      <div class="modal-footer">
+        {{-- Tombol akan ditambahkan di sini oleh JavaScript --}}
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
       </div>
     </div>
   </div>
@@ -126,32 +132,62 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = info.event.extendedProps;
             const start = info.event.start;
             const end = info.event.end;
+            
+            // === TAMBAHAN 1: Ambil ID event ===
+            const eventId = info.event.id;
 
             const timeFormat = { hour: '2-digit', minute: '2-digit', hour12: false };
             const dateFormat = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
             let timeString = `${start.toLocaleTimeString([], timeFormat)} - ${end ? end.toLocaleTimeString([], timeFormat) : ''}`;
 
+            // Konten detail tetap sama
             let contentHtml = ``;
             contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-calendar-alt"></i></div><div class="content"><div class="label">Tanggal</div><div class="value">${start.toLocaleDateString('id-ID', dateFormat)}</div></div></div>`;
             contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-clock"></i></div><div class="content"><div class="label">Waktu</div><div class="value">${timeString}</div></div></div>`;
-
             if (props.ruangan_nama) {
                 contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-door-open"></i></div><div class="content"><div class="label">Ruangan</div><div class="value">${props.ruangan_nama}</div></div></div>`;
             }
             if (props.user_name) {
                 contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-user-circle"></i></div><div class="content"><div class="label">${props.type === 'perkuliahan' ? 'Dosen/Prodi' : 'Peminjam'}</div><div class="value">${props.user_name}</div></div></div>`;
             }
+            if (props.nama_pic) {
+                contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-user-tag"></i></div><div class="content"><div class="label">Nama PIC</div><div class="value">${props.nama_pic}</div></div></div>`;
+            }
+            if (props.nomor_telepon) {
+                contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-phone"></i></div><div class="content"><div class="label">No. Telepon PIC</div><div class="value">${props.nomor_telepon}</div></div></div>`;
+            }
             if (props.deskripsi) {
                 contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-info-circle"></i></div><div class="content"><div class="label">Deskripsi</div><div class="value">${props.deskripsi}</div></div></div>`;
             }
+
+            // === TAMBAHAN 2: Buat HTML untuk tombol HANYA jika bukan perkuliahan ===
+            let buttonsHtml = '';
+            if (props.type !== 'perkuliahan' && eventId) {
+                // Buat URL dengan mengganti placeholder :id
+                const showUrl = '{{ route("admin.kegiatan.show", ":id") }}'.replace(':id', eventId);
+                const editUrl = '{{ route("admin.kegiatan.edit", ":id") }}'.replace(':id', eventId);
+                
+                buttonsHtml = `
+                    <div class="mt-3 pt-3 border-top">
+                        <a href="${showUrl}" class="btn btn-info btn-sm">
+                            <i class="fas fa-eye me-1"></i> Lihat Detail
+                        </a>
+                        <a href="${editUrl}" class="btn btn-success btn-sm">
+                            <i class="fas fa-edit me-1"></i> Edit
+                        </a>
+                    </div>
+                `;
+            }
             
+            // === TAMBAHAN 3: Tampilkan detail DAN tombol sesuai platform (mobile/desktop) ===
             if (isMobile) {
                 modalTitle.textContent = info.event.title;
-                modalBody.innerHTML = contentHtml;
+                // Gabungkan konten detail dengan tombol
+                modalBody.innerHTML = contentHtml + buttonsHtml;
                 eventModal.show();
             } else {
-                let desktopContent = `<h5 class="detail-title">${info.event.title}</h5><hr>` + contentHtml;
+                let desktopContent = `<h5 class="detail-title">${info.event.title}</h5><hr>` + contentHtml + buttonsHtml;
                 eventDetailsContent.innerHTML = desktopContent;
                 eventDetailsContent.classList.remove('d-none');
                 eventDetailsPlaceholder.classList.add('d-none');
@@ -162,4 +198,28 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.render();
 });
 </script>
+
+<style>
+.detail-item {
+    display: flex;
+    align-items: center;
+}
+.detail-item .icon {
+    font-size: 1.2rem;
+    margin-right: 15px;
+    width: 25px;
+    text-align: center;
+}
+.detail-item .label {
+    font-weight: bold;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+.detail-item .value {
+    color: #333;
+}
+.modal-footer .dynamic-buttons {
+    margin-right: auto;
+}
+</style>
 @endsection

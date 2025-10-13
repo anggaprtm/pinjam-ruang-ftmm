@@ -79,7 +79,7 @@ return [
         'pdf'           => 'PDF',
         'print'         => 'Cetak',
         'colvis'        => 'Kolom',
-        'delete'        => 'Hapus data terpilih',
+        'delete'        => 'Hapus Terpilih',
         'zero_selected' => 'Tidak ada baris yang dipilih',
     ],
     'billing' => [
@@ -189,7 +189,7 @@ return [
     'customers'                      => 'Para Pelanggan',
     'deleted_at'                     => 'Dihapus pada',
     'description'                    => 'Keterangan',
-    'deselect_all'                   => 'Batalkan semua pilihan',
+    'deselect_all'                   => 'Batalkan pilihan',
     'discount_amount'                => 'Jumlah Diskon',
     'discount_percent'               => 'Persentase Diskon',
     'due_date'                       => 'Batas Tanggal Terakhir',
