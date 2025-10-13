@@ -22,12 +22,10 @@ class KegiatanController extends Controller
     {
         abort_if(Gate::denies('kegiatan_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        // 👇 2. Ini adalah bagian utama yang menangani permintaan AJAX dari DataTables
         if ($request->ajax()) {
-            // Kita mulai query seperti kode lama Anda
+
             $query = Kegiatan::with(['ruangan', 'user'])->select(sprintf('%s.*', (new Kegiatan())->table));
 
-            // Filter khusus untuk role User (logika lama Anda dipertahankan)
             if ($request->filled('tanggal_mulai')) {
             $query->whereDate('waktu_mulai', '=', $request->tanggal_mulai);
             }
@@ -42,7 +40,6 @@ class KegiatanController extends Controller
                 $query->where('kegiatan.user_id', auth()->id());
             }
 
-            // Di sini kita akan membuat DataTables
             $table = Datatables::of($query);
 
             if (empty($request->input('order'))) {
@@ -50,12 +47,11 @@ class KegiatanController extends Controller
                     $query->orderBy('created_at', 'desc');
                 });
             }
-            // Menambahkan kolom 'actions' untuk tombol (edit, view, delete)
+
             $table->addColumn('placeholder', '&nbsp;');
             $table->addColumn('actions', '&nbsp;');
             $table->addColumn('persetujuan', '&nbsp;');
 
-            // Mengedit kolom 'actions' untuk memasukkan HTML tombol
             $table->editColumn('actions', function ($row) {
                 $buttons = '';
 
@@ -76,7 +72,6 @@ class KegiatanController extends Controller
                 return $buttons;
             });
 
-            // 👇 TAMBAHKAN BLOK INI
             $table->editColumn('waktu_mulai_formatted', function ($row) {
                 return \Carbon\Carbon::parse($row->waktu_mulai)->translatedFormat('d M Y, H:i');
             });
@@ -107,6 +102,13 @@ class KegiatanController extends Controller
                         $setujuiBtn = '<button type="button" class="btn btn-success btn-sm js-open-modal" data-action-type="setujui" data-id="'.$row->id.'">Setujui</button>';
                         $tolakBtn = '<button type="button" class="btn btn-danger btn-sm js-open-modal ms-1" data-action-type="tolak" data-id="'.$row->id.'">Tolak</button>';
                         return $setujuiBtn . $tolakBtn;
+                    case 'disetujui':
+                        // Cek apakah kegiatan ini disetujui langsung oleh admin saat dibuat
+                        if (!$row->verifikasi_sarpras_at && !$row->verifikasi_akademik_at && !$row->disetujui_at) {
+                            return '<span class="text-muted fst-italic"><i class="fas fa-user-shield me-1"></i> Kegiatan dibuat oleh Admin</span>';
+                        }
+                        // Jika disetujui melalui proses normal, tampilkan strip
+                        return '<span class="text-muted">-</span>';
                     default:
                         return '<span class="text-muted">-</span>';
                 }
@@ -119,7 +121,6 @@ class KegiatanController extends Controller
             return $table->make(true);
         }
 
-        // 👇 3. Bagian ini hanya untuk saat halaman pertama kali dibuka
         // Ambil data untuk dropdown filter (logika lama Anda dipertahankan)
         $users = User::pluck('name', 'id')->prepend('Semua Peminjam', '');
         $ruangans = Ruangan::pluck('nama', 'id')->prepend('Semua Ruangan', '');
