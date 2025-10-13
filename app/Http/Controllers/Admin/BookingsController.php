@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Kegiatan;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreKegiatanRequest;
 use App\Models\Ruangan;
 use App\Services\EventService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Mail\KegiatanNotification;
 use Illuminate\Support\Facades\Mail;
-
+use App\Models\Kegiatan;
 
 class BookingsController extends Controller
 {
@@ -24,9 +21,19 @@ class BookingsController extends Controller
 
     public function cariRuang(Request $request)
     {
-        $ruangan = null;
+        // Ganti nama variabel agar konsisten
+        $ruangan = collect(); // Mulai dengan koleksi kosong
 
+        // Cek apakah ada filter waktu dan kapasitas yang diisi
         if ($request->filled(['waktu_mulai', 'waktu_selesai', 'kapasitas'])) {
+            // --- LOGIKA PENCARIAN (FILTER) ---
+            $request->validate([
+                'waktu_mulai' => 'required|date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
+                'waktu_selesai' => 'required|date_format:' . config('panel.date_format') . ' ' . config('panel.time_format') . '|after:waktu_mulai',
+                'kapasitas' => 'required|integer|min:1',
+            ]);
+
+            // Gunakan logika filter Anda yang sudah ada
             $ruangan = Ruangan::where('kapasitas', '>=', $request->input('kapasitas'))
                 ->where('is_active', true)
                 ->get()
@@ -38,24 +45,28 @@ class BookingsController extends Controller
                         'tipe_berulang'   => $request->input('tipe_berulang'),
                         'berulang_sampai' => $request->input('berulang_sampai'),
                     ];
-
                     return !$this->eventService->isRoomTaken($requestData);
                 });
+        } else {
+            // --- LOGIKA TAMPILAN AWAL (IDLE) ---
+            // Ambil semua ruangan yang aktif
+            $ruangan = Ruangan::where('is_active', true)->orderBy('nama', 'asc')->get();
         }
 
-        return view('admin.bookings.cari', compact('ruangan'));
+        // Tampilkan view dengan data ruangan
+        // Ganti nama variabel 'ruangan' menjadi 'ruangans' agar lebih jelas ini adalah collection
+        return view('admin.bookings.cari', ['ruangan' => $ruangan]);
     }
 
+    // Method bookRuang Anda tidak perlu diubah
     public function bookRuang(Request $request, EventService $eventService)
     {
-        $request->merge([
-            'user_id' => auth()->id()
-        ]);
+        $request->merge([ 'user_id' => auth()->id() ]);
 
         $rules = [
-            'nama_kegiatan'     => 'required',
-            'ruangan_id'        => 'required',
-            'nomor_telepon'     => 'required|numeric|digits_between:10,13',
+            'nama_kegiatan'   => 'required',
+            'ruangan_id'      => 'required',
+            'nomor_telepon'   => 'required|numeric|digits_between:10,13',
         ];
 
         if (!auth()->user()->isAdmin()) {
@@ -64,13 +75,10 @@ class BookingsController extends Controller
 
         $request->validate($rules);
 
-        $ruangan = Ruangan::findOrFail($request->input('ruangan_id'));
-
         if ($eventService->isRoomTaken($request->all())) {
-            return redirect()->back()
-                    ->withInput($request->input())
-                    ->withErrors('Ruangan ini tidak tersedia pada waktu tersebut.');
+            return redirect()->back()->withInput($request->input())->withErrors('Ruangan ini tidak tersedia pada waktu tersebut.');
         }
+        
         $suratIzinPath = null;
         if ($request->hasFile('surat_izin')) {
             $suratIzinPath = $request->file('surat_izin')->store('surat_izin', 'public');
@@ -81,7 +89,7 @@ class BookingsController extends Controller
         $data['status'] = auth()->user()->hasRole('Admin') ? 'disetujui' : 'belum_disetujui'; 
         $kegiatan = Kegiatan::create($data);
    
-        $customEmails = ['angga.iryanto@staf.unair.ac.id']; // Email tambahan
+        $customEmails = ['angga.iryanto@staf.unair.ac.id'];
         
         if (env('ENABLE_EMAIL_NOTIFICATIONS', true)) {
             Mail::to($customEmails)->send(new KegiatanNotification($kegiatan));

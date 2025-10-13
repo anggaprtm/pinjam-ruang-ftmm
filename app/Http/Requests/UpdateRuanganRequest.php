@@ -27,6 +27,16 @@ class UpdateRuanganRequest extends FormRequest
                 'min:-2147483648',
                 'max:2147483647',
             ],
+            'lantai' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
+            'foto' => [
+                'nullable', // Boleh kosong agar tidak wajib upload ulang
+                'image',
+                'max:2048',
+            ],
         ];
     }
 }

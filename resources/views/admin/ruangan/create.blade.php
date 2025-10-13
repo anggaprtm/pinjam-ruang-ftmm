@@ -40,6 +40,21 @@
                 <span class="help-block">{{ trans('cruds.ruangan.fields.kapasitas_helper') }}</span>
             </div>
             <div class="form-group">
+                <label class="required" for="lantai">Lantai</label>
+                <input class="form-control {{ $errors->has('lantai') ? 'is-invalid' : '' }}" type="number" name="lantai" id="lantai" value="{{ old('lantai', '') }}" step="1" required>
+                @if($errors->has('lantai'))
+                    <div class="invalid-feedback">{{ $errors->first('lantai') }}</div>
+                @endif
+            </div>
+            <div class="form-group">
+                <label for="foto">Foto Ruangan</label>
+                <input type="file" class="form-control-file {{ $errors->has('foto') ? 'is-invalid' : '' }}" name="foto" id="foto">
+                @if($errors->has('foto'))
+                    <div class="invalid-feedback">{{ $errors->first('foto') }}</div>
+                @endif
+                <span class="help-block">{{ trans('cruds.ruangan.fields.foto_helper') }}</span>
+            </div>
+            <div class="form-group">
                 <button class="btn btn-danger" type="submit">
                     {{ trans('global.save') }}
                 </button>

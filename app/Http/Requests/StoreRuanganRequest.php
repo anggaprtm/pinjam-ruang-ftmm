@@ -27,6 +27,17 @@ class StoreRuanganRequest extends FormRequest
                 'min:-2147483648',
                 'max:2147483647',
             ],
+            'lantai' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
+            'foto' => [
+                'nullable', // Boleh kosong saat pertama kali dibuat
+                'image',
+                'max:2048', // Maksimal 2MB
+            ],
+            
         ];
     }
 }

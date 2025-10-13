@@ -23,6 +23,8 @@ class Ruangan extends Model
         'nama',
         'deskripsi',
         'kapasitas',
+        'lantai',
+        'foto',
         'is_active',
         'created_at',
         'updated_at',

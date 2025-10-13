@@ -1,69 +1,102 @@
 @extends('layouts.admin')
+
 @section('content')
-
-{{-- Kartu Form Pencarian --}}
-<div class="card form-card search-card">
-    <div class="card-header">
-        <h4 class="mb-0">Cari Ruangan Tersedia</h4>
-    </div>
-    <div class="card-body">
-        <form>
-            <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label for="waktu_mulai" class="form-label fw-bold">Waktu Mulai</label>
-                    <input class="form-control datetime" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ request()->input('waktu_mulai') }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="waktu_selesai" class="form-label fw-bold">Waktu Selesai</label>
-                    <input class="form-control datetime" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ request()->input('waktu_selesai') }}" required>
-                </div>
-                <div class="col-md-2">
-                    <label for="kapasitas" class="form-label fw-bold">Min. Kapasitas</label>
-                    <input class="form-control" type="number" name="kapasitas" id="kapasitas" value="{{ request()->input('kapasitas') }}" placeholder="cth. 50" step="1" required>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-primary w-100" type="submit">
-                        <i class="fas fa-search me-1"></i> Cari
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+{{-- === FORM PENCARIAN === --}}
+<div class="card shadow-sm"> 
+    <div class="card-header"> 
+        <h4 class="mb-0">Cari Ruangan Tersedia</h4> 
+    </div> <div class="card-body"> 
+        <form action="{{ route('admin.cariRuang') }}" method="GET"> 
+            <div class="row g-3 align-items-end"> 
+                <div class="col-md-4"> 
+                    <label for="waktu_mulai" class="form-label fw-bold required">Waktu Mulai</label> 
+                    <input class="form-control datetime" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ request()->input('waktu_mulai') }}" required> 
+                </div> 
+                <div class="col-md-4"> 
+                    <label for="waktu_selesai" class="form-label fw-bold required">Waktu Selesai</label> 
+                    <input class="form-control datetime" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ request()->input('waktu_selesai') }}" required> 
+                </div> 
+                <div class="col-md-2"> <label for="kapasitas" class="form-label fw-bold required">Min. Kapasitas</label> 
+                    <input class="form-control" type="number" name="kapasitas" id="kapasitas" value="{{ request()->input('kapasitas') }}" placeholder="cth. 50" step="1" required> 
+                </div> 
+                <div class="col-md-2"> 
+                    <div class="d-flex"> 
+                    <button class="btn btn-primary w-100 me-2" type="submit"> 
+                        <i class="fas fa-search me-1"></i> Cari </button> 
+                        <a href="{{ route('admin.cariRuang') }}" class="btn btn-secondary" title="Reset Pencarian"> 
+                            <i class="fas fa-sync-alt"></i> 
+                        </a> 
+                    </div> 
+                </div> 
+            </div> 
+        </form> 
+    </div> 
 </div>
 
-{{-- Hasil Pencarian --}}
-@if($ruangan !== null)
-<div class="card form-card mt-4">
-    <div class="card-body">
-        @if($ruangan->count())
-            <h5 class="results-header">Ruangan Tersedia</h5>
-            @foreach($ruangan as $item)
-                <div class="room-card">
-                    <div class="room-info">
-                        <div class="icon"><i class="fas fa-door-open"></i></div>
-                        <div>
-                            <div class="room-name">{{ $item->nama ?? '' }}</div>
-                            <div class="room-capacity">Kapasitas: {{ $item->kapasitas ?? '' }} orang</div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bookRuang" data-ruangan-id="{{ $item->id }}" data-ruangan-nama="{{ $item->nama }}">
-                        Pinjam Ruang
-                    </button>
-                </div>
-            @endforeach
+{{-- === DAFTAR RUANG === --}}
+<div class="mt-4">
+    <h4 class="fw-bold mb-3">
+        @if(request()->filled('waktu_mulai'))
+            Ruangan Tersedia ({{ $ruangan->count() }} ditemukan)
         @else
-            <div class="text-center py-4">
-                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Tidak ada ruangan yang tersedia</h5>
-                <p>Silakan coba cari dengan waktu atau kapasitas yang berbeda.</p>
-            </div>
+            Daftar Semua Ruangan
         @endif
+    </h4>
+
+    <div class="row">
+        @forelse ($ruangan as $item)
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                <div class="card room-card shadow-sm border-0 text-center h-100">
+                    <img src="{{ $item->foto ? asset('storage/' . $item->foto) : asset('assets/img/unsplash/ruangan_default.jpg') }}"
+                         class="card-img-top" alt="{{ $item->nama }}">
+                    <div class="card-body">
+                        <h5 class="fw-semibold mb-2 text-dark">{{ $item->nama }}</h5>
+
+                        <div class="d-flex justify-content-center gap-2 mb-3">
+                            <span class="badge bg-dark d-flex align-items-center">
+                                <i class="fas fa-users me-1"></i> {{ $item->kapasitas }} Orang
+                            </span>
+                            <span class="badge bg-secondary d-flex align-items-center text-dark">
+                                <i class="fas fa-building me-1"></i> Lantai {{ $item->lantai }}
+                            </span>
+                        </div>
+
+                        <button type="button" 
+                                class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+                                data-bs-toggle="modal"
+                                data-bs-target="#bookRuang"
+                                data-ruangan-id="{{ $item->id }}"
+                                data-ruangan-nama="{{ $item->nama }}"
+                                {{ !request()->filled('waktu_mulai') ? 'disabled' : '' }}>
+                            <i class="fas fa-calendar-check"></i> Pinjam Ruang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="col-12">
+                <div class="alert alert-warning text-center">
+                    <h4 class="alert-heading mb-2">Tidak Ada Ruangan Ditemukan</h4>
+                    <p class="mb-0">
+                        @if(request()->filled('waktu_mulai'))
+                            Tidak ada ruangan yang tersedia sesuai kriteria. Coba ubah waktu atau kapasitas.
+                        @else
+                            Belum ada ruangan terdaftar atau aktif di sistem.
+                        @endif
+                    </p>
+                </div>
+            </div>
+        @endforelse
     </div>
+    @if(!request()->filled('waktu_mulai'))
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            Silakan isi <strong>Waktu Mulai</strong>, <strong>Waktu Selesai</strong>, dan <strong>Kapasitas</strong> terlebih dahulu untuk meminjam ruangan.
+        </div>
+    @endif
 </div>
-@endif
 
-
-{{-- Modal untuk Booking Ruangan --}}
+{{-- === MODAL BOOKING RUANG === --}}
 <div class="modal fade" tabindex="-1" role="dialog" id="bookRuang">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -116,7 +149,6 @@
     </div>
 </div>
 @endsection
-
 @section('scripts')
 @parent
 <script>
@@ -144,4 +176,43 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+@endsection
+@section('styles')
+<style>
+.room-card {
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #fff;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.room-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+.room-card .card-img-top {
+    height: 180px;
+    width: 100%;
+    object-fit: cover;
+}
+.room-card .card-body {
+    padding: 1rem 1rem 1.25rem;
+}
+.room-card h5 {
+    font-size: 1.1rem;
+}
+.room-card .badge {
+    font-size: 0.85rem;
+    padding: 0.5em 0.75em;
+    border-radius: 8px;
+}
+.room-card .btn-success {
+    border-radius: 10px;
+    font-weight: 500;
+    background-color: #34c759;
+    border: none;
+}
+.room-card .btn-success:hover {
+    background-color: #2db14d;
+}
+</style>
 @endsection

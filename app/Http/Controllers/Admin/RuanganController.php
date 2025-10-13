@@ -7,22 +7,61 @@ use App\Http\Requests\MassDestroyRuanganRequest;
 use App\Http\Requests\StoreRuanganRequest;
 use App\Http\Requests\UpdateRuanganRequest;
 use App\Models\Ruangan;
-use App\Models\Kegiatan; // Tambahkan ini
+use App\Models\Kegiatan; 
 use App\Models\JadwalPerkuliahan;
 use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class RuanganController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        abort_if(Gate::denies('ruangan_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // Ini adalah bagian yang menangani permintaan DataTables (AJAX)
+        if ($request->ajax()) {
+            $query = Ruangan::query()->select(sprintf('%s.*', (new Ruangan())->table));
+            $table = Datatables::of($query);
 
+            $table->addColumn('placeholder', '&nbsp;');
+            $table->addColumn('actions', '&nbsp;');
+
+            $table->editColumn('actions', function ($row) {
+                $viewGate      = 'ruangan_show';
+                $editGate      = 'ruangan_edit';
+                $deleteGate    = 'ruangan_delete';
+                $crudRoutePart = 'ruangan';
+
+                return view('partials.datatablesActions', compact(
+                    'viewGate',
+                    'editGate',
+                    'deleteGate',
+                    'crudRoutePart',
+                    'row'
+                ));
+            });
+
+            $table->editColumn('id', function ($row) {
+                return $row->id ? $row->id : '';
+            });
+            $table->editColumn('nama', function ($row) {
+                return $row->nama ? $row->nama : '';
+            });
+            $table->editColumn('kapasitas', function ($row) {
+                return $row->kapasitas ? $row->kapasitas : '';
+            });
+
+            $table->rawColumns(['actions', 'placeholder']);
+
+            return $table->make(true);
+        }
+
+        // === PERBAIKAN DI SINI ===
+        // Saat halaman dimuat pertama kali (bukan AJAX),
+        // ambil semua data ruangan dan kirim ke view.
         $ruangan = Ruangan::all();
-        // $ruangan = Ruangan::orderBy('id', 'asc')->get();
-
         return view('admin.ruangan.index', compact('ruangan'));
     }
 
@@ -35,9 +74,15 @@ class RuanganController extends Controller
 
     public function store(StoreRuanganRequest $request)
     {
-        $ruangan = Ruangan::create($request->all());
+        $data = $request->all();
+        
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('uploads/fotos', 'public');
+        }
 
-        return redirect()->route('admin.ruangan.index')->with('success','Ruangan berhasil ditambahkan!');
+        Ruangan::create($data);
+
+        return redirect()->route('admin.ruangan.index');
     }
 
     public function edit(Ruangan $ruangan)
@@ -49,12 +94,21 @@ class RuanganController extends Controller
 
     public function update(UpdateRuanganRequest $request, Ruangan $ruangan)
     {
-        $ruangan->update($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('foto')) {
+            if ($ruangan->foto && Storage::disk('public')->exists($ruangan->foto)) {
+                Storage::disk('public')->delete($ruangan->foto);
+            }
+            $data['foto'] = $request->file('foto')->store('uploads/fotos', 'public');
+        }
+
+        $ruangan->update($data);
 
         return redirect()->route('admin.ruangan.index');
     }
 
-     public function show(Ruangan $ruangan)
+    public function show(Ruangan $ruangan)
     {
         abort_if(Gate::denies('ruangan_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
@@ -105,6 +159,11 @@ class RuanganController extends Controller
     public function destroy(Ruangan $ruangan)
     {
         abort_if(Gate::denies('ruangan_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        
+        // Hapus file foto jika ada sebelum menghapus data dari database
+        if ($ruangan->foto && Storage::disk('public')->exists($ruangan->foto)) {
+            Storage::disk('public')->delete($ruangan->foto);
+        }
 
         $ruangan->delete();
 
@@ -113,15 +172,19 @@ class RuanganController extends Controller
 
     public function massDestroy(MassDestroyRuanganRequest $request)
     {
-        $ruangan = Ruangan::find(request('ids'));
+        $ruangan = Ruangan::whereIn('id', request('ids'))->get();
 
         foreach ($ruangan as $ruangan) {
+            // Hapus file foto untuk setiap ruangan yang akan dihapus
+            if ($ruangan->foto && Storage::disk('public')->exists($ruangan->foto)) {
+                Storage::disk('public')->delete($ruangan->foto);
+            }
             $ruangan->delete();
         }
 
         return response(null, Response::HTTP_NO_CONTENT);
     }
-    
+
     public function toggle($id)
     {
         $ruangan = Ruangan::findOrFail($id);
@@ -130,5 +193,4 @@ class RuanganController extends Controller
 
         return back()->with('success', 'Status ruangan berhasil diubah!');
     }
-
 }

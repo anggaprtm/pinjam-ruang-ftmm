@@ -31,6 +31,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::delete('ruangan/destroy', 'RuanganController@massDestroy')->name('ruangan.massDestroy');
     Route::resource('ruangan', 'RuanganController');
     Route::patch('ruangan/{id}/toggle', 'RuanganController@toggle')->name('ruangan.toggle');
+    Route::post('ruangan/storeMedia', 'RuanganController@storeMedia')->name('ruangan.storeMedia');
 
     // Jadwal Perkuliahan
     Route::delete('jadwal-perkuliahan/destroy', 'JadwalPerkuliahanController@massDestroy')->name('jadwal-perkuliahan.massDestroy');
