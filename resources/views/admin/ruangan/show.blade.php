@@ -18,6 +18,17 @@
             {{-- Kolom Kiri: Detail Info Ruangan --}}
             <div class="col-lg-5">
                 <h5 class="mb-3 font-weight-bold">Informasi Ruangan</h5>
+                {{-- === TAMBAHAN: Menampilkan Foto Ruangan === --}}
+                @if($ruangan->foto) 
+                    <div class="mb-3">
+                        <img src="{{ asset('storage/' . $ruangan->foto) }}" alt="{{ $ruangan->nama }}" class="img-fluid rounded shadow-sm">
+                    </div>
+                @else
+                    <div class="mb-3">
+                        <img src="{{ asset('assets/img/unsplash/ruangan_default.jpg') }}" alt="Default Image" class="img-fluid rounded shadow-sm">
+                    </div>
+                @endif
+                {{-- === AKHIR TAMBAHAN === --}}
                 <div class="detail-item">
                     <div class="icon"><i class="fas fa-users"></i></div>
                     <div class="content">

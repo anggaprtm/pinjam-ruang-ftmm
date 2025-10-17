@@ -32,13 +32,19 @@
                     <div class="invalid-feedback">{{ $errors->first('lantai') }}</div>
                 @endif
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label for="foto">Foto Ruangan</label>
+                @if($ruangan->foto)
+                    <div class="mb-2">
+                        <img src="{{ asset('storage/' . $ruangan->foto) }}" alt="{{ $ruangan->nama }}" class="img-thumbnail" width="200">
+                    </div>
+                    <small class="form-text text-muted">Abaikan jika tidak ingin mengganti foto.</small>
+                @endif
                 <input type="file" class="form-control-file {{ $errors->has('foto') ? 'is-invalid' : '' }}" name="foto" id="foto">
                 @if($errors->has('foto'))
                     <div class="invalid-feedback">{{ $errors->first('foto') }}</div>
                 @endif
-                <span class="help-block">Unggah gambar berupa .jpg dengan ukuran maksimal 2MB</span>
+                <span class="help-block">Unggah gambar berupa .jpg, .png dengan ukuran maksimal 2MB</span>
             </div>
 
             <div class="form-group mb-3">

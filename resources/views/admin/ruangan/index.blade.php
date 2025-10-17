@@ -21,6 +21,7 @@
                         <th width="10"></th> {{-- Checkbox --}}
                         <th><i class="fas fa-door-open"></i>{{ trans('cruds.ruangan.fields.nama') }}</th>
                         <th class="text-center"><i class="fas fa-users"></i>{{ trans('cruds.ruangan.fields.kapasitas') }}</th>
+                        <th class="text-center"><i class="fas fa-building"></i> Lantai</th>
                         <th class="text-center"><i class="fas fa-info-circle"></i>Status</th>
                         <th class="text-center" style="width: 150px;"><i class="fas fa-cogs"></i>Aksi</th>
                     </tr>
@@ -31,9 +32,13 @@
                             <td></td> {{-- Checkbox --}}
                             <td data-label="Ruangan">
                                 <div class="kegiatan-title-cell">{{ $item->nama ?? '' }}</div>
+                                <div class="text-muted small">{{ Str::limit($item->deskripsi, 75) ?? '' }}</div>
                             </td>
                             <td data-label="Kapasitas" class="text-center">
                                 <span class="badge-ruangan">{{ $item->kapasitas ?? '' }} Orang</span>
+                            </td>
+                            <td data-label="Lantai" class="text-center">
+                                <span class="badge bg-info">Lantai {{ $item->lantai ?? '' }}</span>
                             </td>
                             <td data-label="Status" class="text-center">
                                 {{-- PERUBAHAN DI SINI: Mengganti badge dengan toggle switch --}}
