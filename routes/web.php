@@ -1,68 +1,91 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
+// === Import controller FQCN (Laravel 11)
+use App\Http\Controllers\Admin\HomeController;
+use App\Http\Controllers\Admin\PermissionsController;
+use App\Http\Controllers\Admin\RolesController;
+use App\Http\Controllers\Admin\UsersController;
+use App\Http\Controllers\Admin\RuanganController;
+use App\Http\Controllers\Admin\JadwalPerkuliahanController;
+use App\Http\Controllers\Admin\JadwalPerkuliahanTemplateExportController;
+use App\Http\Controllers\Admin\KegiatanController;
+use App\Http\Controllers\Admin\SystemCalendarController;
+use App\Http\Controllers\Admin\BookingsController;
+use App\Http\Controllers\Admin\CalendarViewController;
+use App\Http\Controllers\Auth\ChangePasswordController;
+
+// === Redirect root ke login (sesuai rute lama)
 Route::redirect('/', '/login');
+
+Route::get('/dashboard', function () {
+    return redirect()->route('admin.home'); // atau redirect('/home')
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+// === /home -> redirect ke admin.home + forward status (sesuai rute lama)
 Route::get('/home', function () {
     if (session('status')) {
         return redirect()->route('admin.home')->with('status', session('status'));
     }
-
     return redirect()->route('admin.home');
 });
 
-Auth::routes(['register' => false]);
-
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth']], function () {
-    Route::get('/', 'HomeController@index')->name('home');
-    Route::patch('kegiatan/{kegiatan}/update-status', 'KegiatanController@updateStatus')->name('admin.kegiatan.updateStatus');
-
-    // Permissions
-    Route::delete('permissions/destroy', 'PermissionsController@massDestroy')->name('permissions.massDestroy');
-    Route::resource('permissions', 'PermissionsController');
-
-    // Roles
-    Route::delete('roles/destroy', 'RolesController@massDestroy')->name('roles.massDestroy');
-    Route::resource('roles', 'RolesController');
-
-    // Users
-    Route::delete('users/destroy', 'UsersController@massDestroy')->name('users.massDestroy');
-    Route::resource('users', 'UsersController');
-
-    // Ruangan
-    Route::delete('ruangan/destroy', 'RuanganController@massDestroy')->name('ruangan.massDestroy');
-    Route::resource('ruangan', 'RuanganController');
-    Route::patch('ruangan/{id}/toggle', 'RuanganController@toggle')->name('ruangan.toggle');
-    Route::post('ruangan/storeMedia', 'RuanganController@storeMedia')->name('ruangan.storeMedia');
-
-    // Jadwal Perkuliahan
-    Route::delete('jadwal-perkuliahan/destroy', 'JadwalPerkuliahanController@massDestroy')->name('jadwal-perkuliahan.massDestroy');
-    Route::resource('jadwal-perkuliahan', 'JadwalPerkuliahanController');
-    Route::post('jadwal-perkuliahan/import', 'JadwalPerkuliahanController@import')->name('jadwal-perkuliahan.import');
-    Route::get('jadwal-perkuliahan/template', 'JadwalPerkuliahanTemplateExportController@export')->name('jadwal-perkuliahan.template');
+// === Grup ADMIN (prefix + name + middleware=auth)
+Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
 
     // Kegiatan
-    Route::delete('kegiatan/destroy', 'KegiatanController@massDestroy')->name('kegiatan.massDestroy');
-    Route::resource('kegiatan', 'KegiatanController');
-    Route::patch('kegiatan/{kegiatan}/status', 'KegiatanController@updateStatus')
-        ->name('kegiatan.updateStatus')
+    Route::delete('kegiatan/destroy', [KegiatanController::class, 'massDestroy'])->name('kegiatan.massDestroy');
+    Route::resource('kegiatan', KegiatanController::class);
+    Route::patch('kegiatan/{kegiatan}/status', [KegiatanController::class, 'updateStatus'])
+        ->name('kegiatan.updateStatus') // jangan "admin.kegiatan..." karena sudah ada as('admin.')
         ->middleware('role.verification');
-    Route::get('kegiatan/{kegiatan}/edit-surat-izin', 'KegiatanController@editSuratIzin')->name('kegiatan.editSuratIzin');
-    Route::patch('kegiatan/{kegiatan}/update-surat-izin', 'KegiatanController@updateSuratIzin')->name('kegiatan.updateSuratIzin');
+    Route::get('kegiatan/{kegiatan}/edit-surat-izin', [KegiatanController::class, 'editSuratIzin'])->name('kegiatan.editSuratIzin');
+    Route::patch('kegiatan/{kegiatan}/update-surat-izin', [KegiatanController::class, 'updateSuratIzin'])->name('kegiatan.updateSuratIzin');
 
-    Route::get('kalender', 'SystemCalendarController@index')->name('systemCalendar');
-    Route::get('cari-ruang', 'BookingsController@cariRuang')->name('cariRuang');
-    Route::post('book-ruang', 'BookingsController@bookRuang')->name('bookRuang');
+    // Permissions
+    Route::delete('permissions/destroy', [PermissionsController::class, 'massDestroy'])->name('permissions.massDestroy');
+    Route::resource('permissions', PermissionsController::class);
 
-    Route::get('api/holidays', 'CalendarViewController@getHolidays')->name('api.holidays');
+    // Roles
+    Route::delete('roles/destroy', [RolesController::class, 'massDestroy'])->name('roles.massDestroy');
+    Route::resource('roles', RolesController::class);
+
+    // Users
+    Route::delete('users/destroy', [UsersController::class, 'massDestroy'])->name('users.massDestroy');
+    Route::resource('users', UsersController::class);
+
+    // Ruangan
+    Route::delete('ruangan/destroy', [RuanganController::class, 'massDestroy'])->name('ruangan.massDestroy');
+    Route::resource('ruangan', RuanganController::class);
+    Route::patch('ruangan/{id}/toggle', [RuanganController::class, 'toggle'])->name('ruangan.toggle');
+    Route::post('ruangan/storeMedia', [RuanganController::class, 'storeMedia'])->name('ruangan.storeMedia');
+
+    // Jadwal Perkuliahan
+    Route::delete('jadwal-perkuliahan/destroy', [JadwalPerkuliahanController::class, 'massDestroy'])->name('jadwal-perkuliahan.massDestroy');
+    Route::resource('jadwal-perkuliahan', JadwalPerkuliahanController::class);
+    Route::post('jadwal-perkuliahan/import', [JadwalPerkuliahanController::class, 'import'])->name('jadwal-perkuliahan.import');
+    Route::get('jadwal-perkuliahan/template', [JadwalPerkuliahanTemplateExportController::class, 'export'])->name('jadwal-perkuliahan.template');
+
+    // Kalender & Booking
+    Route::get('kalender', [SystemCalendarController::class, 'index'])->name('systemCalendar');
+    Route::get('cari-ruang', [BookingsController::class, 'cariRuang'])->name('cariRuang');
+    Route::post('book-ruang', [BookingsController::class, 'bookRuang'])->name('bookRuang');
+
+    // API Holidays
+    Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
 });
-Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth']], function () {
-    // Change password
-    if (file_exists(app_path('Http/Controllers/Auth/ChangePasswordController.php'))) {
-        Route::get('password', 'ChangePasswordController@edit')->name('password.edit');
-        Route::post('password', 'ChangePasswordController@update')->name('password.update');
-        Route::post('profile', 'ChangePasswordController@updateProfile')->name('password.updateProfile');
-        Route::post('profile/destroy', 'ChangePasswordController@destroy')->name('password.destroyProfile');
+
+// === Grup PROFILE (Change Password) dengan pengecekan file controller (sesuai rute lama)
+Route::middleware(['auth'])->prefix('profile')->as('profile.')->group(function () {
+    if (class_exists(ChangePasswordController::class)) {
+        Route::get('password', [ChangePasswordController::class, 'edit'])->name('password.edit');
+        Route::post('password', [ChangePasswordController::class, 'update'])->name('password.update');
+        Route::post('profile', [ChangePasswordController::class, 'updateProfile'])->name('password.updateProfile');
+        Route::post('profile/destroy', [ChangePasswordController::class, 'destroy'])->name('password.destroyProfile');
     }
 });
-Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\Admin\HomeController::class, 'index'])->name('home');
+// === Rute auth dari Breeze (gantikan Auth::routes())
+require __DIR__.'/auth.php';
