@@ -184,7 +184,7 @@ class KegiatanController extends Controller
         return view('admin.kegiatan.edit', compact('kegiatan', 'ruangan', 'users'));
     }
 
-    public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan)
+    public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan, EventService $eventService)
     {
         // Ambil semua data dari request
         // Tambahan: User tidak bisa update jika sudah disetujui
@@ -192,20 +192,30 @@ class KegiatanController extends Controller
             abort(Response::HTTP_FORBIDDEN, '403 Forbidden: Anda tidak dapat mengubah data yang sudah disetujui.');
         }
 
-        $data = $request->all();
+        // Gabungkan nilai lama + yang baru (supaya payload lengkap untuk isRoomTaken)
+        $payload = array_merge($kegiatan->toArray(), $request->all());
+        $payload['ignore_id'] = $kegiatan->id;
 
-        // Proses file surat izin jika ada
+        // Jika file surat_izin akan diganti, simpan path di payload dulu (tetap cek bentrok dulu)
         if ($request->hasFile('surat_izin')) {
-            // Hapus surat izin lama jika ada
+            $payload['__new_surat_izin'] = true; // penanda sementara
+        }
+
+        $bentrok = $eventService->isRoomTaken($payload);
+        if ($bentrok) {
+            return back()->withInput($request->all())
+                ->withErrors('Bentrok dengan kegiatan: ' . $bentrok->nama_kegiatan);
+        }
+
+        // Baru proses file (setelah aman)
+        $data = $request->all();
+        if ($request->hasFile('surat_izin')) {
             if ($kegiatan->surat_izin && \Storage::disk('public')->exists($kegiatan->surat_izin)) {
                 \Storage::disk('public')->delete($kegiatan->surat_izin);
             }
-
-            // Simpan surat izin baru dan dapatkan path yang benar
             $data['surat_izin'] = $request->file('surat_izin')->store('surat_izin', 'public');
         }
 
-        // Update kegiatan dengan data yang sudah dimodifikasi
         $kegiatan->update($data);
 
         return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil diperbarui.');

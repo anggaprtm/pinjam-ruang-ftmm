@@ -24,6 +24,8 @@ class EventService
         $datetime_format = config('panel.date_format', 'd M Y') . ' ' . config('panel.time_format', 'H:i');
         $date_format = config('panel.date_format', 'd M Y');
 
+        $ignoreId = $requestData['ignore_id'] ?? null;
+
         // Kumpulkan semua rentang waktu yang perlu diperiksa
         $waktuUntukDicek = [];
         try {
@@ -62,6 +64,7 @@ class EventService
 
         // Cek bentrok dengan tabel KEGIATAN dalam SATU QUERY
         $kegiatanBentrok = Kegiatan::where('ruangan_id', $requestData['ruangan_id'])
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
             ->whereIn('status', ['disetujui', 'verifikasi_akademik', 'verifikasi_sarpras'])
             ->where(function (Builder $query) use ($waktuUntukDicek) {
                 foreach ($waktuUntukDicek as $waktu) {
