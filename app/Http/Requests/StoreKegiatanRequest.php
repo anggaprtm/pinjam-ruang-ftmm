@@ -23,7 +23,7 @@ class StoreKegiatanRequest extends FormRequest
             ],
             'nama_pic' => [
                 'string',
-                'nullable', // atau 'required' jika wajib
+                'required', // atau 'required' jika wajib
             ],
             'nomor_telepon' => [
                 'string',

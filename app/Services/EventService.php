@@ -141,6 +141,7 @@ class EventService
             'deskripsi'     => $requestData['deskripsi'] ?? null,
             'user_id'       => $requestData['user_id'],
             'status'        => $requestData['status'],
+            'nama_pic'      => $requestData['nama_pic'] ?? null,
             'nomor_telepon' => $requestData['nomor_telepon'] ?? null,
             'surat_izin'    => $requestData['surat_izin'] ?? null,
             'created_at'    => now(),
