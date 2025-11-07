@@ -67,6 +67,24 @@
     </div>
 </div>
 
+<!-- Modal: daftar kegiatan per tanggal -->
+<div class="modal fade" id="dayEventsModal" tabindex="-1" aria-labelledby="dayEventsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dayEventsModalLabel">Daftar Kegiatan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="dayEventsList" class="list-unstyled mb-0"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -167,25 +185,22 @@ document.addEventListener('DOMContentLoaded', function() {
         eventClick: function(info) {
             info.jsEvent.preventDefault(); 
         },
-        dayMaxEventRows: 100,
+        // Tampilkan maksimal 4 baris event di month view, sisanya jadi link '+n lainnya'
+        dayMaxEventRows: 4,
     });
 
     calendar.render();
 
-    // Expose calendar to window for debugging and log parsed events
-    window.__fc_calendar = calendar;
-    console.log('FullCalendar parsed events:', calendar.getEvents().map(e => ({
-        title: e.title,
-        start: e.start ? e.start.toISOString() : null,
-        end: e.end ? e.end.toISOString() : null,
-        startStr: e.startStr || null,
-        endStr: e.endStr || null,
-    })));
+    // remove debug exposure
 
     // Setelah calendar dirender, ambil EventApi yang sudah ter-parse (menghindari masalah timezone/parsing)
     // dan beri anotasi pada sel hari di month view: shading per event (menggunakan warna event) dan
     // sisipkan daftar judul kegiatan jika ada lebih dari satu pada hari tersebut.
     function annotateDayCells() {
+        // clear previous injected summaries/lists to avoid duplicates
+        document.querySelectorAll('.fc-day-summary').forEach(n => n.remove());
+        document.querySelectorAll('.fc-day-event-list').forEach(n => n.remove());
+
         const events = calendar.getEvents();
         const map = {}; // tanggal 'YYYY-MM-DD' => array of {title, color}
 
@@ -230,9 +245,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Jika FullCalendar sudah merender event elements di hari ini, jangan inject daftar teks lagi
             const existingEvents = dayEl.querySelectorAll('.fc-daygrid-event, .fc-event');
-            if (existingEvents && existingEvents.length > 0) {
-                // ada event blocks, skip injection to avoid duplicate text
-            } else {
+                if (existingEvents && existingEvents.length > 0) {
+                    // FullCalendar sudah merender event blocks; kita tidak inject overlay.
+                    // We'll let FullCalendar show up to 4 events and provide its built-in '+n more' link.
+                } else {
                 // Sisipkan daftar nama kegiatan (jika belum ada)
                 let list = dayEl.querySelector('.fc-day-event-list');
                 if (!list) {
@@ -262,17 +278,73 @@ document.addEventListener('DOMContentLoaded', function() {
                     li.title = item.title;
                     list.appendChild(li);
                 });
+                // jika lebih dari 2, tambahkan link more
+                const titles = map[date].map(i => i.title).filter(t => !!t);
+                if (titles.length > 2) {
+                    const moreLi = document.createElement('li');
+                    const moreLink = document.createElement('a');
+                    moreLink.href = '#';
+                    moreLink.textContent = `Lihat ${titles.length} kegiatan`;
+                    moreLink.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        openDayModal(date, titles);
+                    });
+                    moreLi.appendChild(moreLink);
+                    list.appendChild(moreLi);
+                }
             }
         });
+
+        // store map globally so more-link handlers can access titles
+        window.__fc_dayMap = map;
+
+        // attach click handlers to FullCalendar's built-in more links to open modal instead of native popover
+        document.querySelectorAll('.fc-daygrid-more-link').forEach(link => {
+            // remove previous handler if any by cloning
+            const newLink = link.cloneNode(true);
+            link.parentNode.replaceChild(newLink, link);
+            newLink.addEventListener('click', function(ev) {
+                ev.preventDefault();
+                const dayEl = newLink.closest('.fc-daygrid-day');
+                if (!dayEl) return;
+                const date = dayEl.getAttribute('data-date');
+                const titles = (window.__fc_dayMap && window.__fc_dayMap[date]) ? window.__fc_dayMap[date].map(i => i.title).filter(t=>!!t) : [];
+                if (titles.length > 0) openDayModal(date, titles);
+            });
+        });
+
     }
 
+    // Membuka modal dan mengisi daftar kegiatan
+    function openDayModal(date, titles) {
+        const modalLabel = document.getElementById('dayEventsModalLabel');
+        modalLabel.textContent = 'Kegiatan pada ' + date;
+        const list = document.getElementById('dayEventsList');
+        list.innerHTML = '';
+        titles.forEach(t => {
+            const li = document.createElement('li');
+            li.textContent = t;
+            li.style.padding = '6px 0';
+            list.appendChild(li);
+        });
+
+        // show bootstrap modal (Bootstrap 5) if available, otherwise fallback to alert
+        const modalEl = document.getElementById('dayEventsModal');
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+        } else {
+            alert('Kegiatan pada ' + date + '\n\n' + titles.join('\n'));
+        }
+    }
     // Jalankan anotasi setelah render pertama, dan juga setiap kali view berubah (mis. navigasi bulan)
-    annotateDayCells();
+    // run annotate slightly after render so DOM event elements exist
+    setTimeout(annotateDayCells, 50);
     calendar.on('datesSet', function() {
         // hapus anotasi lama
         document.querySelectorAll('.fc-day-event-list').forEach(n => n.remove());
         document.querySelectorAll('.fc-daygrid-day-frame').forEach(f => { f.style.backgroundColor = ''; });
-        annotateDayCells();
+        setTimeout(annotateDayCells, 50);
     });
 });
 </script>
