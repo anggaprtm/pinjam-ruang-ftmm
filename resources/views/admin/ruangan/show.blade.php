@@ -75,6 +75,80 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
+    // Ambil events yang dikirim dari server
+    const serverEvents = {!! json_encode($events) !!} || [];
+
+    // Kita akan membuat event latar (background) untuk menandai hari-hari ketika ruangan terpakai.
+    // FullCalendar mendukung event dengan property "display: 'background'" atau "rendering: 'background'" tergantung versi.
+    // Karena kita menggunakan FullCalendar v6 (index.global), gunakan 'display: "background"'.
+
+    // Fungsi bantu: mengembalikan array tanggal (YYYY-MM-DD) antara dua tanggal inklusif
+    function datesBetween(start, end) {
+        const dates = [];
+        const cur = new Date(start);
+        const last = new Date(end);
+        // Normalisasi waktu ke tengah malam UTC local to avoid timezone shift issues
+        cur.setHours(0,0,0,0);
+        last.setHours(0,0,0,0);
+        while (cur <= last) {
+            dates.push(cur.toISOString().slice(0,10));
+            cur.setDate(cur.getDate() + 1);
+        }
+        return dates;
+    }
+
+    // Untuk setiap event server, kita buat event latar (background) per tanggal yang dipakai,
+    // dan gunakan warna yang sama namun lebih transparan agar judul event tetap terbaca.
+    const backgroundEvents = [];
+
+    // Membantu konversi hex color (#rrggbb) ke rgba dengan alpha
+    function hexToRgba(hex, alpha) {
+        if (!hex) return `rgba(0,0,0,${alpha})`;
+        // dukung format #rrggbb atau #rgb
+        const h = hex.replace('#', '');
+        let r, g, b;
+        if (h.length === 3) {
+            r = parseInt(h[0] + h[0], 16);
+            g = parseInt(h[1] + h[1], 16);
+            b = parseInt(h[2] + h[2], 16);
+        } else if (h.length === 6) {
+            r = parseInt(h.substring(0,2), 16);
+            g = parseInt(h.substring(2,4), 16);
+            b = parseInt(h.substring(4,6), 16);
+        } else {
+            return `rgba(0,0,0,${alpha})`;
+        }
+        return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    // Mendukung hex atau rgb/rgba CSS string, mengembalikan warna dengan alpha
+    function cssColorWithAlpha(color, alpha) {
+        if (!color) return `rgba(0,0,0,${alpha})`;
+        color = color.trim();
+        // jika sudah rgba, replace alpha
+        if (color.startsWith('rgba')) {
+            return color.replace(/rgba\(([^)]+)\)/, function(_, inner) {
+                const parts = inner.split(',').map(p => p.trim());
+                parts[3] = alpha.toString();
+                return 'rgba(' + parts.join(',') + ')';
+            });
+        }
+        // jika rgb(...) -> ubah ke rgba
+        if (color.startsWith('rgb(')) {
+            return color.replace('rgb(', 'rgba(').replace(')', ', ' + alpha + ')');
+        }
+        // jika hex -> gunakan hexToRgba
+        if (color.startsWith('#')) {
+            return hexToRgba(color, alpha);
+        }
+        // fallback: return rgba(0,0,0,alpha)
+        return `rgba(0,0,0,${alpha})`;
+    }
+
+    serverEvents.forEach(ev => {
+        // noop here — we will rely on FullCalendar's parsed Event objects after render
+    });
+
     const calendar = new FullCalendar.Calendar(calendarEl, {
         headerToolbar: {
             left: 'prev,next',
@@ -87,14 +161,119 @@ document.addEventListener('DOMContentLoaded', function() {
             month: 'Bulan',
             week: 'Minggu',
         },
-        events: {!! json_encode($events) !!},
+    events: serverEvents,
         editable: false,
         // Membuat event tidak bisa diklik karena ini hanya untuk display
         eventClick: function(info) {
             info.jsEvent.preventDefault(); 
-        }
+        },
+        dayMaxEventRows: 100,
     });
+
     calendar.render();
+
+    // Expose calendar to window for debugging and log parsed events
+    window.__fc_calendar = calendar;
+    console.log('FullCalendar parsed events:', calendar.getEvents().map(e => ({
+        title: e.title,
+        start: e.start ? e.start.toISOString() : null,
+        end: e.end ? e.end.toISOString() : null,
+        startStr: e.startStr || null,
+        endStr: e.endStr || null,
+    })));
+
+    // Setelah calendar dirender, ambil EventApi yang sudah ter-parse (menghindari masalah timezone/parsing)
+    // dan beri anotasi pada sel hari di month view: shading per event (menggunakan warna event) dan
+    // sisipkan daftar judul kegiatan jika ada lebih dari satu pada hari tersebut.
+    function annotateDayCells() {
+        const events = calendar.getEvents();
+        const map = {}; // tanggal 'YYYY-MM-DD' => array of {title, color}
+
+        events.forEach(e => {
+            if (!e.start) return;
+            // gunakan end-1ms untuk meng-handle exclusive end
+            const startDt = new Date(e.start);
+            const endDt = e.end ? new Date(e.end.getTime() - 1) : new Date(e.start);
+
+            // Buat tanggal lokal (midnight) untuk start dan end
+            const localStart = new Date(startDt.getFullYear(), startDt.getMonth(), startDt.getDate());
+            const localEnd = new Date(endDt.getFullYear(), endDt.getMonth(), endDt.getDate());
+
+            for (let d = new Date(localStart); d <= localEnd; d.setDate(d.getDate() + 1)) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const key = `${y}-${m}-${day}`;
+                if (!map[key]) map[key] = [];
+                // normalize title: ignore null / 'null' strings
+                let title = e.title;
+                if (title === null || title === undefined) title = null;
+                if (typeof title === 'string' && title.trim().toLowerCase() === 'null') title = null;
+                map[key].push({ title: title, color: e.backgroundColor || e.color || '#17a2b8' });
+            }
+        });
+
+        // Untuk setiap tanggal yang terpakai, cari elemen day cell dan modifikasi
+        Object.keys(map).forEach(date => {
+            const dayEl = document.querySelector(`.fc-daygrid-day[data-date="${date}"]`);
+            if (!dayEl) return; // mis: diluar view
+
+            // Tambahkan shading latar dengan warna campuran (jika banyak acara, pakai warna pertama)
+            const firstColor = map[date][0].color;
+            const shade = cssColorWithAlpha(firstColor, 0.15);
+            // beri style latar pada .fc-daygrid-day-frame agar tidak memengaruhi header
+            const frame = dayEl.querySelector('.fc-daygrid-day-frame');
+            if (frame) {
+                frame.style.backgroundColor = shade;
+                frame.style.borderRadius = '6px';
+            }
+
+            // Jika FullCalendar sudah merender event elements di hari ini, jangan inject daftar teks lagi
+            const existingEvents = dayEl.querySelectorAll('.fc-daygrid-event, .fc-event');
+            if (existingEvents && existingEvents.length > 0) {
+                // ada event blocks, skip injection to avoid duplicate text
+            } else {
+                // Sisipkan daftar nama kegiatan (jika belum ada)
+                let list = dayEl.querySelector('.fc-day-event-list');
+                if (!list) {
+                    list = document.createElement('ul');
+                    list.className = 'fc-day-event-list';
+                    list.style.listStyle = 'none';
+                    list.style.padding = '0 6px 6px 6px';
+                    list.style.margin = '0';
+                    list.style.fontSize = '0.75rem';
+                    list.style.lineHeight = '1.1';
+                    // append ke frame supaya layout konsisten
+                    if (frame) frame.appendChild(list);
+                    else dayEl.appendChild(list);
+                } else {
+                    list.innerHTML = '';
+                }
+
+                // tambahkan semua judul (abaikan yang null/empty)
+                map[date].forEach(item => {
+                    if (!item.title) return;
+                    const li = document.createElement('li');
+                    li.textContent = item.title;
+                    li.style.whiteSpace = 'nowrap';
+                    li.style.overflow = 'hidden';
+                    li.style.textOverflow = 'ellipsis';
+                    li.style.marginBottom = '2px';
+                    li.title = item.title;
+                    list.appendChild(li);
+                });
+            }
+        });
+    }
+
+    // Jalankan anotasi setelah render pertama, dan juga setiap kali view berubah (mis. navigasi bulan)
+    annotateDayCells();
+    calendar.on('datesSet', function() {
+        // hapus anotasi lama
+        document.querySelectorAll('.fc-day-event-list').forEach(n => n.remove());
+        document.querySelectorAll('.fc-daygrid-day-frame').forEach(f => { f.style.backgroundColor = ''; });
+        annotateDayCells();
+    });
 });
 </script>
 @endsection

@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class RuanganController extends Controller
@@ -120,10 +121,15 @@ class RuanganController extends Controller
             ->get();
 
         foreach ($kegiatans as $kegiatan) {
+            // Ambil nilai asli dari atribut waktu (format Y-m-d H:i:s di DB) untuk menghindari formatting accessor
+            $rawStart = $kegiatan->getOriginal('waktu_mulai') ?? $kegiatan->waktu_mulai;
+            $rawEnd = $kegiatan->getOriginal('waktu_selesai') ?? $kegiatan->waktu_selesai;
+
             $events[] = [
                 'title' => $kegiatan->nama_kegiatan,
-                'start' => $kegiatan->waktu_mulai,
-                'end'   => $kegiatan->waktu_selesai,
+                // Kirim sebagai ISO 8601 dengan offset timezone untuk menghindari pergeseran tanggal di client
+                'start' => Carbon::parse($rawStart)->toIso8601String(),
+                'end'   => Carbon::parse($rawEnd)->toIso8601String(),
                 'color' => '#741847', // Warna untuk kegiatan umum
             ];
         }
@@ -136,7 +142,7 @@ class RuanganController extends Controller
                 $startDate = Carbon::parse($jadwal->berlaku_mulai);
                 $endDate = Carbon::parse($jadwal->berlaku_sampai);
             } catch (\Exception $e) { continue; }
-            
+
             $targetDay = strtolower($jadwal->hari);
 
             for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
@@ -144,13 +150,30 @@ class RuanganController extends Controller
                     continue;
                 }
 
+                // Gabungkan tanggal dan jam, lalu kirim sebagai local ISO (YYYY-MM-DDTHH:MM:SS)
+                // Gunakan field yang benar: mata_kuliah, waktu_mulai, waktu_selesai
+                try {
+                    $startDT = Carbon::parse($date->toDateString() . ' ' . $jadwal->waktu_mulai)->toIso8601String();
+                    $endDT = Carbon::parse($date->toDateString() . ' ' . $jadwal->waktu_selesai)->toIso8601String();
+                } catch (\Exception $e) {
+                    $startDT = Carbon::parse($date->toDateString() . ' ' . ($jadwal->waktu_mulai ?? '00:00:00'))->toIso8601String();
+                    $endDT = Carbon::parse($date->toDateString() . ' ' . ($jadwal->waktu_selesai ?? '23:59:59'))->toIso8601String();
+                }
+
                 $events[] = [
-                    'title' => $jadwal->nama_mk,
-                    'start' => $date->toDateString() . ' ' . $jadwal->jam_mulai,
-                    'end'   => $date->toDateString() . ' ' . $jadwal->jam_selesai,
+                    'title' => $jadwal->mata_kuliah,
+                    'start' => $startDT,
+                    'end'   => $endDT,
                     'color' => '#17a2b8', // Warna untuk perkuliahan
                 ];
             }
+        }
+
+        // Log events payload for debugging (user requested tracing)
+        try {
+            Log::info('RuanganController::show events payload for ruangan_id=' . $ruangan->id . ' -> ' . json_encode($events));
+        } catch (\Exception $e) {
+            // ignore logging failure
         }
 
         return view('admin.ruangan.show', compact('ruangan', 'events'));
