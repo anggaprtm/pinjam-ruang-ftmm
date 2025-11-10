@@ -185,6 +185,40 @@ document.addEventListener('DOMContentLoaded', function() {
         eventClick: function(info) {
             info.jsEvent.preventDefault(); 
         },
+        // tambahkan tooltip/title pada setiap event chip agar full title terlihat saat hover
+        eventDidMount: function(info) {
+            try {
+                const ev = info.event;
+                const el = info.el;
+                // bentuk label waktu: jika ada jam, tampilkan jam mulai - jam selesai
+                let timeLabel = '';
+                if (ev.start) {
+                    const s = ev.start;
+                    // jika ada jam (non-midnight) tampilkan waktu
+                    const hasTime = !(s.getHours() === 0 && s.getMinutes() === 0 && (!ev.end || (ev.end.getHours && ev.end.getHours() === 0 && ev.end.getMinutes && ev.end.getMinutes() === 0)));
+                    if (hasTime) {
+                        const opts = { hour: '2-digit', minute: '2-digit' };
+                        const startStr = s.toLocaleTimeString('id-ID', opts);
+                        if (ev.end) {
+                            const e = ev.end;
+                            const endStr = e.toLocaleTimeString('id-ID', opts);
+                            timeLabel = startStr + ' - ' + endStr;
+                        } else {
+                            timeLabel = startStr;
+                        }
+                    }
+                }
+                // set title attribute to full info so hover shows full name + time
+                const titleAttr = (timeLabel ? ('[' + timeLabel + '] ') : '') + (ev.title || '');
+                if (el && typeof el.setAttribute === 'function') el.setAttribute('title', titleAttr);
+                if (el && el.querySelector) {
+                    // also set aria-label for accessibility
+                    el.setAttribute('aria-label', titleAttr);
+                }
+            } catch (err) {
+                // ignore
+            }
+        },
         // Tampilkan maksimal 4 baris event di month view, sisanya jadi link '+n lainnya'
         dayMaxEventRows: 4,
     });
@@ -224,7 +258,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 let title = e.title;
                 if (title === null || title === undefined) title = null;
                 if (typeof title === 'string' && title.trim().toLowerCase() === 'null') title = null;
-                map[key].push({ title: title, color: e.backgroundColor || e.color || '#17a2b8' });
+                // build start/end time string (local) for modal
+                let startTime = '';
+                let endTime = '';
+                if (e.start) {
+                    const s = new Date(e.start);
+                    if (!(s.getHours() === 0 && s.getMinutes() === 0)) startTime = String(s.getHours()).padStart(2,'0') + ':' + String(s.getMinutes()).padStart(2,'0');
+                }
+                if (e.end) {
+                    const en = new Date(e.end);
+                    if (!(en.getHours() === 0 && en.getMinutes() === 0)) endTime = String(en.getHours()).padStart(2,'0') + ':' + String(en.getMinutes()).padStart(2,'0');
+                }
+                map[key].push({ title: title, color: e.backgroundColor || e.color || '#17a2b8', startTime: startTime, endTime: endTime, full: e.extendedProps || {} });
             }
         });
 
@@ -270,24 +315,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 map[date].forEach(item => {
                     if (!item.title) return;
                     const li = document.createElement('li');
-                    li.textContent = item.title;
-                    li.style.whiteSpace = 'nowrap';
-                    li.style.overflow = 'hidden';
-                    li.style.textOverflow = 'ellipsis';
-                    li.style.marginBottom = '2px';
-                    li.title = item.title;
+                    li.style.display = 'flex';
+                    li.style.alignItems = 'center';
+                    li.style.gap = '8px';
+                    li.style.marginBottom = '6px';
+
+                    // color chip
+                    const chip = document.createElement('span');
+                    chip.style.width = '10px';
+                    chip.style.height = '10px';
+                    chip.style.borderRadius = '2px';
+                    chip.style.display = 'inline-block';
+                    chip.style.flex = '0 0 auto';
+                    chip.style.background = item.color || '#17a2b8';
+                    li.appendChild(chip);
+
+                    // title (short) with ellipsis
+                    const titleSpan = document.createElement('span');
+                    titleSpan.textContent = item.title;
+                    titleSpan.style.whiteSpace = 'nowrap';
+                    titleSpan.style.overflow = 'hidden';
+                    titleSpan.style.textOverflow = 'ellipsis';
+                    titleSpan.style.flex = '1 1 auto';
+                    titleSpan.title = item.title; // hover shows full title
+                    li.appendChild(titleSpan);
+
+                    // time
+                    const timeSpan = document.createElement('small');
+                    timeSpan.style.color = '#666';
+                    timeSpan.style.flex = '0 0 auto';
+                    if (item.startTime && item.endTime) timeSpan.textContent = item.startTime + ' - ' + item.endTime;
+                    else if (item.startTime) timeSpan.textContent = item.startTime;
+                    else timeSpan.textContent = '';
+                    li.appendChild(timeSpan);
+
                     list.appendChild(li);
                 });
                 // jika lebih dari 2, tambahkan link more
-                const titles = map[date].map(i => i.title).filter(t => !!t);
-                if (titles.length > 2) {
+                const items = map[date].filter(i => i.title).map(i => i);
+                if (items.length > 2) {
                     const moreLi = document.createElement('li');
                     const moreLink = document.createElement('a');
                     moreLink.href = '#';
-                    moreLink.textContent = `Lihat ${titles.length} kegiatan`;
+                    moreLink.textContent = `Lihat ${items.length} kegiatan`;
                     moreLink.addEventListener('click', function(ev) {
                         ev.preventDefault();
-                        openDayModal(date, titles);
+                        openDayModal(date, items);
                     });
                     moreLi.appendChild(moreLink);
                     list.appendChild(moreLi);
@@ -308,23 +381,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 const dayEl = newLink.closest('.fc-daygrid-day');
                 if (!dayEl) return;
                 const date = dayEl.getAttribute('data-date');
-                const titles = (window.__fc_dayMap && window.__fc_dayMap[date]) ? window.__fc_dayMap[date].map(i => i.title).filter(t=>!!t) : [];
-                if (titles.length > 0) openDayModal(date, titles);
+                const items = (window.__fc_dayMap && window.__fc_dayMap[date]) ? window.__fc_dayMap[date].filter(i=>!!i.title) : [];
+                if (items.length > 0) openDayModal(date, items);
             });
         });
 
     }
 
     // Membuka modal dan mengisi daftar kegiatan
-    function openDayModal(date, titles) {
+    function openDayModal(date, items) {
         const modalLabel = document.getElementById('dayEventsModalLabel');
         modalLabel.textContent = 'Kegiatan pada ' + date;
         const list = document.getElementById('dayEventsList');
         list.innerHTML = '';
-        titles.forEach(t => {
+
+        items.forEach(it => {
             const li = document.createElement('li');
-            li.textContent = t;
-            li.style.padding = '6px 0';
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.gap = '10px';
+            li.style.padding = '8px 0';
+
+            const chip = document.createElement('span');
+            chip.style.width = '12px';
+            chip.style.height = '12px';
+            chip.style.borderRadius = '3px';
+            chip.style.display = 'inline-block';
+            chip.style.background = it.color || '#17a2b8';
+            li.appendChild(chip);
+
+            const titleWrap = document.createElement('div');
+            titleWrap.style.flex = '1 1 auto';
+            titleWrap.style.minWidth = '0';
+
+            const titleEl = document.createElement('div');
+            titleEl.textContent = it.title || '-';
+            titleEl.style.whiteSpace = 'nowrap';
+            titleEl.style.overflow = 'hidden';
+            titleEl.style.textOverflow = 'ellipsis';
+            titleEl.title = it.title || '';
+            titleWrap.appendChild(titleEl);
+
+            // waktu
+            const timeEl = document.createElement('small');
+            timeEl.style.color = '#666';
+            if (it.startTime && it.endTime) timeEl.textContent = it.startTime + ' - ' + it.endTime;
+            else if (it.startTime) timeEl.textContent = it.startTime;
+            else timeEl.textContent = '';
+            titleWrap.appendChild(timeEl);
+
+            li.appendChild(titleWrap);
+
             list.appendChild(li);
         });
 
@@ -334,7 +441,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const bsModal = new bootstrap.Modal(modalEl);
             bsModal.show();
         } else {
-            alert('Kegiatan pada ' + date + '\n\n' + titles.join('\n'));
+            // fallback: show titles + times
+            const text = items.map(it => ((it.startTime ? it.startTime + ' ' : '') + (it.title || ''))).join('\n');
+            alert('Kegiatan pada ' + date + '\n\n' + text);
         }
     }
     // Jalankan anotasi setelah render pertama, dan juga setiap kali view berubah (mis. navigasi bulan)

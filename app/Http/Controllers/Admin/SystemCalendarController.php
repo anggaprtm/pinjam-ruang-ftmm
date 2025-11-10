@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Gate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 class SystemCalendarController extends Controller
@@ -54,6 +55,17 @@ class SystemCalendarController extends Controller
             $query = $source['model']::query();
 
             if ($source['model'] == '\App\Models\JadwalPerkuliahan') {
+                // apply filters for ruangan and peminjam if provided
+                if ($filterRuangan) {
+                    $query->where('ruangan_id', $filterRuangan);
+                }
+                if ($filterPeminjam) {
+                    // JadwalPerkuliahan may not have user_id; skip if not applicable
+                    if (Schema::hasColumn((new JadwalPerkuliahan)->getTable(), 'user_id')) {
+                        $query->where('user_id', $filterPeminjam);
+                    }
+                }
+
                 $jadwalList = $query->get();
                 foreach ($jadwalList as $model) {
                     $startDate = Carbon::parse($model->berlaku_mulai);
