@@ -43,10 +43,12 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label required" for="nomor_telepon">Nomor Telepon PIC</label>
-                        <input class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" type="text" name="nomor_telepon" id="nomor_telepon" value="{{ old('nomor_telepon', '') }}" required>
+                        <input class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" type="text" name="nomor_telepon" id="nomor_telepon" value="{{ old('nomor_telepon', '') }}" required minlength="9" maxlength="15" inputmode="numeric" pattern="^0[0-9]+$">
                         @if($errors->has('nomor_telepon'))
                             <div class="invalid-feedback">{{ $errors->first('nomor_telepon') }}</div>
                         @endif
+                        {{-- Client-side feedback placeholder --}}
+                        <div id="nomor-telepon-client-error" class="invalid-feedback d-none"></div>
                     </div>
                 </div>
 
@@ -211,6 +213,63 @@
             } else {
                 fileNameDisplay.text("Tidak ada file yang dipilih");
             }
+        });
+
+        // === VALIDASI NOMOR TELEPON (CLIENT-SIDE) ===
+        // Asumsi: minimal 9 digit, maksimal 15 digit
+        const phoneMin = 9;
+        const phoneMax = 15;
+
+        function validatePhoneField() {
+            const $input = $('#nomor_telepon');
+            const $clientError = $('#nomor-telepon-client-error');
+            let val = $input.val() || '';
+
+            // Hapus karakter non-digit
+            const cleaned = val.replace(/\D/g, '');
+            if (val !== cleaned) {
+                $input.val(cleaned);
+                val = cleaned;
+            }
+
+            if (val.length === 0) {
+                $clientError.addClass('d-none').text('');
+                $input.removeClass('is-invalid');
+                return true; // biarkan server cek required
+            }
+
+            if (!/^0[0-9]+$/.test(val)) {
+                $clientError.removeClass('d-none').text('Nomor telepon harus berupa angka dan dimulai dengan angka 0.');
+                $input.addClass('is-invalid');
+                return false;
+            }
+
+            if (val.length < phoneMin || val.length > phoneMax) {
+                $clientError.removeClass('d-none').text(`Panjang nomor harus antara ${phoneMin} sampai ${phoneMax} angka.`);
+                $input.addClass('is-invalid');
+                return false;
+            }
+
+            $clientError.addClass('d-none').text('');
+            $input.removeClass('is-invalid');
+            return true;
+        }
+
+        $('#nomor_telepon').on('input blur', function() {
+            validatePhoneField();
+        });
+
+        // Prevent form submit if client-side phone validation fails
+        $('form').on('submit', function(e) {
+            const ok = validatePhoneField();
+            if (!ok) {
+                e.preventDefault();
+                const $firstInvalid = $('#nomor_telepon');
+                $('html, body').animate({ scrollTop: $firstInvalid.offset().top - 120 }, 200);
+                $firstInvalid.focus();
+                return false;
+            }
+            return true;
         });
     });
 </script>
