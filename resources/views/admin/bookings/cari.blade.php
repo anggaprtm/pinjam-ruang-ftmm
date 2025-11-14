@@ -9,12 +9,18 @@
         <form action="{{ route('admin.cariRuang') }}" method="GET"> 
             <div class="row g-3 align-items-end"> 
                 <div class="col-md-4"> 
-                    <label for="waktu_mulai" class="form-label fw-bold required">Waktu Mulai</label> 
-                    <input class="form-control datetime" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ request()->input('waktu_mulai') }}" required> 
+                    <label for="waktu_mulai" class="form-label fw-bold required">Waktu Mulai</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="waktu_mulai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Mulai)" aria-label="Buka picker waktu mulai"><i class="fas fa-calendar-alt"></i></span>
+                        <input class="form-control datetime" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ request()->input('waktu_mulai') }}" required>
+                    </div>
                 </div> 
                 <div class="col-md-4"> 
-                    <label for="waktu_selesai" class="form-label fw-bold required">Waktu Selesai</label> 
-                    <input class="form-control datetime" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ request()->input('waktu_selesai') }}" required> 
+                    <label for="waktu_selesai" class="form-label fw-bold required">Waktu Selesai</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="waktu_selesai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Selesai)" aria-label="Buka picker waktu selesai"><i class="fas fa-calendar-alt"></i></span>
+                        <input class="form-control datetime" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ request()->input('waktu_selesai') }}" required>
+                    </div>
                 </div> 
                 <div class="col-md-2"> <label for="kapasitas" class="form-label fw-bold required">Min. Kapasitas</label> 
                     <input class="form-control" type="number" name="kapasitas" id="kapasitas" value="{{ request()->input('kapasitas') }}" placeholder="cth. 50" step="1" required> 
@@ -174,6 +180,31 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('bookingForm').submit();
         });
     }
+
+    // Toggle datetimepicker when calendar icon clicked (search form)
+    const waktuMulaiToggle = document.getElementById('waktu_mulai_toggle');
+    if (waktuMulaiToggle) {
+        waktuMulaiToggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            try {
+                $('#waktu_mulai').data('DateTimePicker').show();
+            } catch (err) {
+                document.getElementById('waktu_mulai').focus();
+            }
+        });
+    }
+
+    const waktuSelesaiToggle = document.getElementById('waktu_selesai_toggle');
+    if (waktuSelesaiToggle) {
+        waktuSelesaiToggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            try {
+                $('#waktu_selesai').data('DateTimePicker').show();
+            } catch (err) {
+                document.getElementById('waktu_selesai').focus();
+            }
+        });
+    }
 });
 </script>
 @endsection
@@ -196,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 .room-card .card-body {
     padding: 1rem 1rem 1.25rem;
-}
+} 
 .room-card h5 {
     font-size: 1.1rem;
 }

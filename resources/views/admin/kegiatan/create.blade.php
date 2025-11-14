@@ -56,7 +56,10 @@
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label class="form-label required" for="waktu_mulai">{{ trans('cruds.kegiatan.fields.waktu_mulai') }}</label>
-                        <input class="form-control datetime {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ old('waktu_mulai') }}" required>
+                        <div class="input-group">
+                            <span class="input-group-text" id="waktu_mulai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Mulai)" aria-label="Buka picker waktu mulai"><i class="fas fa-calendar-alt"></i></span>
+                            <input class="form-control datetime {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ old('waktu_mulai') }}" required>
+                        </div>
                         @if($errors->has('waktu_mulai'))
                             <div class="invalid-feedback">{{ $errors->first('waktu_mulai') }}</div>
                         @endif
@@ -64,7 +67,10 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label required" for="waktu_selesai">{{ trans('cruds.kegiatan.fields.waktu_selesai') }}</label>
-                        <input class="form-control datetime {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ old('waktu_selesai') }}" required>
+                        <div class="input-group">
+                            <span class="input-group-text" id="waktu_selesai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Selesai)" aria-label="Buka picker waktu selesai"><i class="fas fa-calendar-alt"></i></span>
+                            <input class="form-control datetime {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ old('waktu_selesai') }}" required>
+                        </div>
                         @if($errors->has('waktu_selesai'))
                             <div class="invalid-feedback">{{ $errors->first('waktu_selesai') }}</div>
                         @endif
@@ -270,6 +276,26 @@
                 return false;
             }
             return true;
+        });
+
+        // Toggle datetimepicker when calendar icon clicked
+        $('#waktu_mulai_toggle').on('click', function(e) {
+            e.preventDefault();
+            try {
+                $('#waktu_mulai').data('DateTimePicker').show();
+            } catch (err) {
+                // fallback: focus input
+                $('#waktu_mulai').focus();
+            }
+        });
+
+        $('#waktu_selesai_toggle').on('click', function(e) {
+            e.preventDefault();
+            try {
+                $('#waktu_selesai').data('DateTimePicker').show();
+            } catch (err) {
+                $('#waktu_selesai').focus();
+            }
         });
     });
 </script>
