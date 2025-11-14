@@ -155,7 +155,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-user-tag"></i></div><div class="content"><div class="label">Nama PIC</div><div class="value">${props.nama_pic}</div></div></div>`;
             }
             if (props.nomor_telepon) {
-                contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-phone"></i></div><div class="content"><div class="label">No. Telepon PIC</div><div class="value">${props.nomor_telepon}</div></div></div>`;
+                // Buat link WhatsApp dari nomor yang diinput pengguna.
+                // Langkah: ambil hanya digit, ubah leading 0 -> 62 (kode negara Indonesia),
+                // jika user memasukkan angka tanpa 0 (mis. 8123...), juga tambahkan 62.
+                const phoneRaw = String(props.nomor_telepon || '');
+                const digits = phoneRaw.replace(/\D/g, '');
+                let waNumber = digits;
+                if (digits.startsWith('0')) {
+                    waNumber = '62' + digits.slice(1);
+                } else if (digits.startsWith('+')) {
+                    waNumber = digits.replace(/^\+/, '');
+                } else if (digits.startsWith('8')) {
+                    // user mungkin mengetik tanpa leading 0
+                    waNumber = '62' + digits;
+                }
+
+                const waLink = `https://wa.me/${waNumber}`;
+                contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-phone"></i></div><div class="content"><div class="label">No. Telepon PIC</div><div class="value"><a href="${waLink}" data-wa-number="${waNumber}" class="text-decoration-none js-wa-link"><i class="fab fa-whatsapp me-1 text-success"></i>${phoneRaw}</a></div></div></div>`;
             }
             if (props.deskripsi) {
                 contentHtml += `<div class="detail-item"><div class="icon"><i class="fas fa-info-circle"></i></div><div class="content"><div class="label">Deskripsi</div><div class="value">${props.deskripsi}</div></div></div>`;
@@ -196,8 +212,79 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     calendar.render();
+
+    // Global handler: open Bootstrap modal to confirm opening WhatsApp links
+    document.addEventListener('click', function(e) {
+        const el = e.target.closest && e.target.closest('.js-wa-link');
+        if (!el) return;
+        e.preventDefault();
+        const waNumber = el.getAttribute('data-wa-number') || '';
+        const display = el.textContent.trim();
+        const pretty = waNumber ? ('+' + waNumber) : display;
+
+        // Ensure modal exists
+        let modalEl = document.getElementById('waConfirmModal');
+        if (!modalEl) {
+            // Create modal markup dynamically (fallback)
+            modalEl = document.createElement('div');
+            modalEl.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Konfirmasi WhatsApp</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">Anda akan membuka WhatsApp ke nomor: <strong class="wa-number-display"></strong></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-success wa-confirm-open">Buka WhatsApp</button>
+                        </div>
+                    </div>
+                </div>`;
+            modalEl.id = 'waConfirmModal';
+            modalEl.className = 'modal fade';
+            document.body.appendChild(modalEl);
+        }
+
+        const displayEl = modalEl.querySelector('.wa-number-display');
+        const confirmBtn = modalEl.querySelector('.wa-confirm-open');
+        displayEl.textContent = pretty;
+        confirmBtn.setAttribute('data-href', el.href);
+        // Store instance so we can hide later
+        if (!modalEl.__bsModal) modalEl.__bsModal = new bootstrap.Modal(modalEl);
+        modalEl.__bsModal.show();
+
+        // Ensure single handler for confirm button
+        if (!confirmBtn.__handled) {
+            confirmBtn.addEventListener('click', function() {
+                const href = this.getAttribute('data-href');
+                if (href) {
+                    window.open(href, '_blank', 'noopener');
+                }
+                if (modalEl.__bsModal) modalEl.__bsModal.hide();
+            });
+            confirmBtn.__handled = true;
+        }
+    });
 });
 </script>
+
+<!-- Modal markup: WA confirmation (for browsers that prefer static markup) -->
+<div class="modal fade" id="waConfirmModal" tabindex="-1" aria-labelledby="waConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="waConfirmModalLabel">Konfirmasi WhatsApp</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">Anda akan membuka WhatsApp ke nomor: <strong class="wa-number-display"></strong></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-success wa-confirm-open">Buka WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <style>
 .detail-item {
