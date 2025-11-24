@@ -1,7 +1,12 @@
 @extends('layouts.admin')
 @section('content')
 
-<h3 class="font-weight-bold mb-4">{{ trans('global.systemCalendar') }}</h3>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h3 class="font-weight-bold mb-0">{{ trans('global.systemCalendar') }}</h3>
+    <div>
+        <a href="{{ route('admin.kiosk') }}" target="_blank" class="btn btn-sm btn-primary">Masuk Kiosk</a>
+    </div>
+</div>
 
 <div class="calendar-container">
     {{-- Kolom Utama untuk Kalender --}}

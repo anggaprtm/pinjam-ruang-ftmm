@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\KegiatanController;
 use App\Http\Controllers\Admin\SystemCalendarController;
 use App\Http\Controllers\Admin\BookingsController;
 use App\Http\Controllers\Admin\CalendarViewController;
+use App\Http\Controllers\Admin\KioskController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 
 // === Redirect root ke login (sesuai rute lama)
@@ -72,6 +73,10 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('kalender', [SystemCalendarController::class, 'index'])->name('systemCalendar');
     Route::get('cari-ruang', [BookingsController::class, 'cariRuang'])->name('cariRuang');
     Route::post('book-ruang', [BookingsController::class, 'bookRuang'])->name('bookRuang');
+    
+    // Kiosk Mode (fullscreen TV dashboard)
+    Route::get('kiosk', [KioskController::class, 'index'])->name('kiosk');
+    Route::get('api/kiosk/events', [KioskController::class, 'events'])->name('api.kiosk.events');
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
