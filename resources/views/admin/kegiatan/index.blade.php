@@ -110,6 +110,12 @@
 @section('scripts')
 @parent
 <script>
+function decodeHtmlEntities(str) {
+    if (!str) return '';
+    var txt = document.createElement('textarea');
+    txt.innerHTML = str;
+    return txt.value;
+}
 $(function () {
 
         $(document).on('click', '.js-open-modal', function () {
@@ -194,10 +200,116 @@ $(function () {
         columns: ':visible',
         exportOptions: { modifier: { selected: true } }
     };
+    
 
     // Definisikan tombol ekspor dengan properti enabled: false
     dtButtons.push(
-        $.extend({}, exportOptions, { extend: 'copy', text: '<i class="fas fa-copy me-2"></i> Salin', className: 'btn-secondary', enabled: false }),
+        {
+            text: '<i class="fas fa-copy me-2"></i> Salin',
+            className: 'btn-secondary',
+            enabled: false,
+            action: function (e, dt, node, config) {
+            let rows = dt.rows({ selected: true }).data().toArray();
+            if (!rows.length) return;
+
+            let grouped = {};
+            rows.forEach(function (row) {
+                let ruangRaw = (row.ruangan && row.ruangan.nama) ? row.ruangan.nama : (row['ruangan.nama'] || '-');
+                let ruang = decodeHtmlEntities(ruangRaw);
+                if (!grouped[ruang]) grouped[ruang] = [];
+                grouped[ruang].push(row);
+            });
+
+            let text = "*JADWAL PEMAKAIAN RUANGAN FTMM*\n\n";
+
+            Object.keys(grouped).forEach(function (ruang) {
+                text += `*${ruang}*\n`;
+
+                grouped[ruang].forEach(function (row) {
+                    // --- AMBIL DAN FORMAT WAKTU DI SINI ---
+                    let mulaiFull   = row.waktu_mulai_formatted || row.waktu_mulai || '';
+                    let selesaiFull = row.waktu_selesai_formatted || row.waktu_selesai || '';
+
+                    // Pecah jadi [tanggal, jam]
+                    let [mulaiDate, mulaiTime]     = mulaiFull.split(',').map(s => s ? s.trim() : '');
+                    let [selesaiDate, selesaiTime] = selesaiFull.split(',').map(s => s ? s.trim() : '');
+
+                    let waktuText;
+                    if (mulaiDate && selesaiDate) {
+                        if (mulaiDate === selesaiDate) {
+                            waktuText = `${mulaiDate}, ${mulaiTime} - ${selesaiTime}`;
+                        } else {
+                            waktuText = `${mulaiDate}, ${mulaiTime} - ${selesaiDate}, ${selesaiTime}`;
+                        }
+                    } else {
+                        // fallback kalau format tidak sesuai
+                        waktuText = `${mulaiFull} - ${selesaiFull}`;
+                    }
+
+                    // --- BAGIAN LAINNYA SAMA ---
+                    let nama    = decodeHtmlEntities(row.nama_kegiatan || '');
+                    let user    = row.user ? decodeHtmlEntities(row.user.name || '') : '';
+                    let picName = decodeHtmlEntities(row.nama_pic || '');
+
+                    let userText = user ? ` [${user}]` : '';
+                    let picText  = picName ? ` (PIC: ${picName})` : '';
+
+                    text += `- ${waktuText}: ${nama}${userText}${picText}\n`;
+                });
+
+                text += "\n";
+            });
+
+            text += "*Disalin dari Aplikasi PINJAM-RUANG FTMM ✨*";
+
+            function fallbackCopy(str) {
+                let $temp = $('<textarea>');
+                $('body').append($temp);
+                $temp.val(str).select();
+                document.execCommand('copy');
+                $temp.remove();
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+
+                    // === TOAST SWEETALERT DI SINI ===
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Berhasil disalin!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+
+                }).catch(function () {
+                    fallbackCopy(text);
+                    Swal.fire({
+                        toast: true,
+                        position: 'bottom-end',
+                        icon: 'success',
+                        title: 'Berhasil disalin!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                });
+            } else {
+                fallbackCopy(text);
+
+                Swal.fire({
+                    toast: true,
+                    position: 'bottom-end',
+                    icon: 'success',
+                    title: 'Berhasil disalin!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+
+        }
+
+        },
         $.extend({}, exportOptions, { extend: 'csv', text: '<i class="fas fa-file-export me-2"></i> CSV', className: 'btn-secondary', enabled: false }),
         $.extend({}, exportOptions, { extend: 'excel', text: '<i class="fas fa-file-excel me-2"></i> Excel', className: 'btn-secondary', enabled: false }),
         $.extend({}, exportOptions, { extend: 'pdf', text: '<i class="fas fa-file-pdf me-2"></i> PDF', className: 'btn-secondary', enabled: false }),
@@ -343,7 +455,7 @@ $(function () {
             targets:   0
         } ],
         select: {
-            style:    'os',
+            style:    'multi',
             selector: 'td:first-child'
         },
     });

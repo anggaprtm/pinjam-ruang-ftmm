@@ -39,8 +39,8 @@ class HomeController
                     $waktuMulai = Carbon::parse($kegiatan->waktu_mulai)->format('H:i');
                     $waktuSelesai = Carbon::parse($kegiatan->waktu_selesai)->format('H:i');
                     $namaKegiatan = $kegiatan->nama_kegiatan;
-                    $pic = $kegiatan->nama_pic ? " (PIC: {$kegiatan->nama_pic})" : " [{$kegiatan->user->name}]" ?? '' ;
-                    $jadwalHariIniText .= "- {$waktuMulai} - {$waktuSelesai}: {$namaKegiatan} {$pic}";
+                    $pic = $kegiatan->nama_pic ? " (PIC: {$kegiatan->nama_pic})" : "";
+                    $jadwalHariIniText .= "- {$waktuMulai} - {$waktuSelesai}: {$namaKegiatan} [{$kegiatan->user->name}] {$pic}\n";
                 }
                 $jadwalHariIniText .= "\n"; 
             }
@@ -55,14 +55,14 @@ class HomeController
                 foreach ($kegiatans as $kegiatan) {
                     $waktuMulai = Carbon::parse($kegiatan->waktu_mulai)->format('H:i');
                     $waktuSelesai = Carbon::parse($kegiatan->waktu_selesai)->format('H:i');
-                    $pic = $kegiatan->nama_pic ? " (PIC: {$kegiatan->nama_pic})" : " [{$kegiatan->user->name}]" ?? '';
-                    $jadwalBesokText .= "- {$waktuMulai} - {$waktuSelesai}: {$kegiatan->nama_kegiatan} {$pic}";
+                    $pic = $kegiatan->nama_pic ? " (PIC: {$kegiatan->nama_pic})" : "";
+                    $jadwalBesokText .= "- {$waktuMulai} - {$waktuSelesai}: {$kegiatan->nama_kegiatan} [{$kegiatan->user->name}] {$pic}\n";
                 }
                 $jadwalBesokText .= "\n";
             }
         }
 
-        $footerText = "\n_Disalin dari Aplikasi PINJAM-RUANG FTMM ✨_";
+        $footerText = "_Disalin dari Aplikasi PINJAM-RUANG FTMM ✨_";
         $jadwalHariIniText .= $footerText;
         $jadwalBesokText .= $footerText;
 
