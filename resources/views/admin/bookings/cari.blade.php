@@ -132,7 +132,19 @@
                         @endif
                     </div>
                     <div class="form-group mb-3">
-                        <label class="form-label" for="nomor_telepon">Nomor Telepon PIC</label>
+                        <label class="form-label required" for="nama_pic">Nama PIC</label>
+                        <input type="text"
+                            name="nama_pic"
+                            id="nama_pic"
+                            class="form-control {{ $errors->has('nama_pic') ? 'is-invalid' : '' }}"
+                            value="{{ old('nama_pic') }}"
+                            required>
+                        @if($errors->has('nama_pic'))
+                            <div class="invalid-feedback">{{ $errors->first('nama_pic') }}</div>
+                        @endif
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label required" for="nomor_telepon">Nomor Telepon PIC</label>
                         <input type="text" name="nomor_telepon" id="nomor_telepon" class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" value="{{ old('nomor_telepon') }}">
                         @if($errors->has('nomor_telepon'))
                             <div class="invalid-feedback">{{ $errors->first('nomor_telepon') }}</div>

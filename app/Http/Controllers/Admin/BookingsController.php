@@ -48,13 +48,9 @@ class BookingsController extends Controller
                     return !$this->eventService->isRoomTaken($requestData);
                 });
         } else {
-            // --- LOGIKA TAMPILAN AWAL (IDLE) ---
-            // Ambil semua ruangan yang aktif
             $ruangan = Ruangan::where('is_active', true)->orderBy('nama', 'asc')->get();
         }
 
-        // Tampilkan view dengan data ruangan
-        // Ganti nama variabel 'ruangan' menjadi 'ruangans' agar lebih jelas ini adalah collection
         return view('admin.bookings.cari', ['ruangan' => $ruangan]);
     }
 
@@ -66,7 +62,14 @@ class BookingsController extends Controller
         $rules = [
             'nama_kegiatan'   => 'required',
             'ruangan_id'      => 'required',
-            'nomor_telepon'   => 'required|numeric|digits_between:10,13',
+            'nama_pic'      => ['required', 'string'],
+            'nomor_telepon' => [
+                                    'required',
+                                    'regex:/^0[0-9]+$/',
+                                    'min:9',
+                                    'max:15',
+                                ],
+
         ];
 
         if (!auth()->user()->isAdmin()) {
@@ -89,11 +92,11 @@ class BookingsController extends Controller
         $data['status'] = auth()->user()->hasRole('Admin') ? 'disetujui' : 'belum_disetujui'; 
         $kegiatan = Kegiatan::create($data);
    
-        $customEmails = ['angga.iryanto@staf.unair.ac.id'];
+        // $customEmails = ['angga.iryanto@staf.unair.ac.id'];
         
-        if (env('ENABLE_EMAIL_NOTIFICATIONS', true)) {
-            Mail::to($customEmails)->send(new KegiatanNotification($kegiatan));
-        }
+        // if (env('ENABLE_EMAIL_NOTIFICATIONS', true)) {
+        //     Mail::to($customEmails)->send(new KegiatanNotification($kegiatan));
+        // }
 
         return redirect()->route('admin.kegiatan.index')->with('success','Proses book ruang berhasil dibuat.');
     }
