@@ -35,8 +35,17 @@ class UpdateRuanganRequest extends FormRequest
             'foto' => [
                 'nullable', // Boleh kosong agar tidak wajib upload ulang
                 'image',
-                'max:2048',
+                'max:10240',
             ],
+        ];
+    }
+    
+    public function messages()
+    {
+        return [
+            'foto.uploaded' => 'Foto gagal diunggah. Ukuran file mungkin terlalu besar atau terjadi kesalahan saat upload.',
+            'foto.image'    => 'File yang diunggah harus berupa gambar (jpg, jpeg, png).',
+            'foto.max'      => 'Ukuran foto maksimal 10MB.',
         ];
     }
 }

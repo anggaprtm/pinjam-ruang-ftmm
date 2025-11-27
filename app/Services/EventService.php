@@ -36,8 +36,11 @@ class EventService
                 ? Carbon::createFromFormat($date_format, $requestData['berulang_sampai'])->endOfDay()
                 : $waktuSelesai->copy()->endOfDay();
         } catch (\Exception $e) {
-            Log::error('[isRoomTaken] Carbon Parsing Failed: ' . $e->getMessage());
-            return new Kegiatan(['nama_kegiatan' => 'Error Format Tanggal Tidak Valid']);
+            \Log::error('[EventService::isRoomTaken] Carbon parsing failed: ' . $e->getMessage(), [
+                'input' => $waktu_mulai_raw ?? null,
+            ]);
+            // Lempar agar controller menangani sebagai validasi, bukan "room taken"
+            throw new \InvalidArgumentException('Format tanggal/waktu tidak valid. Harap gunakan format yang sesuai.');
         }
 
         // Ambil tipe pengulangan dari request, default ke 'harian' jika tidak ada

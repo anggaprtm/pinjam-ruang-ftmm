@@ -32,6 +32,9 @@ Route::get('/home', function () {
     return redirect()->route('admin.home');
 });
 
+Route::get('/phpinfo', function () {
+    phpinfo();
+});
 // === Grup ADMIN (prefix + name + middleware=auth)
 Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');

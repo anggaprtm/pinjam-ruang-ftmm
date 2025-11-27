@@ -106,7 +106,9 @@ class RuanganController extends Controller
 
         $ruangan->update($data);
 
-        return redirect()->route('admin.ruangan.index');
+        return redirect()
+            ->route('admin.ruangan.index')
+            ->with('success', 'Data ruangan berhasil diperbarui!');
     }
 
     public function show(Ruangan $ruangan)
