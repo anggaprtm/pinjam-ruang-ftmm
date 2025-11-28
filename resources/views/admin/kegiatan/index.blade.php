@@ -113,6 +113,12 @@
 
 @section('scripts')
 @parent
+<style>
+#globalLoadingOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center}
+#globalLoadingOverlay .loader-text{color:#fff;margin-top:.5rem;font-weight:600}
+#globalLoadingOverlay.d-none{display:none !important}
+#globalLoadingOverlay .spinner-border{width:3rem;height:3rem}
+</style>
 <script>
 function decodeHtmlEntities(str) {
     if (!str) return '';
@@ -121,6 +127,19 @@ function decodeHtmlEntities(str) {
     return txt.value;
 }
 $(function () {
+
+    // Tambahkan overlay loading global ke body jika belum ada
+    if (!$('#globalLoadingOverlay').length) {
+        $('body').append(`
+            <div id="globalLoadingOverlay" class="d-none" aria-hidden="true">
+                <div class="text-center">
+                    <div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <div class="loader-text">Menghapus...</div>
+                </div>
+            </div>
+        `);
+    }
+
 
         $(document).on('click', '.js-open-modal', function () {
         const actionType = $(this).data('action-type');
@@ -346,10 +365,23 @@ $(function () {
                 cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Tampilkan overlay saat request berjalan
+                    $('#globalLoadingOverlay').removeClass('d-none');
                     $.ajax({
-                        headers: {'x-csrf-token': _token}, method: 'POST',
-                        url: config.url, data: { ids: ids, _method: 'DELETE' }
-                    }).done(() => { table.ajax.reload(); Swal.fire('Berhasil!', 'Data telah dihapus.', 'success'); });
+                        headers: {'x-csrf-token': _token},
+                        method: 'POST',
+                        url: config.url,
+                        data: { ids: ids, _method: 'DELETE' }
+                    }).done(function () {
+                        // Tahan overlay sampai DataTable selesai me-reload
+                        table.ajax.reload(function () {
+                            $('#globalLoadingOverlay').addClass('d-none');
+                            Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
+                        });
+                    }).fail(function () {
+                        $('#globalLoadingOverlay').addClass('d-none');
+                        Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
+                    });
                 }
             });
         }
@@ -533,22 +565,27 @@ $(document).on('click', '.js-delete-btn', function (e) {
         confirmButtonText: 'Ya, hapus!',
         cancelButtonText: 'Batal'
     }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                headers: {'x-csrf-token': _token}, // Pastikan variabel _token ada
-                method: 'POST', // Method tetap POST karena kita akan spoofing DELETE
-                url: deleteUrl,
-                data: { _method: 'DELETE' }
-            })
-            .done(function () { 
-                table.ajax.reload(); // Muat ulang tabel
-                Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
-            })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                // Opsi: Tampilkan pesan error jika gagal
-                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
-            });
-        }
+            if (result.isConfirmed) {
+                // Tampilkan overlay saat request berjalan
+                $('#globalLoadingOverlay').removeClass('d-none');
+                $.ajax({
+                    headers: {'x-csrf-token': _token}, // Pastikan variabel _token ada
+                    method: 'POST', // Method tetap POST karena kita akan spoofing DELETE
+                    url: deleteUrl,
+                    data: { _method: 'DELETE' }
+                })
+                .done(function () { 
+                    table.ajax.reload(function () {
+                        $('#globalLoadingOverlay').addClass('d-none');
+                        Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
+                    });
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    $('#globalLoadingOverlay').addClass('d-none');
+                    // Opsi: Tampilkan pesan error jika gagal
+                    Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
+                });
+            }
     });
 });
 

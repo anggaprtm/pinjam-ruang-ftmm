@@ -140,7 +140,9 @@
                                     <a href="https://wa.me/{{ $waNumber }}" class="text-decoration-none js-wa-link" data-wa-number="{{ $waNumber }}" target="_blank" rel="noopener noreferrer">
                                         <i class="fab fa-whatsapp me-1 text-success"></i>{{ $kegiatan->nomor_telepon }}
                                     </a>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-phone-btn" data-copy-value="{{ $kegiatan->nomor_telepon }}" aria-label="Salin nomor">Salin</button>
+                                    <button type="button" class="btn btn-sm btn-outline-success ms-2 copy-phone-btn" data-copy-value="{{ $kegiatan->nomor_telepon }}" aria-label="Salin nomor">
+                                        <i class="fas fa-copy me-1"></i>Salin
+                                    </button>
                                 </span>
                             @else
                                 -
@@ -158,7 +160,7 @@
                             <button type="button" class="btn btn-sm btn-info js-open-pdf" data-url="{{ asset('storage/' . $kegiatan->surat_izin) }}">
                                 <i class="fas fa-file-pdf me-1"></i> Lihat Surat
                             </button>
-                            <a href="{{ asset('storage/' . $kegiatan->surat_izin) }}" class="btn btn-sm btn-outline-secondary ms-2" download>
+                            <a href="{{ asset('storage/' . $kegiatan->surat_izin) }}" class="btn btn-sm btn-outline-success ms-2" download>
                                 <i class="fas fa-download me-1"></i> Unduh
                             </a>
                         </div>
