@@ -418,6 +418,9 @@ $(function () {
                         case 'belum_disetujui': statusText = 'Menunggu Verifikasi Operator'; break;
                         case 'verifikasi_sarpras': statusText = 'Menunggu Verifikasi Akademik'; break;
                         case 'verifikasi_akademik': statusText = 'Menunggu Verifikasi Sarpras'; break;
+                        case 'revisi_operator': statusText = 'Permintaan Revisi (Operator)'; break;
+                        case 'revisi_sarpras': statusText = 'Permintaan Revisi (Akademik)'; break;
+                        case 'revisi_akademik': statusText = 'Permintaan Revisi (Sarpras)'; break;
                         case 'disetujui': statusText = 'Disetujui'; break;
                         case 'ditolak': statusText = 'Ditolak'; break;
                         default: statusText = data; break;

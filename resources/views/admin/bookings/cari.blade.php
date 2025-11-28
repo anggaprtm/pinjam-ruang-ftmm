@@ -151,11 +151,40 @@
                         @endif
                     </div>
                     <div class="form-group mb-3">
-                        <label for="surat_izin">Upload Surat Izin (PDF)</label>
-                        <input class="form-control {{ $errors->has('surat_izin') ? 'is-invalid' : '' }}" type="file" name="surat_izin" id="surat_izin" accept=".pdf">
-                        @if($errors->has('surat_izin'))
-                            <div class="invalid-feedback">{{ $errors->first('surat_izin') }}</div>
-                        @endif
+                        <label class="form-label required" for="surat_izin">Unggah Surat Izin Kegiatan (SIK)</label>
+
+                        <div class="input-group">
+                            {{-- 1. Input File Asli (Disembunyikan) --}}
+                            <input 
+                                type="file" 
+                                name="surat_izin" 
+                                id="surat_izin" 
+                                class="d-none" 
+                                accept=".pdf">
+
+                            {{-- 2. Tombol Custom (Label sebagai pemicu) --}}
+                            <label for="surat_izin" class="btn btn-outline-dark mb-0 rounded-end-0">
+                                <i class="fas fa-folder-open me-2"></i>Pilih File
+                            </label>
+
+                            {{-- 3. Penampil Nama File (Span) --}}
+                            {{-- Kita beri class is-invalid di sini agar border merah muncul di kotak ini kalau error --}}
+                            <span class="form-control rounded-start-0 {{ $errors->has('surat_izin') ? 'is-invalid' : '' }}" id="surat_izin_display">
+                                Tidak ada file yang dipilih
+                            </span>
+
+                            {{-- 4. Pesan Error Validasi --}}
+                            @if($errors->has('surat_izin'))
+                                <div class="invalid-feedback d-block">
+                                    {{ $errors->first('surat_izin') }}
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- 5. Keterangan Kecil --}}
+                        <small class="form-text text-muted mt-1">
+                            *Ekstensi wajib <strong>.pdf</strong>, maksimal ukuran <strong>5 MB</strong>.
+                        </small>
                     </div>
                 </form>
             </div>
@@ -217,6 +246,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+    $('#surat_izin').on('change', function() {
+            // Ambil nama file
+            let fileName = $(this).val().split('\\').pop();
+            
+            // Jika ada file, tampilkan namanya di span #surat_izin_display
+            if (fileName) {
+                $('#surat_izin_display').text(fileName);
+            } else {
+                $('#surat_izin_display').text('Tidak ada file yang dipilih');
+            }
+        });
 });
 </script>
 @endsection

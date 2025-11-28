@@ -362,6 +362,10 @@ h5 {
 .badge-status-verifikasi-akademik { color: #383d41; background-color: #e2e3e5; }
 .badge-status-disetujui { color: #155724; background-color: #d4edda; }
 .badge-status-ditolak { color: #721c24; background-color: #f8d7da; }
+/* Badges untuk status revisi agar konsisten dengan timeline warna oranye */
+.badge-status-revisi-operator { color: #7a4100; background-color: #fff4e6; }
+.badge-status-revisi-sarpras { color: #7a4100; background-color: #fff4e6; }
+.badge-status-revisi-akademik { color: #7a4100; background-color: #fff4e6; }
 
 /* Filter Bar */
 .filter-bar {

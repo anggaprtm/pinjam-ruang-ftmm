@@ -95,6 +95,16 @@ class BookingsController extends Controller
         $data['surat_izin'] = $suratIzinPath; 
         $data['status'] = auth()->user()->isAdmin() ? 'disetujui' : 'belum_disetujui'; 
         $kegiatan = Kegiatan::create($data);
+
+        // Buat history untuk entri yang baru dibuat agar riwayat tampil di halaman show
+        \App\Models\KegiatanHistory::create([
+            'kegiatan_id' => $kegiatan->id,
+            'user_id' => auth()->id(),
+            'action' => 'created',
+            'note' => null,
+            'meta' => json_encode(['borrower_id' => $kegiatan->user_id]),
+            'created_at' => $kegiatan->created_at,
+        ]);
    
         // $customEmails = ['angga.iryanto@staf.unair.ac.id'];
         
