@@ -22,14 +22,14 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label required" for="ruangan_id">{{ trans('cruds.kegiatan.fields.ruangan') }}</label>
-                        <select class="form-control select2 {{ $errors->has('ruangan') ? 'is-invalid' : '' }}" name="ruangan_id" id="ruangan_id" required oninvalid="this.setCustomValidity('Silakan pilih ruangan terlebih dahulu')">
+                        <select class="form-control select2 {{ $errors->has('ruangan_id') ? 'is-invalid' : '' }}" name="ruangan_id" id="ruangan_id" required oninvalid="this.setCustomValidity('Silakan pilih ruangan terlebih dahulu')">
                             <option value=""></option>
                             @foreach($ruangan as $id => $entry)
                                 <option value="{{ $id }}" {{ old('ruangan_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
                             @endforeach
                         </select>
-                        @if($errors->has('ruangan'))
-                            <div class="invalid-feedback">{{ $errors->first('ruangan') }}</div>
+                        @if($errors->has('ruangan_id'))
+                            <div class="invalid-feedback">{{ $errors->first('ruangan_id') }}</div>
                         @endif
                     </div>
                     
@@ -79,15 +79,15 @@
                     @if(auth()->user()->isAdmin())
                         <div class="form-group mb-3">
                             <label class="required" for="user_id">Peminjam</label>
-                            <select class="form-control select2 {{ $errors->has('user') ? 'is-invalid' : '' }}" name="user_id" id="user_id" required>
+                            <select class="form-control select2 {{ $errors->has('user_id') ? 'is-invalid' : '' }}" name="user_id" id="user_id" required>
                                 {{-- Menambahkan opsi 'pleaseSelect' sesuai referensi --}}
                                 <option value="">{{ trans('global.pleaseSelect' )}}</option>
                                 @foreach($users as $id => $entry)
                                     <option value="{{ $id }}" {{ old('user_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
                                 @endforeach
                             </select>
-                            @if($errors->has('user'))
-                                <div class="invalid-feedback">{{ $errors->first('user') }}</div>
+                            @if($errors->has('user_id'))
+                                <div class="invalid-feedback">{{ $errors->first('user_id') }}</div>
                             @endif
                         </div>
                     @endif

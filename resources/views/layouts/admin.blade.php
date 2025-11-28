@@ -273,6 +273,52 @@
     $.fn.dataTable.ext.classes.sPageButton = '';
     });
 
+    // Expose a helper to get a standardized set of DataTables buttons.
+    // Use: let dtButtons = getStandardDtButtons();
+    window.getStandardDtButtons = function(options) {
+        options = options || {};
+        // default translations (same variables from above closure)
+        let copyBtn = '{{ trans('global.datatables.copy') }}';
+        let csvBtn = '{{ trans('global.datatables.csv') }}';
+        let excelBtn = '{{ trans('global.datatables.excel') }}';
+        let pdfBtn = '{{ trans('global.datatables.pdf') }}';
+        let printBtn = '{{ trans('global.datatables.print') }}';
+        let colvisBtn = '{{ trans('global.datatables.colvis') }}';
+        let selectAllBtn = '{{ trans('global.select_all') }}';
+        let selectNoneBtn = '{{ trans('global.deselect_all') }}';
+
+        let buttons = [];
+        buttons.push(
+            { extend: 'selectAll', text: '<i class="fas fa-check-double me-2"></i> ' + selectAllBtn, className: 'btn-primary' },
+            { extend: 'selectNone', text: '<i class="fas fa-times me-2"></i> ' + selectNoneBtn, className: 'btn-primary' }
+        );
+
+        // Copy button: allow caller to pass a custom action function in options.copyAction
+        if (options.copyAction && typeof options.copyAction === 'function') {
+            buttons.push({
+                text: '<i class="fas fa-copy me-2"></i> ' + copyBtn,
+                className: 'btn-secondary',
+                enabled: false,
+                action: options.copyAction
+            });
+        } else {
+            buttons.push({ extend: 'copy', text: '<i class="fas fa-copy me-2"></i> ' + copyBtn, className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } });
+        }
+
+        // Exports (disabled until selection)
+        buttons.push(
+            { extend: 'csv', text: '<i class="fas fa-file-export me-2"></i> CSV', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+            { extend: 'excel', text: '<i class="fas fa-file-excel me-2"></i> Excel', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+            { extend: 'pdf', text: '<i class="fas fa-file-pdf me-2"></i> PDF', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+            { extend: 'print', text: '<i class="fas fa-print me-2"></i> Cetak', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } }
+        );
+
+        // Column visibility
+        buttons.push({ extend: 'colvis', text: '<i class="fas fa-columns me-2"></i> ' + colvisBtn, className: 'btn-secondary' });
+
+        return buttons;
+    };
+
     </script>
     <script>
         function confirmDelete(id) {

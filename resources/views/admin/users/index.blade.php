@@ -79,7 +79,7 @@
 @parent
 <script>
     $(function () {
-      let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
+    let dtButtons = getStandardDtButtons();
       @can('user_delete')
       let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
       let deleteButton = {
@@ -117,10 +117,11 @@
           })
         }
       }
-      dtButtons.push(deleteButton)
+    let deleteIndex = dtButtons.length;
+    dtButtons.push(deleteButton)
       @endcan
 
-      let table = $('.datatable-User').DataTable({
+            let table = $('.datatable-User').DataTable({
         buttons: dtButtons,
         order: [[ 1, 'asc' ]],
         pageLength: 50,
@@ -164,6 +165,15 @@
       });
 
       table.draw();
+      table.on('select deselect', function () {
+          let selectedRows = table.rows({ selected: true }).count();
+          table.button(2).enable(selectedRows > 0); // Salin
+          table.button(3).enable(selectedRows > 0); // CSV
+          table.button(4).enable(selectedRows > 0); // Excel
+          table.button(5).enable(selectedRows > 0); // PDF
+          table.button(6).enable(selectedRows > 0); // Print
+          if (typeof deleteIndex !== 'undefined') table.button(deleteIndex).enable(selectedRows > 0);
+      });
     });
 </script>
 @endsection

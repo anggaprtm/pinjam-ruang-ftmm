@@ -83,8 +83,8 @@
 @parent
 <script>
     $(function () {
-      // Salin tombol default dari global config
-      let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
+    // Salin tombol default dari helper standar
+    let dtButtons = getStandardDtButtons();
       
       // Tambahkan tombol hapus massal jika diizinkan
       @can('ruangan_delete')
@@ -124,7 +124,8 @@
           })
         }
       }
-      dtButtons.push(deleteButton)
+    let deleteIndex = dtButtons.length;
+    dtButtons.push(deleteButton)
       @endcan
 
       // Inisialisasi DataTables dengan semua konfigurasi yang diperlukan
@@ -175,7 +176,18 @@
       });
 
       // Panggil draw untuk menerapkan tata letak saat pertama kali dimuat
+      // Panggil draw untuk menerapkan tata letak saat pertama kali dimuat
       table.draw();
+
+      table.on('select deselect', function () {
+          let selectedRows = table.rows({ selected: true }).count();
+          table.button(2).enable(selectedRows > 0); // Salin
+          table.button(3).enable(selectedRows > 0); // CSV
+          table.button(4).enable(selectedRows > 0); // Excel
+          table.button(5).enable(selectedRows > 0); // PDF
+          table.button(6).enable(selectedRows > 0); // Print
+          if (typeof deleteIndex !== 'undefined') table.button(deleteIndex).enable(selectedRows > 0);
+      });
     });
 </script>
 @endsection

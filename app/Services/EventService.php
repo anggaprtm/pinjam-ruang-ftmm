@@ -36,8 +36,9 @@ class EventService
                 ? Carbon::createFromFormat($date_format, $requestData['berulang_sampai'])->endOfDay()
                 : $waktuSelesai->copy()->endOfDay();
         } catch (\Exception $e) {
-            \Log::error('[EventService::isRoomTaken] Carbon parsing failed: ' . $e->getMessage(), [
-                'input' => $waktu_mulai_raw ?? null,
+            $raw = $requestData['waktu_mulai'] ?? null;
+            Log::error('[EventService::isRoomTaken] Carbon parsing failed: ' . $e->getMessage(), [
+                'input' => $raw,
             ]);
             // Lempar agar controller menangani sebagai validasi, bukan "room taken"
             throw new \InvalidArgumentException('Format tanggal/waktu tidak valid. Harap gunakan format yang sesuai.');
@@ -121,7 +122,7 @@ class EventService
      * @param array $requestData Data dari request.
      * @return void
      */
-    public function createEvents(array $requestData): void
+    public function createEvents(array $requestData): array
     {
         $datetime_format = config('panel.date_format', 'd M Y') . ' ' . config('panel.time_format', 'H:i');
         $date_format = config('panel.date_format', 'd M Y');
@@ -138,7 +139,7 @@ class EventService
 
         } catch (\Exception $e) {
             Log::error('[createEvents] Carbon Parsing Failed: ' . $e->getMessage());
-            return;
+            return [];
         }
         
         $baseData = [
@@ -171,9 +172,15 @@ class EventService
             }
         }
 
+        $created = [];
         if (!empty($eventsToCreate)) {
-            Kegiatan::insert($eventsToCreate);
+            // create each event with Eloquent so model events and relations work
+            foreach ($eventsToCreate as $data) {
+                $created[] = Kegiatan::create($data);
+            }
         }
+
+        return $created; // return created models so caller can create history if desired
     }
 
     // =======================================================================

@@ -17,6 +17,7 @@ class Kegiatan extends Model
     protected $dates = [
         'waktu_mulai',
         'waktu_selesai',
+        'revisi_at',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -33,6 +34,10 @@ class Kegiatan extends Model
         'nama_pic',
         'nomor_telepon',
         'surat_izin',
+        'revisi_by',
+        'revisi_at',
+        'revisi_level',
+        'revisi_notes',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -80,5 +85,15 @@ class Kegiatan extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function revisiBy()
+    {
+        return $this->belongsTo(User::class, 'revisi_by');
+    }
+
+    public function histories()
+    {
+        return $this->hasMany(\App\Models\KegiatanHistory::class, 'kegiatan_id')->orderBy('created_at');
     }
 }

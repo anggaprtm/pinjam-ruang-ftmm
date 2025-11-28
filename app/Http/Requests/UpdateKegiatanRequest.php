@@ -14,6 +14,16 @@ class UpdateKegiatanRequest extends FormRequest
         return Gate::allows('kegiatan_edit');
     }
 
+    protected function prepareForValidation()
+    {
+        // Jika user_id tidak dikirimkan (mis. user biasa), set ke user yang sedang login
+        if (! $this->has('user_id')) {
+            $this->merge([
+                'user_id' => auth()->id(),
+            ]);
+        }
+    }
+
     public function rules()
     {
         return [

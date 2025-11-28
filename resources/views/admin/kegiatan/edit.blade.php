@@ -23,13 +23,13 @@
 
                     <div class="form-group mb-3">
                         <label class="form-label" for="ruangan_id">{{ trans('cruds.kegiatan.fields.ruangan') }}</label>
-                        <select class="form-control select2 {{ $errors->has('ruangan') ? 'is-invalid' : '' }}" name="ruangan_id" id="ruangan_id">
+                        <select class="form-control select2 {{ $errors->has('ruangan_id') ? 'is-invalid' : '' }}" name="ruangan_id" id="ruangan_id">
                             @foreach($ruangan as $id => $entry)
                                 <option value="{{ $id }}" {{ (old('ruangan_id') ? old('ruangan_id') : $kegiatan->ruangan->id ?? '') == $id ? 'selected' : '' }}>{{ $entry }}</option>
                             @endforeach
                         </select>
-                        @if($errors->has('ruangan'))
-                            <div class="invalid-feedback">{{ $errors->first('ruangan') }}</div>
+                        @if($errors->has('ruangan_id'))
+                            <div class="invalid-feedback">{{ $errors->first('ruangan_id') }}</div>
                         @endif
                     </div>
 
@@ -87,13 +87,13 @@
 
                 <div class="form-group mb-3">
                     <label class="required" for="user_id">{{ trans('cruds.kegiatan.fields.user') }}</label>
-                    <select class="form-control select2 {{ $errors->has('user') ? 'is-invalid' : '' }}" name="user_id" id="user_id" required>
+                    <select class="form-control select2 {{ $errors->has('user_id') ? 'is-invalid' : '' }}" name="user_id" id="user_id" required>
                         @foreach($users as $id => $entry)
                             <option value="{{ $id }}" {{ (old('user_id') ? old('user_id') : $kegiatan->user->id ?? '') == $id ? 'selected' : '' }}>{{ $entry }}</option>
                         @endforeach
                     </select>
-                    @if($errors->has('user'))
-                        <div class="invalid-feedback">{{ $errors->first('user') }}</div>
+                    @if($errors->has('user_id'))
+                        <div class="invalid-feedback">{{ $errors->first('user_id') }}</div>
                     @endif
                 </div>
             @endif

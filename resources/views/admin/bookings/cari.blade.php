@@ -125,10 +125,10 @@
                         @endif
                     </div>
                     <div class="form-group mb-3">
-                        <label class="form-label" for="description">{{ trans('cruds.kegiatan.fields.deskripsi') }}</label>
-                        <textarea class="form-control {{ $errors->has('description') ? 'is-invalid' : '' }}" name="description" id="description">{{ old('description') }}</textarea>
-                        @if($errors->has('description'))
-                            <div class="invalid-feedback">{{ $errors->first('description') }}</div>
+                        <label class="form-label" for="deskripsi">{{ trans('cruds.kegiatan.fields.deskripsi') }}</label>
+                        <textarea class="form-control {{ $errors->has('deskripsi') ? 'is-invalid' : '' }}" name="deskripsi" id="deskripsi">{{ old('deskripsi') }}</textarea>
+                        @if($errors->has('deskripsi'))
+                            <div class="invalid-feedback">{{ $errors->first('deskripsi') }}</div>
                         @endif
                     </div>
                     <div class="form-group mb-3">

@@ -12,6 +12,7 @@ use App\Models\Ruangan;
 use App\Models\User;
 use App\Models\JadwalPerkuliahan;
 use Gate;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Yajra\DataTables\Facades\DataTables;
@@ -89,7 +90,8 @@ class KegiatanController extends Controller
             });
             
             $table->editColumn('persetujuan', function($row) {
-                if (!auth()->user()->can('persetujuan_access') || !auth()->user()->can('kegiatan_edit_status')) {
+                // Tampilkan kolom persetujuan jika user memiliki salah satu izin yang relevan
+                if (!auth()->user()->can('persetujuan_access') && !auth()->user()->can('kegiatan_edit_status')) {
                     return '-';
                 }
 
@@ -160,8 +162,24 @@ class KegiatanController extends Controller
             $data['status'] = 'disetujui';
         }
         
-        // Panggil method baru yang menangani semuanya
-        $eventService->createEvents($data);
+        // Panggil method yang membuat event(s) dan kembalikan model yang dibuat
+        $created = $eventService->createEvents($data);
+
+        // Buat history untuk setiap kegiatan yang baru dibuat
+        if (!empty($created)) {
+            foreach ($created as $model) {
+                \App\Models\KegiatanHistory::create([
+                    'kegiatan_id' => $model->id,
+                    // actor = current authenticated user (may be admin)
+                    'user_id' => auth()->id(),
+                    'action' => 'created',
+                    'note' => null,
+                    // save borrower in meta so we know who the peminjam is
+                    'meta' => json_encode(['borrower_id' => $model->user_id]),
+                    'created_at' => $model->created_at,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil disimpan!');
     }
@@ -216,7 +234,37 @@ class KegiatanController extends Controller
             $data['surat_izin'] = $request->file('surat_izin')->store('surat_izin', 'public');
         }
 
+        $oldStatus = $kegiatan->status;
+
         $kegiatan->update($data);
+
+        // Tambahkan history untuk perubahan (edit oleh pemohon)
+        \App\Models\KegiatanHistory::create([
+            'kegiatan_id' => $kegiatan->id,
+            'user_id' => auth()->id(),
+            'action' => 'edited',
+            'note' => 'Data kegiatan diperbarui',
+            'meta' => null,
+            'created_at' => now(),
+        ]);
+
+        // Jika ini adalah resubmisi setelah revisi, kembalikan status ke tahap verifikasi yang sesuai
+        if (Str::startsWith($oldStatus, 'revisi_')) {
+            switch ($oldStatus) {
+                case 'revisi_operator':
+                    $kegiatan->status = 'belum_disetujui';
+                    break;
+                case 'revisi_sarpras':
+                    $kegiatan->status = 'verifikasi_sarpras';
+                    break;
+                case 'revisi_akademik':
+                    $kegiatan->status = 'verifikasi_akademik';
+                    break;
+                default:
+                    $kegiatan->status = 'belum_disetujui';
+            }
+            $kegiatan->save();
+        }
 
         return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil diperbarui.');
     }
@@ -288,7 +336,7 @@ class KegiatanController extends Controller
     {
     // Validasi input
     $validated = $request->validate([
-        'action' => 'required|in:next,back,reject', // Aksi yang harus dilakukan
+        'action' => 'required|in:next,back,reject,revise', // Aksi yang harus dilakukan
         'notes' => 'nullable|string',              // Validasi notes
     ]);
 
@@ -338,18 +386,70 @@ class KegiatanController extends Controller
             $successMessage = 'Kegiatan ditolak.';
             break;
 
+        case 'revise':
+            // Tetapkan status revisi berdasarkan tahapan saat ini
+            switch ($kegiatan->status) {
+                case 'belum_disetujui':
+                    $newStatus = 'revisi_operator';
+                    $successMessage = 'Permintaan revisi dikirim ke pemohon (Operator).';
+                    break;
+                case 'verifikasi_sarpras':
+                    $newStatus = 'revisi_sarpras';
+                    $successMessage = 'Permintaan revisi dikirim ke pemohon (Sarpras).';
+                    break;
+                case 'verifikasi_akademik':
+                    $newStatus = 'revisi_akademik';
+                    $successMessage = 'Permintaan revisi dikirim ke pemohon (Akademik).';
+                    break;
+                default:
+                    $newStatus = 'revisi_operator';
+                    $successMessage = 'Permintaan revisi dikirim ke pemohon.';
+            }
+            // Pastikan notes tersedia untuk revisi
+            if (empty($validated['notes'])) {
+                return redirect()->back()->with('error', 'Mohon isi catatan/revisi sebelum mengirim permintaan revisi.');
+            }
+            // Simpan informasi audit revisi
+            $kegiatan->revisi_by = auth()->id();
+            $kegiatan->revisi_at = now();
+            // simpan level sesuai status yang ditetapkan
+            $level = str_replace('revisi_', '', $newStatus);
+            $kegiatan->revisi_level = $level;
+            $kegiatan->revisi_notes = $validated['notes'];
+            // juga simpan di notes umum agar terlihat di tampilan kegiatan
+            $kegiatan->notes = $validated['notes'];
+            break;
+
         default:
             return redirect()->back()->with('error', 'Aksi tidak valid!');
     }
 
     // Simpan perubahan status dan notes
     $kegiatan->status = $newStatus;
-    if (!empty($validated['notes'])) {
+    if (!empty($validated['notes']) && $validated['action'] !== 'revise') {
         $kegiatan->notes = $validated['notes'];
+    }
+
+    // Jika bukan revisi, hapus data revisi lama (sudah ditangani)
+    if ($validated['action'] !== 'revise') {
+        $kegiatan->revisi_by = null;
+        $kegiatan->revisi_at = null;
+        $kegiatan->revisi_level = null;
+        $kegiatan->revisi_notes = null;
     }
     $kegiatan->save();
 
     // Kirimkan pesan sukses yang sesuai dengan status baru
+    // Simpan history khusus untuk aksi ini
+    \App\Models\KegiatanHistory::create([
+        'kegiatan_id' => $kegiatan->id,
+        'user_id' => auth()->id(),
+        'action' => $newStatus, // simpan action sesuai status baru atau 'revisi'
+        'note' => $validated['notes'] ?? null,
+        'meta' => json_encode(['action' => $validated['action'] ?? null, 'level' => $kegiatan->revisi_level ?? null]),
+        'created_at' => now(),
+    ]);
+
     return redirect()
         ->route('admin.kegiatan.index')
         ->with('success', $successMessage);

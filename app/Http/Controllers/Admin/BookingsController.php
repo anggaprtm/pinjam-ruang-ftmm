@@ -55,16 +55,20 @@ class BookingsController extends Controller
     }
 
     // Method bookRuang Anda tidak perlu diubah
-    public function bookRuang(Request $request, EventService $eventService)
+    public function bookRuang(Request $request)
     {
         $request->merge([ 'user_id' => auth()->id() ]);
 
         $rules = [
             'nama_kegiatan'   => 'required',
             'ruangan_id'      => 'required',
+            // validate waktu fields passed from the search form
+            'waktu_mulai'     => 'required|date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
+            'waktu_selesai'   => 'required|date_format:' . config('panel.date_format') . ' ' . config('panel.time_format') . '|after:waktu_mulai',
             'nama_pic'      => ['required', 'string'],
             'nomor_telepon' => [
                                     'required',
+                                    'string',
                                     'regex:/^0[0-9]+$/',
                                     'min:9',
                                     'max:15',
@@ -78,7 +82,7 @@ class BookingsController extends Controller
 
         $request->validate($rules);
 
-        if ($eventService->isRoomTaken($request->all())) {
+        if ($this->eventService->isRoomTaken($request->all())) {
             return redirect()->back()->withInput($request->input())->withErrors('Ruangan ini tidak tersedia pada waktu tersebut.');
         }
         
@@ -89,7 +93,7 @@ class BookingsController extends Controller
 
         $data = $request->all();
         $data['surat_izin'] = $suratIzinPath; 
-        $data['status'] = auth()->user()->hasRole('Admin') ? 'disetujui' : 'belum_disetujui'; 
+        $data['status'] = auth()->user()->isAdmin() ? 'disetujui' : 'belum_disetujui'; 
         $kegiatan = Kegiatan::create($data);
    
         // $customEmails = ['angga.iryanto@staf.unair.ac.id'];

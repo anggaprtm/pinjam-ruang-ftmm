@@ -60,9 +60,9 @@
                         <th><i class="fas fa-door-open"></i>Ruangan</th>
                         <th><i class="fas fa-calendar-alt"></i>Jadwal</th>
                         <th class="text-center"><i class="fas fa-info-circle"></i>Status</th>
-                        @can('persetujuan_access')
+                        @if(auth()->user()->can('persetujuan_access') || auth()->user()->can('kegiatan_edit_status'))
                             <th class="text-center"><i class="fas fa-tasks"></i> Persetujuan</th>
-                        @endcan
+                        @endif
                         <th class="text-center" style="width: 150px;"><i class="fas fa-cogs"></i>Aksi</th>
                     </tr>
                 </thead>
@@ -97,7 +97,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" id="modalSubmitButton" class="btn btn-primary">Kirim</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="modalReviseBtn" class="btn btn-warning">Minta Revisi</button>
+                        <button type="button" id="modalRejectBtn" class="btn btn-danger">Tolak</button>
+                        <button type="button" id="modalVerifyBtn" class="btn btn-primary">Verifikasi</button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -123,69 +127,69 @@ $(function () {
         const kegiatanId = $(this).data('id');
 
         let config = {};
-        const baseUrl = "{{ url('admin/kegiatan') }}/" + kegiatanId + "/update-status";
+        const baseUrl = "{{ url('admin/kegiatan') }}/" + kegiatanId + "/status";
 
         // Reset modal ke default
         $('#modalNotesTextarea').prop('required', false);
         $('#modalBodyText').show();
 
-        switch (actionType) {
-            case 'verifikasi_sarpras':
-                config = {
-                    title: 'Verifikasi Kegiatan',
-                    bodyText: 'Lanjutkan untuk memverifikasi kegiatan ini?',
-                    actionValue: 'next',
-                    submitText: 'Kirim',
-                    submitClass: 'btn-primary',
-                    notesLabel: 'Catatan (opsional)'
-                };
-                break;
-            case 'verifikasi_akademik':
-                config = {
-                    title: 'Verifikasi Akademik',
-                    bodyText: 'Lanjutkan untuk memverifikasi kegiatan ini?',
-                    actionValue: 'next',
-                    submitText: 'Kirim & Verifikasi',
-                    submitClass: 'btn-primary',
-                    notesLabel: 'Catatan (opsional)'
-                };
-                break;
-            case 'setujui':
-                config = {
-                    title: 'Setujui Kegiatan',
-                    bodyText: 'Apakah Anda yakin ingin menyetujui kegiatan ini?',
-                    actionValue: 'next',
-                    submitText: 'Ya, Setujui',
-                    submitClass: 'btn-success',
-                    notesLabel: 'Catatan (opsional)'
-                };
-                break;
-            case 'tolak':
-                config = {
-                    title: 'Tolak Kegiatan',
-                    bodyText: 'Mohon isi alasan penolakan di bawah ini.',
-                    actionValue: 'reject',
-                    submitText: 'Tolak Kegiatan',
-                    submitClass: 'btn-danger',
-                    notesLabel: 'Alasan Penolakan (wajib diisi)'
-                };
-                // Jadikan catatan wajib untuk penolakan
-                $('#modalNotesTextarea').prop('required', true);
-                break;
+        // Default configuration
+        config = {
+            title: 'Verifikasi Kegiatan',
+            bodyText: 'Lanjutkan untuk memverifikasi kegiatan ini?',
+            verifyText: 'Verifikasi',
+            verifyClass: 'btn-primary',
+            reviseText: 'Minta Revisi',
+            reviseClass: 'btn-warning',
+            rejectText: 'Tolak',
+            rejectClass: 'btn-danger',
+            notesLabel: 'Catatan (opsional)'
+        };
+
+        if (actionType === 'verifikasi_akademik') {
+            config.title = 'Verifikasi Akademik';
+        } else if (actionType === 'setujui') {
+            config.title = 'Setujui Kegiatan';
+            config.verifyText = 'Ya, Setujui';
+            config.verifyClass = 'btn-success';
+        } else if (actionType === 'tolak') {
+            config.title = 'Tolak Kegiatan';
+            config.bodyText = 'Mohon isi alasan penolakan di bawah ini.';
+            config.notesLabel = 'Alasan Penolakan (wajib diisi)';
         }
 
         // Terapkan konfigurasi ke modal
         $('#modalForm').attr('action', baseUrl);
         $('#modalTitle').text(config.title);
-        $('#modalBodyText').text(config.bodyText);
-        $('#modalActionInput').val(config.actionValue);
+        $('#modalBodyText').text(config.bodyText || '');
         $('#modalNotesLabel').text(config.notesLabel);
-        $('#modalSubmitButton').text(config.submitText)
-            .removeClass('btn-primary btn-success btn-danger')
-            .addClass(config.submitClass);
-        
-        // Tampilkan modal
+
+        // Set button texts and classes
+        $('#modalVerifyBtn').text(config.verifyText).removeClass('btn-primary btn-success btn-danger').addClass(config.verifyClass);
+        $('#modalReviseBtn').text(config.reviseText).removeClass('btn-warning').addClass(config.reviseClass);
+        $('#modalRejectBtn').text(config.rejectText).removeClass('btn-danger').addClass(config.rejectClass);
+
+        // Show modal
         $('#approvalModal').modal('show');
+
+        // Handlers for the three action buttons
+        $('#modalVerifyBtn').off('click').on('click', function () {
+            $('#modalActionInput').val('next');
+            $('#modalNotesTextarea').prop('required', false);
+            $('#modalForm').submit();
+        });
+
+        $('#modalReviseBtn').off('click').on('click', function () {
+            $('#modalActionInput').val('revise');
+            $('#modalNotesTextarea').prop('required', true);
+            $('#modalForm').submit();
+        });
+
+        $('#modalRejectBtn').off('click').on('click', function () {
+            $('#modalActionInput').val('reject');
+            $('#modalNotesTextarea').prop('required', true);
+            $('#modalForm').submit();
+        });
     });
     // 1. KITA PERTAHANKAN LOGIKA TOMBOL HAPUS MASSAL DARI SKRIP LAMA ANDA
     let dtButtons = [];
@@ -424,17 +428,17 @@ $(function () {
                     $(td).attr('data-label', 'Status'); // 👈 Tambahan untuk mobile
                 }      
             },
-            @can('persetujuan_access')
-            { data: 'persetujuan', 
-              name: 'persetujuan',
-              className: 'text-center', 
-              orderable: false, 
-              searchable: false,
-              createdCell: function(td, cellData, rowData, row, col) {
-                $(td).attr('data-label', 'Persetujuan'); // 👈 Tambahan untuk mobile
-              }
-            },
-            @endcan
+                        @if(auth()->user()->can('persetujuan_access') || auth()->user()->can('kegiatan_edit_status'))
+                        { data: 'persetujuan', 
+                            name: 'persetujuan',
+                            className: 'text-center', 
+                            orderable: false, 
+                            searchable: false,
+                            createdCell: function(td, cellData, rowData, row, col) {
+                                $(td).attr('data-label', 'Persetujuan'); // 👈 Tambahan untuk mobile
+                            }
+                        },
+                        @endif
             { data: 'actions', 
               name: 'actions', 
               className: 'text-center actions-cell', 

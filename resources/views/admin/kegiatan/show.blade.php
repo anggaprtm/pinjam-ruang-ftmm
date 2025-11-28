@@ -25,6 +25,33 @@
         </div>
     </div>
     <div class="card-body p-4">
+        <style>
+            /* Timeline layout */
+            .timeline { position: relative; padding-left: 64px; }
+            .timeline:before { content: ''; position: absolute; left: 32px; top: 8px; bottom: 8px; width: 2px; background: #e9ecef; z-index:1; }
+            .timeline-item { position: relative; margin-bottom: 18px; }
+            /* Marker */
+            .timeline-marker { position: absolute; left: -62px; top: 0; width: 34px; height: 34px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background:#fff; border:2px solid #dee2e6; z-index:2; }
+            .timeline-marker.done { color:#fff; }
+            .timeline-marker.pending { background:#fff; color:#6c757d; border-color:#ced4da; }
+            .timeline-content { margin-left: -19px; }
+            .timeline-time { font-size: 12px; color: #6c757d; }
+            .timeline-note { font-style: italic; color: #495057; }
+
+            /* Colors per action (applies when marker has .done) */
+            .timeline-marker.marker-created.done { background:#6f42c1; border-color:#6f42c1; }
+            .timeline-marker.marker-verifikasi-sarpras.done { background:#0d6efd; border-color:#0d6efd; }
+            .timeline-marker.marker-verifikasi-akademik.done { background:#0d6efd; border-color:#0d6efd; }
+            .timeline-marker.marker-revisi-operator.done { background:#fd7e14; border-color:#fd7e14; }
+            .timeline-marker.marker-revisi-sarpras.done { background:#fd7e14; border-color:#fd7e14; }
+            .timeline-marker.marker-revisi-akademik.done { background:#fd7e14; border-color:#fd7e14; }
+            .timeline-marker.marker-resubmitted.done { background:#0dcaf0; border-color:#0dcaf0; }
+            .timeline-marker.marker-disetujui.done { background:#198754; border-color:#198754; }
+            .timeline-marker.marker-ditolak.done { background:#dc3545; border-color:#dc3545; }
+
+            /* Fallback small icon sizing */
+            .timeline-marker i { font-size:12px; }
+        </style>
         <div class="row">
             {{-- Kolom Kiri: Detail Utama --}}
             <div class="col-lg-8">
@@ -129,27 +156,17 @@
                             <div class="value">
                                 @php
                                     $statusClass = str_replace('_', '-', $kegiatan->status);
-                                    $statusText = '';
-                                    switch ($kegiatan->status) {
-                                        case 'belum_disetujui': 
-                                            $statusText = 'Menunggu Verifikasi Operator'; 
-                                            break;
-                                        case 'verifikasi_sarpras': 
-                                            $statusText = 'Operator Sudah Verifikasi'; 
-                                            break;
-                                        case 'verifikasi_akademik': 
-                                            $statusText = 'Akademik Sudah Verifikasi'; 
-                                            break;
-                                        case 'disetujui': 
-                                            $statusText = 'Kegiatan Disetujui'; 
-                                            break;
-                                        case 'ditolak': 
-                                            $statusText = 'Kegiatan Ditolak'; 
-                                            break;
-                                        default: 
-                                            $statusText = $kegiatan->status; 
-                                            break;
-                                    }
+                                    $statusMap = [
+                                        'belum_disetujui' => 'Menunggu Verifikasi Operator',
+                                        'verifikasi_sarpras' => 'Operator Sudah Verifikasi',
+                                        'verifikasi_akademik' => 'Akademik Sudah Verifikasi',
+                                        'disetujui' => 'Kegiatan Disetujui',
+                                        'ditolak' => 'Kegiatan Ditolak',
+                                        'revisi_operator' => 'Revisi Diminta (Operator)',
+                                        'revisi_akademik' => 'Revisi Diminta (Akademik)',
+                                        'revisi_sarpras' => 'Revisi Diminta (Sarpras)',
+                                    ];
+                                    $statusText = $statusMap[$kegiatan->status] ?? $kegiatan->status;
                                 @endphp
                                 <span class="badge-status badge-status-{{ $statusClass }}">
                                     {{ $statusText }}
@@ -157,38 +174,89 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Catatan Terakhir (ambil dari history jika ada) --}}
+                    @php
+                        $histories = $kegiatan->histories ?? collect();
+                        $lastNoteEntry = $histories->reverse()->first(function($h){ return !empty($h->note); });
+                        $lastNote = $lastNoteEntry->note ?? $kegiatan->revisi_notes ?? $kegiatan->notes ?? null;
+                    @endphp
                     <div class="detail-item">
                         <div class="icon"><i class="fas fa-comment-dots"></i></div>
                         <div class="content">
-                            <div class="label">Catatan Pemroses</div>
-                            <div class="value fst-italic">"{{ $kegiatan->notes ?? 'Tidak ada catatan.' }}"</div>
+                            <div class="label">Catatan Terakhir</div>
+                            <div class="value fst-italic">"{{ $lastNote ?? 'Tidak ada catatan.' }}"</div>
                         </div>
                     </div>
-                    <div class="detail-item">
+
+                    {{-- Riwayat (dari tabel kegiatan_histories). Jika entri hanya 'created' dan status disetujui oleh Admin, tampilkan pesan khusus --}}
+                    <div class="detail-item mt-3">
                         <div class="icon"><i class="fas fa-history"></i></div>
                         <div class="content">
                             <div class="label">Riwayat Verifikasi</div>
                             <div class="value small">
-                                {{-- PERUBAHAN DIMULAI DI SINI --}}
-                                @if ($kegiatan->status == 'disetujui' && !$kegiatan->verifikasi_sarpras_at && !$kegiatan->verifikasi_akademik_at && !$kegiatan->disetujui_at)
-                                    <div class="text-muted fst-italic">
-                                        <i class="fas fa-user-shield me-1"></i> Kegiatan dibuat oleh Admin
-                                    </div>
+                                @php
+                                    $histCount = $histories->count();
+                                    $first = $histories->first();
+                                    // consider admin-created if the very first history entry is 'created' and was done by an admin
+                                    $isAdminCreated = (optional($first)->action === 'created' && optional($first->user)->isAdmin());
+                                    $isAdminCreatedSingle = $isAdminCreated && $histCount === 1 && $kegiatan->status === 'disetujui';
+                                    $actionTitles = [
+                                        'created' => 'Permohonan Diajukan',
+                                        'edited' => 'Data Diperbarui',
+                                        'verifikasi_sarpras' => 'Verifikasi Operator',
+                                        'verifikasi_akademik' => 'Verifikasi Akademik',
+                                        'revisi_operator' => 'Permintaan Revisi (Operator)',
+                                        'revisi_sarpras' => 'Permintaan Revisi (Sarpras)',
+                                        'revisi_akademik' => 'Permintaan Revisi (Akademik)',
+                                        'resubmitted' => 'Perbaikan Dikirim Kembali',
+                                        'disetujui' => 'Disetujui',
+                                        'ditolak' => 'Ditolak',
+                                    ];
+                                @endphp
+                                @if($isAdminCreatedSingle)
+                                    <div class="text-muted fst-italic"><i class="fas fa-user-shield me-1"></i> Kegiatan dibuat oleh Admin</div>
                                 @else
-                                    @if($kegiatan->verifikasi_sarpras_at)
-                                        <div>Verifikasi Operator: {{ \Carbon\Carbon::parse($kegiatan->verifikasi_sarpras_at)->format('d/m/y H:i') }}</div>
-                                    @endif
-                                    @if($kegiatan->verifikasi_akademik_at)
-                                        <div>Verifikasi Akademik: {{ \Carbon\Carbon::parse($kegiatan->verifikasi_akademik_at)->format('d/m/y H:i') }}</div>
-                                    @endif
-                                    @if($kegiatan->disetujui_at)
-                                        <div>Disetujui: {{ \Carbon\Carbon::parse($kegiatan->disetujui_at)->format('d/m/y H:i') }}</div>
-                                    @endif
-                                    @if($kegiatan->ditolak_at)
-                                        <div>Ditolak: {{ \Carbon\Carbon::parse($kegiatan->ditolak_at)->format('d/m/y H:i') }}</div>
-                                    @endif
+                                    <div class="timeline">
+                                        @foreach($histories as $h)
+                                            @php
+                                                $title = $actionTitles[$h->action] ?? ucfirst(str_replace('_', ' ', $h->action));
+                                                $done = !empty($h->created_at);
+                                                $actionSlug = 'action-' . (isset($h->action) ? str_replace('_','-',$h->action) : 'unknown');
+                                                $markerClass = ($done ? 'done' : 'pending') . ' marker-' . (isset($h->action) ? str_replace('_','-',$h->action) : 'unknown');
+                                            @endphp
+                                            <div class="timeline-item">
+                                                @php
+                                                    // If the very first history is 'created' by admin and we're rendering the first loop,
+                                                    // replace its title to 'Kegiatan dibuat oleh Admin' so it doesn't read as 'Permohonan Diajukan'.
+                                                    $isFirstCreatedByAdmin = $loop->first && $h->action === 'created' && $isAdminCreated;
+                                                    if ($isFirstCreatedByAdmin) {
+                                                        $title = 'Kegiatan dibuat oleh Admin';
+                                                    }
+                                                @endphp
+                                                <div class="timeline-marker {{ $markerClass }}">
+                                                    @if($done)
+                                                        <i class="fas fa-check"></i>
+                                                    @else
+                                                        <i class="far fa-circle"></i>
+                                                    @endif
+                                                </div>
+                                                <div class="timeline-content">
+                                                    <div><strong>{{ $title }}</strong></div>
+                                                    <div class="timeline-time">
+                                                        {{ $h->created_at ? \Carbon\Carbon::parse($h->created_at)->format('d/m/Y H:i') : 'Belum' }}
+                                                        @if($h->user)
+                                                            &middot; oleh {{ $h->user->name }}
+                                                        @endif
+                                                    </div>
+                                                    @if($h->note)
+                                                        <div class="timeline-note mt-1">"{{ $h->note }}"</div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 @endif
-                                {{-- AKHIR DARI PERUBAHAN --}}
                             </div>
                         </div>
                     </div>
