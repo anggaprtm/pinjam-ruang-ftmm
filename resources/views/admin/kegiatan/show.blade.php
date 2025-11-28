@@ -155,8 +155,11 @@
                     <div class="content">
                         <div class="label">Surat Izin</div>
                         <div class="value">
-                            <a href="{{ asset('storage/' . $kegiatan->surat_izin) }}" target="_blank" class="btn btn-sm btn-info">
-                                <i class="fas fa-download me-1"></i> Lihat/Unduh Surat
+                            <button type="button" class="btn btn-sm btn-info js-open-pdf" data-url="{{ asset('storage/' . $kegiatan->surat_izin) }}">
+                                <i class="fas fa-file-pdf me-1"></i> Lihat Surat
+                            </button>
+                            <a href="{{ asset('storage/' . $kegiatan->surat_izin) }}" class="btn btn-sm btn-outline-secondary ms-2" download>
+                                <i class="fas fa-download me-1"></i> Unduh
                             </a>
                         </div>
                     </div>
@@ -314,7 +317,14 @@
 
 @section('scripts')
 @parent
+<!-- PDF.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
+// Configure worker (CDN)
+if (window['pdfjsLib']) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     // Intercept clicks on .js-wa-link to show confirmation before opening WhatsApp
     document.addEventListener('click', function(e) {
@@ -385,8 +395,207 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         }
+                // 3) Handle PDF preview button clicks (PDF.js)
+                const pdfBtn = e.target.closest && e.target.closest('.js-open-pdf');
+                if (pdfBtn) {
+                        e.preventDefault();
+                        const url = pdfBtn.getAttribute('data-url');
+                        openPdfJsModal(url);
+                        return;
+                }
     });
 });
+</script>
+<!-- PDF Preview Modal (PDF.js) -->
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1" aria-labelledby="pdfPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width:1200px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pdfPreviewModalLabel">Preview Surat Izin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="pdf-viewer-toolbar">
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-1 pdf-prev"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-2 pdf-next">Next <i class="fas fa-chevron-right"></i></button>
+                    <span class="pdf-page-info me-3">Page <span class="pdf-current-page">0</span> / <span class="pdf-total-pages">0</span></span>
+                </div>
+                <div class="ms-auto d-flex align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-1 pdf-zoom-out"><i class="fas fa-search-minus"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary me-3 pdf-zoom-in"><i class="fas fa-search-plus"></i></button>
+                    <a class="btn btn-sm btn-primary pdf-download me-2" href="#" download><i class="fas fa-download me-1"></i> Unduh</a>
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+            <div class="modal-body p-0" style="position:relative;">
+                <div class="pdf-loading" role="status" aria-hidden="true">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                </div>
+                <div class="pdf-viewer-container">
+                    <canvas id="pdf-canvas" class="pdf-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDF.js runtime and viewer helper -->
+<script>
+// PDF.js variables
+let __pdfDoc = null;
+let __pdfPageNum = 1;
+let __pdfScale = 1.0; // initial scale, will adjust to fit width
+let __pdfRendering = false;
+
+async function openPdfJsModal(url) {
+    const modalEl = document.getElementById('pdfPreviewModal');
+    const downloadEl = modalEl.querySelector('.pdf-download');
+    const currPageEl = modalEl.querySelector('.pdf-current-page');
+    const totalPageEl = modalEl.querySelector('.pdf-total-pages');
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // set download link
+    if (downloadEl) downloadEl.href = url;
+
+    // show loading overlay
+    const spinner = modalEl.querySelector('.pdf-loading');
+    if (spinner) spinner.style.display = 'flex';
+
+    try {
+        // fetch PDF as arrayBuffer to avoid Content-Disposition issues
+        const resp = await fetch(url, { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('Gagal memuat PDF');
+        const data = await resp.arrayBuffer();
+
+        // load document
+        if (!window['pdfjsLib']) throw new Error('PDF.js not loaded');
+        __pdfDoc = await pdfjsLib.getDocument({ data }).promise;
+        __pdfPageNum = 1;
+        totalPageEl.textContent = __pdfDoc.numPages;
+
+        // show modal first so measurements are correct
+        if (!modalEl.__bsModal) modalEl.__bsModal = new bootstrap.Modal(modalEl);
+        modalEl.__bsModal.show();
+
+        // wait until modal is fully shown so container sizes are available
+        await new Promise((resolve) => {
+            const onShown = function () {
+                modalEl.removeEventListener('shown.bs.modal', onShown);
+                resolve();
+            };
+            modalEl.addEventListener('shown.bs.modal', onShown);
+        });
+
+        // auto-fit width: calculate scale using container width after modal is visible
+        const container = modalEl.querySelector('.pdf-viewer-container');
+        const containerWidth = (container && container.clientWidth) ? container.clientWidth - 24 : 800; // fallback
+        // Render first page at scale that fits width
+        const page = await __pdfDoc.getPage(1);
+        const viewport = page.getViewport({ scale: 1 });
+        __pdfScale = (containerWidth / viewport.width) || 1.0;
+
+        // wire toolbar buttons (once)
+        setupPdfToolbar(modalEl, canvas, ctx);
+
+        // render first page
+        await renderPdfPage(__pdfPageNum);
+        // hide loading overlay after first render
+        if (spinner) spinner.style.display = 'none';
+
+    } catch (err) {
+        console.error(err);
+        // hide spinner on error
+        const spinnerErr = modalEl.querySelector('.pdf-loading');
+        if (spinnerErr) spinnerErr.style.display = 'none';
+        alert('Gagal memuat preview PDF. Silakan unduh file.');
+    }
+}
+
+function setupPdfToolbar(modalEl, canvas, ctx) {
+    const prevBtn = modalEl.querySelector('.pdf-prev');
+    const nextBtn = modalEl.querySelector('.pdf-next');
+    const zoomInBtn = modalEl.querySelector('.pdf-zoom-in');
+    const zoomOutBtn = modalEl.querySelector('.pdf-zoom-out');
+    const currPageEl = modalEl.querySelector('.pdf-current-page');
+    const totalPageEl = modalEl.querySelector('.pdf-total-pages');
+
+    if (prevBtn && !prevBtn.__bound) {
+        prevBtn.addEventListener('click', function() { if (__pdfDoc && __pdfPageNum > 1) { __pdfPageNum--; renderPdfPage(__pdfPageNum); } });
+        prevBtn.__bound = true;
+    }
+    if (nextBtn && !nextBtn.__bound) {
+        nextBtn.addEventListener('click', function() { if (__pdfDoc && __pdfPageNum < __pdfDoc.numPages) { __pdfPageNum++; renderPdfPage(__pdfPageNum); } });
+        nextBtn.__bound = true;
+    }
+    if (zoomInBtn && !zoomInBtn.__bound) {
+        zoomInBtn.addEventListener('click', function() { __pdfScale = __pdfScale * 1.2; renderPdfPage(__pdfPageNum); });
+        zoomInBtn.__bound = true;
+    }
+    if (zoomOutBtn && !zoomOutBtn.__bound) {
+        zoomOutBtn.addEventListener('click', function() { __pdfScale = __pdfScale / 1.2; renderPdfPage(__pdfPageNum); });
+        zoomOutBtn.__bound = true;
+    }
+
+    // update page indicators on modal show/hide
+    const updateIndicators = () => {
+        const modal = modalEl;
+        const curr = modal.querySelector('.pdf-current-page');
+        const total = modal.querySelector('.pdf-total-pages');
+        if (curr) curr.textContent = __pdfPageNum;
+        if (total && __pdfDoc) total.textContent = __pdfDoc.numPages;
+    };
+
+        // ensure indicators update after render
+        modalEl.addEventListener('shown.bs.modal', updateIndicators);
+
+        // clear PDF when modal hidden to free memory
+        if (!modalEl.__cleanupBound) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                __pdfDoc = null;
+                __pdfPageNum = 1;
+                __pdfScale = 1.0;
+                const canvas = document.getElementById('pdf-canvas');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx && ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    canvas.width = 0; canvas.height = 0;
+                }
+            });
+            modalEl.__cleanupBound = true;
+        }
+}
+
+async function renderPdfPage(pageNum) {
+    if (!__pdfDoc) return;
+    if (__pdfRendering) return;
+    __pdfRendering = true;
+
+    const modalEl = document.getElementById('pdfPreviewModal');
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const page = await __pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: __pdfScale });
+
+    // set canvas size to match viewport
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    // render
+    const renderContext = { canvasContext: ctx, viewport };
+    const renderTask = page.render(renderContext);
+    await renderTask.promise;
+
+    // update indicators
+    const modal = modalEl;
+    const curr = modal.querySelector('.pdf-current-page');
+    if (curr) curr.textContent = pageNum;
+    __pdfRendering = false;
+    // hide spinner after any completed render (in case it's still visible)
+    const spinner = modalEl.querySelector('.pdf-loading');
+    if (spinner) spinner.style.display = 'none';
+}
 </script>
 <!-- WA confirm modal for show page -->
 <div class="modal fade" id="waConfirmModalShow" tabindex="-1" aria-labelledby="waConfirmModalShowLabel" aria-hidden="true">

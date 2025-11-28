@@ -228,6 +228,34 @@ table.dataTable thead .sorting_desc {
     transform: translate(0, 0);
 }
 
+/* PDF viewer toolbar and canvas */
+.pdf-viewer-toolbar {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    padding:8px 12px;
+    border-bottom:1px solid #e9ecef;
+}
+.pdf-viewer-toolbar .btn { padding:6px 10px; }
+.pdf-viewer-container { width:100%; height:78vh; background:#fff; display:flex; justify-content:center; align-items:flex-start; overflow:auto; }
+.pdf-canvas { display:block; margin:12px auto; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.pdf-page-info { font-size:0.9rem; color:#495057; }
+
+/* Loading overlay for PDF viewer */
+.pdf-loading {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.85);
+    z-index: 10;
+}
+.pdf-loading .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
 
 #sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown .c-sidebar-nav-dropdown-items {
     display: none !important;
