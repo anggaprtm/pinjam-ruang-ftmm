@@ -38,7 +38,12 @@
         </form> 
     </div> 
 </div>
-
+@if(!request()->filled('waktu_mulai'))
+    <div class="alert alert-info mt-3">
+        <i class="fas fa-info-circle me-2"></i>
+        Silakan isi <strong>Waktu Mulai</strong>, <strong>Waktu Selesai</strong>, dan <strong>Kapasitas</strong> terlebih dahulu untuk meminjam ruangan.
+    </div>
+@endif
 {{-- === DAFTAR RUANG === --}}
 <div class="mt-4">
     <h4 class="fw-bold mb-3">
@@ -94,12 +99,6 @@
             </div>
         @endforelse
     </div>
-    @if(!request()->filled('waktu_mulai'))
-        <div class="alert alert-info mt-3">
-            <i class="fas fa-info-circle me-2"></i>
-            Silakan isi <strong>Waktu Mulai</strong>, <strong>Waktu Selesai</strong>, dan <strong>Kapasitas</strong> terlebih dahulu untuk meminjam ruangan.
-        </div>
-    @endif
 </div>
 
 {{-- === MODAL BOOKING RUANG === --}}
