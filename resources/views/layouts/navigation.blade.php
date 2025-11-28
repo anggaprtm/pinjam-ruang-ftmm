@@ -15,6 +15,20 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    @php
+                        // Count kegiatan that are not yet final (not disetujui or ditolak)
+                        $pendingKegiatanCount = \App\Models\Kegiatan::whereNotIn('status', ['disetujui', 'ditolak'])->count();
+                    @endphp
+                    <div class="hidden sm:flex sm:items-center">
+                        <x-nav-link :href="route('admin.kegiatan.index')" :active="request()->routeIs('admin.kegiatan.*')">
+                            <span class="">{{ __('Kegiatan') }}</span>
+                            @if($pendingKegiatanCount)
+                                <span class="ms-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-600 text-white">
+                                    {{ $pendingKegiatanCount }}
+                                </span>
+                            @endif
+                        </x-nav-link>
+                    </div>
                 </div>
             </div>
 
@@ -70,6 +84,20 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if(isset($pendingKegiatanCount) || true)
+                @php
+                    // ensure variable is available in responsive block
+                    if (!isset($pendingKegiatanCount)) {
+                        $pendingKegiatanCount = \App\Models\Kegiatan::whereNotIn('status', ['disetujui', 'ditolak'])->count();
+                    }
+                @endphp
+                <x-responsive-nav-link :href="route('admin.kegiatan.index')" :active="request()->routeIs('admin.kegiatan.*')">
+                    {{ __('Kegiatan') }}
+                    @if($pendingKegiatanCount)
+                        <span class="ms-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-600 text-white">{{ $pendingKegiatanCount }}</span>
+                    @endif
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

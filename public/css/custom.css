@@ -207,6 +207,27 @@ table.dataTable thead .sorting_desc {
     margin-bottom: 5px;
 }
 
+/* Sidebar badge visible both in expanded and minimized states */
+.c-sidebar .c-sidebar-nav-link .sidebar-badge {
+    margin-left: 8px;
+    font-size: 0.65rem;
+    padding: 3px 6px;
+    border-radius: 999px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+/* When sidebar is minimized, position badge over the icon */
+#sidebar.c-sidebar-minimized .c-sidebar-nav-link .sidebar-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    margin-left: 0;
+    font-size: 0.6rem;
+    padding: 2px 5px;
+    transform: translate(0, 0);
+}
+
 
 #sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown .c-sidebar-nav-dropdown-items {
     display: none !important;

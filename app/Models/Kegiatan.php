@@ -7,6 +7,7 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 class Kegiatan extends Model
 {
@@ -95,5 +96,27 @@ class Kegiatan extends Model
     public function histories()
     {
         return $this->hasMany(\App\Models\KegiatanHistory::class, 'kegiatan_id')->orderBy('created_at');
+    }
+
+    /**
+     * Clear cached pending kegiatan count when model changes
+     */
+    protected static function booted()
+    {
+        static::created(function ($model) {
+            Cache::forget('pending_kegiatan_count');
+        });
+
+        static::updated(function ($model) {
+            Cache::forget('pending_kegiatan_count');
+        });
+
+        static::deleted(function ($model) {
+            Cache::forget('pending_kegiatan_count');
+        });
+
+        static::restored(function ($model) {
+            Cache::forget('pending_kegiatan_count');
+        });
     }
 }

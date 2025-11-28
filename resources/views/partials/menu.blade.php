@@ -54,6 +54,11 @@
                 <a href="{{ route("admin.kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/kegiatan") || request()->is("admin/kegiatan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.kegiatan.title') }}">
                     <i class="fa-fw fas fa-calendar c-sidebar-nav-icon"></i>
                     {{ trans('cruds.kegiatan.title') }}
+                    @if(optional(auth()->user())->isAdmin())
+                        @if(!empty($pendingKegiatanCount))
+                            <span class="sidebar-badge bg-danger text-white">{{ $pendingKegiatanCount }}</span>
+                        @endif
+                    @endif
                 </a>
             </li>
         @endcan
