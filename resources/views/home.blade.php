@@ -52,6 +52,11 @@
                     <button class="btn btn-sm btn-outline-info" id="copyBesokBtn" @if($kegiatanBesok->isEmpty()) disabled @endif>
                         <i class="fas fa-file-alt me-2"></i> Salin Jadwal Besok
                     </button>
+                    <a href="{{ route('admin.statistics.index') }}"
+                    class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-chart-bar me-2"></i> Lihat Statistik Lengkap
+                    </a>
+
                 </div>
             </div>
             <div class="card-body">

@@ -81,6 +81,10 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('kiosk', [KioskController::class, 'index'])->name('kiosk');
     Route::get('api/kiosk/events', [KioskController::class, 'events'])->name('api.kiosk.events');
 
+    // Statistik (hanya untuk admin/home_access)
+    Route::get('statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])
+        ->name('statistics.index');
+
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
 });
