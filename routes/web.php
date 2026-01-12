@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PermissionsController;
 use App\Http\Controllers\Admin\RolesController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Admin\RuanganController;
+use App\Http\Controllers\Admin\BarangController;
 use App\Http\Controllers\Admin\JadwalPerkuliahanController;
 use App\Http\Controllers\Admin\JadwalPerkuliahanTemplateExportController;
 use App\Http\Controllers\Admin\KegiatanController;
@@ -47,6 +48,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         ->middleware('role.verification');
     Route::get('kegiatan/{kegiatan}/edit-surat-izin', [KegiatanController::class, 'editSuratIzin'])->name('kegiatan.editSuratIzin');
     Route::patch('kegiatan/{kegiatan}/update-surat-izin', [KegiatanController::class, 'updateSuratIzin'])->name('kegiatan.updateSuratIzin');
+    Route::post('kegiatan/{kegiatan}/pinjam-barang', [KegiatanController::class, 'pinjamBarang'])->name('kegiatan.pinjamBarang');
+    Route::post('kegiatan/{kegiatan}/kembalikan-barang/{barang}', [KegiatanController::class, 'kembalikanBarang'])->name('kegiatan.kembalikanBarang');
 
     // Permissions
     Route::delete('permissions/destroy', [PermissionsController::class, 'massDestroy'])->name('permissions.massDestroy');
@@ -65,6 +68,10 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::resource('ruangan', RuanganController::class);
     Route::patch('ruangan/{id}/toggle', [RuanganController::class, 'toggle'])->name('ruangan.toggle');
     Route::post('ruangan/storeMedia', [RuanganController::class, 'storeMedia'])->name('ruangan.storeMedia');
+
+    // Barangs
+    Route::delete('barangs/destroy', [BarangController::class, 'massDestroy'])->name('barangs.massDestroy');
+    Route::resource('barangs', BarangController::class);
 
     // Jadwal Perkuliahan
     Route::delete('jadwal-perkuliahan/destroy', [JadwalPerkuliahanController::class, 'massDestroy'])->name('jadwal-perkuliahan.massDestroy');

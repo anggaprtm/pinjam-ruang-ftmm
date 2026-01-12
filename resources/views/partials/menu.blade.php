@@ -49,6 +49,14 @@
                 </a>
             </li>
         @endcan
+        @can('barang_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.barangs.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/barangs") || request()->is("admin/barangs/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Master Barang">
+                    <i class="fa-fw fas fa-box c-sidebar-nav-icon"></i>
+                    Master Barang
+                </a>
+            </li>
+        @endcan
         @can('kegiatan_access')
             <li class="c-sidebar-nav-item">
                 <a href="{{ route("admin.kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/kegiatan") || request()->is("admin/kegiatan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.kegiatan.title') }}">

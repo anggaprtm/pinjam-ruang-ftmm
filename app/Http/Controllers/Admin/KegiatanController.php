@@ -11,6 +11,7 @@ use App\Models\Kegiatan;
 use App\Models\Ruangan;
 use App\Models\User;
 use App\Models\JadwalPerkuliahan;
+use App\Models\Barang;
 use Gate;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -301,9 +302,11 @@ class KegiatanController extends Controller
     {
         abort_if(Gate::denies('kegiatan_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $kegiatan->load('ruangan', 'user');
+        $kegiatan->load('ruangan', 'user', 'barangs');
 
-        return view('admin.kegiatan.show', compact('kegiatan'));
+        $barangs = \App\Models\Barang::where('stok', '>', 0)->get();
+
+        return view('admin.kegiatan.show', compact('kegiatan', 'barangs'));
     }
 
     public function destroy(Kegiatan $kegiatan)
@@ -452,9 +455,61 @@ class KegiatanController extends Controller
 
     return redirect()
         ->route('admin.kegiatan.index')
-        ->with('success', $successMessage);
-    }
-
-
-
-}
+                ->with('success', $successMessage);
+            }
+        
+                    public function pinjamBarang(Request $request, Kegiatan $kegiatan)
+                    {
+                        $request->validate([
+                            'barang_id' => 'required|exists:barangs,id',
+                            'jumlah' => 'required|integer|min:1',
+                        ]);
+                
+                        $barang = Barang::find($request->barang_id);
+                        $jumlahPinjam = $request->jumlah;
+                
+                        if ($jumlahPinjam > $barang->stok) {
+                            return back()->with('error', 'Stok barang tidak mencukupi.');
+                        }
+                
+                        // Cek apakah barang ini sedang dalam status 'dipinjam' untuk kegiatan ini
+                        $borrowedItem = $kegiatan->barangs()
+                            ->where('barang_id', $barang->id)
+                            ->wherePivot('status', 'dipinjam')
+                            ->first();
+                
+                        if ($borrowedItem) {
+                            // Jika sudah ada dan statusnya 'dipinjam', update jumlahnya
+                            $borrowedItem->pivot->jumlah += $jumlahPinjam;
+                            $borrowedItem->pivot->save();
+                        } else {
+                            // Jika belum ada (atau sudah dikembalikan), buat record peminjaman baru
+                            $kegiatan->barangs()->attach($barang->id, ['jumlah' => $jumlahPinjam, 'status' => 'dipinjam']);
+                        }
+                
+                        $barang->stok -= $jumlahPinjam;
+                        $barang->save();
+                
+                        return back()->with('success', 'Barang berhasil dipinjam.');
+                    }        
+                    public function kembalikanBarang(Request $request, Kegiatan $kegiatan, Barang $barang)
+                    {
+                        $borrowedItem = $kegiatan->barangs()->where('barang_id', $barang->id)->wherePivot('status', 'dipinjam')->first();
+            
+                        if (!$borrowedItem) {
+                            return back()->with('error', 'Data peminjaman tidak ditemukan atau sudah dikembalikan.');
+                        }
+            
+                        $jumlahKembali = $borrowedItem->pivot->jumlah;
+            
+                        // Update status on the specific pivot record
+                        $borrowedItem->pivot->status = 'dikembalikan';
+                        $borrowedItem->pivot->save();
+            
+                        // Kembalikan stok barang
+                        $barang->stok += $jumlahKembali;
+                        $barang->save();
+            
+                        return back()->with('success', 'Barang berhasil dikembalikan.');
+                    }        }
+        
