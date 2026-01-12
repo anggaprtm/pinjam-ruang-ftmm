@@ -14,8 +14,8 @@
             <h5 class="mb-0">Statistik Peminjaman Ruangan</h5>
             <div>
                 <div class="btn-group me-2" role="group" aria-label="preset">
-                    <a href="{{ route('admin.statistics.index', ['preset' => 'this_month']) }}" class="btn btn-sm btn-outline-secondary">Bulan Ini</a>
-                    <a href="{{ route('admin.statistics.index', ['preset' => 'all_time']) }}" class="btn btn-sm btn-outline-secondary">Sepanjang Waktu</a>
+                    <a href="{{ route('admin.statistics.index', ['preset' => 'this_month']) }}" class="btn btn-sm btn-outline-success">Bulan Ini</a>
+                    <a href="{{ route('admin.statistics.index', ['preset' => 'all_time']) }}" class="btn btn-sm btn-outline-success">Sepanjang Waktu</a>
                 </div>
                 <form id="filterForm" class="d-inline-flex align-items-center" method="get" action="{{ route('admin.statistics.index') }}">
                     <input type="hidden" name="preset" id="presetInput" value="">
@@ -62,12 +62,17 @@
                             <hr>
                             <div class="table-responsive">
                                 <table class="table table-sm">
-                                    <thead><tr><th>Ruangan</th><th class="text-end">Jumlah Peminjaman</th></tr></thead>
+                                    <thead>
+                                        <tr><th>No.</th><th>Ruangan</th><th class="text-end">Jumlah Peminjaman</th></tr>
                                     <tbody>
                                         @forelse($topRooms as $r)
-                                            <tr><td>{{ $r->nama }}</td><td class="text-end">{{ $r->total }}</td></tr>
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>{{ $r->nama }}</td>
+                                                <td class="text-end">{{ $r->total }}</td>
+                                            </tr>
                                         @empty
-                                            <tr><td colspan="2">Tidak ada data</td></tr>
+                                            <tr><td colspan="3">Tidak ada data</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -86,12 +91,16 @@
                             <hr>
                             <div class="table-responsive">
                                 <table class="table table-sm">
-                                    <thead><tr><th>Pengguna</th><th class="text-end">Jumlah Peminjaman</th></tr></thead>
+                                    <thead><tr><th>No.</th><th>Pengguna</th><th class="text-end">Jumlah Peminjaman</th></tr></thead>
                                     <tbody>
                                         @forelse($topUsers as $u)
-                                            <tr><td>{{ $u->name }}</td><td class="text-end">{{ $u->total }}</td></tr>
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>{{ $u->name }}</td>
+                                                <td class="text-end">{{ $u->total }}</td>
+                                            </tr>
                                         @empty
-                                            <tr><td colspan="2">Tidak ada data</td></tr>
+                                            <tr><td colspan="3">Tidak ada data</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
