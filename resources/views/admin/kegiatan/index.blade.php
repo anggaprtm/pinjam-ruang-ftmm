@@ -60,6 +60,7 @@
                         <th><i class="fas fa-door-open"></i>Ruangan</th>
                         <th><i class="fas fa-calendar-alt"></i>Jadwal</th>
                         <th class="text-center"><i class="fas fa-info-circle"></i>Status</th>
+                        <th class="text-center"><i class="fas fa-box-open"></i>Barang</th>
                         @if(auth()->user()->can('persetujuan_access') || auth()->user()->can('kegiatan_edit_status'))
                             <th class="text-center"><i class="fas fa-tasks"></i> Persetujuan</th>
                         @endif
@@ -462,6 +463,16 @@ $(function () {
                 createdCell: function(td, cellData, rowData, row, col) {
                     $(td).attr('data-label', 'Status'); // 👈 Tambahan untuk mobile
                 }      
+            },
+            {
+                data: 'pinjam_barang',
+                name: 'pinjam_barang',
+                className: 'text-center',
+                orderable: false,
+                searchable: false,
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Pinjam Barang');
+                }
             },
                         @if(auth()->user()->can('persetujuan_access') || auth()->user()->can('kegiatan_edit_status'))
                         { data: 'persetujuan', 

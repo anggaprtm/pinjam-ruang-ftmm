@@ -26,7 +26,13 @@ class KegiatanController extends Controller
 
         if ($request->ajax()) {
 
-            $query = Kegiatan::with(['ruangan', 'user'])->select(sprintf('%s.*', (new Kegiatan())->table));
+            $query = Kegiatan::with(['ruangan', 'user'])
+                ->withCount(['barangs as barangs_dipinjam_count' => function ($q) {
+                    $q->where('barang_kegiatan.status', 'dipinjam');
+                }])
+
+                ->addSelect(sprintf('%s.*', (new Kegiatan())->table));
+
 
             if ($request->filled('tanggal_mulai')) {
             $query->whereDate('waktu_mulai', '=', $request->tanggal_mulai);
@@ -53,6 +59,16 @@ class KegiatanController extends Controller
             $table->addColumn('placeholder', '&nbsp;');
             $table->addColumn('actions', '&nbsp;');
             $table->addColumn('persetujuan', '&nbsp;');
+            $table->addColumn('pinjam_barang', function ($row) {
+                if ($row->barangs_dipinjam_count > 0) {
+                    return '<span class="badge-status badge-pinjam-ya">Pinjam ('.$row->barangs_dipinjam_count.')</span>';
+                }
+
+                return '<span class="badge-status badge-pinjam-tidak">Tidak</span>';
+            });
+
+
+
 
             $table->editColumn('actions', function ($row) {
                 $buttons = '';
@@ -118,7 +134,7 @@ class KegiatanController extends Controller
             });
 
             // Di rawColumns, tambahkan 'persetujuan' dan 'placeholder'
-            $table->rawColumns(['actions', 'placeholder', 'persetujuan']);
+            $table->rawColumns(['actions', 'placeholder', 'persetujuan', 'pinjam_barang']);
 
             // Mengembalikan data dalam format JSON
             return $table->make(true);

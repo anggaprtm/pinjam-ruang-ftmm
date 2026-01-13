@@ -19,7 +19,21 @@ class BarangController extends Controller
 
         $barangs = Barang::all();
 
-        return view('admin.barangs.index', compact('barangs'));
+        $barangsDipinjam = \Illuminate\Support\Facades\DB::table('barang_kegiatan')
+            ->join('barangs', 'barang_kegiatan.barang_id', '=', 'barangs.id')
+            ->join('kegiatan', 'barang_kegiatan.kegiatan_id', '=', 'kegiatan.id')
+            ->join('users', 'kegiatan.user_id', '=', 'users.id')
+            ->where('barang_kegiatan.status', 'dipinjam')
+            ->select(
+                'barangs.nama_barang as nama_barang',
+                'kegiatan.nama_kegiatan',
+                'kegiatan.id as kegiatan_id',
+                'users.name as nama_peminjam',
+                'barang_kegiatan.jumlah'
+            )
+            ->get();
+
+        return view('admin.barangs.index', compact('barangs', 'barangsDipinjam'));
     }
 
     public function create()

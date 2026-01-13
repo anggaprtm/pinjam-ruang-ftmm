@@ -415,6 +415,16 @@ h5 {
 .badge-status-revisi-operator { color: #7a4100; background-color: #fff4e6; }
 .badge-status-revisi-sarpras { color: #7a4100; background-color: #fff4e6; }
 .badge-status-revisi-akademik { color: #7a4100; background-color: #fff4e6; }
+/* Badge pinjam barang */
+.badge-pinjam-ya {
+    color: #004085;
+    background-color: #cce5ff; /* biru muda */
+}
+
+.badge-pinjam-tidak {
+    color: #383d41;
+    background-color: #e2e3e5; /* merah muda */
+}
 
 /* Filter Bar */
 .filter-bar {

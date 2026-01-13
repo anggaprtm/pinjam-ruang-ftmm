@@ -58,4 +58,43 @@
         </div>
     </div>
 </div>
+
+{{-- Rekap Peminjaman --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header font-weight-bold">
+        Rekap Peminjaman Barang
+    </div>
+    <div class="card-body">
+        @if($barangsDipinjam->isNotEmpty())
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nama Barang</th>
+                            <th>Jumlah</th>
+                            <th>Kegiatan</th>
+                            <th>Peminjam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($barangsDipinjam as $pinjaman)
+                            <tr>
+                                <td>{{ $pinjaman->nama_barang }}</td>
+                                <td>{{ $pinjaman->jumlah }}</td>
+                                <td>
+                                    <a href="{{ route('admin.kegiatan.show', $pinjaman->kegiatan_id) }}">
+                                        {{ $pinjaman->nama_kegiatan }}
+                                    </a>
+                                </td>
+                                <td>{{ $pinjaman->nama_peminjam }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-center text-muted">Tidak ada barang yang sedang dipinjam saat ini.</p>
+        @endif
+    </div>
+</div>
 @endsection
