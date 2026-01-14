@@ -51,9 +51,9 @@
         @endcan
         @can('barang_access')
             <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.barangs.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/barangs") || request()->is("admin/barangs/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Master Barang">
+                <a href="{{ route("admin.barangs.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/barangs") || request()->is("admin/barangs/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Peminjaman Barang">
                     <i class="fa-fw fas fa-box c-sidebar-nav-icon"></i>
-                    Master Barang
+                    Data Barang
                 </a>
             </li>
         @endcan

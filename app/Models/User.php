@@ -94,6 +94,12 @@ class User extends Authenticatable
     return $this->hasRole('User');
     }
 
+    public function kegiatans()
+    {
+        return $this->hasMany(\App\Models\Kegiatan::class, 'user_id');
+    }
+
+
     // public function isAdmin()
     // {
     //     return $this->roles()->where('role_id', 1)->exists(); 

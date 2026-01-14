@@ -8,7 +8,7 @@
 
     <div class="card-body">
         <div class="form-group">
-            <a class="btn btn-default" href="{{ route('admin.barangs.index') }}">
+            <a class="btn btn-default" href="{{ route('admin.barangs.master') }}">
                 Kembali ke Daftar
             </a>
         </div>
@@ -41,7 +41,7 @@
             </tbody>
         </table>
         <div class="form-group">
-            <a class="btn btn-default" href="{{ route('admin.barangs.index') }}">
+            <a class="btn btn-default" href="{{ route('admin.barangs.master') }}">
                 Kembali ke Daftar
             </a>
         </div>

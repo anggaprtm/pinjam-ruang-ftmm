@@ -70,8 +70,10 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::post('ruangan/storeMedia', [RuanganController::class, 'storeMedia'])->name('ruangan.storeMedia');
 
     // Barangs
+    Route::get('barangs/master', [BarangController::class, 'master'])->name('barangs.master');
     Route::delete('barangs/destroy', [BarangController::class, 'massDestroy'])->name('barangs.massDestroy');
     Route::resource('barangs', BarangController::class);
+
 
     // Jadwal Perkuliahan
     Route::delete('jadwal-perkuliahan/destroy', [JadwalPerkuliahanController::class, 'massDestroy'])->name('jadwal-perkuliahan.massDestroy');
