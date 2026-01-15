@@ -19,63 +19,121 @@ class BarangController extends Controller
     {
         abort_if(Gate::denies('barang_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        if ($request->ajax()) {
+        $mode = $request->get('mode', 'barang');
 
-        $query = DB::table('barang_kegiatan')
-            ->join('barangs', 'barang_kegiatan.barang_id', '=', 'barangs.id')
-            ->join('kegiatan', 'barang_kegiatan.kegiatan_id', '=', 'kegiatan.id')
-            ->join('users', 'kegiatan.user_id', '=', 'users.id')
-            ->where('barang_kegiatan.status', 'dipinjam')
-            ->select(
-                'barangs.nama_barang as nama_barang',
-                'kegiatan.nama_kegiatan',
-                'kegiatan.id as kegiatan_id',
-                'kegiatan.waktu_mulai as waktu_mulai',
-                'kegiatan.waktu_selesai as waktu_selesai',
-                'users.name as nama_peminjam',
-                'barang_kegiatan.jumlah as jumlah'
+        if ($request->ajax()) {
+            if ($mode === 'kegiatan') {
+
+            $query = DB::table('barang_kegiatan')
+                ->join('barangs', 'barang_kegiatan.barang_id', '=', 'barangs.id')
+                ->join('kegiatan', 'barang_kegiatan.kegiatan_id', '=', 'kegiatan.id')
+                ->join('users', 'kegiatan.user_id', '=', 'users.id')
+                ->where('barang_kegiatan.status', 'dipinjam')
+                ->groupBy('kegiatan.id', 'kegiatan.nama_kegiatan', 'kegiatan.waktu_mulai', 'kegiatan.waktu_selesai', 'users.name')
+                ->selectRaw('
+                    kegiatan.id as kegiatan_id,
+                    kegiatan.nama_kegiatan as nama_kegiatan,
+                    kegiatan.waktu_mulai as waktu_mulai,
+                    kegiatan.waktu_selesai as waktu_selesai,
+                    users.name as nama_peminjam,
+                    SUM(barang_kegiatan.jumlah) as total_item,
+                    GROUP_CONCAT(CONCAT(barangs.nama_barang, " (", barang_kegiatan.jumlah, ")") SEPARATOR ", ") as daftar_barang
+                ');
+
+            // filter kegiatan
+            if ($request->filled('kegiatan_id')) {
+                $query->where('kegiatan.id', $request->kegiatan_id);
+            }
+
+            // filter user
+            if ($request->filled('user_id')) {
+                $query->where('users.id', $request->user_id);
+            }
+
+            // filter barang (agar kegiatan yg ditampilkan hanya yg minjam barang itu)
+            if ($request->filled('barang_id')) {
+                $query->where('barangs.id', $request->barang_id);
+            }
+
+            $table = DataTables::of($query);
+
+            $table->addColumn('placeholder', '&nbsp;');
+
+            $table->addColumn('kegiatan_url', fn($row) => route('admin.kegiatan.show', $row->kegiatan_id));
+
+            $table->addColumn('waktu_mulai_formatted', fn($row) =>
+                $row->waktu_mulai ? \Carbon\Carbon::parse($row->waktu_mulai)->translatedFormat('d M Y, H:i') : '-'
             );
 
-        if ($request->filled('kegiatan_id')) {
-            $query->where('kegiatan.id', $request->kegiatan_id);
+            $table->addColumn('waktu_selesai_formatted', fn($row) =>
+                $row->waktu_selesai ? \Carbon\Carbon::parse($row->waktu_selesai)->translatedFormat('d M Y, H:i') : '-'
+            );
+
+            $table->rawColumns(['placeholder']);
+
+            return $table->make(true);
+        
+            } else {
+                $query = DB::table('barang_kegiatan')
+                    ->join('barangs', 'barang_kegiatan.barang_id', '=', 'barangs.id')
+                    ->join('kegiatan', 'barang_kegiatan.kegiatan_id', '=', 'kegiatan.id')
+                    ->join('users', 'kegiatan.user_id', '=', 'users.id')
+                    ->where('barang_kegiatan.status', 'dipinjam')
+                    ->select(
+                        'barangs.nama_barang as nama_barang',
+                        'kegiatan.nama_kegiatan',
+                        'kegiatan.id as kegiatan_id',
+                        'kegiatan.waktu_mulai as waktu_mulai',
+                        'kegiatan.waktu_selesai as waktu_selesai',
+                        'users.name as nama_peminjam',
+                        'barang_kegiatan.jumlah as jumlah'
+                    );
+
+                if ($request->filled('kegiatan_id')) {
+                    $query->where('kegiatan.id', $request->kegiatan_id);
+                }
+
+                if ($request->filled('barang_id')) {
+                    $query->where('barangs.id', $request->barang_id);
+                }
+
+                if ($request->filled('user_id')) {
+                    $query->where('users.id', $request->user_id);
+                }
+
+
+                $table = DataTables::of($query);
+
+                $table->addColumn('placeholder', '&nbsp;');
+
+                $table->addColumn('kegiatan_url', function ($row) {
+                    return route('admin.kegiatan.show', $row->kegiatan_id);
+                });
+
+                // ✅ ini yang bikin waktu muncul di JSON
+                $table->addColumn('waktu_mulai_formatted', function ($row) {
+                    return !empty($row->waktu_mulai)
+                        ? \Carbon\Carbon::parse($row->waktu_mulai)->translatedFormat('d M Y, H:i')
+                        : '-';
+                });
+
+                $table->addColumn('waktu_selesai_formatted', function ($row) {
+                    return !empty($row->waktu_selesai)
+                        ? \Carbon\Carbon::parse($row->waktu_selesai)->translatedFormat('d M Y, H:i')
+                        : '-';
+                });
+
+                $table->filterColumn('daftar_barang', function($query, $keyword) {
+                    $query->whereRaw("LOWER(barangs.nama_barang) LIKE ?", ["%".strtolower($keyword)."%"]);
+                });
+
+
+                $table->rawColumns(['placeholder']);
+
+                return $table->make(true);
+                        
+            }
         }
-
-        if ($request->filled('barang_id')) {
-            $query->where('barangs.id', $request->barang_id);
-        }
-
-        if ($request->filled('user_id')) {
-            $query->where('users.id', $request->user_id);
-        }
-
-
-        $table = DataTables::of($query);
-
-        $table->addColumn('placeholder', '&nbsp;');
-
-        $table->addColumn('kegiatan_url', function ($row) {
-            return route('admin.kegiatan.show', $row->kegiatan_id);
-        });
-
-        // ✅ ini yang bikin waktu muncul di JSON
-        $table->addColumn('waktu_mulai_formatted', function ($row) {
-            return !empty($row->waktu_mulai)
-                ? \Carbon\Carbon::parse($row->waktu_mulai)->translatedFormat('d M Y, H:i')
-                : '-';
-        });
-
-        $table->addColumn('waktu_selesai_formatted', function ($row) {
-            return !empty($row->waktu_selesai)
-                ? \Carbon\Carbon::parse($row->waktu_selesai)->translatedFormat('d M Y, H:i')
-                : '-';
-        });
-
-        $table->rawColumns(['placeholder']);
-
-        return $table->make(true);
-
-
-    }
 
 
         $kegiatans = \App\Models\Kegiatan::query()

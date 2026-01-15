@@ -11,6 +11,18 @@
     @endcan
 </div>
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="btn-group" role="group" aria-label="Toggle Mode">
+        <button type="button" class="btn btn-outline-info" id="btnModeBarang" data-mode="barang">
+            <i class="fas fa-box"></i> Per Barang
+        </button>
+        <button type="button" class="btn btn-outline-info" id="btnModeKegiatan" data-mode="kegiatan">
+            <i class="fas fa-calendar"></i> Per Kegiatan
+        </button>
+    </div>
+</div>
+
+
 {{-- Rekap Peminjaman --}}
 <div class="filter-bar">
     <form id="formFilterBarang" onsubmit="return false;">
@@ -66,20 +78,40 @@
 </div>
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="modern-table datatable datatable-BarangDipinjam">
-                <thead>
-                    <tr>
-                        <th width="10"></th>
-                        <th><i class="fas fa-box"></i> Nama Barang</th>
-                        <th class="text-center"><i class="fas fa-sort-numeric-up"></i> Jumlah</th>
-                        <th><i class="fas fa-calendar-alt"></i> Kegiatan</th>
-                        <th><i class="fas fa-user"></i> Peminjam</th>
-                    </tr>
-                </thead>
-            </table>
+                {{-- MODE: Per Barang --}}
+        <div id="wrapModeBarang">
+            <div class="table-responsive">
+                <table class="modern-table datatable datatable-BarangDipinjam w-100">
+                    <thead>
+                        <tr>
+                            <th width="10"></th>
+                            <th><i class="fas fa-box"></i> Nama Barang</th>
+                            <th class="text-center"><i class="fas fa-sort-numeric-up"></i> Jumlah</th>
+                            <th><i class="fas fa-calendar-alt"></i> Kegiatan</th>
+                            <th><i class="fas fa-user"></i> Peminjam</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
-    </div>
+
+        {{-- MODE: Per Kegiatan --}}
+        <div id="wrapModeKegiatan" style="display:none;">
+            <div class="table-responsive">
+                <table class="modern-table datatable datatable-KegiatanDipinjam w-100">
+                    <thead>
+                        <tr>
+                            <th width="10"></th>
+                            <th><i class="fas fa-calendar-alt"></i> Kegiatan</th>
+                            <th><i class="fas fa-box"></i> Barang Dipinjam</th>
+                            <th class="text-center"><i class="fas fa-list"></i> Total Item</th>
+                            <th><i class="fas fa-user"></i> Peminjam</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>     
 </div>
 
 @endsection
@@ -89,138 +121,322 @@
 <script>
 $(function () {
 
+    // ========== INIT SELECT2 ==========
     $('.select2').select2({ width: '100%' });
 
-    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
+    // ========== VARIABLES ==========
+    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
 
-    let table = $('.datatable-BarangDipinjam').DataTable({
-        buttons: dtButtons,
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "{{ route('admin.barangs.index') }}",
-            data: function (d) {
-                d.kegiatan_id = $('#filter_kegiatan_id').val();
-                d.barang_id   = $('#filter_barang_id').val();
-                d.user_id     = $('#filter_user_id').val();
-            }
-        },
-        columns: [
-            { data: 'placeholder', name: 'placeholder', orderable: false, searchable: false, defaultContent: '' },
+    let currentMode = 'barang'; // default
+    let tableBarang = null;
+    let tableKegiatan = null;
 
-            {
-                data: 'nama_barang',
-                name: 'nama_barang',
-                render: function(data, type, row) {
-                    return `<div class="kegiatan-title-cell">${data || '-'}</div>`;
-                },
-                createdCell: function(td) {
-                    $(td).attr('data-label', 'Nama Barang');
+    // ========== HELPER: BUILD CONTROL ROW ==========
+    function buildControlsRow(tableSelector) {
+        let wrapper = $(tableSelector).closest('.dataTables_wrapper');
+        let length = wrapper.find('.dataTables_length');
+        let filter = wrapper.find('.dataTables_filter');
+        let buttons = wrapper.find('.dt-buttons');
+
+        // supaya gak dobel
+        if (!wrapper.find('.dt-controls-row').length) {
+            let controlsRow = $('<div class="dt-controls-row"></div>');
+            let leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
+            let rightCol = $('<div class="dt-controls-right"></div>').append(filter);
+            controlsRow.append(leftCol).append(rightCol);
+            wrapper.prepend(controlsRow);
+        }
+    }
+
+    // ========== DATATABLE: MODE PER BARANG ==========
+    function initTableBarang() {
+        if (tableBarang) return;
+
+        tableBarang = $('.datatable-BarangDipinjam').DataTable({
+            buttons: dtButtons,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('admin.barangs.index') }}",
+                data: function (d) {
+                    d.mode = 'barang';
+                    d.kegiatan_id = $('#filter_kegiatan_id').val();
+                    d.barang_id   = $('#filter_barang_id').val();
+                    d.user_id     = $('#filter_user_id').val();
                 }
             },
+            columns: [
+                { data: 'placeholder', name: 'placeholder', orderable: false, searchable: false, defaultContent: '' },
 
-            {
-                data: 'jumlah',
-                name: 'jumlah',
-                className: 'text-center',
-                render: function(data, type, row) {
-                    return `<span class="badge-stok badge-stok-aman">${data ?? 0}</span>`;
-                },
-                createdCell: function(td) {
-                    $(td).attr('data-label', 'Jumlah');
-                }
-            },
-
-            {
-                data: 'nama_kegiatan',
-                name: 'nama_kegiatan',
-                render: function(data, type, row) {
-                    let kegiatan = data || '-';
-
-                    if (row.kegiatan_id) {
-                        kegiatan = `
-                            <a href="${row.kegiatan_url}" class="text-decoration-none fw-bold">
-                                ${kegiatan}
-                            </a>
-                        `;
-                    } else {
-                        kegiatan = `<div class="fw-bold">${kegiatan}</div>`;
+                {
+                    data: 'nama_barang',
+                    name: 'barangs.nama_barang',
+                    render: function(data) {
+                        return `<div class="kegiatan-title-cell">${data || '-'}</div>`;
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Nama Barang');
                     }
-
-                    return `
-                        <div class="kegiatan-title-cell">${kegiatan}</div>
-                        <div class="kegiatan-sub-cell">Mulai: ${row.waktu_mulai_formatted ?? '-'}</div>
-                        <div class="kegiatan-sub-cell">Selesai: ${row.waktu_selesai_formatted ?? '-'}</div>
-                    `;
                 },
-                createdCell: function(td) {
-                    $(td).attr('data-label', 'Kegiatan');
+
+                {
+                    data: 'jumlah',
+                    name: 'barang_kegiatan.jumlah',
+                    className: 'text-center',
+                    render: function(data) {
+                        return `<span class="badge-stok badge-stok-aman">${data ?? 0}</span>`;
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Jumlah');
+                    }
+                },
+
+                {
+                    data: 'nama_kegiatan',
+                    name: 'kegiatan.nama_kegiatan',
+                    render: function(data, type, row) {
+                        let kegiatan = data || '-';
+
+                        if (row.kegiatan_id) {
+                            kegiatan = `
+                                <a href="${row.kegiatan_url}" class="text-decoration-none fw-bold">
+                                    ${kegiatan}
+                                </a>
+                            `;
+                        } else {
+                            kegiatan = `<div class="fw-bold">${kegiatan}</div>`;
+                        }
+
+                        return `
+                            <div class="kegiatan-title-cell">${kegiatan}</div>
+                            <div class="kegiatan-sub-cell">Mulai: ${row.waktu_mulai_formatted ?? '-'}</div>
+                            <div class="kegiatan-sub-cell">Selesai: ${row.waktu_selesai_formatted ?? '-'}</div>
+                        `;
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Kegiatan');
+                    }
+                },
+
+                {
+                    data: 'nama_peminjam',
+                    name: 'users.name',
+                    render: function(data) {
+                        return data || '-';
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Peminjam');
+                    }
+                },
+            ],
+
+            orderCellsTop: true,
+            pageLength: 10,
+
+            columnDefs: [{
+                orderable: false,
+                className: 'select-checkbox',
+                targets: 0
+            }],
+
+            select: {
+                style: 'multi',
+                selector: 'td:first-child'
+            },
+        });
+
+        // rapihin UI control row
+        $('.datatable-BarangDipinjam').on('draw.dt', function () {
+            buildControlsRow('.datatable-BarangDipinjam');
+        });
+
+        buildControlsRow('.datatable-BarangDipinjam');
+    }
+
+    // ========== DATATABLE: MODE PER KEGIATAN ==========
+    function initTableKegiatan() {
+        if (tableKegiatan) return;
+
+        tableKegiatan = $('.datatable-KegiatanDipinjam').DataTable({
+            buttons: dtButtons,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('admin.barangs.index') }}",
+                data: function (d) {
+                    d.mode = 'kegiatan';
+                    d.kegiatan_id = $('#filter_kegiatan_id').val();
+                    d.barang_id   = $('#filter_barang_id').val();
+                    d.user_id     = $('#filter_user_id').val();
                 }
             },
+            columns: [
+                { data: 'placeholder', name: 'placeholder', orderable: false, searchable: false, defaultContent: '' },
 
+                {
+                    data: 'nama_kegiatan',
+                    name: 'kegiatan.nama_kegiatan',
+                    render: function(data, type, row) {
+                        let kegiatan = data || '-';
 
-            {
-                data: 'nama_peminjam',
-                name: 'nama_peminjam',
-                render: function(data) {
-                    return data || '-';
+                        if (row.kegiatan_id) {
+                            kegiatan = `
+                                <a href="${row.kegiatan_url}" class="text-decoration-none fw-bold">
+                                    ${kegiatan}
+                                </a>
+                            `;
+                        } else {
+                            kegiatan = `<div class="fw-bold">${kegiatan}</div>`;
+                        }
+
+                        return `
+                            <div class="kegiatan-title-cell">${kegiatan}</div>
+                            <div class="kegiatan-sub-cell">Mulai: ${row.waktu_mulai_formatted ?? '-'}</div>
+                            <div class="kegiatan-sub-cell">Selesai: ${row.waktu_selesai_formatted ?? '-'}</div>
+                        `;
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Kegiatan');
+                    }
                 },
-                createdCell: function(td) {
-                    $(td).attr('data-label', 'Peminjam');
-                }
+
+                {
+                    data: 'daftar_barang',
+                    name: 'barangs.nama_barang',
+                    render: function(data) {
+                        return `<div style="white-space:normal;">${data || '-'}</div>`;
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Barang Dipinjam');
+                    }
+                },
+
+                {
+                    data: 'total_item',
+                    name: 'total_item',
+                    searchable: false,
+                    className: 'text-center',
+                    render: function(data) {
+                        return `<span class="badge-stok badge-stok-aman">${data ?? 0}</span>`;
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Total Item');
+                    }
+                },
+
+                {
+                    data: 'nama_peminjam',
+                    name: 'users.name',
+                    render: function(data) {
+                        return data || '-';
+                    },
+                    createdCell: function(td) {
+                        $(td).attr('data-label', 'Peminjam');
+                    }
+                },
+            ],
+
+            orderCellsTop: true,
+            pageLength: 10,
+
+            columnDefs: [{
+                orderable: false,
+                className: 'select-checkbox',
+                targets: 0
+            }],
+
+            select: {
+                style: 'multi',
+                selector: 'td:first-child'
             },
-        ],
-        orderCellsTop: true,
-        pageLength: 10,
+        });
 
-        columnDefs: [{
-            orderable: false,
-            className: 'select-checkbox',
-            targets: 0
-        }],
+        $('.datatable-KegiatanDipinjam').on('draw.dt', function () {
+            buildControlsRow('.datatable-KegiatanDipinjam');
+        });
 
-        select: {
-            style: 'multi',
-            selector: 'td:first-child'
-        },
+        buildControlsRow('.datatable-KegiatanDipinjam');
+    }
+
+    // ========== APPLY MODE (SHOW / HIDE TABLES) ==========
+    function applyModeUI(mode) {
+        currentMode = mode;
+
+        if (mode === 'barang') {
+            $('#wrapModeBarang').show();
+            $('#wrapModeKegiatan').hide();
+
+            $('#btnModeBarang').removeClass('btn-outline-primary').addClass('btn-primary');
+            $('#btnModeKegiatan').removeClass('btn-primary').addClass('btn-outline-primary');
+
+            initTableBarang();
+            tableBarang.columns.adjust();
+            tableBarang.ajax.reload();
+
+        } else {
+            $('#wrapModeBarang').hide();
+            $('#wrapModeKegiatan').show();
+
+            $('#btnModeKegiatan').removeClass('btn-outline-primary').addClass('btn-primary');
+            $('#btnModeBarang').removeClass('btn-primary').addClass('btn-outline-primary');
+
+            initTableKegiatan();
+            tableKegiatan.columns.adjust();
+            tableKegiatan.ajax.reload();
+        }
+    }
+
+    // ========== EVENT: TOGGLE MODE ==========
+    $('#btnModeBarang').on('click', function () {
+        applyModeUI('barang');
     });
 
-    $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-        $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+    $('#btnModeKegiatan').on('click', function () {
+        applyModeUI('kegiatan');
     });
 
-    // ✅ Klik tombol filter
+    // ========== EVENT: FILTER APPLY ==========
     $('#btnApplyFilter').on('click', function () {
-        table.ajax.reload();
+        if (currentMode === 'barang') {
+            initTableBarang();
+            tableBarang.ajax.reload();
+        } else {
+            initTableKegiatan();
+            tableKegiatan.ajax.reload();
+        }
     });
 
-    // ✅ Auto filter saat dropdown berubah (opsional tapi enak)
+    // ========== EVENT: AUTO FILTER ON CHANGE ==========
     $('#filter_kegiatan_id, #filter_barang_id, #filter_user_id').on('change', function () {
-        table.ajax.reload();
+        if (currentMode === 'barang') {
+            if (tableBarang) tableBarang.ajax.reload();
+        } else {
+            if (tableKegiatan) tableKegiatan.ajax.reload();
+        }
     });
 
-    // ✅ Reset filter
+    // ========== EVENT: RESET FILTER ==========
     $('#btnResetFilter').on('click', function () {
         $('#filter_kegiatan_id').val('').trigger('change');
         $('#filter_barang_id').val('').trigger('change');
         $('#filter_user_id').val('').trigger('change');
-        table.ajax.reload();
-    });
 
-    $('.datatable-BarangDipinjam').on('draw.dt', function () {
-        var wrapper = $(this).closest('.dataTables_wrapper');
-        var length = wrapper.find('.dataTables_length');
-        var filter = wrapper.find('.dataTables_filter');
-        var buttons = wrapper.find('.dt-buttons');
-
-        if (!wrapper.find('.dt-controls-row').length) {
-            var controlsRow = $('<div class="dt-controls-row"></div>');
-            var leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
-            var rightCol = $('<div class="dt-controls-right"></div>').append(filter);
-            controlsRow.append(leftCol).append(rightCol);
-            wrapper.prepend(controlsRow);
+        if (currentMode === 'barang') {
+            if (tableBarang) tableBarang.ajax.reload();
+        } else {
+            if (tableKegiatan) tableKegiatan.ajax.reload();
         }
     });
+
+    // ========== TAB SUPPORT (kalau ada tab bootstrap) ==========
+    $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
+        $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+    });
+
+    // ========== INITIAL LOAD ==========
+    applyModeUI('barang');
+
 });
 </script>
+
 @endsection
