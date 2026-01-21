@@ -86,6 +86,22 @@
             </a>
         </li>
         @endcan
+        @can('mobil_access') 
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.mobils.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/mobils") || request()->is("admin/mobils/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Data Kendaraan">
+                    <i class="fa-fw fas fa-car c-sidebar-nav-icon"></i>
+                    Data Kendaraan
+                </a>
+            </li>
+        @endcan
+        @can('riwayat_perjalanan_access') 
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.riwayat-perjalanan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/riwayat-perjalanan") || request()->is("admin/riwayat-perjalanan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Logbook Perjalanan">
+                    <i class="fa-fw fas fa-road c-sidebar-nav-icon"></i>
+                    Logbook Driver
+                </a>
+            </li>
+        @endcan
         @if(file_exists(app_path('Http/Controllers/Auth/ChangePasswordController.php')))
             @can('profile_password_edit')
                 <li class="c-sidebar-nav-item">

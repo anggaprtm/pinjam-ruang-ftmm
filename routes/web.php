@@ -15,8 +15,11 @@ use App\Http\Controllers\Admin\KegiatanController;
 use App\Http\Controllers\Admin\SystemCalendarController;
 use App\Http\Controllers\Admin\BookingsController;
 use App\Http\Controllers\Admin\CalendarViewController;
+use App\Http\Controllers\Admin\MobilController;
 use App\Http\Controllers\Admin\KioskController;
 use App\Http\Controllers\Auth\ChangePasswordController;
+use App\Http\Controllers\Admin\RiwayatPerjalananController;
+
 
 // === Redirect root ke login (sesuai rute lama)
 Route::redirect('/', '/login');
@@ -88,6 +91,16 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('cari-ruang', [BookingsController::class, 'cariRuang'])->name('cariRuang');
     Route::post('book-ruang', [BookingsController::class, 'bookRuang'])->name('bookRuang');
     
+    Route::delete('mobils/destroy', [MobilController::class, 'massDestroy'])->name('mobils.massDestroy');
+    Route::resource('mobils', MobilController::class);
+    Route::delete('riwayat-perjalanan/mass-destroy', [RiwayatPerjalananController::class, 'massDestroy'])
+        ->name('riwayat-perjalanan.massDestroy');
+    Route::resource('riwayat-perjalanan', RiwayatPerjalananController::class)->parameters([
+        'riwayat-perjalanan' => 'riwayat_perjalanan' // Memastikan parameter binding benar
+        ]);
+    Route::patch('riwayat-perjalanan/{riwayat_perjalanan}/selesai', [RiwayatPerjalananController::class, 'selesaikan'])->name('riwayat-perjalanan.selesaikan');
+    Route::patch('riwayat-perjalanan/{riwayat_perjalanan}/mulai', [RiwayatPerjalananController::class, 'mulaiJalan'])->name('riwayat-perjalanan.mulai');
+
     // Kiosk Mode (fullscreen TV dashboard)
     Route::get('kiosk', [KioskController::class, 'index'])->name('kiosk');
     Route::get('api/kiosk/events', [KioskController::class, 'events'])->name('api.kiosk.events');
