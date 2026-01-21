@@ -16,7 +16,7 @@
                         <label class="form-label required" for="tipe">Tipe</label>
                         <select class="form-control {{ $errors->has('tipe') ? 'is-invalid' : '' }}" name="tipe" id="tipe" required>
                             <option value="">-- Pilih Tipe --</option>
-                            @foreach(['Kuliah Reguler', 'Seminar Proposal', 'Seminar Hasil', 'PHL'] as $tipe)
+                            @foreach(['Kuliah Reguler', 'PHL'] as $tipe)
                                 <option value="{{ $tipe }}" {{ old('tipe') == $tipe ? 'selected' : '' }}>{{ $tipe }}</option>
                             @endforeach
                         </select>
@@ -25,25 +25,25 @@
                         @endif
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="program_studi">Program Studi</label>
-                        <select class="form-control {{ $errors->has('program_studi') ? 'is-invalid' : '' }}" name="program_studi" id="program_studi" required>
-                            <option value="">-- Pilih Program Studi --</option>
-                            @foreach(['TSD', 'TI', 'RN', 'TRKB', 'TE'] as $program_studi)
-                                <option value="{{ $program_studi }}" {{ old('program_studi') == $program_studi ? 'selected' : '' }}>{{ $program_studi }}</option>
-                            @endforeach
-                        </select>
-                        @if($errors->has('program_studi'))
-                            <div class="invalid-feedback">{{ $errors->first('program_studi') }}</div>
-                        @endif
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label required" for="kode_matkul">Kode MK</label>
+                            {{-- Perhatikan value old-nya sesuaikan jika di file edit --}}
+                            <input class="form-control {{ $errors->has('kode_matkul') ? 'is-invalid' : '' }}" 
+                                type="text" name="kode_matkul" id="kode_matkul" 
+                                value="{{ old('kode_matkul', isset($jadwalPerkuliahan) ? $jadwalPerkuliahan->kode_matkul : '') }}" 
+                                placeholder="Cth: TI-301" required>
+                        </div>
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="mata_kuliah">Mata Kuliah</label>
-                        <input class="form-control {{ $errors->has('mata_kuliah') ? 'is-invalid' : '' }}" type="text" name="mata_kuliah" id="mata_kuliah" value="{{ old('mata_kuliah', '') }}" required>
-                        @if($errors->has('mata_kuliah'))
-                            <div class="invalid-feedback">{{ $errors->first('mata_kuliah') }}</div>
-                        @endif
+                    {{-- Mata Kuliah (Sisa col-md-8) --}}
+                    <div class="col-md-8">
+                        <div class="form-group mb-3">
+                            <label class="form-label required" for="mata_kuliah">Mata Kuliah</label>
+                            <input class="form-control {{ $errors->has('mata_kuliah') ? 'is-invalid' : '' }}" 
+                                type="text" name="mata_kuliah" id="mata_kuliah" 
+                                value="{{ old('mata_kuliah', isset($jadwalPerkuliahan) ? $jadwalPerkuliahan->mata_kuliah : '') }}" required>
+                        </div>
                     </div>
 
                     <div class="form-group mb-3">

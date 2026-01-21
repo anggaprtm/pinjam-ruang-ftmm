@@ -38,12 +38,25 @@
                         @endif
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="mata_kuliah">Mata Kuliah</label>
-                        <input class="form-control {{ $errors->has('mata_kuliah') ? 'is-invalid' : '' }}" type="text" name="mata_kuliah" id="mata_kuliah" value="{{ old('mata_kuliah', $jadwalPerkuliahan->mata_kuliah) }}" required>
-                        @if($errors->has('mata_kuliah'))
-                            <div class="invalid-feedback">{{ $errors->first('mata_kuliah') }}</div>
-                        @endif
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label required" for="kode_matkul">Kode MK</label>
+                            {{-- Perhatikan value old-nya sesuaikan jika di file edit --}}
+                            <input class="form-control {{ $errors->has('kode_matkul') ? 'is-invalid' : '' }}" 
+                                type="text" name="kode_matkul" id="kode_matkul" 
+                                value="{{ old('kode_matkul', isset($jadwalPerkuliahan) ? $jadwalPerkuliahan->kode_matkul : '') }}" 
+                                placeholder="Cth: TI-301" required>
+                        </div>
+                    </div>
+
+                    {{-- Mata Kuliah (Sisa col-md-8) --}}
+                    <div class="col-md-8">
+                        <div class="form-group mb-3">
+                            <label class="form-label required" for="mata_kuliah">Mata Kuliah</label>
+                            <input class="form-control {{ $errors->has('mata_kuliah') ? 'is-invalid' : '' }}" 
+                                type="text" name="mata_kuliah" id="mata_kuliah" 
+                                value="{{ old('mata_kuliah', isset($jadwalPerkuliahan) ? $jadwalPerkuliahan->mata_kuliah : '') }}" required>
+                        </div>
                     </div>
 
                     <div class="form-group mb-3">

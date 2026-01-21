@@ -23,6 +23,7 @@ class JadwalPerkuliahanImport implements ToModel, WithHeadingRow
 
         return new JadwalPerkuliahan([
             'ruangan_id'      => $ruangan ? $ruangan->id : null,
+            'kode_matkul'   => $row['kode_matkul'],
             'mata_kuliah'     => $row['mata_kuliah'],
             'hari'            => $row['hari'],
             'waktu_mulai'     => $this->parseExcelTime($row['waktu_mulai']), // Format: 'HH:MM'

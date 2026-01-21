@@ -43,7 +43,7 @@ class SignageController extends Controller
         $jadwalKuliah = $jadwalQuery->orderBy('waktu_mulai')->get()->map(function ($jadwal) {
             return [
                 'title' => $jadwal->mata_kuliah,
-                'course_code' => $jadwal->program_studi . '-' . $jadwal->id, // Kode Dummy
+                'course_code' => $jadwal->kode_matkul ?? substr($jadwal->program_studi, 0, 2).'-'.$jadwal->id,
                 'time' => Carbon::parse($jadwal->waktu_mulai)->format('H:i') . ' - ' . Carbon::parse($jadwal->waktu_selesai)->format('H:i'),
                 'room' => $jadwal->ruangan->nama ?? '-',
                 'pic' => $jadwal->dosen ?? '-',

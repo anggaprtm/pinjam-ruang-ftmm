@@ -16,6 +16,7 @@ class UpdateJadwalPerkuliahanRequest extends FormRequest
     {
         return [
             'ruangan_id' => ['required', 'integer', 'exists:ruangan,id'],
+            'kode_matkul' => ['required', 'string', 'max:20'],
             'mata_kuliah' => ['required', 'string', 'max:255'],
             'program_studi' => ['required', 'in:RN,TRKB,TI,TSD,TE'],
             'dosen' => ['nullable', 'string', 'max:255'],

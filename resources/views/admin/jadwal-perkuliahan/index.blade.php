@@ -88,6 +88,7 @@
                         <tr data-entry-id="{{ $jadwal->id }}">
                             <td></td>
                             <td>
+                                <span class="badge bg-secondary mb-1">{{ $jadwal->kode_matkul ?? '-' }}</span>
                                 <div class="kegiatan-title-cell">{{ $jadwal->mata_kuliah }}</div>
                                 <div class="kegiatan-sub-cell">ID: {{ $jadwal->id }}</div>
                             </td>
