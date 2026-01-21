@@ -5,6 +5,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="font-weight-bold">Daftar Kegiatan</h3>
     @can('kegiatan_create')
+        <button type="button" class="btn btn-info text-white me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-file-import me-2"></i> Import Excel
+        </button>
         <a class="btn btn-success" href="{{ route('admin.kegiatan.create') }}">
             <i class="fas fa-plus-circle me-2"></i> Tambah Kegiatan
         </a>
@@ -109,6 +112,33 @@
     </div>
 </div>
 
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('admin.kegiatan.import') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Import Data Kegiatan atau Data Sidang/Seminar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <small>Pastikan format Excel memiliki header: <br>
+                        <b>judul_kegiatan, nama_pic, jenis_kegiatan, ruangan, tanggal, jam_mulai, jam_selesai, pembimbing_1, pembimbing_2, penguji_1, penguji_2</b></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="file">Pilih File Excel (.xlsx)</label>
+                        <input type="file" name="file" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 @endsection
 

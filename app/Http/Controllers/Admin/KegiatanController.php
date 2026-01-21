@@ -12,6 +12,8 @@ use App\Models\Ruangan;
 use App\Models\User;
 use App\Models\JadwalPerkuliahan;
 use App\Models\Barang;
+use App\Imports\KegiatanImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Gate;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -362,6 +364,20 @@ class KegiatanController extends Controller
         }
 
         return response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new KegiatanImport, $request->file('file'));
+            return redirect()->route('admin.kegiatan.index')->with('success', 'Data Sidang/Seminar berhasil diimport!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
+        }
     }
 
     public function updateStatus(Request $request, Kegiatan $kegiatan)
