@@ -315,6 +315,87 @@
     </div>
 </div>
 
+<div class="card mt-4">
+    <div class="card-header">
+        Peminjaman Barang
+    </div>
+    <div class="card-body">
+        <h5 class="mb-3">Daftar Barang Dipinjam</h5>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nama Barang</th>
+                    <th>Jumlah</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($kegiatan->barangs as $barang)
+                    <tr>
+                        <td>{{ $barang->nama_barang }}</td>
+                        <td>{{ $barang->pivot->jumlah }}</td>
+                        <td>
+                            @if($barang->pivot->status == 'dipinjam')
+                                <span class="badge bg-warning text-dark">Dipinjam</span>
+                            @else
+                                <span class="badge bg-success">Dikembalikan</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($barang->pivot->status == 'dipinjam')
+                                <form action="{{ route('admin.kegiatan.kembalikanBarang', [$kegiatan->id, $barang->id]) }}" method="POST" onsubmit="return confirm('Anda yakin ingin mengembalikan barang ini?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-primary">Kembalikan</button>
+                                </form>
+                            @else
+                                -
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="text-center">Belum ada barang yang dipinjam.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        @if($kegiatan->status == 'disetujui')
+            <hr>
+            <h5 class="mb-3 mt-4">Pinjam Barang Baru</h5>
+            <form action="{{ route('admin.kegiatan.pinjamBarang', $kegiatan->id) }}" method="POST">
+                @csrf
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="barang_id">Pilih Barang</label>
+                            <select name="barang_id" id="barang_id" class="form-control" required>
+                                <option value="">-- Pilih Barang --</option>
+                                @foreach($barangs as $barang)
+                                    <option value="{{ $barang->id }}">{{ $barang->nama_barang }} (Stok: {{ $barang->stok }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="jumlah">Jumlah</label>
+                            <input type="number" name="jumlah" id="jumlah" class="form-control" min="1" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-primary form-control">Pinjam</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        @endif
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')

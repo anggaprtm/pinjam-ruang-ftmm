@@ -98,6 +98,13 @@ class Kegiatan extends Model
         return $this->hasMany(\App\Models\KegiatanHistory::class, 'kegiatan_id')->orderBy('created_at');
     }
 
+    public function barangs()
+    {
+        return $this->belongsToMany(Barang::class, 'barang_kegiatan')
+            ->withPivot('jumlah', 'status')
+            ->withTimestamps();
+    }
+
     /**
      * Clear cached pending kegiatan count when model changes
      */

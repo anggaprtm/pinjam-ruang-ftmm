@@ -415,6 +415,33 @@ h5 {
 .badge-status-revisi-operator { color: #7a4100; background-color: #fff4e6; }
 .badge-status-revisi-sarpras { color: #7a4100; background-color: #fff4e6; }
 .badge-status-revisi-akademik { color: #7a4100; background-color: #fff4e6; }
+/* Badge pinjam barang */
+.badge-pinjam-ya {
+    color: #004085;
+    background-color: #cce5ff; /* biru muda */
+}
+
+.badge-pinjam-tidak {
+    color: #383d41;
+    background-color: #e2e3e5; /* merah muda */
+}
+
+/* Badge stok barang */
+.badge-stok {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.35em 0.7em;
+    border-radius: 14px;
+    display: inline-block;
+    min-width: 48px;
+    text-align: center;
+}
+
+/* level stok */
+.badge-stok-habis { color: #721c24; background-color: #f8d7da; }  /* merah */
+.badge-stok-menipis { color: #856404; background-color: #fff3cd; } /* kuning */
+.badge-stok-aman { color: #155724; background-color: #d4edda; }    /* hijau */
+
 
 /* Filter Bar */
 .filter-bar {
