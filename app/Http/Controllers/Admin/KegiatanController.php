@@ -171,6 +171,10 @@ class KegiatanController extends Controller
     
         // PERUBAHAN UTAMA DI SINI
         $data = $request->all();
+
+        if ($request->hasFile('poster')) {
+            $data['poster'] = $request->file('poster')->store('posters', 'public');
+        }
         
         // Logika status dan user_id tetap sama
         if (auth()->user()->hasRole('User')) {
@@ -244,6 +248,15 @@ class KegiatanController extends Controller
 
         // Baru proses file (setelah aman)
         $data = $request->all();
+
+        if ($request->hasFile('poster')) {
+            // Hapus poster lama jika ada
+            if ($kegiatan->poster && \Storage::disk('public')->exists($kegiatan->poster)) {
+                \Storage::disk('public')->delete($kegiatan->poster);
+            }
+            // Upload yang baru
+            $data['poster'] = $request->file('poster')->store('posters', 'public');
+        }
         if ($request->hasFile('surat_izin')) {
             if ($kegiatan->surat_izin && \Storage::disk('public')->exists($kegiatan->surat_izin)) {
                 \Storage::disk('public')->delete($kegiatan->surat_izin);

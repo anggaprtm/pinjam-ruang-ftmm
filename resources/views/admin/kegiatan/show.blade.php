@@ -75,6 +75,49 @@
             {{-- Kolom Kiri: Detail Utama --}}
             <div class="col-lg-8">
                 <h5 class="mb-3 font-weight-bold">Informasi Peminjaman</h5>
+                {{-- TAMPILKAN JENIS KEGIATAN --}}
+                <div class="detail-item">
+                    <div class="icon"><i class="fas fa-tag"></i></div>
+                    <div class="content">
+                        <div class="label">Jenis Kegiatan</div>
+                        <div class="value">
+                            <span class="badge bg-info text-dark">{{ $kegiatan->jenis_kegiatan }}</span>
+                        </div>
+                    </div>
+                </div>
+                @if(in_array($kegiatan->jenis_kegiatan, ['Seminar Proposal', 'Sidang Skripsi']))
+                    <hr class="my-3">
+                    <h6 class="font-weight-bold text-primary mb-3">Tim Dosen</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <div class="icon"><i class="fas fa-user-tie"></i></div>
+                                <div class="content">
+                                    <div class="label">Dosen Pembimbing</div>
+                                    <div class="value">
+                                        1. {{ $kegiatan->dosen_pembimbing_1 ?? '-' }}<br>
+                                        2. {{ $kegiatan->dosen_pembimbing_2 ?? '-' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="detail-item">
+                                <div class="icon"><i class="fas fa-user-edit"></i></div>
+                                <div class="content">
+                                    <div class="label">Dosen Penguji</div>
+                                    <div class="value">
+                                        1. {{ $kegiatan->dosen_penguji_1 ?? '-' }}<br>
+                                        @if($kegiatan->jenis_kegiatan == 'Sidang Skripsi' || $kegiatan->dosen_penguji_2)
+                                        2. {{ $kegiatan->dosen_penguji_2 ?? '-' }}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 <div class="detail-item">
                     <div class="icon"><i class="fas fa-user-circle"></i></div>
                     <div class="content">
@@ -162,6 +205,19 @@
                             </button>
                             <a href="{{ asset('storage/' . $kegiatan->surat_izin) }}" class="btn btn-sm btn-outline-success ms-2" download>
                                 <i class="fas fa-download me-1"></i> Unduh
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @endif
+                @if($kegiatan->poster)
+                <div class="detail-item">
+                    <div class="icon"><i class="fas fa-image"></i></div>
+                    <div class="content">
+                        <div class="label">Poster Kegiatan</div>
+                        <div class="value mt-2">
+                            <a href="{{ asset('storage/' . $kegiatan->poster) }}" target="_blank">
+                                <img src="{{ asset('storage/' . $kegiatan->poster) }}" alt="Poster" class="img-fluid rounded shadow-sm" style="max-width: 300px;">
                             </a>
                         </div>
                     </div>
