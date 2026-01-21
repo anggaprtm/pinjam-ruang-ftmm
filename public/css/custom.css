@@ -591,7 +591,23 @@ h5 {
     background-color: #f1b0b7;
     border-color: #ee9ca7;
 }
-
+/* Badge: Bentuk Pill (Kapsul) & Lebar */
+.badge-status {
+    padding: 0.5rem 1rem;
+    border-radius: 50rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-block;
+    min-width: 100px;
+    text-align: center;
+}
+.badge-status-booking { background-color: #e0f2fe; color: #0369a1; }
+.badge-status-selesai { background-color: #f3f4f6; color: #4b5563; }
+.badge-status-onduty  { background-color: #d1fae5; color: #047857; }
+    /* Symbol & Avatar Styles */
+.symbol-40px { width: 40px; height: 40px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.symbol-label { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.bg-light-primary { background-color: #f1faff; }
 /* ========================================= */
 /* == GAYA UNTUK HALAMAN DETAIL & FORM == */
 /* ========================================= */
@@ -681,6 +697,52 @@ h5 {
     font-size: 0.8rem; /* Ukuran ikon */
     margin-right: 8px;
     flex-shrink: 0.5;
+}
+
+.icon-circle{
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: #eef2ff;
+    color: #1d4ed8;
+}
+
+.icon-circle-sm{
+    width: 36px;
+    height: 36px;
+}
+.plate-badge{
+    display: inline-flex;          /* ✅ biar ngikut konten */
+    align-items: center;
+    width: fit-content;            /* ✅ kunci supaya ga melebar */
+    max-width: 100%;
+    padding: 2px 10px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;           /* ✅ biar ga turun baris */
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+.user-initial{
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: #f3f4f6;
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 0.85rem;
 }
 
 /* Teks kecil untuk waktu pembuatan */
