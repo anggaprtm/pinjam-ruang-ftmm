@@ -41,6 +41,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
 
     // Kegiatan
+    Route::get('kegiatan/template', [KegiatanController::class, 'downloadTemplate'])->name('kegiatan.template');
+    Route::post('kegiatan/import', [KegiatanController::class, 'import'])->name('kegiatan.import');
     Route::delete('kegiatan/destroy', [KegiatanController::class, 'massDestroy'])->name('kegiatan.massDestroy');
     Route::resource('kegiatan', KegiatanController::class);
     Route::patch('kegiatan/{kegiatan}/status', [KegiatanController::class, 'updateStatus'])
@@ -96,6 +98,10 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
+});
+
+Route::get('/dashboard-signage', function () {
+    return view('signage');
 });
 
 // === Grup PROFILE (Change Password) dengan pengecekan file controller (sesuai rute lama)

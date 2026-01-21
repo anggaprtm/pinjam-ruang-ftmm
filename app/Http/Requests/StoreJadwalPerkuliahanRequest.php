@@ -20,6 +20,7 @@ class StoreJadwalPerkuliahanRequest extends FormRequest
             'hari' => ['required', 'in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu'],
             'tipe' => ['required', 'in:Kuliah Reguler,Seminar Proposal,Seminar Hasil,PHL'],
             'program_studi' => ['required', 'in:RN,TRKB,TI,TSD,TE'],
+            'kode_matkul' => ['required', 'string', 'max:20'],
             'waktu_mulai' => [
                 'required', 
                 'date_format:H:i',
@@ -28,6 +29,7 @@ class StoreJadwalPerkuliahanRequest extends FormRequest
                 'required', 
                 'date_format:H:i', 'after:waktu_mulai'
             ],
+            'dosen' => ['nullable', 'string', 'max:255'],
             'berlaku_mulai' => [
                 'required', 
                 'date_format:j M Y',

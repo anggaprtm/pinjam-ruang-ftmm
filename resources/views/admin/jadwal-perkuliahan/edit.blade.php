@@ -29,8 +29,8 @@
                         <label class="form-label required" for="program_studi">Program Studi</label>
                         <select class="form-control {{ $errors->has('program_studi') ? 'is-invalid' : '' }}" name="program_studi" id="program_studi" required>
                             <option value="">-- Pilih Program Studi --</option>
-                            @foreach(['S1 Teknologi Sains Data', 'S1 Teknik Industri', 'S1 Rekayasa Nanoteknologi', 'S1 Teknik Robotika dan Kecerdasan Buatan', 'S1 Teknik Elektro'] as $program)
-                                <option value="{{ $program }}" {{ (old('program_studi', $jadwalPerkuliahan->program_studi) == $program) ? 'selected' : '' }}>{{ $program }}</option>
+                            @foreach(['TSD', 'TI', 'RN', 'TRKB', 'TE'] as $program_studi)
+                                <option value="{{ $program_studi }}" {{ (old('program_studi', $jadwalPerkuliahan->program_studi) == $program_studi) ? 'selected' : '' }}>{{ $program_studi }}</option>
                             @endforeach
                         </select>
                         @if($errors->has('program_studi'))
@@ -38,19 +38,32 @@
                         @endif
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="mata_kuliah">Mata Kuliah</label>
-                        <input class="form-control {{ $errors->has('mata_kuliah') ? 'is-invalid' : '' }}" type="text" name="mata_kuliah" id="mata_kuliah" value="{{ old('mata_kuliah', $jadwalPerkuliahan->mata_kuliah) }}" required>
-                        @if($errors->has('mata_kuliah'))
-                            <div class="invalid-feedback">{{ $errors->first('mata_kuliah') }}</div>
-                        @endif
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label class="form-label required" for="kode_matkul">Kode MK</label>
+                            {{-- Perhatikan value old-nya sesuaikan jika di file edit --}}
+                            <input class="form-control {{ $errors->has('kode_matkul') ? 'is-invalid' : '' }}" 
+                                type="text" name="kode_matkul" id="kode_matkul" 
+                                value="{{ old('kode_matkul', isset($jadwalPerkuliahan) ? $jadwalPerkuliahan->kode_matkul : '') }}" 
+                                placeholder="Cth: TI-301" required>
+                        </div>
+                    </div>
+
+                    {{-- Mata Kuliah (Sisa col-md-8) --}}
+                    <div class="col-md-8">
+                        <div class="form-group mb-3">
+                            <label class="form-label required" for="mata_kuliah">Mata Kuliah</label>
+                            <input class="form-control {{ $errors->has('mata_kuliah') ? 'is-invalid' : '' }}" 
+                                type="text" name="mata_kuliah" id="mata_kuliah" 
+                                value="{{ old('mata_kuliah', isset($jadwalPerkuliahan) ? $jadwalPerkuliahan->mata_kuliah : '') }}" required>
+                        </div>
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label" for="dosen_pengampu">Dosen Pengampu (Opsional)</label>
-                        <input class="form-control {{ $errors->has('dosen_pengampu') ? 'is-invalid' : '' }}" type="text" name="dosen_pengampu" id="dosen_pengampu" value="{{ old('dosen_pengampu', $jadwalPerkuliahan->dosen_pengampu) }}" placeholder="Kosongkan jika tidak ada">
-                        @if($errors->has('dosen_pengampu'))
-                            <div class="invalid-feedback">{{ $errors->first('dosen_pengampu') }}</div>
+                        <label class="form-label" for="dosen">Dosen Pengampu (Opsional)</label>
+                        <input class="form-control {{ $errors->has('dosen') ? 'is-invalid' : '' }}" type="text" name="dosen" id="dosen" value="{{ old('dosen', $jadwalPerkuliahan->dosen) }}" placeholder="Kosongkan jika tidak ada">
+                        @if($errors->has('dosen'))
+                            <div class="invalid-feedback">{{ $errors->first('dosen') }}</div>
                         @endif
                     </div>
 
@@ -81,18 +94,18 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label required" for="jam_mulai">Jam Mulai</label>
-                        <input class="form-control timepicker {{ $errors->has('jam_mulai') ? 'is-invalid' : '' }}" type="text" name="jam_mulai" id="jam_mulai" value="{{ old('jam_mulai', $jadwalPerkuliahan->jam_mulai) }}" required>
-                        @if($errors->has('jam_mulai'))
-                            <div class="invalid-feedback">{{ $errors->first('jam_mulai') }}</div>
+                        <label class="form-label required" for="waktu_mulai">Jam Mulai</label>
+                        <input class="form-control timepicker {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ old('waktu_mulai', $jadwalPerkuliahan->waktu_mulai) }}" required>
+                        @if($errors->has('waktu_mulai'))
+                            <div class="invalid-feedback">{{ $errors->first('waktu_mulai') }}</div>
                         @endif
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label required" for="jam_selesai">Jam Selesai</label>
-                        <input class="form-control timepicker {{ $errors->has('jam_selesai') ? 'is-invalid' : '' }}" type="text" name="jam_selesai" id="jam_selesai" value="{{ old('jam_selesai', $jadwalPerkuliahan->jam_selesai) }}" required>
-                        @if($errors->has('jam_selesai'))
-                            <div class="invalid-feedback">{{ $errors->first('jam_selesai') }}</div>
+                        <label class="form-label required" for="waktu_selesai">Jam Selesai</label>
+                        <input class="form-control timepicker {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ old('waktu_selesai', $jadwalPerkuliahan->waktu_selesai) }}" required>
+                        @if($errors->has('waktu_selesai'))
+                            <div class="invalid-feedback">{{ $errors->first('waktu_selesai') }}</div>
                         @endif
                     </div>
 

@@ -12,6 +12,9 @@ use App\Models\Ruangan;
 use App\Models\User;
 use App\Models\JadwalPerkuliahan;
 use App\Models\Barang;
+use App\Imports\KegiatanImport;
+use App\Exports\KegiatanTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Gate;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -171,6 +174,10 @@ class KegiatanController extends Controller
     
         // PERUBAHAN UTAMA DI SINI
         $data = $request->all();
+
+        if ($request->hasFile('poster')) {
+            $data['poster'] = $request->file('poster')->store('posters', 'public');
+        }
         
         // Logika status dan user_id tetap sama
         if (auth()->user()->hasRole('User')) {
@@ -244,6 +251,15 @@ class KegiatanController extends Controller
 
         // Baru proses file (setelah aman)
         $data = $request->all();
+
+        if ($request->hasFile('poster')) {
+            // Hapus poster lama jika ada
+            if ($kegiatan->poster && \Storage::disk('public')->exists($kegiatan->poster)) {
+                \Storage::disk('public')->delete($kegiatan->poster);
+            }
+            // Upload yang baru
+            $data['poster'] = $request->file('poster')->store('posters', 'public');
+        }
         if ($request->hasFile('surat_izin')) {
             if ($kegiatan->surat_izin && \Storage::disk('public')->exists($kegiatan->surat_izin)) {
                 \Storage::disk('public')->delete($kegiatan->surat_izin);
@@ -349,6 +365,25 @@ class KegiatanController extends Controller
         }
 
         return response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new KegiatanImport, $request->file('file'));
+            return redirect()->route('admin.kegiatan.index')->with('success', 'Data Sidang/Seminar berhasil diimport!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new KegiatanTemplateExport, 'template_import_kegiatan.xlsx');
     }
 
     public function updateStatus(Request $request, Kegiatan $kegiatan)

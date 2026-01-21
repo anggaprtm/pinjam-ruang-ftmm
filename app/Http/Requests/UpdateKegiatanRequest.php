@@ -31,6 +31,12 @@ class UpdateKegiatanRequest extends FormRequest
                 'string',
                 'required',
             ],
+            'jenis_kegiatan' => ['required', 'in:Kegiatan Ormawa,Seminar Proposal,Sidang Skripsi,Rapat,Lomba,Lainnya'],
+            'poster' => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,jpg,gif,svg'],
+            'dosen_pembimbing_1' => ['nullable', 'string', 'max:255'],
+            'dosen_pembimbing_2' => ['nullable', 'string', 'max:255'],
+            'dosen_penguji_1'    => ['nullable', 'string', 'max:255'],
+            'dosen_penguji_2'    => ['nullable', 'string', 'max:255'],
             'waktu_mulai' => [
                 'required',
                 'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),

@@ -145,6 +145,12 @@ class EventService
         $baseData = [
             'ruangan_id'    => $requestData['ruangan_id'],
             'nama_kegiatan' => $requestData['nama_kegiatan'],
+            'jenis_kegiatan'     => $requestData['jenis_kegiatan'] ?? 'Lainnya',
+            'poster'             => $requestData['poster'] ?? null,
+            'dosen_pembimbing_1' => $requestData['dosen_pembimbing_1'] ?? null,
+            'dosen_pembimbing_2' => $requestData['dosen_pembimbing_2'] ?? null,
+            'dosen_penguji_1'    => $requestData['dosen_penguji_1'] ?? null,
+            'dosen_penguji_2'    => $requestData['dosen_penguji_2'] ?? null,
             'deskripsi'     => $requestData['deskripsi'] ?? null,
             'user_id'       => $requestData['user_id'],
             'status'        => $requestData['status'],

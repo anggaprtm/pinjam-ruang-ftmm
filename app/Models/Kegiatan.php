@@ -27,6 +27,12 @@ class Kegiatan extends Model
     protected $fillable = [
         'ruangan_id',
         'nama_kegiatan',
+        'jenis_kegiatan',
+        'poster',
+        'dosen_pembimbing_1',
+        'dosen_pembimbing_2',
+        'dosen_penguji_1',
+        'dosen_penguji_2',
         'waktu_mulai',
         'waktu_selesai',
         'deskripsi',

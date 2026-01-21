@@ -12,6 +12,7 @@ class JadwalPerkuliahan extends Model
     protected $table = 'jadwal_perkuliahan';
 
     protected $fillable = [
+        'kode_matkul',
         'mata_kuliah',
         'ruangan_id',
         'hari',
@@ -21,6 +22,7 @@ class JadwalPerkuliahan extends Model
         'berlaku_sampai',
         'tipe',
         'program_studi',
+        'dosen',
     ];
 
     protected $casts = [

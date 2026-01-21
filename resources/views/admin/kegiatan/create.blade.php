@@ -11,6 +11,46 @@
             @csrf
             <div class="row">
                 {{-- Kolom Kiri --}}
+                <div class="form-group mb-3">
+                    <label class="form-label required" for="jenis_kegiatan">Jenis Kegiatan</label>
+                    <select class="form-control select2 {{ $errors->has('jenis_kegiatan') ? 'is-invalid' : '' }}" name="jenis_kegiatan" id="jenis_kegiatan" required>
+                        <option value="">{{ trans('global.pleaseSelect') }}</option>
+                        @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'Lainnya'] as $jenis)
+                            <option value="{{ $jenis }}" {{ old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>{{ $jenis }}</option>
+                        @endforeach
+                    </select>
+                    @if($errors->has('jenis_kegiatan'))
+                        <div class="invalid-feedback">{{ $errors->first('jenis_kegiatan') }}</div>
+                    @endif
+                </div>
+                <div id="form-dosen-container" style="display: none;" class="p-3 mb-3 bg-light border rounded">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-user-graduate me-2"></i>Detail Dosen</h6>
+                    
+                    <div class="row">
+                        {{-- Pembimbing selalu 2 --}}
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label" for="dosen_pembimbing_1">Dosen Pembimbing 1</label>
+                            <input class="form-control" type="text" name="dosen_pembimbing_1" id="dosen_pembimbing_1" placeholder="Nama Pembimbing 1">
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label" for="dosen_pembimbing_2">Dosen Pembimbing 2</label>
+                            <input class="form-control" type="text" name="dosen_pembimbing_2" id="dosen_pembimbing_2" placeholder="Nama Pembimbing 2">
+                        </div>
+                        
+                        {{-- Penguji 1 --}}
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label" for="dosen_penguji_1">Dosen Penguji 1</label>
+                            <input class="form-control" type="text" name="dosen_penguji_1" id="dosen_penguji_1" placeholder="Nama Penguji 1">
+                        </div>
+
+                        {{-- Penguji 2 (Hanya untuk Sidang Skripsi) --}}
+                        <div class="col-md-6 mb-2" id="container-penguji-2">
+                            <label class="form-label" for="dosen_penguji_2">Dosen Penguji 2</label>
+                            <input class="form-control" type="text" name="dosen_penguji_2" id="dosen_penguji_2" placeholder="Nama Penguji 2">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label class="form-label required" for="nama_kegiatan">{{ trans('cruds.kegiatan.fields.nama_kegiatan') }}</label>
@@ -91,6 +131,39 @@
                             @endif
                         </div>
                     @endif
+                    <div class="form-group mb-3">
+                        <label for="poster" class="form-label">Poster Kegiatan (Opsional):</label>
+
+                        <div class="input-group">
+                            {{-- Hidden file input --}}
+                            <input 
+                                class="d-none {{ $errors->has('poster') ? 'is-invalid' : '' }}" 
+                                type="file" 
+                                name="poster" 
+                                id="poster" 
+                                accept="image/*"
+                            >
+
+                            {{-- Custom button --}}
+                            <label for="poster" class="btn btn-outline-dark mb-0 rounded-end-0">
+                                <i class="fas fa-upload me-2"></i>Pilih Gambar
+                            </label>
+
+                            {{-- File name display --}}
+                            <span class="form-control rounded-start-0" id="poster-display">
+                                Tidak ada file yang dipilih
+                            </span>
+                        </div>
+
+                        {{-- Error message --}}
+                        @if($errors->has('poster'))
+                            <div class="invalid-feedback d-block">{{ $errors->first('poster') }}</div>
+                        @endif
+
+                        <small class="form-text text-muted">
+                            Format: JPG, PNG. Maks: 2MB.
+                        </small>
+                    </div>
                 </div>
             </div>
 
@@ -297,6 +370,45 @@
                 $('#waktu_selesai').focus();
             }
         });
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        // Fungsi untuk cek jenis kegiatan
+        function checkJenisKegiatan() {
+            var jenis = $('#jenis_kegiatan').val();
+            var container = $('#form-dosen-container');
+            var penguji2 = $('#container-penguji-2');
+
+            // Reset dulu visibility
+            container.hide();
+            penguji2.hide();
+
+            if (jenis === 'Seminar Proposal') {
+                container.slideDown();
+                // Sempro: 2 Pembimbing, 1 Penguji (Penguji 2 hide)
+                penguji2.hide(); 
+            } 
+            else if (jenis === 'Sidang Skripsi') {
+                container.slideDown();
+                // Sidang: 2 Pembimbing, 2 Penguji (Penguji 2 show)
+                penguji2.show();
+            }
+        }
+
+        // Jalankan saat halaman load (siapa tahu ada error validasi dan form balik)
+        checkJenisKegiatan();
+
+        // Jalankan saat user ganti pilihan dropdown
+        $('#jenis_kegiatan').change(function() {
+            checkJenisKegiatan();
+        });
+    });
+</script>
+<script>
+    document.getElementById('poster').addEventListener('change', function () {
+        const fileName = this.files.length ? this.files[0].name : "Tidak ada file yang dipilih";
+        document.getElementById('poster-display').textContent = fileName;
     });
 </script>
 @endsection

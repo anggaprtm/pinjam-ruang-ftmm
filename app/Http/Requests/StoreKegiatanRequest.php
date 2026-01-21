@@ -21,10 +21,24 @@ class StoreKegiatanRequest extends FormRequest
                 'string',
                 'required',
             ],
+            'jenis_kegiatan' => [
+                'required', 
+                'in:Kegiatan Ormawa,Seminar Proposal,Sidang Skripsi,Rapat,Lomba,Lainnya' // Sesuaikan opsi mu
+            ],
+            'poster' => [
+                'nullable', 
+                'image',        // Harus gambar (jpg, png, dll)
+                'max:2048',     // Maksimal 2MB
+                'mimes:jpeg,png,jpg,gif,svg'
+            ],
             'nama_pic' => [
                 'string',
                 'required', // atau 'required' jika wajib
             ],
+            'dosen_pembimbing_1' => ['nullable', 'string', 'max:255'],
+            'dosen_pembimbing_2' => ['nullable', 'string', 'max:255'],
+            'dosen_penguji_1'    => ['nullable', 'string', 'max:255'],
+            'dosen_penguji_2'    => ['nullable', 'string', 'max:255'],
             'nomor_telepon' => [
                 'required',
                 // Hanya angka dan harus diawali dengan 0, misal: 08123456789
