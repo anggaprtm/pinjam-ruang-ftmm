@@ -55,7 +55,8 @@ class SignageController extends Controller
         // 2. QUERY KEGIATAN (EVENTS) - FIX FILTER DISINI
         // ==========================================
         $kegiatanQuery = Kegiatan::where('status', 'disetujui')
-            ->whereDate('waktu_mulai', '>=', $today)
+            ->whereDate('waktu_mulai', '>=', $today) // Hanya hari ini (atau >= today terserah policy)
+            ->whereNotIn('jenis_kegiatan', ['Rapat', 'Seminar Proposal', 'Sidang Skripsi']) 
             ->with(['ruangan', 'user']);
 
         // --- FILTER LANTAI DIPASANG DISINI JUGA ---
@@ -88,14 +89,63 @@ class SignageController extends Controller
                 'date_month' => $startTime->translatedFormat('M'), // Bulan (Okt)
                 'category' => 'Kegiatan Ormawa',
                 // Gambar placeholder unik berdasarkan ID kegiatan
-                'image' => 'https://picsum.photos/seed/event' . $kegiatan->id . '/800/600', 
+                'image' => $kegiatan->poster ? asset('storage/'.$kegiatan->poster) : '...',
                 'type' => 'kegiatan',
+            ];
+        });
+
+        $sidangQuery = Kegiatan::where('status', 'disetujui')
+            ->whereDate('waktu_mulai', $today)
+            ->whereIn('jenis_kegiatan', ['Rapat', 'Seminar Proposal', 'Sidang Skripsi'])
+            ->with(['ruangan', 'user']);
+
+        // Apply Filter Lantai/Gedung ke $sidangQuery juga!
+        if ($filterLantai) {
+            $sidangQuery->whereHas('ruangan', function($q) use ($filterLantai) {
+                $q->where('lantai', 'LIKE', "%{$filterLantai}%");
+            });
+        }
+        if ($filterGedung) {
+            $sidangQuery->whereHas('ruangan', function($q) use ($filterGedung) {
+                $q->where('gedung', 'LIKE', "%{$filterGedung}%");
+            });
+        }
+
+        $sidangRapat = $sidangQuery->orderBy('waktu_mulai')->get()->map(function ($item) use ($today) {
+            $start = Carbon::parse($item->waktu_mulai);
+            $end = Carbon::parse($item->waktu_selesai);
+            
+            // Logika Status Sederhana
+            $status = 'Reserved';
+            if ($today->between($start, $end)) {
+                $status = 'Occupied';
+            } elseif ($today->gt($end)) {
+                $status = 'Finished';
+            }
+
+            // Gabungkan Dosen jadi Array string biar gampang di frontend
+            $pembimbing = array_filter([$item->dosen_pembimbing_1, $item->dosen_pembimbing_2]);
+            $penguji = array_filter([$item->dosen_penguji_1, $item->dosen_penguji_2]);
+
+            return [
+                'id' => $item->id,
+                'room' => $item->ruangan->nama ?? 'TBA',
+                'title' => $item->nama_kegiatan, // Misal: "Sidang Skripsi: Budi"
+                'time' => $start->format('H:i') . ' - ' . $end->format('H:i'),
+                'status' => $status,
+                'jenis' => $item->jenis_kegiatan, // Penting buat pembeda UI
+                'pic' => $item->nama_pic,         // Nama Mahasiswa / Penanggung Jawab
+                
+                // Data Dosen (Dipisah koma)
+                'pembimbing' => !empty($pembimbing) ? implode(', ', $pembimbing) : null,
+                'penguji' => !empty($penguji) ? implode(', ', $penguji) : null,
             ];
         });
 
         return response()->json([
             'jadwal_kuliah_hari_ini' => $jadwalKuliah,
-            'kegiatan_mendatang' => $kegiatan,
+            'kegiatan_mendatang' => $kegiatan, // Panel Tengah
+            'sidang_rapat' => $sidangRapat,    // Panel Kanan (Data Baru)
         ]);
     }
 }

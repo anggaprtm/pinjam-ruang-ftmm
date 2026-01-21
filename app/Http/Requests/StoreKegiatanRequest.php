@@ -22,8 +22,8 @@ class StoreKegiatanRequest extends FormRequest
                 'required',
             ],
             'jenis_kegiatan' => [
-            'required', 
-            'in:Kegiatan Ormawa,Seminar Proposal,Sidang Skripsi,Rapat,Lomba,Lainnya' // Sesuaikan opsi mu
+                'required', 
+                'in:Kegiatan Ormawa,Seminar Proposal,Sidang Skripsi,Rapat,Lomba,Lainnya' // Sesuaikan opsi mu
             ],
             'poster' => [
                 'nullable', 

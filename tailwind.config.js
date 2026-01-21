@@ -27,6 +27,15 @@ export default {
                     500: '#00f2ff', // Warna highlight/selection
                 },
             },
+            animation: {
+                'marquee-vertical': 'marqueeVertical 25s linear infinite',
+            },
+            keyframes: {
+                marqueeVertical: {
+                '0%': { transform: 'translateY(0)' },
+                '100%': { transform: 'translateY(-50%)' }, // Gerak setengah karena list diduplikasi
+                },
+            },
         },
     },
 

@@ -22,18 +22,19 @@ export interface AgendaItem {
 
 // TAMBAHKAN INI:
 export interface Meeting {
-    id: string;
+    id: number;
     room: string;
     title: string;
     time: string;
-    status: 'Occupied' | 'Reserved' | 'Available';
-    // Persiapan buat nanti (Optional dulu)
-    student?: string;
-    supervisor?: string; // Dosen Pembimbing
-    examiner?: string;   // Dosen Penguji
+    status: 'Occupied' | 'Reserved' | 'Finished';
+    jenis: string;      // 'Rapat', 'Sidang Skripsi', dll
+    pic: string;        // Nama Mahasiswa
+    pembimbing?: string | null; // "Dr. A, Prof. B"
+    penguji?: string | null;    // "Dr. C"
 }
 
 export interface ApiResponse {
     jadwal_kuliah_hari_ini: AgendaItem[];
     kegiatan_mendatang: AgendaItem[];
+    sidang_rapat: Meeting[]; // Tambahkan ini
 }

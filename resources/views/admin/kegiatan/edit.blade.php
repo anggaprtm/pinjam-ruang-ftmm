@@ -261,6 +261,39 @@
     });
 </script>
 <script>
+    $(document).ready(function() {
+        // Fungsi untuk cek jenis kegiatan
+        function checkJenisKegiatan() {
+            var jenis = $('#jenis_kegiatan').val();
+            var container = $('#form-dosen-container');
+            var penguji2 = $('#container-penguji-2');
+
+            // Reset dulu visibility
+            container.hide();
+            penguji2.hide();
+
+            if (jenis === 'Seminar Proposal') {
+                container.slideDown();
+                // Sempro: 2 Pembimbing, 1 Penguji (Penguji 2 hide)
+                penguji2.hide(); 
+            } 
+            else if (jenis === 'Sidang Skripsi') {
+                container.slideDown();
+                // Sidang: 2 Pembimbing, 2 Penguji (Penguji 2 show)
+                penguji2.show();
+            }
+        }
+
+        // Jalankan saat halaman load (siapa tahu ada error validasi dan form balik)
+        checkJenisKegiatan();
+
+        // Jalankan saat user ganti pilihan dropdown
+        $('#jenis_kegiatan').change(function() {
+            checkJenisKegiatan();
+        });
+    });
+</script>
+<script>
 document.getElementById('surat_izin').addEventListener('change', function () {
     const fileName = this.files.length ? this.files[0].name : "Tidak ada file yang dipilih";
     document.getElementById('surat-izin-display').textContent = fileName;

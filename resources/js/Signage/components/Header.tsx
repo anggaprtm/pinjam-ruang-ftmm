@@ -32,14 +32,16 @@ const Header: React.FC<HeaderProps> = ({ customTitle }) => {
             <div className="bg-navy-900/50 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full shadow-2xl">
                 <span className="text-electric-400 font-mono text-sm tracking-wider flex items-center gap-2">
                     {/* Disini variabel customTitle dipanggil. Kalau kosong, pakai default. */}
-                    {customTitle || "Gedung Nano • Lantai 1"}
+                    {customTitle || "Gedung Nano • Fakultas Teknologi Maju dan Multidisiplin"}
                 </span>
             </div>
 
             {/* KANAN: JAM DIGITAL */}
             <div className="text-right">
                 <div className="text-4xl font-bold text-white tracking-tight font-mono leading-none">
-                    {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    {String(time.getHours()).padStart(2, '0')}:
+                    {String(time.getMinutes()).padStart(2, '0')}:
+                    {String(time.getSeconds()).padStart(2, '0')} WIB
                 </div>
                 <div className="text-blue-300 text-sm font-medium mt-1 uppercase tracking-wide">
                     {time.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
