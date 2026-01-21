@@ -21,6 +21,7 @@ class JadwalPerkuliahan extends Model
         'berlaku_sampai',
         'tipe',
         'program_studi',
+        'dosen',
     ];
 
     protected $casts = [

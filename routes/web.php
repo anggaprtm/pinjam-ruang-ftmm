@@ -98,6 +98,10 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
 });
 
+Route::get('/dashboard-signage', function () {
+    return view('signage');
+});
+
 // === Grup PROFILE (Change Password) dengan pengecekan file controller (sesuai rute lama)
 Route::middleware(['auth'])->prefix('profile')->as('profile.')->group(function () {
     if (class_exists(ChangePasswordController::class)) {

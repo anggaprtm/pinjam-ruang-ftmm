@@ -1,3 +1,35 @@
+/* 1. Import Font Keren (Inter & JetBrains Mono) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 2. Style Khusus Dashboard Signage */
+@layer components {
+    /* Efek Kaca Transparan Futuristik */
+    .glass-panel {
+        @apply bg-navy-900/60 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl;
+    }
+    
+    /* Efek Kartu di dalam Panel */
+    .glass-card {
+        @apply bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all duration-300;
+    }
+}
+
+@layer utilities {
+    /* Sembunyikan Scrollbar tapi tetap bisa discroll */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
+
+/* Reset Cursor untuk Kiosk Mode */
+body {
+    font-family: 'Inter', sans-serif;
+}

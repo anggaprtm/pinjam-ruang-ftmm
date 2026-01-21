@@ -24,6 +24,7 @@ class Ruangan extends Model
         'deskripsi',
         'kapasitas',
         'lantai',
+        'gedung',
         'foto',
         'is_active',
         'created_at',

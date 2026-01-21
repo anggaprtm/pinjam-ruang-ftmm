@@ -1,61 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Clock } from 'lucide-react';
 
-const Header: React.FC = () => {
-  const [date, setDate] = useState(new Date());
+// 1. Definisikan tipe data props yang diterima
+interface HeaderProps {
+    customTitle?: string; // Tanda tanya (?) artinya boleh kosong/optional
+}
 
-  useEffect(() => {
-    const timer = setInterval(() => setDate(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+// 2. JANGAN LUPA: Tambahkan ({ customTitle }) disini agar variabelnya bisa dipakai
+const Header: React.FC<HeaderProps> = ({ customTitle }) => {
+    
+    // Logic jam digital biar jalan real-time
+    const [time, setTime] = useState(new Date());
 
-  // Format Time: HH:MM
-  const timeString = date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
+    useEffect(() => {
+        const timer = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
-  // Format Date: Weekday, Month Day, Year
-  const dateString = date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
+    return (
+        <div className="flex justify-between items-center mb-6 relative z-20">
+            {/* LOGO KIRI */}
+            <div className="flex items-center gap-4">
+                {/* Logo Image */}
+                <img 
+                    src="/images/logo-ftmm.png" // Pastikan nama file sesuai
+                    alt="Logo FTMM"
+                    className="h-16 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                />
+            </div>
 
-  return (
-    <header className="relative z-50 flex items-center justify-between px-8 py-5 mb-6 rounded-2xl bg-navy-900/60 backdrop-blur-md border border-white/10 shadow-lg">
-      {/* Left: Logo */}
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 flex items-center justify-center bg-electric-500 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.4)]">
-           <ShieldCheck className="text-white w-7 h-7" />
+            {/* TENGAH: LOKASI (DYNAMIC DARI URL) */}
+            <div className="bg-navy-900/50 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full shadow-2xl">
+                <span className="text-electric-400 font-mono text-sm tracking-wider flex items-center gap-2">
+                    {/* Disini variabel customTitle dipanggil. Kalau kosong, pakai default. */}
+                    {customTitle || "Gedung Nano • Lantai 1"}
+                </span>
+            </div>
+
+            {/* KANAN: JAM DIGITAL */}
+            <div className="text-right">
+                <div className="text-4xl font-bold text-white tracking-tight font-mono leading-none">
+                    {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                </div>
+                <div className="text-blue-300 text-sm font-medium mt-1 uppercase tracking-wide">
+                    {time.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+            </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight leading-none">TECH UNIVERSITY</h1>
-          <p className="text-xs text-electric-400 font-medium tracking-widest uppercase mt-1">Excellence in Innovation</p>
-        </div>
-      </div>
-
-      {/* Center: Location */}
-      <div className="absolute left-1/2 transform -translate-x-1/2">
-        <div className="px-6 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
-          <span className="text-white/80 font-medium tracking-wide">Engineering Building &bull; Lobby A</span>
-        </div>
-      </div>
-
-      {/* Right: Clock */}
-      <div className="text-right">
-        <div className="text-4xl font-bold text-white tabular-nums leading-none tracking-tight">
-          {timeString}
-        </div>
-        <div className="text-sm text-gray-400 font-medium mt-1 flex items-center justify-end gap-2">
-          <Clock className="w-3 h-3" />
-          {dateString}
-        </div>
-      </div>
-    </header>
-  );
+    );
 };
 
 export default Header;

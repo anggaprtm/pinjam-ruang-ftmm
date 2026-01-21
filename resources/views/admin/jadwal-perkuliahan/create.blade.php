@@ -84,18 +84,18 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label required" for="jam_mulai">Jam Mulai</label>
-                        <input class="form-control timepicker {{ $errors->has('jam_mulai') ? 'is-invalid' : '' }}" type="text" name="jam_mulai" id="jam_mulai" value="{{ old('jam_mulai') }}" required>
-                        @if($errors->has('jam_mulai'))
-                            <div class="invalid-feedback">{{ $errors->first('jam_mulai') }}</div>
+                        <label class="form-label required" for="waktu_mulai">Jam Mulai</label>
+                        <input class="form-control timepicker {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ old('jam_mulai') }}" required>
+                        @if($errors->has('waktu_mulai'))
+                            <div class="invalid-feedback">{{ $errors->first('waktu_mulai') }}</div>
                         @endif
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label required" for="jam_selesai">Jam Selesai</label>
-                        <input class="form-control timepicker {{ $errors->has('jam_selesai') ? 'is-invalid' : '' }}" type="text" name="jam_selesai" id="jam_selesai" value="{{ old('jam_selesai') }}" required>
-                        @if($errors->has('jam_selesai'))
-                            <div class="invalid-feedback">{{ $errors->first('jam_selesai') }}</div>
+                        <label class="form-label required" for="waktu_selesai">Jam Selesai</label>
+                        <input class="form-control timepicker {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ old('jam_selesai') }}" required>
+                        @if($errors->has('waktu_selesai'))
+                            <div class="invalid-feedback">{{ $errors->first('waktu_selesai') }}</div>
                         @endif
                     </div>
 
