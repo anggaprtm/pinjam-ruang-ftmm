@@ -41,6 +41,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
 
     // Kegiatan
+    Route::get('kegiatan/template', [KegiatanController::class, 'downloadTemplate'])->name('kegiatan.template');
     Route::post('kegiatan/import', [KegiatanController::class, 'import'])->name('kegiatan.import');
     Route::delete('kegiatan/destroy', [KegiatanController::class, 'massDestroy'])->name('kegiatan.massDestroy');
     Route::resource('kegiatan', KegiatanController::class);

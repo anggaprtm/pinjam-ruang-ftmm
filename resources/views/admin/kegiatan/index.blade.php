@@ -2,17 +2,22 @@
 @section('content')
 
 {{-- Bagian Header & Filter --}}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold">Daftar Kegiatan</h3>
+<div class="d-flex align-items-center mb-4">
+    <h3 class="font-weight-bold mb-0">Daftar Kegiatan</h3>
+
     @can('kegiatan_create')
-        <button type="button" class="btn btn-info text-white me-2" data-bs-toggle="modal" data-bs-target="#importModal">
+        <div class="ms-auto d-flex gap-2">
+            <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#importModal">
                 <i class="fas fa-file-import me-2"></i> Import Excel
-        </button>
-        <a class="btn btn-success" href="{{ route('admin.kegiatan.create') }}">
-            <i class="fas fa-plus-circle me-2"></i> Tambah Kegiatan
-        </a>
+            </button>
+
+            <a class="btn btn-success" href="{{ route('admin.kegiatan.create') }}">
+                <i class="fas fa-plus-circle me-2"></i> Tambah Kegiatan
+            </a>
+        </div>
     @endcan
 </div>
+
 
 {{-- Filter Bar dengan Tambahan Filter --}}
 <div class="filter-bar">
@@ -122,14 +127,28 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info">
-                        <small>Pastikan format Excel memiliki header: <br>
-                        <b>judul_kegiatan, nama_pic, jenis_kegiatan, ruangan, tanggal, jam_mulai, jam_selesai, pembimbing_1, pembimbing_2, penguji_1, penguji_2</b></small>
+    
+                    {{-- LANGKAH 1: DOWNLOAD --}}
+                    <div class="mb-4 p-3 bg-light border rounded">
+                        <label class="form-label fw-bold">Langkah 1: Unduh Template</label>
+                        <p class="small text-muted mb-2">
+                            Unduh format Excel yang sudah kami sediakan agar proses import berjalan lancar.
+                        </p>
+                        <a href="{{ route('admin.kegiatan.template') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-file-excel me-2"></i>Download Template Excel
+                        </a>
                     </div>
-                    <div class="form-group">
-                        <label for="file">Pilih File Excel (.xlsx)</label>
-                        <input type="file" name="file" class="form-control" required>
+
+                    {{-- LANGKAH 2: UPLOAD --}}
+                    <div class="mb-3">
+                        <label for="file" class="form-label fw-bold">Langkah 2: Upload File</label>
+                        <p class="small text-muted mb-2">
+                            Pilih file Excel yang sudah Anda isi datanya.
+                        </p>
+                        <input type="file" name="file" class="form-control" required accept=".xlsx, .xls, .csv">
+                        <small class="text-danger mt-1 d-block">*Pastikan nama ruangan sesuai dengan data di sistem.</small>
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\JadwalPerkuliahan;
 use App\Models\Barang;
 use App\Imports\KegiatanImport;
+use App\Exports\KegiatanTemplateExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Gate;
 use Illuminate\Support\Str;
@@ -378,6 +379,11 @@ class KegiatanController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
         }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new KegiatanTemplateExport, 'template_import_kegiatan.xlsx');
     }
 
     public function updateStatus(Request $request, Kegiatan $kegiatan)
