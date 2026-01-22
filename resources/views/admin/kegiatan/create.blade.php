@@ -9,6 +9,13 @@
     <div class="card-body">
         <form method="POST" action="{{ route("admin.kegiatan.store") }}" enctype="multipart/form-data">
             @csrf
+            @if(isset($prefilledData['permintaan_id']))
+                <div class="alert alert-success mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Mode Plotting Ruang:</strong> Data telah diisi otomatis dari Permintaan Kegiatan. Silakan pilih ruangan.
+                </div>
+                <input type="hidden" name="permintaan_id" value="{{ $prefilledData['permintaan_id'] }}">
+            @endif
             <div class="row">
                 {{-- Kolom Kiri --}}
                 <div class="form-group mb-3">
@@ -16,7 +23,10 @@
                     <select class="form-control select2 {{ $errors->has('jenis_kegiatan') ? 'is-invalid' : '' }}" name="jenis_kegiatan" id="jenis_kegiatan" required>
                         <option value="">{{ trans('global.pleaseSelect') }}</option>
                         @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'Lainnya'] as $jenis)
-                            <option value="{{ $jenis }}" {{ old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>{{ $jenis }}</option>
+                            <option value="{{ $jenis }}" 
+                                {{ (isset($prefilledData['jenis_kegiatan']) && $prefilledData['jenis_kegiatan'] == $jenis) || old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>
+                                {{ $jenis }}
+                            </option>
                         @endforeach
                     </select>
                     @if($errors->has('jenis_kegiatan'))
@@ -54,7 +64,7 @@
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label class="form-label required" for="nama_kegiatan">{{ trans('cruds.kegiatan.fields.nama_kegiatan') }}</label>
-                        <input class="form-control {{ $errors->has('nama_kegiatan') ? 'is-invalid' : '' }}" type="text" name="nama_kegiatan" id="nama_kegiatan" value="{{ old('nama_kegiatan', '') }}" required>
+                        <input class="form-control {{ $errors->has('nama_kegiatan') ? 'is-invalid' : '' }}" type="text" name="nama_kegiatan" id="nama_kegiatan" value="{{ isset($prefilledData['nama_kegiatan']) ? $prefilledData['nama_kegiatan'] : old('nama_kegiatan', '') }}" required>
                         @if($errors->has('nama_kegiatan'))
                             <div class="invalid-feedback">{{ $errors->first('nama_kegiatan') }}</div>
                         @endif
@@ -75,7 +85,7 @@
                     
                     <div class="form-group mb-3">
                         <label class="form-label required" for="nama_pic">Nama PIC</label>
-                        <input class="form-control {{ $errors->has('nama_pic') ? 'is-invalid' : '' }}" type="text" name="nama_pic" id="nama_pic" value="{{ old('nama_pic', '') }}" required>
+                        <input class="form-control {{ $errors->has('nama_pic') ? 'is-invalid' : '' }}" type="text" name="nama_pic" id="nama_pic" value="{{ isset($prefilledData['nama_pic']) ? $prefilledData['nama_pic'] : old('nama_pic', '') }}" required>
                         @if($errors->has('nama_pic'))
                             <div class="invalid-feedback">{{ $errors->first('nama_pic') }}</div>
                         @endif
@@ -98,7 +108,7 @@
                         <label class="form-label required" for="waktu_mulai">{{ trans('cruds.kegiatan.fields.waktu_mulai') }}</label>
                         <div class="input-group">
                             <span class="input-group-text" id="waktu_mulai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Mulai)" aria-label="Buka picker waktu mulai"><i class="fas fa-calendar-alt"></i></span>
-                            <input class="form-control datetime {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ old('waktu_mulai') }}" required>
+                            <input class="form-control datetime {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ isset($prefilledData['waktu_mulai']) ? $prefilledData['waktu_mulai'] : old('waktu_mulai') }}" required>
                         </div>
                         @if($errors->has('waktu_mulai'))
                             <div class="invalid-feedback">{{ $errors->first('waktu_mulai') }}</div>
@@ -109,7 +119,7 @@
                         <label class="form-label required" for="waktu_selesai">{{ trans('cruds.kegiatan.fields.waktu_selesai') }}</label>
                         <div class="input-group">
                             <span class="input-group-text" id="waktu_selesai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Selesai)" aria-label="Buka picker waktu selesai"><i class="fas fa-calendar-alt"></i></span>
-                            <input class="form-control datetime {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ old('waktu_selesai') }}" required>
+                            <input class="form-control datetime {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ isset($prefilledData['waktu_selesai']) ? $prefilledData['waktu_selesai'] : old('waktu_selesai') }}" required>
                         </div>
                         @if($errors->has('waktu_selesai'))
                             <div class="invalid-feedback">{{ $errors->first('waktu_selesai') }}</div>
@@ -123,7 +133,10 @@
                                 {{-- Menambahkan opsi 'pleaseSelect' sesuai referensi --}}
                                 <option value="">{{ trans('global.pleaseSelect' )}}</option>
                                 @foreach($users as $id => $entry)
-                                    <option value="{{ $id }}" {{ old('user_id') == $id ? 'selected' : '' }}>{{ $entry }}</option>
+                                    <option value="{{ $id }}" 
+                                        {{ (isset($prefilledData['user_id']) && $prefilledData['user_id'] == $id) || old('user_id') == $id ? 'selected' : '' }}>
+                                        {{ $entry }}
+                                    </option>
                                 @endforeach
                             </select>
                             @if($errors->has('user_id'))
@@ -169,7 +182,7 @@
 
             <div class="form-group mb-3">
                 <label class="form-label" for="deskripsi">{{ trans('cruds.kegiatan.fields.deskripsi') }}</label>
-                <textarea class="form-control {{ $errors->has('deskripsi') ? 'is-invalid' : '' }}" name="deskripsi" id="deskripsi">{{ old('deskripsi') }}</textarea>
+                <textarea class="form-control {{ $errors->has('deskripsi') ? 'is-invalid' : '' }}" name="deskripsi" id="deskripsi">{{ isset($prefilledData['deskripsi']) ? $prefilledData['deskripsi'] : old('deskripsi') }}</textarea>
                 @if($errors->has('deskripsi'))
                     <div class="invalid-feedback">{{ $errors->first('deskripsi') }}</div>
                 @endif

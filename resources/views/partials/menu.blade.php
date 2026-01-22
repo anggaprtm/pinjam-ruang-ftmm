@@ -57,6 +57,14 @@
                 </a>
             </li>
         @endcan
+        @can('permintaan_kegiatan_access') {{-- Pastikan permission ini sudah dibuat di seeder --}}
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.permintaan-kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/permintaan-kegiatan") || request()->is("admin/permintaan-kegiatan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Permintaan Layanan">
+                    <i class="fa-fw fas fa-concierge-bell c-sidebar-nav-icon"></i>
+                    Permintaan Layanan
+                </a>
+            </li>
+        @endcan
         @can('kegiatan_access')
             <li class="c-sidebar-nav-item">
                 <a href="{{ route("admin.kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/kegiatan") || request()->is("admin/kegiatan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.kegiatan.title') }}">

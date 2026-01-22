@@ -681,7 +681,55 @@ h5 {
 /* ========================================= */
 /* == PENYEMPURNAAN TAMPILAN TABEL INDEKS == */
 /* ========================================= */
+/* 1. BASE BADGE STYLE (Bentuk Pill Modern) */
+.badge-pill-modern {
+    display: inline-block;
+    padding: 0.35em 0.8em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 50rem; /* Bikin bulat lonjong */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    border: 1px solid transparent; /* Opsional biar lebih tajam */
+}
 
+/* 2. VARIASI WARNA (Soft Background + Dark Text) */
+
+/* Ruangan (Abu-abu) */
+.badge-soft-secondary {
+    color: #4a5568;
+    background-color: #e2e8f0;
+    border-color: #cbd5e0;
+}
+
+/* Pending (Kuning/Oranye Soft) */
+.badge-soft-warning {
+    color: #92400e; /* Coklat/Oranye gelap */
+    background-color: #fef3c7; /* Kuning pucat */
+    border-color: #fde68a;
+}
+
+/* Proses / Info (Biru Soft) */
+.badge-soft-info {
+    color: #1e40af; /* Biru gelap */
+    background-color: #dbeafe; /* Biru pucat */
+    border-color: #bfdbfe;
+}
+
+/* Selesai / Success (Hijau Soft) */
+.badge-soft-success {
+    color: #065f46; /* Hijau gelap */
+    background-color: #d1fae5; /* Hijau pucat */
+    border-color: #a7f3d0;
+}
+
+/* Ditolak / Danger (Merah Soft) */
+.badge-soft-danger {
+    color: #991b1b; /* Merah gelap */
+    background-color: #fee2e2; /* Merah pucat */
+    border-color: #fecaca;
+}
 /* Badge untuk Nama Ruangan */
 .badge-ruangan {
     display: inline-block;
@@ -691,6 +739,42 @@ h5 {
     color: #4a5568; /* Warna teks sedikit gelap */
     background-color: #e2e8f0; /* Warna latar abu-abu muda */
     border-radius: 20px;
+}
+
+/* VARIASI WARNA (Soft Colors) */
+/* Pending (Kuning Soft) */
+.badge-status-pending {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+}
+
+/* Info / Proses (Biru Soft) */
+.badge-status-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+}
+
+/* Success / Selesai (Hijau Soft) */
+.badge-status-success {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+/* Danger / Ditolak (Merah Soft) */
+.badge-status-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+/* Secondary / Default */
+.badge-status-secondary {
+    color: #383d41;
+    background-color: #e2e3e5;
+    border: 1px solid #d6d8db;
 }
 
 /* Avatar untuk Peminjam (disesuaikan untuk ikon) */

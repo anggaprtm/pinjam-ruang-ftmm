@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\MobilController;
 use App\Http\Controllers\Admin\KioskController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Admin\RiwayatPerjalananController;
+use App\Http\Controllers\Admin\PermintaanKegiatanController;
+
 
 
 // === Redirect root ke login (sesuai rute lama)
@@ -108,6 +110,15 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     // Statistik (hanya untuk admin/home_access)
     Route::get('statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])
         ->name('statistics.index');
+    
+    // Route Permintaan Kegiatan
+    Route::post(
+        'permintaan-kegiatan/{permintaan_kegiatan}/proses-konsumsi',
+        [PermintaanKegiatanController::class, 'prosesKonsumsi']
+    )->name('permintaan-kegiatan.prosesKonsumsi');
+
+    Route::resource('permintaan-kegiatan', PermintaanKegiatanController::class);
+
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
