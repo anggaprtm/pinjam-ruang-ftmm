@@ -62,12 +62,26 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ data }) => {
                                 {highlightEvent.title}
                             </h3>
                             
+                            <div className="flex items-center gap-3 mb-2 min-w-0">
+                            {/* Speaker */}
                             {highlightEvent.speaker && (
-                                <div className="flex items-center gap-2 mb-2 text-gray-300 text-sm">
-                                    <User className="w-3.5 h-3.5 text-electric-500" />
-                                    <span className="font-medium truncate">{highlightEvent.speaker}</span>
+                                <div className="flex items-center gap-2 text-gray-300 text-sm min-w-0">
+                                <User className="w-3.5 h-3.5 text-electric-500 shrink-0" />
+                                <span className="font-medium truncate">
+                                    {highlightEvent.speaker}
+                                </span>
                                 </div>
                             )}
+
+                            {/* Lokasi */}
+                            {highlightEvent.location && (
+                                <div className="flex items-center gap-2 text-gray-300 min-w-0">
+                                    <MapPin className="w-3 h-3 shrink-0" />
+                                    <span className="font-medium truncate">{highlightEvent.location || highlightEvent.room}</span>
+                                </div>
+                            )}
+                            </div>
+
                             
                             <div className="flex items-center gap-3 text-gray-300 text-xs font-mono mt-2">
                                 <span className="flex items-center gap-1.5 bg-black/30 px-2 py-1 rounded backdrop-blur-sm">
@@ -112,11 +126,16 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ data }) => {
                                             {event.title}
                                         </h5>
                                         <div className="flex items-center gap-3 mt-1">
-                                            <p className="text-xs text-gray-400 flex items-center gap-1 font-mono">
+                                            <p className="text-sm text-gray-400 flex items-center gap-1 font-mono">
                                                 {event.time}
                                             </p>
                                             <span className="text-gray-600 text-[10px]">•</span>
-                                            <p className="text-xs text-gray-400 flex items-center gap-1 truncate">
+                                            <p className="text-sm text-gray-400 flex items-center gap-1 truncate">
+                                                <User className="w-3 h-3" />
+                                                {event.speaker}
+                                            </p>
+                                            <span className="text-gray-600 text-[10px]">•</span>
+                                            <p className="text-sm text-gray-400 flex items-center gap-1 truncate">
                                                 <MapPin className="w-3 h-3" />
                                                 {event.location || event.room}
                                             </p>

@@ -16,7 +16,7 @@
                     <div class="form-group mb-3">
                         <label class="form-label required" for="jenis_kegiatan">Jenis Kegiatan</label>
                         <select class="form-control select2 {{ $errors->has('jenis_kegiatan') ? 'is-invalid' : '' }}" name="jenis_kegiatan" id="jenis_kegiatan" required>
-                            @foreach(['Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Himpunan', 'Lomba', 'Lainnya'] as $jenis)
+                            @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'Lainnya'] as $jenis)
                                 <option value="{{ $jenis }}" {{ (old('jenis_kegiatan') ? old('jenis_kegiatan') : $kegiatan->jenis_kegiatan) == $jenis ? 'selected' : '' }}>{{ $jenis }}</option>
                             @endforeach
                         </select>

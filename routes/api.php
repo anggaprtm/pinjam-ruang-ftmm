@@ -6,4 +6,5 @@ use App\Http\Controllers\Api\SignageController;
 
 Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
     Route::get('signage', [SignageController::class, 'index'])->name('signage.index');
+    Route::get('signage/cars', [SignageController::class, 'getCars'])->name('signage.cars');
 });

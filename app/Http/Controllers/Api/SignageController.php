@@ -87,7 +87,7 @@ class SignageController extends Controller
                 // Data tambahan untuk UI Events Panel Baru
                 'date_day' => $startTime->format('d'),       // Tanggal (20)
                 'date_month' => $startTime->translatedFormat('M'), // Bulan (Okt)
-                'category' => 'Kegiatan Ormawa',
+                'category' => $kegiatan->jenis_kegiatan,
                 // Gambar placeholder unik berdasarkan ID kegiatan
                 'image' => $kegiatan->poster ? asset('storage/'.$kegiatan->poster) : '...',
                 'type' => 'kegiatan',
@@ -147,5 +147,31 @@ class SignageController extends Controller
             'kegiatan_mendatang' => $kegiatan, // Panel Tengah
             'sidang_rapat' => $sidangRapat,    // Panel Kanan (Data Baru)
         ]);
+    }
+
+    public function getCars()
+    {
+        // Ambil data mobil beserta relasi trip yang sedang berlangsung
+        $cars = \App\Models\Mobil::with(['tripBerlangsung.driver'])
+            ->orderBy('nama_mobil', 'asc')
+            ->get()
+            ->map(function($car) {
+                return [
+                    'id' => $car->id,
+                    'nama' => $car->nama_mobil,
+                    'plat' => $car->plat_nomor,
+                    'status' => $car->status, // tersedia, dipakai, maintenance
+                    
+                    // Detail Trip (hanya jika sedang dipakai)
+                    'detail_trip' => $car->tripBerlangsung ? [
+                        'driver' => $car->tripBerlangsung->driver->name ?? 'Driver',
+                        'tujuan' => $car->tripBerlangsung->tujuan,
+                        'keperluan' => $car->tripBerlangsung->keperluan,
+                        'mulai' => \Carbon\Carbon::parse($car->tripBerlangsung->waktu_mulai)->format('H:i'),
+                    ] : null
+                ];
+            });
+
+        return response()->json($cars);
     }
 }

@@ -3,15 +3,20 @@ import Header from './components/Header';
 import LecturesPanel from './components/LecturesPanel';
 import EventsPanel from './components/EventsPanel';
 import MeetingsPanel from './components/MeetingsPanel';
-import { AgendaItem, ApiResponse, Meeting } from './types'; // Tambahkan Meeting di import
+import CarStatusWidget from './components/CarStatusWidget'; // 1. IMPORT WIDGET
+import { AgendaItem, ApiResponse, Meeting } from './types';
 
 const App: React.FC = () => {
+  // ... state lainnya tetap sama ...
   const [lectures, setLectures] = useState<AgendaItem[]>([]);
   const [events, setEvents] = useState<AgendaItem[]>([]);
   const [meetingsData, setMeetingsData] = useState<Meeting[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleTimeString());
   const [locationTitle, setLocationTitle] = useState("Gedung Nano • Fakultas Teknologi Maju dan Multidisiplin");
+  
+  // 2. STATE UNTUK DETEKSI DASHBOARD UTAMA
+  const [isMainDashboard, setIsMainDashboard] = useState(true);
 
   const fetchData = async () => {
     try {
@@ -19,12 +24,16 @@ const App: React.FC = () => {
       const lantai = params.get('lantai');
       const gedung = params.get('gedung');
 
+      // 3. LOGIC PENENTUAN: Jika ada filter lantai/gedung, berarti BUKAN Dashboard Utama
       if (lantai || gedung) {
+         setIsMainDashboard(false); // Sembunyikan Mobil
          const title = `${gedung ? 'Gedung ' + gedung : 'Engineering Building'} • ${lantai ? 'Lantai ' + lantai : 'All Levels'}`;
          setLocationTitle(title);
+      } else {
+         setIsMainDashboard(true); // Tampilkan Mobil
+         setLocationTitle("Gedung Nano • Fakultas Teknologi Maju dan Multidisiplin");
       }
 
-      // Pastikan URL API sesuai dengan environment kamu
       const apiUrl = new URL('/api/v1/signage', window.location.origin); 
       if (lantai) apiUrl.searchParams.append('lantai', lantai);
       if (gedung) apiUrl.searchParams.append('gedung', gedung);
@@ -36,8 +45,7 @@ const App: React.FC = () => {
       setEvents(data.kegiatan_mendatang);
       setMeetingsData(data.sidang_rapat);
 
-      // JIKA BERHASIL FETCH:
-      setIsOnline(true); // Set status Online
+      setIsOnline(true);
       setLastUpdate(
         new Date().toLocaleTimeString('id-ID', {
           timeZone: 'Asia/Jakarta',
@@ -45,7 +53,7 @@ const App: React.FC = () => {
           minute: '2-digit',
           hour12: false,
         }) + ' WIB'
-      ); // Update jam terakhir sync
+      );
       
     } catch (error) {
       console.error("Error fetching signage data:", error);
@@ -53,6 +61,7 @@ const App: React.FC = () => {
     }
   };
 
+  // ... useEffect dan event listener lainnya tetap sama ...
   useEffect(() => {
     fetchData(); 
     const interval = setInterval(() => {
@@ -61,7 +70,6 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. EVENT LISTENER BROWSER (Buat deteksi kabel dicabut real-time)
   const handleOnline = () => setIsOnline(true);
   const handleOffline = () => setIsOnline(false);
 
@@ -69,11 +77,9 @@ const App: React.FC = () => {
   window.addEventListener('offline', handleOffline);
 
   return (
-    // FIX 1: Ganti 'min-h-screen' jadi 'h-screen' & Tambah 'overflow-hidden'
-    // Ini mengunci layar agar tidak bisa discroll oleh browser (Fix Footer Kepotong)
     <div className="relative h-screen w-full bg-navy-900 text-slate-900 overflow-hidden selection:bg-electric-500 selection:text-white font-sans">
       
-      {/* Background Section (Biarkan sama) */}
+      {/* Background (Tetap sama) */}
       <div 
         className="absolute inset-0 bg-cover bg-center z-0 scale-105"
         style={{
@@ -84,48 +90,42 @@ const App: React.FC = () => {
       <div className="absolute inset-0 bg-navy-900/70 z-0 mix-blend-multiply" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(5,10,20,0.8)_100%)] z-0 pointer-events-none" />
 
-      {/* Main Container */}
-      {/* FIX 2: Ganti 'h-screen' jadi 'h-full'. Karena parent sudah h-screen, anak cukup h-full. */}
-      <div className="relative z-10 flex flex-col h-full p-6 gap-6 max-w-[2400px] mx-auto">
-        
-        {/* Header: shrink-0 agar tidak gepeng */}
+      <div className="relative z-10 flex flex-col h-full px-6 pt-6 gap-3 max-w-[2400px] mx-auto">
         <div className="shrink-0">
             <Header customTitle={locationTitle} />
         </div>
         
-        {/* Dashboard Grid - 3 Columns */}
-        {/* flex-1 dan min-h-0 WAJIB ADA agar scroll bar bekerja di dalam sini, bukan di window */}
+        {/* Tambahkan padding-bottom (pb-24) agar konten paling bawah tidak ketutupan Widget Mobil */}
         <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
-          
-          {/* Left Panel - Lectures */}
           <div className="col-span-3 h-full overflow-hidden">
             <LecturesPanel data={lectures} />
           </div>
-          
-          {/* Center Panel - Events */}
           <div className="col-span-6 h-full overflow-hidden">
             <EventsPanel data={events} />
           </div>
-          
-          {/* Right Panel - Meetings */}
-          <div className="col-span-3 h-full overflow-hidden">
-            <MeetingsPanel data={meetingsData} />
-          </div>
+          <div className="col-span-3 h-full flex flex-col gap-6 overflow-hidden">
+            
+            {/* Panel Sidang/Rapat (Ambil sisa space yang ada) */}
+            <div className="flex-1 overflow-hidden min-h-0">
+                <MeetingsPanel data={meetingsData} />
+            </div>
 
+            {/* Panel Mobil (Conditionally Rendered) */}
+            {/* Shrink-0 agar tingginya menyesuaikan konten mobil, tidak memaksa full height */}
+            {isMainDashboard && (
+                 <div className="shrink-0 max-h-[45%] overflow-hidden">
+                    <CarStatusWidget />
+                 </div>
+            )}
+          </div>
         </div>
         
-        {/* Footer / Ticker (Status Bar) */}
-        {/* FOOTER / TICKER (STATUS BAR) YANG SUDAH REAL */}
-        <div
-          className={`h-8 shrink-0 flex items-center px-4 text-xs font-mono tracking-widest uppercase rounded-lg border backdrop-blur-sm transition-colors duration-500 ${
-            isOnline
-              ? 'bg-navy-950/50 border-white/5 text-white/30'
-              : 'bg-red-900/80 border-red-500 text-white'
-          }`}
-        >
-          {/* KIRI: STATUS + LAST SYNC */}
-          <div className="flex items-center gap-6 flex-1">
-              {/* STATUS KONEKSI */}
+        {/* Footer (Tetap sama) */}
+        <div className={`h-8 shrink-0 flex items-center px-4 text-xs font-mono tracking-widest uppercase rounded-lg border backdrop-blur-sm transition-colors duration-500 ${
+            isOnline ? 'bg-navy-950/50 border-white/5 text-white/30' : 'bg-red-900/80 border-red-500 text-white'
+        }`}>
+            {/* ... isi footer ... */}
+             <div className="flex items-center gap-6 flex-1">
               <div className="flex items-center gap-2">
                 <span>STATUS SISTEM:</span>
                 {isOnline ? (
@@ -143,24 +143,11 @@ const App: React.FC = () => {
                   </span>
                 )}
               </div>
-
-              {/* JAM TERAKHIR SYNC */}
-              <span className="whitespace-nowrap">
-                • SYNC: {lastUpdate}
-              </span>
+              <span className="whitespace-nowrap">• SYNC: {lastUpdate}</span>
             </div>
-
-            {/* TENGAH: NAMA FAKULTAS */}
-            <div className="flex-1 text-center text-white/60 font-semibold">
-              FAKULTAS TEKNOLOGI MAJU DAN MULTIDISIPLIN
-            </div>
-
-            {/* KANAN: COPYRIGHT */}
-            <div className="flex-1 flex justify-end whitespace-nowrap">
-              <span>© {new Date().getFullYear()} • USI FTMM</span>
-            </div>
-          </div>
-
+            <div className="flex-1 text-center text-white/60 font-semibold">FAKULTAS TEKNOLOGI MAJU DAN MULTIDISIPLIN</div>
+            <div className="flex-1 flex justify-end whitespace-nowrap"><span>© {new Date().getFullYear()} • USI FTMM</span></div>
+        </div>
 
       </div>
     </div>

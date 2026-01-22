@@ -33,7 +33,7 @@ function AutoScrollList<T extends { id: number | string }>({
         <div className={`relative h-full overflow-hidden flex flex-col px-1 ${className}`}>
             {data.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-2 opacity-50">
-                    <span className="text-sm">No Data Stream</span>
+                    <span className="text-sm">Tidak ada data untuk ditampilkan.</span>
                 </div>
             ) : (
                 <div className={`

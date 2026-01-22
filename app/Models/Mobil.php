@@ -15,4 +15,10 @@ class Mobil extends Model
                     ->where('status', 'berlangsung')
                     ->latest();
     }
+
+    public function tripBerlangsung()
+    {
+        // Ambil satu perjalanan terakhir yang statusnya 'berlangsung'
+        return $this->hasOne(RiwayatPerjalanan::class)->where('status', 'berlangsung')->latest();
+    }
 }

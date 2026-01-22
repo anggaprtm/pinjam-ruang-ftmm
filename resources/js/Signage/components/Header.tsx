@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({ customTitle }) => {
 
             {/* TENGAH: LOKASI (DYNAMIC DARI URL) */}
             <div className="bg-navy-900/50 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full shadow-2xl">
-                <span className="text-electric-400 font-mono text-sm tracking-wider flex items-center gap-2">
+                <span className="text-electric-400 font-mono text-base tracking-wider flex items-center gap-2">
                     {/* Disini variabel customTitle dipanggil. Kalau kosong, pakai default. */}
                     {customTitle || "Gedung Nano • Fakultas Teknologi Maju dan Multidisiplin"}
                 </span>
