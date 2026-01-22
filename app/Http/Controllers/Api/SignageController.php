@@ -174,4 +174,30 @@ class SignageController extends Controller
 
         return response()->json($cars);
     }
+
+    public function getPendingRequests()
+    {
+        $requests = \App\Models\PermintaanKegiatan::with(['user', 'picUser'])
+            ->where('status_permintaan', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function($item) {
+                // Logic Label Jenis Layanan
+                $types = [];
+                if ($item->request_ruang) $types[] = 'Ruang';
+                if ($item->request_konsumsi) $types[] = 'Konsumsi';
+
+                return [
+                    'id' => $item->id,
+                    'kegiatan' => $item->nama_kegiatan,     // Judul tetap penting biar tau konteks
+                    'pemohon' => $item->user->name,         // <--- PEMOHON
+                    'jumlah_peserta' => $item->jumlah_peserta, // <--- KEBUTUHAN PESERTA
+                    'waktu' => \Carbon\Carbon::parse($item->created_at)->diffForHumans(),
+                    'jenis_layanan' => implode(' & ', $types),
+                ];
+            });
+
+        return response()->json($requests);
+    }
 }

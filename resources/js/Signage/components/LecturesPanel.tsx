@@ -41,7 +41,7 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data }) => {
             
             <AutoScrollList 
                 data={data}
-                threshold={3} // Kalau lebih dari 5 matkul, dia scroll
+                threshold={1} // Kalau lebih dari 5 matkul, dia scroll
                 renderItem={(lecture, index) => {
                     const status = getStatus(lecture.time);
                     

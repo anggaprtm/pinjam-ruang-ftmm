@@ -5,6 +5,7 @@ import EventsPanel from './components/EventsPanel';
 import MeetingsPanel from './components/MeetingsPanel';
 import CarStatusWidget from './components/CarStatusWidget'; // 1. IMPORT WIDGET
 import { AgendaItem, ApiResponse, Meeting } from './types';
+import PendingRequestsWidget from './components/PendingRequestsWidget';
 
 const App: React.FC = () => {
   // ... state lainnya tetap sama ...
@@ -97,9 +98,21 @@ const App: React.FC = () => {
         
         {/* Tambahkan padding-bottom (pb-24) agar konten paling bawah tidak ketutupan Widget Mobil */}
         <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
-          <div className="col-span-3 h-full overflow-hidden">
-            <LecturesPanel data={lectures} />
+          {/* KOLOM KIRI (MODIFIKASI DISINI) */}
+          <div className="col-span-3 h-full flex flex-col gap-4 overflow-hidden">
+            {/* Panel Perkuliahan (Ambil sisa space) */}
+            <div className="flex-1 overflow-hidden min-h-0">
+                <LecturesPanel data={lectures} />
+            </div>
+
+            {/* Widget Permintaan Pending (Hanya muncul di Main Dashboard) */}
+            {isMainDashboard && (
+                 <div className="shrink-0 max-h-[40%] overflow-hidden flex flex-col">
+                    <PendingRequestsWidget />
+                 </div>
+            )}
           </div>
+          
           <div className="col-span-6 h-full overflow-hidden">
             <EventsPanel data={events} />
           </div>
