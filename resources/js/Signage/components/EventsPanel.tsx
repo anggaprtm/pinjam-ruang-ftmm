@@ -33,7 +33,7 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ data }) => {
                 {data.length === 0 && (
                     <div className="flex-1 flex flex-col items-center justify-center text-white/30 text-center animate-pulse">
                         <Calendar className="w-16 h-16 mb-4 opacity-20" />
-                        <p className="text-lg font-mono uppercase tracking-widest">No Events on this Floor</p>
+                        <p className="text-lg font-mono uppercase tracking-widest">Tidak ada agenda untuk ditampilkan.</p>
                     </div>
                 )}
 

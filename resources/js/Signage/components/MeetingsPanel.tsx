@@ -61,7 +61,7 @@ const MeetingsPanel: React.FC<MeetingsPanelProps> = ({ data }) => {
                     </div>
                 )}
 
-                <div className="flex items-center gap-2 text-xs font-mono bg-black/30 w-fit px-2 py-1 rounded text-electric-400">
+                <div className="flex items-center gap-2 text-sm font-mono bg-black/30 w-fit px-2 py-1 rounded text-electric-400">
                     <Clock className="w-3 h-3" />
                     {meeting.time}
                 </div>

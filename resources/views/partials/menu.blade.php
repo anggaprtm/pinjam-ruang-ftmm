@@ -2,10 +2,10 @@
 
     <div class="c-sidebar-brand d-md-down-none">
         <div class="c-sidebar-brand-full" href="#">
-            PINJAM-RUANG FTMM
+            SARPRAS-FTMM
         </div>
         <div class="c-sidebar-brand-minimized">
-            PR
+            SF
         </div>
     </div>
 
