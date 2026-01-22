@@ -20,7 +20,7 @@
             <div class="col-lg-4 col-md-6 col-12 order-lg-1 min-vh-100 order-2 bg-white">
                 <div class="p-4 m-3">
                     <h5 class="text-dark font-weight-normal pt-5 mt-5">
-                        Aplikasi <span class="font-weight-bold">PinjamRuang FTMM</span>
+                        Aplikasi <span class="font-weight-bold">LayananSarpras FTMM</span>
                     </h5>
 
                     {{-- Session status (mis. setelah reset password) --}}
