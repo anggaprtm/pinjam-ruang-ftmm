@@ -12,18 +12,30 @@
             
             {{-- SECTION 1: JENIS PERMINTAAN --}}
             <div class="alert alert-info bg-light-info border-0 mb-4">
-                <label class="fw-bold mb-2">Jenis Layanan yang Dibutuhkan:</label>
-                <div class="d-flex gap-4">
-                    <div class="form-check form-switch">
+                <div class="fw-bold mb-2">Jenis Layanan yang Dibutuhkan:</div>
+
+                <div class="d-flex flex-column flex-md-row gap-2 gap-md-4">
+                    {{-- Peminjaman Ruang --}}
+                    <div class="form-check form-switch m-0">
                         <input class="form-check-input" type="checkbox" name="request_ruang" id="req_ruang" checked>
-                        <label class="form-check-label fw-bold" for="req_ruang">Peminjaman Ruang</label>
+                        <label class="form-check-label fw-bold " for="req_ruang">
+                            <i class="fas me-2"></i>
+                            Peminjaman Ruang
+                        </label>
                     </div>
-                    <div class="form-check form-switch">
+
+                    {{-- Permintaan Konsumsi --}}
+                    <div class="form-check form-switch m-0">
                         <input class="form-check-input" type="checkbox" name="request_konsumsi" id="req_konsumsi" checked>
-                        <label class="form-check-label fw-bold" for="req_konsumsi">Permintaan Konsumsi</label>
+                        <label class="form-check-label fw-bold " for="req_konsumsi">
+                            <i class="fas me-2"></i>
+                            Permintaan Konsumsi
+                        </label>
                     </div>
                 </div>
             </div>
+
+
 
             <div class="row">
                 {{-- KOLOM KIRI: DATA UTAMA --}}

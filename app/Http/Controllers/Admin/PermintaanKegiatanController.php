@@ -9,22 +9,126 @@ use App\Http\Requests\StorePermintaanRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
+use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 
 class PermintaanKegiatanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Tampilkan semua jika Admin/Pegawai, atau hanya milik sendiri jika User biasa
-        $query = PermintaanKegiatan::with(['user', 'picUser']);
-        
-        if (!auth()->user()->isAdmin()) { // Sesuaikan logic role kamu
-             $query->where('user_id', auth()->id())
-                   ->orWhere('pic_user_id', auth()->id());
-        }
-        
-        $permintaans = $query->latest()->get();
+        if ($request->ajax()) {
+            // PERBAIKAN DISINI: Pakai ->getTable()
+            $query = PermintaanKegiatan::with(['user', 'picUser', 'kegiatan.ruangan'])
+                ->select(sprintf('%s.*', (new PermintaanKegiatan)->getTable()));
 
-        return view('admin.permintaan.index', compact('permintaans'));
+            // --- FILTER USER ---
+            if (!auth()->user()->isAdmin()) { 
+                $query->where(function($q) {
+                    $q->where('user_id', auth()->id())
+                    ->orWhere('pic_user_id', auth()->id());
+                });
+            }
+
+            // --- FILTER TANGGAL (Opsional jika ada input filter di view) ---
+            if ($request->filled('tanggal_mulai')) {
+                $query->whereDate('tanggal_kegiatan', '=', $request->tanggal_mulai);
+            }
+
+            $table = DataTables::of($query);
+
+            $table->addColumn('placeholder', '&nbsp;');
+            $table->addColumn('actions', '&nbsp;');
+
+            // 1. KOLOM KEGIATAN (Title + Subtitle User)
+            $table->editColumn('nama_kegiatan', function ($row) {
+                $userName = $row->user->name ?? '-';
+                $createdHuman = $row->created_at->diffForHumans();
+                
+                return '<div class="kegiatan-title-cell">'.$row->nama_kegiatan.'</div>
+                        <div class="d-flex align-items-center mt-1">
+                            <div class="user-avatar bg-secondary text-white d-flex justify-content-center align-items-center rounded-circle me-2" style="width:20px;height:20px;font-size:10px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <div class="kegiatan-sub-cell text-muted small">Pemohon: '.$userName.'</div>
+                                <div class="text-muted" style="font-size: 10px;">Dibuat: '.$createdHuman.'</div>
+                            </div>
+                        </div>';
+            });
+
+            // 2. KOLOM WAKTU (Tanggal + Jam)
+            $table->editColumn('tanggal_kegiatan', function ($row) {
+                $tgl = Carbon::parse($row->tanggal_kegiatan)->translatedFormat('d M Y');
+                $jam = Carbon::parse($row->waktu_mulai)->format('H:i') . ' - ' . Carbon::parse($row->waktu_selesai)->format('H:i');
+                return '<div class="fw-bold text-dark">'.$tgl.'</div><div class="small text-muted"><i class="far fa-clock me-1"></i>'.$jam.'</div>';
+            });
+
+            // 3. STATUS RUANG
+            $table->editColumn('status_ruang', function ($row) {
+                if ($row->status_ruang == 'selesai') {
+                    // Tampilkan nama ruangan dengan style abu-abu
+                    $ruangNama = $row->kegiatan->ruangan->nama ?? '-';
+                    return '<span class="badge-pill-modern badge-soft-secondary">'.$ruangNama.'</span>';
+                } elseif ($row->status_ruang == 'pending') {
+                    return '<span class="badge-pill-modern badge-soft-warning">PENDING</span>';
+                }
+                return '<span class="text-muted small">-</span>';
+            });
+
+            // 2. STATUS KONSUMSI
+            $table->editColumn('status_konsumsi', function ($row) {
+                if ($row->status_konsumsi == 'tidak_perlu') {
+                    return '<span class="text-muted small">-</span>';
+                }
+                
+                $status = $row->status_konsumsi;
+                $label = strtoupper($status); // PENDING, DIPROSES, SELESAI
+                
+                $cls = 'badge-soft-secondary';
+                if ($status == 'pending') $cls = 'badge-soft-warning';
+                if ($status == 'diproses') $cls = 'badge-soft-info';
+                if ($status == 'selesai') $cls = 'badge-soft-success';
+
+                return '<span class="badge-pill-modern '.$cls.'">'.$label.'</span>';
+            });
+
+            /// 3. STATUS PERMINTAAN (UTAMA)
+            $table->editColumn('status_permintaan', function ($row) {
+                $status = $row->status_permintaan;
+                $label = strtoupper($status);
+
+                $cls = 'badge-soft-secondary';
+                if ($status == 'pending') $cls = 'badge-soft-warning';
+                if ($status == 'proses') $cls = 'badge-soft-info';
+                if ($status == 'selesai') $cls = 'badge-soft-success';
+                if ($status == 'ditolak') $cls = 'badge-soft-danger';
+
+                return '<span class="badge-pill-modern '.$cls.'">'.$label.'</span>';
+            });
+
+            // 6. ACTIONS
+            $table->editColumn('actions', function ($row) {
+                $btn = '<a class="btn btn-xs btn-info" href="' . route('admin.permintaan-kegiatan.show', $row->id) . '" title="Detail"><i class="fas fa-eye"></i></a> ';
+                
+                // Edit/Delete hanya jika pending
+                if ($row->status_permintaan == 'pending' && (auth()->user()->id == $row->user_id || auth()->user()->isAdmin())) {
+                    $btn .= '<a class="btn btn-xs btn-success" href="' . route('admin.permintaan-kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i></a> ';
+                    
+                    $btn .= '<form action="'.route('admin.permintaan-kegiatan.destroy', $row->id).'" method="POST" onsubmit="return confirm(\'Batalkan permintaan ini?\');" style="display: inline-block;">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <input type="hidden" name="_token" value="'.csrf_token().'">
+                                <button type="submit" class="btn btn-xs btn-danger" title="Batalkan"><i class="fas fa-trash-alt"></i></button>
+                            </form>';
+                }
+                return $btn;
+            });
+
+            $table->rawColumns(['actions', 'placeholder', 'nama_kegiatan', 'tanggal_kegiatan', 'status_ruang', 'status_konsumsi', 'status_permintaan']);
+
+            return $table->make(true);
+        }
+
+        return view('admin.permintaan.index');
     }
 
     public function create()

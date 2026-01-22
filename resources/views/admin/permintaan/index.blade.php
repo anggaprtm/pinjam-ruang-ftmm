@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 @section('content')
 
+{{-- HEADER --}}
 <div class="d-flex align-items-center mb-4">
     <h3 class="font-weight-bold mb-0">Daftar Permintaan Layanan</h3>
     <div class="ms-auto">
@@ -10,49 +11,139 @@
     </div>
 </div>
 
+{{-- FILTER BAR --}}
+<div class="filter-bar mb-4">
+    <form action="" method="GET">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Filter Tanggal:</label>
+                <input type="date" id="tanggal_mulai" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="button" id="filter-btn" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i> Filter
+                    </button>
+                    <button type="button" id="reset-btn" class="btn btn-secondary">
+                        <i class="fas fa-redo me-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+{{-- TABEL MODERN --}}
 <div class="card border-0 shadow-sm">
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped datatable">
+            <table class="modern-table datatable datatable-Permintaan w-100">
                 <thead>
                     <tr>
-                        <th>Tanggal</th>
-                        <th>Kegiatan</th>
-                        <th>PIC</th>
-                        <th class="text-center">Status Ruang</th>
-                        <th class="text-center">Status Konsumsi</th>
-                        <th class="text-center">Aksi</th>
+                        <th width="10"></th>
+                        <th><i class="fas fa-clipboard-list me-1"></i> Kegiatan</th>
+                        <th><i class="fas fa-calendar-alt me-1"></i> Waktu Pelaksanaan</th>
+                        <th class="text-center"><i class="fas fa-door-open me-1"></i> Ruang</th>
+                        <th class="text-center"><i class="fas fa-utensils me-1"></i> Konsumsi</th>
+                        <th class="text-center"><i class="fas fa-info-circle me-1"></i> Status</th>
+                        <th class="text-center" width="100"><i class="fas fa-cogs me-1"></i> Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($permintaans as $item)
-                    <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal_kegiatan)->format('d M Y') }}</td>
-                        <td>
-                            <div class="fw-bold">{{ $item->nama_kegiatan }}</div>
-                            <small class="text-muted">{{ $item->waktu_mulai }} - {{ $item->waktu_selesai }}</small>
-                        </td>
-                        <td>{{ $item->picUser->name }}</td>
-                        <td class="text-center">
-                            @if($item->status_ruang == 'pending') <span class="badge bg-warning text-dark">Pending</span>
-                            @elseif($item->status_ruang == 'selesai') <span class="badge bg-success">Selesai</span>
-                            @else <span class="badge bg-secondary">-</span> @endif
-                        </td>
-                        <td class="text-center">
-                            @if($item->status_konsumsi == 'pending') <span class="badge bg-warning text-dark">Pending</span>
-                            @elseif($item->status_konsumsi == 'selesai') <span class="badge bg-success">Selesai</span>
-                            @else <span class="badge bg-secondary">-</span> @endif
-                        </td>
-                        <td class="text-center">
-                            <a href="{{ route('admin.permintaan-kegiatan.show', $item->id) }}" class="btn btn-sm btn-info text-white">
-                                <i class="fas fa-eye"></i> Detail
-                            </a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
             </table>
         </div>
     </div>
 </div>
+
+@endsection
+
+@section('scripts')
+@parent
+<script>
+$(function () {
+    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
+    
+    // Tombol Salin/Excel/dll (Copy dari Kegiatan jika perlu)
+    // dtButtons.push(...) 
+
+    let table = $('.datatable-Permintaan').DataTable({
+        buttons: dtButtons,
+        processing: true,
+        serverSide: true,
+        retrieve: true,
+        aaSorting: [],
+        ajax: {
+            url: "{{ route('admin.permintaan-kegiatan.index') }}",
+            data: function (d) {
+                d.tanggal_mulai = $('#tanggal_mulai').val();
+            }
+        },
+        columns: [
+            { data: 'placeholder', name: 'placeholder', orderable: false, searchable: false },
+            { 
+                data: 'nama_kegiatan', 
+                name: 'nama_kegiatan',
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Kegiatan');
+                }
+            },
+            { 
+                data: 'tanggal_kegiatan', 
+                name: 'tanggal_kegiatan',
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Waktu');
+                } 
+            },
+            { 
+                data: 'status_ruang', 
+                name: 'status_ruang', 
+                className: 'text-center',
+                // Render sudah dihandle Controller (mengeluarkan HTML string)
+                // Kita cuma perlu createdCell untuk mobile label
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Ruang');
+                }
+            },
+            { 
+                data: 'status_konsumsi', 
+                name: 'status_konsumsi', 
+                className: 'text-center',
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Konsumsi');
+                }
+            },
+            { 
+                data: 'status_permintaan', 
+                name: 'status_permintaan', 
+                className: 'text-center',
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Status');
+                }
+            },
+            { 
+                data: 'actions', 
+                name: 'actions', 
+                className: 'text-center', 
+                orderable: false, 
+                searchable: false,
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Aksi');
+                }
+            }
+        ],
+        orderCellsTop: true,
+        order: [[ 1, 'desc' ]],
+        pageLength: 10,
+    });
+
+    $('#filter-btn').on('click', function() {
+    table.draw();
+    });
+
+    // Tombol Reset
+    $('#reset-btn').on('click', function() {
+        $('#tanggal_mulai').val(''); // Kosongkan input tanggal
+        table.draw(); // Reload tabel tanpa filter
+    });
+});
+</script>
 @endsection
