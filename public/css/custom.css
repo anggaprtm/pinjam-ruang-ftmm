@@ -396,6 +396,15 @@ h5 {
 /* ================================================= */
 /* == GAYA MODERN & RINGKAS UNTUK TABEL KEGIATAN == */
 /* ================================================= */
+.c-app,
+.c-root {
+  --primary: #741847;
+}
+
+.text-primary {
+  color: #741847 !important; /* ungu misal */
+}
+
 
 /* Lencana Status (sedikit disesuaikan untuk tabel) */
 .badge-status {

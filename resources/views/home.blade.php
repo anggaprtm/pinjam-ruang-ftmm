@@ -43,7 +43,7 @@
         {{-- Daftar Kegiatan --}}
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 font-weight-bold">Daftar Kegiatan</h5>
+                <h5 class="mb-0 font-weight-bold text-primary">Daftar Kegiatan</h5>
                 {{-- === PERUBAHAN: Grup Tombol Salin === --}}
                 <div class="btn-group" role="group">
                     <button class="btn btn-sm btn-outline-success" id="copyHariIniBtn" @if($kegiatanHariIni->isEmpty()) disabled @endif>
