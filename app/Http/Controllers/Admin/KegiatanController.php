@@ -47,7 +47,7 @@ class KegiatanController extends Controller
                 $query->where('ruangan_id', $request->ruangan_id);
             }
 
-            if (auth()->user()->hasRole('User')) {
+            if (auth()->user()->hasRole('User') || auth()->user()->hasRole('Pegawai')) {
                 $query->where('kegiatan.user_id', auth()->id());
             }
 
@@ -151,14 +151,41 @@ class KegiatanController extends Controller
         return view('admin.kegiatan.index', compact('users', 'ruangans'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         abort_if(Gate::denies('kegiatan_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
-        $users = User::pluck('name', 'id');
+        $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
 
-        return view('admin.kegiatan.create', compact('ruangan', 'users'));
+        $prefilledData = [];
+        if ($request->has('permintaan_id')) {
+            $permintaan = \App\Models\PermintaanKegiatan::with(['user', 'picUser'])->findOrFail($request->permintaan_id);
+            
+            $format = config('panel.date_format') . ' ' . config('panel.time_format');
+            
+            // --- PERBAIKAN DISINI ---
+            // Kita paksa ubah string tanggal jadi Carbon dulu biar gak error
+            $tanggal = \Carbon\Carbon::parse($permintaan->tanggal_kegiatan)->format('Y-m-d');
+            
+            $start = $tanggal . ' ' . \Carbon\Carbon::parse($permintaan->waktu_mulai)->format('H:i:s');
+            $end = $tanggal . ' ' . \Carbon\Carbon::parse($permintaan->waktu_selesai)->format('H:i:s');
+            // ------------------------
+
+            $prefilledData = [
+                'permintaan_id' => $permintaan->id,
+                'nama_kegiatan' => $permintaan->nama_kegiatan,
+                'jenis_kegiatan' => $permintaan->jenis_kegiatan,
+                'waktu_mulai' => \Carbon\Carbon::parse($start)->format($format),
+                'waktu_selesai' => \Carbon\Carbon::parse($end)->format($format),
+                'deskripsi' => $permintaan->catatan_konsumsi, 
+                'user_id' => $permintaan->user_id, 
+                'nama_pic' => $permintaan->user->name ?? $permintaan->picUser->name,
+                'nomor_telepon' => $permintaan->user->nomor_telepon ?? '', 
+            ];
+        }
+
+        return view('admin.kegiatan.create', compact('ruangan', 'users', 'prefilledData'));
     }
 
     public function store(StoreKegiatanRequest $request, EventService $eventService)
@@ -188,7 +215,34 @@ class KegiatanController extends Controller
         
         // Panggil method yang membuat event(s) dan kembalikan model yang dibuat
         $created = $eventService->createEvents($data);
+        
+        if ($request->filled('permintaan_id') && !empty($created)) {
+            // Ambil ID Permintaan
+            $permintaan = \App\Models\PermintaanKegiatan::find($request->permintaan_id);
+            
+            if ($permintaan) {
+                // Ambil kegiatan pertama yang baru dibuat sebagai referensi
+                // ($created biasanya array karena support recurring events)
+                $kegiatanUtama = is_array($created) ? $created[0] : $created;
 
+                // 1. Update Status Ruang jadi SELESAI & Link ke Kegiatan ID
+                $permintaan->update([
+                    'status_ruang' => 'selesai',
+                    'kegiatan_id'  => $kegiatanUtama->id,
+                ]);
+
+                // 2. Cek apakah status GLOBAL permintaan bisa diselesaikan?
+                // Syarat: Status Konsumsi harus 'selesai' atau 'tidak_perlu'
+                $konsumsiOk = in_array($permintaan->status_konsumsi, ['selesai', 'tidak_perlu']);
+                
+                if ($konsumsiOk) {
+                    $permintaan->update(['status_permintaan' => 'selesai']);
+                } else {
+                    // Jika konsumsi belum beres, set status jadi 'proses'
+                    $permintaan->update(['status_permintaan' => 'proses']);
+                }
+            }
+        }
         // Buat history untuk setiap kegiatan yang baru dibuat
         if (!empty($created)) {
             foreach ($created as $model) {
