@@ -45,6 +45,7 @@ class Kegiatan extends Model
         'revisi_at',
         'revisi_level',
         'revisi_notes',
+        'google_event_id',
         'created_at',
         'updated_at',
         'deleted_at',
