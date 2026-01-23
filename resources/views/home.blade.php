@@ -145,7 +145,7 @@
                                     </div>
 
                                     <div class="mb-1">
-                                        <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                                        <i class="fas fa-map-marker-alt me-2"></i>
                                         <span class="fw-semibold text-dark">Tujuan:</span>
                                         {{ $ongoingTrip->tujuan ?? '-' }}
                                     </div>
@@ -179,8 +179,9 @@
                                         -
                                     </div>
 
-                                    <div class="mb-1">
-                                        <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                                    <div class="mb-1"><!-- BLADENYA AAAAAAAAA -->
+
+                                        <i class="fas fa-map-marker-alt me-2"></i>
                                         <span class="fw-semibold text-dark">Tujuan:</span>
                                         -
                                     </div>
@@ -265,7 +266,7 @@
 
                             </a>
                         @empty
-                            <div class="text-center py-4 text-muted">
+                            <div class="d-flex flex-column justify-content-center align-items-center text-center text-muted flex-grow-1 py-4" style="min-height: 180px;">
                                 <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
                                 <p class="small mb-0">Tidak ada permintaan baru.</p>
                             </div>
