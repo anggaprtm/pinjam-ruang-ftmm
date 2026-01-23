@@ -110,7 +110,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     // Statistik (hanya untuk admin/home_access)
     Route::get('statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])
         ->name('statistics.index');
-    
+    Route::get('statistics/export-excel', [App\Http\Controllers\Admin\StatisticsController::class, 'exportExcel'])
+        ->name('statistics.exportExcel');
     // Route Permintaan Kegiatan
     Route::post(
         'permintaan-kegiatan/{permintaan_kegiatan}/proses-konsumsi',

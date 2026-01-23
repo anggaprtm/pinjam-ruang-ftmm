@@ -259,6 +259,140 @@ table.dataTable thead .sorting_desc {
 .logout-btn i {
     color: white !important;
 }
+
+.statistics-page .trend-chart{
+  height: 260px;
+}
+.stats-filter-card{
+  border-radius: 16px;
+}
+/* Scoped ONLY for statistics page */
+.statistics-page .chart-container{
+    height: 320px;
+    min-height: 220px;
+    position: relative;
+}
+.statistics-page .chart-container canvas{
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Header inputs style */
+.statistics-page .stats-input-group .input-group-text{
+    background: #fff;
+    border-color: rgba(0,0,0,.12);
+}
+.statistics-page .stats-input-group input{
+    border-color: rgba(0,0,0,.12);
+}
+
+/* Summary cards */
+.statistics-page .stats-summary-card{
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    box-shadow: 0 12px 32px rgba(0,0,0,.08);
+    transition: all .18s ease;
+    height: 100%;
+}
+.statistics-page .stats-summary-card:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 16px 44px rgba(0,0,0,.11);
+}
+.statistics-page .stats-summary-card .icon{
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.04);
+    font-size: 1.25rem;
+}
+.statistics-page .stats-summary-card .label{
+    font-size: .85rem;
+    color: rgba(0,0,0,.55);
+    font-weight: 700;
+}
+.statistics-page .stats-summary-card .value{
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: rgba(0,0,0,.80);
+    line-height: 1.1;
+}
+
+/* Main cards */
+.statistics-page .stats-card{
+    border-radius: 16px;
+    overflow: hidden;
+}
+.statistics-page .stats-card .card-header{
+    border-bottom: 1px solid rgba(0,0,0,.06) !important;
+}
+
+/* Apply button */
+.statistics-page .stats-btn-apply{
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+/* Modern Table Styling */
+.statistics-page .modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.statistics-page .modern-table thead th {
+    background: #f8f9fa;
+    color: gray;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 14px 16px;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.statistics-page .modern-table thead th:first-child {
+    border-radius: 8px 0 0 0;
+}
+
+.statistics-page .modern-table thead th:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+.statistics-page .modern-table tbody tr {
+    background: #fff;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.statistics-page .modern-table tbody tr:hover {
+    background: #f8f9ff;
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.statistics-page .modern-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.statistics-page .modern-table tbody td {
+    padding: 14px 16px;
+    color: #2d3748;
+    font-size: 0.9rem;
+}
+
+.statistics-page .modern-table tbody td .badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+
 /* PDF viewer toolbar and canvas */
 .pdf-viewer-toolbar {
     display:flex;

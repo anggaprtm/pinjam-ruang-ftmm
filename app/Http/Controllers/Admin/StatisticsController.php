@@ -87,6 +87,29 @@ class StatisticsController extends Controller
             return $q->count();
         });
 
+        // Trend peminjaman per hari
+        $trendCacheKey = 'stats:trendDaily:' . ($startDateTime ?? 'all') . ':' . ($endDateTime ?? 'all');
+
+        $trendDaily = Cache::remember($trendCacheKey, now()->addMinutes(5), function () use ($startDateTime, $endDateTime) {
+            $q = DB::table('kegiatan')
+                ->select(DB::raw("DATE(waktu_mulai) as tanggal"), DB::raw("COUNT(*) as total"))
+                ->groupBy(DB::raw("DATE(waktu_mulai)"))
+                ->orderBy(DB::raw("DATE(waktu_mulai)"), "asc");
+
+            if ($startDateTime && $endDateTime) {
+                $q->whereBetween('waktu_mulai', [$startDateTime, $endDateTime]);
+            }
+
+            return $q->get();
+        });
+
+        $trendLabels = $trendDaily->pluck('tanggal')->map(function ($d) {
+            return Carbon::parse($d)->format('d M');
+        })->toArray();
+
+        $trendData = $trendDaily->pluck('total')->toArray();
+
+
         // Prepare data for charts
         $topRoomsLabels = $topRooms->pluck('nama')->toArray();
         $topRoomsData = $topRooms->pluck('total')->toArray();
@@ -99,7 +122,88 @@ class StatisticsController extends Controller
             'topRoomsLabels', 'topRoomsData',
             'topUsersLabels', 'topUsersData',
             'start', 'end',
-            'totalRooms', 'totalBookings'
+            'totalRooms', 'totalBookings',
+            'trendLabels', 'trendData',
         ));
     }
+
+    public function exportExcel(Request $request)
+    {
+        // ambil filter sama kayak index
+        $preset = $request->query('preset');
+        $rawStart = $request->query('start');
+        $rawEnd = $request->query('end');
+
+        if ($preset === 'this_month') {
+            $start = Carbon::now()->startOfMonth();
+            $end = Carbon::now()->endOfMonth();
+        } elseif ($preset === 'all_time') {
+            $start = null;
+            $end = null;
+        } else {
+            $end = $rawEnd ? Carbon::parse($rawEnd) : Carbon::today();
+            $start = $rawStart ? Carbon::parse($rawStart) : $end->copy()->subDays(29);
+        }
+
+        $startDateTime = $start ? $start->copy()->startOfDay()->toDateTimeString() : null;
+        $endDateTime = $end ? $end->copy()->endOfDay()->toDateTimeString() : null;
+
+        $rows = DB::table('kegiatan')
+            ->join('ruangan', 'kegiatan.ruangan_id', '=', 'ruangan.id')
+            ->join('users', 'kegiatan.user_id', '=', 'users.id')
+            ->select(
+                'kegiatan.nama_kegiatan',
+                'ruangan.nama as ruangan',
+                'users.name as pemohon',
+                'kegiatan.waktu_mulai',
+                'kegiatan.waktu_selesai',
+                'kegiatan.status'
+            )
+            ->when($startDateTime && $endDateTime, function($q) use ($startDateTime, $endDateTime) {
+                $q->whereBetween('kegiatan.waktu_mulai', [$startDateTime, $endDateTime]);
+            })
+            ->orderBy('kegiatan.waktu_mulai', 'asc')
+            ->get();
+
+        $filename = 'statistik-peminjaman-'.now()->format('Ymd_His').'.csv';
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use ($rows) {
+            $file = fopen('php://output', 'w');
+
+            fputcsv($file, ['Nama Kegiatan', 'Ruangan', 'Pemohon', 'Waktu Mulai', 'Waktu Selesai', 'Status']);
+
+            foreach ($rows as $r) {
+                fputcsv($file, [
+                    $r->nama_kegiatan,
+                    $r->ruangan,
+                    $r->pemohon,
+                    $r->waktu_mulai,
+                    $r->waktu_selesai,
+                    $r->status,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        // NOTE:
+        // Untuk export PDF yang rapi, idealnya pakai barryvdh/laravel-dompdf.
+        // Kalau belum install, aku bisa bantu step installnya.
+
+        abort(404, 'Export PDF belum diaktifkan. Install dompdf dulu.');
+    }
+
 }
