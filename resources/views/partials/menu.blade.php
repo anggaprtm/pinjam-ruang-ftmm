@@ -2,10 +2,10 @@
 
     <div class="c-sidebar-brand d-md-down-none">
         <div class="c-sidebar-brand-full" href="#">
-            SARPRAS-FTMM
+            LAYANAN SARPRAS-FTMM
         </div>
         <div class="c-sidebar-brand-minimized">
-            SF
+            <i class="fas fa-toolbox" style="font-size: 23px; color: #2e2d2d; padding: 10px;"></i>
         </div>
     </div>
 
@@ -126,8 +126,8 @@
                 Cari Ruang
             </a>
         </li>
-        <li class="c-sidebar-nav-item">
-            <a href="#" class="c-sidebar-nav-link" onclick="event.preventDefault(); document.getElementById('logoutform').submit();" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('global.logout') }}">
+        <li class="c-sidebar-nav-item" style="margin-top: auto; margin-bottom: 20px;">
+            <a href="#" class="c-sidebar-nav-link logout-btn" onclick="event.preventDefault(); document.getElementById('logoutform').submit();" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('global.logout') }}">
                 <i class="c-sidebar-nav-icon fas fa-fw fa-sign-out-alt"></i>
                 {{ trans('global.logout') }}
             </a>

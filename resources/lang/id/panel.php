@@ -1,6 +1,6 @@
 <?php
 
 return [
-    'site_title' => 'Pinjam-Ruang FTMM',
+    'site_title' => 'LayananSarpras FTMM',
 
 ];

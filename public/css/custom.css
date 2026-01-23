@@ -18,11 +18,6 @@ body {
     background-color: #741847;
 }
 
-#current-time{
-    font-weight: 700;
-    color: #34395e;
-    font-size: 24px;
-}
 .card {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
     background-color: #fff;
@@ -123,18 +118,36 @@ table.dataTable thead .sorting_desc {
 }
 
 
-
 /* 2. TAMPILAN ITEM MENU (MODE MAXIMIZED) */
 /* ------------------------------------------------------------------------- */
 .c-sidebar .c-sidebar-nav-link,
 .c-sidebar .c-sidebar-nav-dropdown-toggle {
     color: #5c6873;
     font-weight: 500;
-    padding: 0.9rem 1.5rem;
+    padding: 0.6rem 1.5rem;
     border-radius: 8px;
     margin: 4px 10px;
     transition: all 0.2s ease-in-out;
 }
+
+/* Hover di parent li juga bikin link ungu */
+.c-sidebar .c-sidebar-nav-item:hover > .c-sidebar-nav-link,
+.c-sidebar .c-sidebar-nav-dropdown:hover > .c-sidebar-nav-dropdown-toggle {
+  background-color: #f1e4e9 !important;
+}
+
+/* Ikon ikut ungu */
+.c-sidebar .c-sidebar-nav-item:hover > .c-sidebar-nav-link.c-active .c-sidebar-nav-icon,
+.c-sidebar .c-sidebar-nav-dropdown:hover > .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
+  color: #ffffff !important;
+}
+
+/* Ikon ikut ungu */
+.c-sidebar .c-sidebar-nav-item:hover > .c-sidebar-nav-link .c-sidebar-nav-icon,
+.c-sidebar .c-sidebar-nav-dropdown:hover > .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
+  color: #741847 !important;
+}
+
 
 .c-sidebar .c-sidebar-nav-link .c-sidebar-nav-icon,
 .c-sidebar .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
@@ -177,11 +190,15 @@ table.dataTable thead .sorting_desc {
     align-items: center;
     width: 44px;       
     height: 44px;    
-    margin: 8px auto;    
+    margin: 4px auto;    
     border-radius: 10px; 
     padding: 0;
     font-size: 0;
     position: relative;
+}
+
+.c-sidebar-minimized .c-sidebar-nav {
+    padding-bottom: 0px !important;
 }
 
 #sidebar.c-sidebar-minimized .c-sidebar-nav-link.c-active,
@@ -196,7 +213,7 @@ table.dataTable thead .sorting_desc {
 }
 
 #sidebar.c-sidebar-minimized .c-sidebar-nav-link:hover .c-sidebar-nav-icon {
-    color: #741847;
+    color: #741847 !important;
     background-color: #f1e4e9 !important; 
 }
 
@@ -217,6 +234,7 @@ table.dataTable thead .sorting_desc {
     vertical-align: middle;
 }
 
+
 /* When sidebar is minimized, position badge over the icon */
 #sidebar.c-sidebar-minimized .c-sidebar-nav-link .sidebar-badge {
     position: absolute;
@@ -228,6 +246,19 @@ table.dataTable thead .sorting_desc {
     transform: translate(0, 0);
 }
 
+.logout-btn {
+    background-color: #b02a37 !important;
+    color: white !important;
+}
+
+.logout-btn:hover {
+    background-color: #e03232 !important;
+    color: white !important;
+}
+
+.logout-btn i {
+    color: white !important;
+}
 /* PDF viewer toolbar and canvas */
 .pdf-viewer-toolbar {
     display:flex;
@@ -677,6 +708,193 @@ h5 {
     background-color: #f8f9fa;
     border-top: 1px solid #e9ecef;
 }
+
+/* ----------------------------
+   1) WELCOME BANNER
+---------------------------- */
+.dashboard-home .welcome-banner{
+  background: linear-gradient(90deg, #6f123f, #8a1f5c, #a12b70);
+  border-radius: 14px;
+  padding: 26px 28px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-home .welcome-banner::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,.18), transparent 35%),
+    radial-gradient(circle at 80% 80%, rgba(255,255,255,.10), transparent 35%);
+  pointer-events:none;
+}
+
+.dashboard-home .welcome-banner h4,
+.dashboard-home .welcome-banner p,
+.dashboard-home .welcome-banner #current-time{
+  color: #fff !important;
+}
+
+.dashboard-home .welcome-banner p{
+  opacity: .85;
+}
+
+.dashboard-home #current-time{
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+}
+
+
+/* ----------------------------
+   2) CARD STATISTIK (stat-card)
+---------------------------- */
+.dashboard-home .stat-card{
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  transition: all .2s ease-in-out;
+  overflow: hidden;
+}
+
+.dashboard-home .stat-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.12);
+}
+
+.dashboard-home .stat-card .icon-container{
+  border-radius: 999px;
+}
+
+
+/* ----------------------------
+   3) PANEL CARD (Driver, Permintaan, Approval)
+---------------------------- */
+.dashboard-home .card{
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.dashboard-home .card.shadow-sm{
+  box-shadow: 0 12px 32px rgba(0,0,0,.08) !important;
+}
+
+.dashboard-home .card-header{
+  border-bottom: 1px solid rgba(0,0,0,.06) !important;
+}
+
+.dashboard-home .card-header h6 i{
+  opacity: .85;
+}
+
+/* Badge polish */
+.dashboard-home .badge{
+  font-weight: 700;
+  font-size: .72rem;
+  letter-spacing: .2px;
+}
+
+/* Badge "Mobil Ready" */
+.dashboard-home .card-header .badge.bg-success{
+  box-shadow: 0 6px 16px rgba(25,135,84,.25);
+}
+
+/* Badge ON DUTY */
+.dashboard-home .badge.bg-danger{
+  box-shadow: 0 6px 16px rgba(220,53,69,.22);
+}
+
+/* List group item lebih enak */
+.dashboard-home .list-group-item{
+  transition: background-color .18s ease;
+}
+
+.dashboard-home .list-group-item:hover{
+  background: rgba(0,0,0,.02);
+}
+
+
+/* ----------------------------
+   4) FIX TOMBOL FOOTER CARD
+   (supaya ga tampil kayak input)
+---------------------------- */
+.dashboard-home .card-footer{
+  padding: 14px 16px;
+  border-top: 1px solid rgba(0,0,0,.06) !important;
+}
+
+.dashboard-home .card-footer .btn{
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  transition: all .18s ease-in-out;
+}
+
+/* Outline secondary biar keliatan tombol */
+.dashboard-home .card-footer .btn-outline-secondary{
+  border-color: rgba(0,0,0,.15) !important;
+  background: rgba(0,0,0,.03) !important;
+  color: rgba(0,0,0,.65) !important;
+}
+
+.dashboard-home .card-footer .btn-outline-secondary:hover{
+  background: rgba(0,0,0,.06) !important;
+  border-color: rgba(0,0,0,.22) !important;
+  transform: translateY(-1px);
+}
+
+/* Focus ring biar cakep */
+.dashboard-home .card-footer .btn:focus,
+.dashboard-home .card-footer .btn:active{
+  box-shadow: 0 0 0 .25rem rgba(111,18,63,.15) !important;
+}
+
+
+/* ----------------------------
+   5) NAV TABS (JADWAL)
+---------------------------- */
+.dashboard-home .nav-tabs{
+  border-bottom-color: rgba(0,0,0,.10);
+}
+
+.dashboard-home .nav-tabs .nav-link{
+  border: none !important;
+  border-radius: 10px 10px 0 0;
+  font-weight: 700;
+  color: rgba(0,0,0,.55);
+  padding: 10px 14px;
+}
+
+.dashboard-home .nav-tabs .nav-link.active{
+  background: rgba(111,18,63,.08);
+  color: #6f123f;
+}
+
+/* tombol di header jadwal */
+.dashboard-home .btn-group .btn{
+  border-radius: 10px !important;
+  font-weight: 700;
+}
+
+/* SCROLL list permintaan (khusus home) */
+.dashboard-home .dashboard-scroll{
+  max-height: 220px;   /* bisa kamu ubah */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* scrollbar halus */
+.dashboard-home .dashboard-scroll::-webkit-scrollbar{
+  width: 7px;
+}
+.dashboard-home .dashboard-scroll::-webkit-scrollbar-thumb{
+  background: rgba(0,0,0,.18);
+  border-radius: 999px;
+}
+.dashboard-home .dashboard-scroll::-webkit-scrollbar-track{
+  background: transparent;
+}
+
 
 /* ========================================= */
 /* == PENYEMPURNAAN TAMPILAN TABEL INDEKS == */
@@ -1631,5 +1849,22 @@ div.dt-button-collection .dt-button.active:hover::before {
   }
   
 
+}
 
+
+/* ----------------------------
+   6) RESPONSIVE
+---------------------------- */
+@media (max-width: 576px){
+  .dashboard-home .welcome-banner{
+    padding: 20px 18px;
+  }
+
+  .dashboard-home .btn-group{
+    width: 100%;
+  }
+
+  .dashboard-home .btn-group .btn{
+    flex: 1 1 auto;
+  }
 }
