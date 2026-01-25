@@ -87,6 +87,77 @@ class KioskController extends Controller
     }
 
     /**
+     * API Khusus untuk Vertical Signage TV
+     */
+    public function getVerticalData(Request $request)
+    {
+        Carbon::setLocale('id');
+        $today = Carbon::now();
+
+        // Ambil parameter filter (bisa diset dari URL ?room=... atau default di code)
+        // Default cari yang mengandung "Lt. 10" (sesuai request)
+        $filterRoom = $request->input('room', 'Lt. 10'); 
+        
+        $query = Kegiatan::with(['ruangan', 'user'])
+            ->where('status', 'disetujui')
+            ->whereDate('waktu_mulai', '>=', $today) // Ambil hari ini ke depan
+            ->where('jenis_kegiatan', 'Rapat'); // KHUSUS RAPAT
+
+        // Filter Ruangan
+        if ($filterRoom) {
+            $query->whereHas('ruangan', function($q) use ($filterRoom) {
+                $q->where('nama', 'LIKE', "%{$filterRoom}%");
+            });
+        }
+
+        $data = $query->orderBy('waktu_mulai', 'asc')
+            ->limit(10) // Ambil 10 terdekat
+            ->get()
+            ->map(function ($item) use ($today) {
+                $start = Carbon::parse($item->waktu_mulai);
+                $end = Carbon::parse($item->waktu_selesai);
+                
+                // Logic Status (Occupied / Reserved)
+                $status = 'Reserved';
+                // Jika hari ini DAN jam sekarang masuk range
+                if ($start->isSameDay(Carbon::now()) && Carbon::now()->between($start, $end)) {
+                    $status = 'Occupied'; 
+                } 
+
+                // Logic Label Tanggal
+                $isToday = $start->isSameDay(Carbon::now());
+                $isTomorrow = $start->isSameDay(Carbon::now()->addDay());
+                
+                if ($isToday) {
+                    $dateLabel = "HARI INI";
+                    $dateFlag = "today";
+                } elseif ($isTomorrow) {
+                    $dateLabel = "BESOK • " . $start->translatedFormat('d M');
+                    $dateFlag = "tomorrow";
+                } else {
+                    $dateLabel = $start->translatedFormat('l, d F'); 
+                    $dateFlag = "future";
+                }
+
+                // Nama Peminjam / PIC
+                $picName = $item->nama_pic ?: ($item->user->name ?? '-');
+
+                return [
+                    'id' => $item->id,
+                    'title' => $item->nama_kegiatan,
+                    'room' => $item->ruangan->nama ?? 'TBA',
+                    'time' => $start->format('H:i') . ' - ' . $end->format('H:i'),
+                    'status' => $status,
+                    'pic' => $picName,
+                    'date_label' => $dateLabel,
+                    'date_flag' => $dateFlag,
+                ];
+            });
+
+        return response()->json($data);
+    }
+
+    /**
      * Return approved events as JSON for kiosk polling.
      */
     public function events(Request $request)
