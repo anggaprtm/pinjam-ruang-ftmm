@@ -53,7 +53,7 @@ class SyncGoogleCalendar extends Command
                     'waktu_selesai' => $end,
                     'ruangan_id'    => $defaultRuanganId,
                     'user_id'       => $defaultUserId, 
-                    'nama_pic'      => 'Sekretaris (GCal)', // Penanda ini dari GCal
+                    'nama_pic'      => '*Sinkron Google Calendar', // Penanda ini dari GCal
                     'status'        => 'disetujui', // Langsung setujui
                     'nomor_telepon' => '-'
                 ]

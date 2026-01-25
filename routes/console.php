@@ -24,3 +24,5 @@ Schedule::command('backup:run')->dailyAt('01:00');
 
 // Perintah Bersih-bersih backup lama: Jalan setiap jam 01:30 Pagi
 Schedule::command('backup:clean')->dailyAt('01:30');
+
+Schedule::command('sync:google-calendar')->everyFifteenMinutes();
