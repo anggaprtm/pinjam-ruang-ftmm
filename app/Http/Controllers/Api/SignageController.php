@@ -226,7 +226,7 @@ class SignageController extends Controller
         }
 
         $data = $query->orderBy('waktu_mulai', 'asc')
-            ->limit(10) // Ambil 10 terdekat
+            ->limit(5) // Ambil 10 terdekat
             ->get()
             ->map(function ($item) use ($today) {
                 $start = Carbon::parse($item->waktu_mulai);
