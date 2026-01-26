@@ -30,7 +30,7 @@
         .hero-section {
             position: relative;
             /* Pastikan gambar ada di public/images/ */
-            background: url('{{ asset("images/gedung-ftmms.JPG") }}') no-repeat center center/cover;
+            background: url('{{ asset("images/gedung-ftmmz.JPG") }}') no-repeat center center/cover;
             padding: 120px 0 160px 0;
             color: white;
             text-align: center;
@@ -162,7 +162,7 @@
     {{-- FOOTER --}}
     <footer class="bg-white py-4 mt-5 border-top">
         <div class="container text-center">
-            <p class="mb-0 text-muted">&copy; {{ date('Y') }} FTMM Universitas Airlangga.</p>
+            <p class="mb-0 text-muted">Made with ❤️ &copy; {{ date('Y') }} USI FTMM Universitas Airlangga.</p>
         </div>
     </footer>
 
