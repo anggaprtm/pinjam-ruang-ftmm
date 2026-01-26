@@ -77,8 +77,19 @@
 
 {{-- 2. SEARCH FORM (FORM PENCARIAN) --}}
 {{-- Note: margin-top dibuat overlap (-60px) biar nyambung sama hero --}}
+{{-- 2. SEARCH FORM (FORM PENCARIAN) --}}
 <div class="container search-container" style="margin-top: -60px;">
     <div class="glass-card bg-white">
+        
+        {{-- [BARU] HEADER JUDUL PENCARIAN --}}
+        <div class="mb-4 pb-2 border-bottom d-flex align-items-center">
+            <i class="fas fa-search-location text-primary fa-lg me-3"></i>
+            <div>
+                <h6 class="fw-bold text-dark mb-0">Cek Ketersediaan Ruang</h6>
+                <small class="text-muted" style="font-size: 0.85rem;">Silakan isi waktu dan kebutuhan kapasitas Anda</small>
+            </div>
+        </div>
+
         {{-- Alert Error --}}
         @if($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -103,7 +114,7 @@
                 <div class="col-md-4">
                     <label class="form-label fw-bold text-dark">Waktu Selesai</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-calendar-alt  text-primary"></i></span>
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-clock text-primary"></i></span>
                         <input class="form-control border-start-0 ps-0" type="text" name="waktu_selesai" id="waktu_selesai"
                                value="{{ request('waktu_selesai') }}" placeholder="Waktu Selesai" required autocomplete="off">
                     </div>
