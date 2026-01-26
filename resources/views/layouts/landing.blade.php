@@ -140,7 +140,7 @@
     <nav class="navbar navbar-expand-lg navbar-landing fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
-                <i class="fas fa-building me-2"></i> LayananSarpras
+                <i class="fas fa-building me-2"></i> LayananSarpras FTMM
             </a>
             <div class="ms-auto">
                 @auth

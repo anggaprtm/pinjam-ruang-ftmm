@@ -15,17 +15,18 @@
 
         {{-- SHORTCUT MENU (PINDAH KESINI) --}}
         <div class="row g-3 justify-content-center hero-shortcuts px-2">
-            {{-- A. Pinjam Ruang --}}
-            <div class="col-6 col-md-3">
+            
+            {{-- 1. Pinjam Ruang --}}
+            <div class="col-6 col-md-4">
                 <a href="#" onclick="document.querySelector('.search-container').scrollIntoView({behavior: 'smooth'}); return false;" class="service-card">
                     <div class="service-icon"><i class="fas fa-building"></i></div>
                     <h5 class="service-title">Pinjam Ruang</h5>
-                    <p class="service-desc d-none d-md-block">Booking ruang rapat/kelas.</p>
+                    <p class="service-desc d-none d-md-block">Booking ruang rapat & kelas.</p>
                 </a>
             </div>
 
-            {{-- B. Pinjam Barang --}}
-            <div class="col-6 col-md-3">
+            {{-- 2. Pinjam Barang --}}
+            <div class="col-6 col-md-4">
                 <a href="{{ route('login') }}" class="service-card">
                     <div class="service-icon"><i class="fas fa-box-open"></i></div>
                     <h5 class="service-title">Pinjam Barang</h5>
@@ -33,23 +34,42 @@
                 </a>
             </div>
 
-            {{-- C. Driver --}}
-            <div class="col-6 col-md-3">
-                <a href="{{ route('login') }}" class="service-card">
-                    <div class="service-icon"><i class="fas fa-search"></i></div>
-                    <h5 class="service-title">Lost & Found</h5>
-                    <p class="service-desc d-none d-md-block">Pencarian barang yang hilang.</p>
-                </a>
-            </div>
-
-            {{-- D. Konsumsi --}}
-            <div class="col-6 col-md-3">
+            {{-- 3. Layanan Konsumsi --}}
+            <div class="col-6 col-md-4">
                 <a href="{{ route('login') }}" class="service-card">
                     <div class="service-icon"><i class="fas fa-utensils"></i></div>
                     <h5 class="service-title">Konsumsi</h5>
-                    <p class="service-desc d-none d-md-block">Snack & makan siang tamu.</p>
+                    <p class="service-desc d-none d-md-block">Layanan pengadaan konsumsi.</p>
                 </a>
             </div>
+
+            {{-- 4. Inventarisasi Aset --}}
+            <div class="col-6 col-md-4">
+                <a href="http://inventaris.ftmm/" target="_blank" class="service-card">
+                    <div class="service-icon"><i class="fas fa-box"></i></div>
+                    <h5 class="service-title">Inventarisasi Aset</h5>
+                    <p class="service-desc d-none d-md-block">Pengelolaan aset dan inventaris.</p>
+                </a>
+            </div>
+
+            {{-- 5. SiMon --}}
+            <div class="col-6 col-md-4">
+                <a href="http://simon.ftmm/login" target="_blank" class="service-card">
+                    <div class="service-icon"><i class="fas fa-boxes"></i></div>
+                    <h5 class="service-title">SiMon FTMM</h5>
+                    <p class="service-desc d-none d-md-block">Sistem informasi monitoring stock opname.</p>
+                </a>
+            </div>
+
+            {{-- 6. Lost & Found --}}
+            <div class="col-6 col-md-4">
+                <a href="#" class="service-card">
+                    <div class="service-icon"><i class="fas fa-search"></i></div>
+                    <h5 class="service-title">Lost & Found <i style="font-size: 0.8rem;">(Coming Soon)</i></h5>
+                    <p class="service-desc d-none d-md-block">Laporan barang hilang. <i style="font-size: 0.8rem;">(Coming Soon)</i></p>
+                </a>
+            </div>
+
         </div>
 
     </div>
