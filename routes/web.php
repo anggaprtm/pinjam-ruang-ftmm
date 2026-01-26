@@ -20,11 +20,13 @@ use App\Http\Controllers\Admin\KioskController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Admin\RiwayatPerjalananController;
 use App\Http\Controllers\Admin\PermintaanKegiatanController;
+use App\Http\Controllers\LandingController;
 
 
 
 // === Redirect root ke login (sesuai rute lama)
-Route::redirect('/', '/login');
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+// Route::redirect('/', '/login');
 
 Route::get('/dashboard', function () {
     return redirect()->route('admin.home'); // atau redirect('/home')
