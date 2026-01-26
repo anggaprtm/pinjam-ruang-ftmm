@@ -226,7 +226,7 @@ class SignageController extends Controller
         }
 
         $data = $query->orderBy('waktu_mulai', 'asc')
-            ->limit(5) // Ambil 10 terdekat
+            ->limit(8) // Ambil 10 terdekat
             ->get()
             ->map(function ($item) use ($today) {
                 $start = Carbon::parse($item->waktu_mulai);
@@ -247,7 +247,7 @@ class SignageController extends Controller
                     $dateLabel = "HARI INI";
                     $dateFlag = "today";
                 } elseif ($isTomorrow) {
-                    $dateLabel = "BESOK • " . $start->translatedFormat('d M');
+                    $dateLabel = "BESOK • " . $start->translatedFormat('d F');
                     $dateFlag = "tomorrow";
                 } else {
                     $dateLabel = $start->translatedFormat('l, d F'); 

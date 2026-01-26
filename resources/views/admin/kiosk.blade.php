@@ -28,11 +28,12 @@
         .bg-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; }
         .bg-image {
             /* URL Gambar Gedung yang lebih terang */
-            background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1920&auto=format&fit=crop');
-            background-size: cover; background-position: center;
-            /* Filter brightness dinaikkan agar lebih terang */
+            background-image: url("{{ asset('images/gedung-ftmm.JPG') }}");
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+	    width: 100%;
+	    height: 100%;
+	    position: absolute;
             filter: brightness(0.7) contrast(1.1);
-            transform: scale(1.02);
         }
         /* Gradient ditipiskan drastis agar gambar belakang terlihat jelas */
         .bg-gradient { 
@@ -43,6 +44,7 @@
         .glass-panel {
             background: rgba(15, 23, 42, 0.6); /* Panel sedikit lebih transparan */
             backdrop-filter: blur(15px);
+            margin-bottom: 12px;
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
@@ -99,6 +101,7 @@
             border-radius: 12px;
             padding: 16px 20px;
             border-radius: 12px;
+	    margin-bottom: 12px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
@@ -123,18 +126,18 @@
             margin-bottom: 12px;
         }
         
-        .date-badge { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+        .date-badge { font-size: 0.9rem; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em; }
         .badge-today { background: #14b8a6; color: #0f172a; }
         .badge-tomorrow { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-future { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
 
-        .status-badge { padding: 4px 8px; border-radius: 50px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .status-badge { padding: 4px 8px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .status-reserved { background: rgba(255,255,255,0.1); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); }
         .status-occupied { background: #be123c; color: white; animation: pulse 2s infinite; }
 
         /* Judul (FIXED SIZE & WRAPPING) */
         .card-title { 
-            font-size: 1.1rem; /* Ukuran diperkecil */
+            font-size: 1.3rem; /* Ukuran diperkecil */
             font-weight: 700; 
             line-height: 1.3; /* Jarak antar baris jika wrap */
             color: #ffffff;
@@ -156,8 +159,8 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .time-display { display: flex; align-items: center; gap: 8px; font-family: 'Roboto Mono', monospace; font-size: 1.1rem; font-weight: 700; color: #e2e8f0; }
-        .time-display i { color: #14b8a6; }
+        .time-display { display: flex; align-items: center; font-family: 'Roboto Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #e2e8f0; }
+        .time-display i { color: #14b8a6; margin-right: 13px; }
 
         .pic-display { text-align: right; }
         .pic-label { font-size: 0.6rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
@@ -177,7 +180,7 @@
         }
         .marquee-container { flex: 1; overflow: hidden; position: relative; height: 24px; }
         .marquee-text {
-            position: absolute; white-space: nowrap; font-size: 1rem; color: #cbd5e1;
+            position: absolute; white-space: nowrap; font-size: 1.3rem; color: #cbd5e1;
             animation: marquee 25s linear infinite; line-height: 24px;
         }
 
@@ -192,7 +195,7 @@
 
     {{-- HEADER --}}
     <header class="glass-panel">
-        <p class="subtitle">AGENDA RAPAT & PERTEMUAN</p>
+        <p class="subtitle">GEDUNG NANO • R. SIDANG LT. 10</p>
         <div class="clock-container">
             <div id="clock-time">00:00</div>
             <div id="clock-date">...</div>
@@ -203,7 +206,7 @@
     <main class="glass-panel">
         <div class="list-header">
             <span style="font-weight: 700; color: #e2e8f0; letter-spacing: 1px; text-transform: uppercase;">
-                <i class="fas fa-list-ul me-2"></i> 5 Agenda Terdekat
+                <i class="fas fa-list-ul me-2"></i> Agenda Terdekat
             </span>
             <span style="font-size:0.7rem; padding:4px 8px; background:rgba(20,184,166,0.2); color:#2dd4bf; border-radius:4px; font-weight:700;">
                 LIVE
@@ -223,7 +226,7 @@
         <div class="info-icon"><i class="fas fa-info"></i></div>
         <div class="marquee-container">
             <div class="marquee-text">
-                Selamat Datang di Fakultas Teknologi Maju dan Multidisiplin~
+                • Selamat Datang di Fakultas Teknologi Maju dan Multidisiplin • Beraksi Dalam Kolaborasi •
             </div>
         </div>
     </footer>
@@ -234,14 +237,26 @@
         const REFRESH_INTERVAL = 30000; 
 
         // JAM
-        function updateClock() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':');
-            const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+	function updateClock() {
+            var now = new Date();
+            
+            // Teknik '0' + angka lalu slice(-2) adalah cara paling aman di browser lama
+            var h = ('0' + now.getHours()).slice(-2);
+            var m = ('0' + now.getMinutes()).slice(-2);
+            var s = ('0' + now.getSeconds()).slice(-2);
+            var timeStr = h + ':' + m + ':' + s;
+
+            var dateStr = now.toLocaleDateString('id-ID', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
             
             document.getElementById('clock-time').innerText = timeStr;
             document.getElementById('clock-date').innerText = dateStr;
         }
+
         setInterval(updateClock, 1000);
         updateClock();
 
@@ -272,7 +287,7 @@
             }
 
             // Batasi 5 item
-            const limitedData = data.slice(0, 5);
+            const limitedData = data.slice(0, 7);
 
             const itemsHtml = limitedData.map(item => {
                 let statusClass = 'status-reserved';

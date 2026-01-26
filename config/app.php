@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'PinjamRuang-FTMM'),
+    'name' => env('APP_NAME', 'LayananSarpras-FTMM'),
 
     /*
     |--------------------------------------------------------------------------
