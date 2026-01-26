@@ -1668,6 +1668,53 @@ div.dt-button-collection .dt-button.active:hover::before {
   color: #0b5ed7; /* Warna biru lebih gelap saat hover */
 }
 
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(0,0,0,0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* INISIAL */
+.avatar-initial {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #ffffff; /* biru clean */
+  color: #741847;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* BADGE ONLINE */
+.avatar-status {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  background: #28a745;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+
 /* ================================================= */
 /* == GAYA RESPONSIVE UNTUK TAMPILAN MOBILE == */
 /* ================================================= */
@@ -1981,6 +2028,55 @@ div.dt-button-collection .dt-button.active:hover::before {
   .c-footer > div:first-child {
     margin-bottom: 0.25rem !important;
   }
+
+  .avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(0,0,0,0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    }
+
+    /* INISIAL */
+    .avatar-initial {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #ffffff; /* biru clean */
+    color: #741847;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    /* BADGE ONLINE */
+    .avatar-status {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background: #28a745;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    }
+
+
+
   
 
 }

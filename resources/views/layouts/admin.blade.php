@@ -64,18 +64,64 @@
             </button>
 
             <ul class="c-header-nav ml-auto">
-                @if(count(config('panel.available_languages', [])) > 1)
-                    <li class="c-header-nav-item dropdown d-md-down-none">
-                        <a class="c-header-nav-link" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                            {{ strtoupper(app()->getLocale()) }}
+                @auth
+                    <li class="c-header-nav-item dropdown">
+                        <a class="c-header-nav-link p-0"
+                        data-toggle="dropdown"
+                        href="#"
+                        role="button"
+                        aria-haspopup="true"
+                        aria-expanded="false">
+
+                            <div class="avatar-circle">
+                                @if(Auth::user()->photo)
+                                    <img src="{{ asset('storage/'.Auth::user()->photo) }}"
+                                        alt="{{ Auth::user()->name }}">
+                                @else
+                                    @php
+                                        $names = explode(' ', trim(Auth::user()->name));
+                                        $initials = strtoupper(
+                                            substr($names[0], 0, 1) .
+                                            (isset($names[1]) ? substr($names[1], 0, 1) : '')
+                                        );
+                                    @endphp
+                                    <div class="avatar-initial">
+                                        {{ $initials }}
+                                    </div>
+                                @endif
+                            </div>
+
+
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            @foreach(config('panel.available_languages') as $langLocale => $langName)
-                                <a class="dropdown-item" href="{{ url()->current() }}?change_language={{ $langLocale }}">{{ strtoupper($langLocale) }} ({{ $langName }})</a>
-                            @endforeach
+
+                        <div class="dropdown-menu dropdown-menu-right pt-0">
+                            <div class="dropdown-header bg-light py-2 text-center">
+                                <strong class="text-primary">{{ Auth::user()->name }}</strong><br>
+                                <small class="text-muted">{{ Auth::user()->email }}</small>
+                            </div>
+
+                            <a class="dropdown-item" href="{{ route('profile.password.edit') }}">
+                                <i class="cil-user mr-2"></i> Profil
+                            </a>
+
+                            <div class="dropdown-divider"></div>
+
+                            <a class="dropdown-item text-danger"
+                            href="{{ route('logout') }}"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="cil-account-logout mr-2"></i> Logout
+                            </a>
+
+                            <form id="logout-form"
+                                action="{{ route('logout') }}"
+                                method="POST"
+                                class="d-none">
+                                @csrf
+                            </form>
                         </div>
                     </li>
-                @endif
+                    @endauth
+
 
 
             </ul>
@@ -118,29 +164,6 @@
             <form id="logoutform" action="{{ route('logout') }}" method="POST" style="display: none;">
                 {{ csrf_field() }}
             </form>
-        </div>
-    </div>
-    
-    <!-- Floating Calendar Button -->
-    <button id="floating-calendar-btn" class="btn btn-primary btn-lg" type="button" data-bs-toggle="modal" data-bs-target="#calendarModal" style="position: fixed; bottom: 35px; right: 20px; z-index: 1050; border-radius: 50%; width: 60px; height: 60px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-        <i class="fas fa-calendar-alt"></i>
-    </button>
-
-    <!-- Calendar Modal -->
-    <div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="calendarModalLabel">Kalender Hari Libur</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <!-- Embed Google Calendar -->
-                    <div class="ratio ratio-16x9">
-                        <iframe src="https://calendar.google.com/calendar/embed?src=id.indonesian%23holiday%40group.v.calendar.google.com&src=93dbfe7f13693cb27cafb0ec37d538ee11c7ac8def40063e6c163f35fb0387cb%40group.calendar.google.com&ctz=Asia%2FJakarta" style="border: 0" allowfullscreen></iframe>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
