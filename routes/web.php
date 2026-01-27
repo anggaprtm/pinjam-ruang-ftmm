@@ -40,9 +40,10 @@ Route::get('/home', function () {
     return redirect()->route('admin.home');
 });
 
-Route::get('/phpinfo', function () {
-    phpinfo();
-});
+// Kiosk Mode (fullscreen TV dashboard)
+Route::get('kiosk', [KioskController::class, 'index'])->name('kiosk');
+Route::get('api/kiosk/events', [KioskController::class, 'events'])->name('api.kiosk.events');
+
 // === Grup ADMIN (prefix + name + middleware=auth)
 Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -104,10 +105,6 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         ]);
     Route::patch('riwayat-perjalanan/{riwayat_perjalanan}/selesai', [RiwayatPerjalananController::class, 'selesaikan'])->name('riwayat-perjalanan.selesaikan');
     Route::patch('riwayat-perjalanan/{riwayat_perjalanan}/mulai', [RiwayatPerjalananController::class, 'mulaiJalan'])->name('riwayat-perjalanan.mulai');
-
-    // Kiosk Mode (fullscreen TV dashboard)
-    Route::get('kiosk', [KioskController::class, 'index'])->name('kiosk');
-    Route::get('api/kiosk/events', [KioskController::class, 'events'])->name('api.kiosk.events');
 
     // Statistik (hanya untuk admin/home_access)
     Route::get('statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])
