@@ -28,7 +28,7 @@
         .bg-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; }
         .bg-image {
             /* URL Gambar Gedung yang lebih terang */
-            background-image: url("{{ asset('images/gedung-ftmm.JPG') }}");
+            background-image: url("{{ asset('images/gedung-ftmms.JPG') }}");
             background-size: cover; background-position: center; background-repeat: no-repeat;
 	    width: 100%;
 	    height: 100%;
@@ -101,7 +101,7 @@
             border-radius: 12px;
             padding: 16px 20px;
             border-radius: 12px;
-	    margin-bottom: 12px;
+	        margin-bottom: 12px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
@@ -134,6 +134,8 @@
         .status-badge { padding: 4px 8px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .status-reserved { background: rgba(255,255,255,0.1); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); }
         .status-occupied { background: #be123c; color: white; animation: pulse 2s infinite; }
+        .status-finished { background: rgba(8, 143, 76, 0.44); color: white; }
+
 
         /* Judul (FIXED SIZE & WRAPPING) */
         .card-title { 
@@ -295,6 +297,7 @@
                 let badgeColorClass = 'badge-' + (item.date_flag || 'future');
 
                 if ((item.status || "").toLowerCase() === 'occupied') statusClass = 'status-occupied';
+                if ((item.status || "").toLowerCase() === 'finished') statusClass = 'status-finished';
 
                 // Fallback jika judul kosong
                 const titleText = item.title ? item.title : '(Tanpa Judul)';
@@ -307,7 +310,14 @@
                             ${item.date_label || 'AGENDA'}
                         </div>
                         <span class="status-badge ${statusClass}">
-                            ${item.status === 'Occupied' ? '● BERLANGSUNG' : item.status}
+                            ${item.status === 'Occupied'
+                                ? '● BERLANGSUNG'
+                                : item.status === 'Reserved'
+                                    ? 'DIJADWALKAN'
+                                    : item.status === 'Finished'
+                                        ? '✔ SELESAI'
+                                        : item.status
+                            }
                         </span>
                     </div>
 

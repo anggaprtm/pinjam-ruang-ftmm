@@ -239,6 +239,10 @@ class SignageController extends Controller
                     $status = 'Occupied'; 
                 } 
 
+                if (Carbon::now()->gt($end)) {
+                    $status = 'Finished';
+                }
+
                 // Logic Label Tanggal
                 $isToday = $start->isSameDay(Carbon::now());
                 $isTomorrow = $start->isSameDay(Carbon::now()->addDay());
