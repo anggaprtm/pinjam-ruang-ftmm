@@ -63,10 +63,10 @@
 
             {{-- 6. Lost & Found --}}
             <div class="col-6 col-md-4">
-                <a href="#" class="service-card">
+                <a href="http://210.57.209.70:5852" class="service-card">
                     <div class="service-icon"><i class="fas fa-search"></i></div>
-                    <h5 class="service-title">Lost & Found <i style="font-size: 0.8rem;">(Coming Soon)</i></h5>
-                    <p class="service-desc d-none d-md-block">Laporan barang hilang. <i style="font-size: 0.8rem;">(Coming Soon)</i></p>
+                    <h5 class="service-title">Lost & Found</h5>
+                    <p class="service-desc d-none d-md-block">Portal barang temuan dan hilang.</p>
                 </a>
             </div>
 
