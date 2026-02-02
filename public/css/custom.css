@@ -580,15 +580,44 @@ h5 {
     text-transform: capitalize;
     letter-spacing: 0.5px;
 }
-.badge-status-belum-disetujui { color: #856404; background-color: #fff3cd; }
-.badge-status-verifikasi-sarpras { color: #004085; background-color: #cce5ff; }
-.badge-status-verifikasi-akademik { color: #383d41; background-color: #e2e3e5; }
-.badge-status-disetujui { color: #155724; background-color: #d4edda; }
-.badge-status-ditolak { color: #721c24; background-color: #f8d7da; }
-/* Badges untuk status revisi agar konsisten dengan timeline warna oranye */
-.badge-status-revisi-operator { color: #7a4100; background-color: #fff4e6; }
-.badge-status-revisi-sarpras { color: #7a4100; background-color: #fff4e6; }
-.badge-status-revisi-akademik { color: #7a4100; background-color: #fff4e6; }
+/* Tahap Awal / Operator */
+.badge-status-belum-disetujui,
+.badge-status-revisi-operator {
+    background-color: #6c757d; /* Abu-abu / Secondary */
+    color: white;
+}
+
+/* Tahap Kemahasiswaan */
+.badge-status-verifikasi-kemahasiswaan,
+.badge-status-revisi-kemahasiswaan {
+    background-color: #17a2b8; /* Info / Cyan */
+    color: white;
+}
+
+/* Tahap Akademik */
+.badge-status-verifikasi-kasubag-akademik,
+.badge-status-revisi-kasubag-akademik {
+    background-color: #0d6efd; /* Primary / Blue */
+    color: white;
+}
+
+/* Tahap Sarpras */
+.badge-status-verifikasi-kasubag-sarpras,
+.badge-status-revisi-kasubag-sarpras {
+    background-color: #fd7e14; /* Orange */
+    color: white;
+}
+
+/* Final */
+.badge-status-disetujui {
+    background-color: #198754; /* Success / Green */
+    color: white;
+}
+
+.badge-status-ditolak {
+    background-color: #dc3545; /* Danger / Red */
+    color: white;
+}
 /* Badge pinjam barang */
 .badge-pinjam-ya {
     color: #004085;

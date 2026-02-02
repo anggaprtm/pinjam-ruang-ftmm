@@ -14,6 +14,14 @@
             <a href="{{ route("admin.home") }}" class="c-sidebar-nav-link" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('global.dashboard') }}">
                 <i class="c-sidebar-nav-icon fas fa-fw fa-fire"></i>
                 {{ trans('global.dashboard') }}
+
+                {{-- Logic Badge Dashboard --}}
+                @if(optional(auth()->user())->isAdmin())
+                    @if(isset($totalDashboardPending) && $totalDashboardPending > 0)
+                        <span class="sidebar-badge bg-danger text-white">{{ $totalDashboardPending }}</span>
+                    @endif
+                @endif
+
             </a>
         </li>
         @can('permission_access')
@@ -62,6 +70,11 @@
                 <a href="{{ route("admin.permintaan-kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/permintaan-kegiatan") || request()->is("admin/permintaan-kegiatan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Permintaan Layanan">
                     <i class="fa-fw fas fa-concierge-bell c-sidebar-nav-icon"></i>
                     Permintaan Layanan
+                    @if(optional(auth()->user())->isAdmin())
+                        @if(!empty($pendingPermintaanCount))
+                            <span class="sidebar-badge bg-danger text-white">{{ $pendingPermintaanCount }}</span>
+                        @endif
+                    @endif
                 </a>
             </li>
         @endcan

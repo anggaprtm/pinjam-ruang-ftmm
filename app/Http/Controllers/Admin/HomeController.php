@@ -91,7 +91,7 @@ class HomeController extends Controller
         // C. APPROVAL RUANG (belum disetujui)
         // ------------------------------------------
         $pendingApproval = Kegiatan::with(['ruangan', 'user'])
-            ->where('status', 'belum_disetujui')
+            ->whereNotIn('status', ['disetujui', 'ditolak'])
             ->orderBy('created_at', 'asc')
             ->take(5)
             ->get();

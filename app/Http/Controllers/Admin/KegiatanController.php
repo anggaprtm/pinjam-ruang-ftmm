@@ -71,21 +71,46 @@ class KegiatanController extends Controller
             });
 
 
-
-
             $table->editColumn('actions', function ($row) {
                 $buttons = '';
+                $user = auth()->user();
 
-                if (auth()->user()->can('kegiatan_show')) {
+                // 1. Tombol DETAIL (Semua bisa lihat jika punya izin)
+                if ($user->can('kegiatan_show')) {
                     $buttons .= '<a class="btn btn-xs btn-info" href="' . route('admin.kegiatan.show', $row->id) . '" title="Detail"><i class="fas fa-eye"></i></a> ';
                 }
 
-                if (!auth()->user()->hasRole('User') || (auth()->user()->hasRole('User') && !in_array($row->status, ['disetujui', 'ditolak']))) {
-                    if (auth()->user()->can('kegiatan_edit')) {
+                // 2. Logic Tombol EDIT & HAPUS
+                // Default: Izinkan tampil (untuk Admin/Verifikator)
+                $allowEditDelete = true;
+
+                // FILTER KHUSUS ROLE USER (PEMINJAM)
+                if ($user->hasRole('User')) {
+                    // Daftar status "Aman" untuk diedit user
+                    $editableStatuses = [
+                        'belum_disetujui',          // Masih draft awal
+                        'revisi_operator',          // Sedang direvisi
+                        'revisi_kemahasiswaan',
+                        'revisi_kasubag_akademik',
+                        'revisi_kasubag_sarpras'
+                    ];
+
+                    // Jika status saat ini TIDAK ada di daftar editable, maka kunci tombol
+                    if (!in_array($row->status, $editableStatuses)) {
+                        $allowEditDelete = false;
+                    }
+                }
+
+                // Render tombol jika lolos filter
+                if ($allowEditDelete) {
+                    // Cek permission Edit
+                    if ($user->can('kegiatan_edit')) {
                         $buttons .= '<a class="btn btn-xs btn-success" href="' . route('admin.kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i></a> ';
                     }
 
-                    if (auth()->user()->can('kegiatan_delete')) {
+                    // Cek permission Hapus
+                    // (Biasanya kalau gak boleh edit, hapus juga gak boleh saat sedang diverifikasi)
+                    if ($user->can('kegiatan_delete')) {
                         $buttons .= '<button type="button" class="btn btn-xs btn-danger js-delete-btn" data-url="' . route('admin.kegiatan.destroy', $row->id) . '" title="Hapus"><i class="fas fa-trash"></i></button>';
                     }
                 }
@@ -115,24 +140,54 @@ class KegiatanController extends Controller
                     return '-';
                 }
 
+                // Di dalam $table->editColumn('persetujuan', function($row) { ...
                 switch ($row->status) {
                     case 'belum_disetujui':
-                        return '<button type="button" class="btn btn-primary btn-sm js-open-modal" data-action-type="verifikasi_sarpras" data-id="'.$row->id.'">Verifikasi</button>';
-                    case 'verifikasi_sarpras':
-                        return '<button type="button" class="btn btn-primary btn-sm js-open-modal" data-action-type="verifikasi_akademik" data-id="'.$row->id.'">Verifikasi</button>';
-                    case 'verifikasi_akademik':
-                        $setujuiBtn = '<button type="button" class="btn btn-success btn-sm js-open-modal" data-action-type="setujui" data-id="'.$row->id.'">Setujui</button>';
-                        $tolakBtn = '<button type="button" class="btn btn-danger btn-sm js-open-modal ms-1" data-action-type="tolak" data-id="'.$row->id.'">Tolak</button>';
-                        return $setujuiBtn . $tolakBtn;
+                        // Tombol untuk lanjut ke Kemahasiswaan
+                        // Pastikan permission 'verifikasi_awal' atau role Operator dimiliki
+                        return '<button type="button" class="btn btn-primary btn-sm js-open-modal" data-action-type="ajukan_ke_kemahasiswaan" data-id="'.$row->id.'">Ajukan ke Kemahasiswaan</button>';
+                    
+                    case 'verifikasi_kemahasiswaan':
+                        // Tombol aksi untuk staff Kemahasiswaan
+                        // Permission check: auth()->user()->can('verifikasi_kemahasiswaan')
+                        return '<button class="btn btn-primary btn-sm js-open-modal" data-action-type="verifikasi_kemahasiswaan" data-id="'.$row->id.'">Verifikasi (Kemahasiswaan)</button>';
+
+                    case 'verifikasi_kasubag_akademik':
+                        // Tombol aksi untuk Kasubag Akademik
+                        return '<button class="btn btn-primary btn-sm js-open-modal" data-action-type="verifikasi_kasubag_akademik" data-id="'.$row->id.'">Verifikasi (Akademik)</button>';
+
+                    case 'verifikasi_kasubag_sarpras':
+                        // Sesuai request: "Disetujui (operator yg aksi)"
+                        // Berarti di tahap ini, tombol "Setujui" muncul.
+                        // PERHATIAN: Siapa yang boleh klik? Jika Operator, pastikan permission-nya cek Operator.
+                        // Jika Kasubag Sarpras yang klik, permissionnya cek Sarpras.
+                        
+                        $btnSetujui = '<button class="btn btn-success btn-sm js-open-modal" data-action-type="setujui" data-id="'.$row->id.'">Finalisasi (Disetujui)</button>';
+                        $btnTolak = '<button class="btn btn-danger btn-sm js-open-modal ms-1" data-action-type="tolak" data-id="'.$row->id.'">Tolak</button>';
+                        return $btnSetujui . $btnTolak;
+
                     case 'disetujui':
-                        // Cek apakah kegiatan ini disetujui langsung oleh admin saat dibuat
-                        if (!$row->verifikasi_sarpras_at && !$row->verifikasi_akademik_at && !$row->disetujui_at) {
-                            return '<span class="text-muted fst-italic"><i class="fas fa-user-shield me-1"></i> Kegiatan dibuat oleh Admin</span>';
+                        // Cek apakah kegiatan ini 'Bypass' (Dibuat Admin)
+                        // Ciri-cirinya: Status disetujui, TAPI tidak punya timestamp verifikasi dari flow normal
+                        // Pastikan nama kolom timestamp sesuai dengan yang ada di tabel kamu (misal: verifikasi_kemahasiswaan_at)
+                        
+                        if (
+                            is_null($row->verifikasi_kemahasiswaan_at) && // Kolom Baru
+                            is_null($row->verifikasi_akademik_at) &&      // Kolom Lama (Mapping: Kasubag Akademik)
+                            is_null($row->verifikasi_sarpras_at)        // Kolom Lama (Mapping: Kasubag Sarpras)                // Tapi punya tanggal disetujui
+                        ) {
+                            return '<span class="text-muted fst-italic"><i class="fas fa-user-shield me-1"></i> Dibuat oleh Admin</span>';
                         }
-                        // Jika disetujui melalui proses normal, tampilkan strip
-                        return '<span class="text-muted">-</span>';
+
+                        // Jika lewat jalur normal (punya history verifikasi), tampilkan badge sukses biasa
+                        return '<span class="badge-status badge-status-success">Telah Disetujui</span>';
+                        
                     default:
-                        return '<span class="text-muted">-</span>';
+                        // Handle status revisi / ditolak
+                        if (Str::startsWith($row->status, 'revisi_')) {
+                            return '<span class="badge-status badge-status-pending">Menunggu Revisi</span>';
+                        }
+                        return '-';
                 }
             });
 
@@ -339,13 +394,20 @@ class KegiatanController extends Controller
         if (Str::startsWith($oldStatus, 'revisi_')) {
             switch ($oldStatus) {
                 case 'revisi_operator':
+                    // Jika revisi dari status awal
                     $kegiatan->status = 'belum_disetujui';
                     break;
-                case 'revisi_sarpras':
-                    $kegiatan->status = 'verifikasi_sarpras';
+                case 'revisi_kemahasiswaan':
+                    // Balik ke meja Kemahasiswaan
+                    $kegiatan->status = 'verifikasi_kemahasiswaan';
                     break;
-                case 'revisi_akademik':
-                    $kegiatan->status = 'verifikasi_akademik';
+                case 'revisi_kasubag_akademik':
+                    // Balik ke meja Akademik
+                    $kegiatan->status = 'verifikasi_kasubag_akademik';
+                    break;
+                case 'revisi_kasubag_sarpras':
+                    // Balik ke meja Sarpras
+                    $kegiatan->status = 'verifikasi_kasubag_sarpras';
                     break;
                 default:
                     $kegiatan->status = 'belum_disetujui';
@@ -454,38 +516,53 @@ class KegiatanController extends Controller
 
     switch ($validated['action']) {
         case 'next':
+            // ALUR MAJU: Estafet ke tahap berikutnya
             switch ($kegiatan->status) {
                 case 'belum_disetujui':
-                    $newStatus = 'verifikasi_sarpras';
-                    $kegiatan->verifikasi_sarpras_at = now();
-                    $successMessage = 'Verifikasi berhasil, verifikasi selanjutnya ditangguhkan ke pihak Akademik.';
+                    // Aksi Awal: Masuk ke Kemahasiswaan
+                    $newStatus = 'verifikasi_kemahasiswaan';
+                    $successMessage = 'Berhasil diajukan. Menunggu verifikasi Kemahasiswaan.';
                     break;
-                case 'verifikasi_sarpras':
-                    $newStatus = 'verifikasi_akademik';
+                case 'verifikasi_kemahasiswaan':
+                    // Kemahasiswaan OK -> Lanjut Kasubag Akademik
+                    $newStatus = 'verifikasi_kasubag_akademik';
+                    $kegiatan->verifikasi_kemahasiswaan_at = now(); // Pastikan kolom ini ada di DB
+                    $successMessage = 'Verifikasi Kemahasiswaan berhasil. Lanjut ke Kasubag Akademik.';
+                    break;
+                case 'verifikasi_kasubag_akademik':
+                    // Akademik OK -> Lanjut Kasubag Sarpras
+                    $newStatus = 'verifikasi_kasubag_sarpras';
                     $kegiatan->verifikasi_akademik_at = now();
-                    $successMessage = 'Verifikasi Akademik berhasil, verifikasi selanjutnya ditangguhkan ke pihak Sarpras.';
+                    $successMessage = 'Verifikasi Akademik berhasil. Lanjut ke Kasubag Sarpras.';
                     break;
-                case 'verifikasi_akademik':
+                case 'verifikasi_kasubag_sarpras':
+                    // Sarpras OK -> FINAL (Disetujui oleh Operator)
+                    // Sesuai request: "Disetujui (operator yg aksi)"
+                    // Ini mengasumsikan tombol diklik saat status masih di sarpras untuk mem-finalisasi
                     $newStatus = 'disetujui';
+                    $kegiatan->verifikasi_sarpras_at = now();
                     $kegiatan->disetujui_at = now();
-                    $successMessage = 'Verifikasi berhasil, kegiatan telah disetujui!';
+                    $successMessage = 'Kegiatan telah disetujui sepenuhnya dan diterbitkan!';
                     break;
             }
             break;
 
         case 'back':
+            // ALUR MUNDUR (Opsional: jika verifikator ingin mengembalikan ke tahap sebelumnya tanpa revisi user)
             switch ($kegiatan->status) {
-                case 'verifikasi_sarpras':
+                case 'verifikasi_kemahasiswaan':
                     $newStatus = 'belum_disetujui';
-                    $kegiatan->verifikasi_sarpras_at = null;
-                    $successMessage = 'Verifikasi sarpras dibatalkan, dikembalikan ke Akademik.';
                     break;
-                case 'verifikasi_akademik':
-                    $newStatus = 'verifikasi_sarpras';
+                case 'verifikasi_kasubag_akademik':
+                    $newStatus = 'verifikasi_kemahasiswaan';
+                    $kegiatan->verifikasi_kemahasiswaan_at = null;
+                    break;
+                case 'verifikasi_kasubag_sarpras':
+                    $newStatus = 'verifikasi_kasubag_akademik';
                     $kegiatan->verifikasi_akademik_at = null;
-                    $successMessage = 'Verifikasi akademik dibatalkan, dikembalikan ke Operator.';
                     break;
             }
+            $successMessage = 'Status dikembalikan ke tahap sebelumnya.';
             break;
 
         case 'reject':
@@ -495,37 +572,32 @@ class KegiatanController extends Controller
             break;
 
         case 'revise':
-            // Tetapkan status revisi berdasarkan tahapan saat ini
+            // ALUR REVISI: Mengembalikan ke pemohon dengan tag revisi spesifik
             switch ($kegiatan->status) {
-                case 'belum_disetujui':
-                    $newStatus = 'revisi_operator';
-                    $successMessage = 'Permintaan revisi dikirim ke pemohon (Operator).';
+                case 'verifikasi_kemahasiswaan':
+                    $newStatus = 'revisi_kemahasiswaan';
                     break;
-                case 'verifikasi_sarpras':
-                    $newStatus = 'revisi_sarpras';
-                    $successMessage = 'Permintaan revisi dikirim ke pemohon (Sarpras).';
+                case 'verifikasi_kasubag_akademik':
+                    $newStatus = 'revisi_kasubag_akademik';
                     break;
-                case 'verifikasi_akademik':
-                    $newStatus = 'revisi_akademik';
-                    $successMessage = 'Permintaan revisi dikirim ke pemohon (Akademik).';
+                case 'verifikasi_kasubag_sarpras':
+                    $newStatus = 'revisi_kasubag_sarpras';
                     break;
                 default:
                     $newStatus = 'revisi_operator';
-                    $successMessage = 'Permintaan revisi dikirim ke pemohon.';
             }
-            // Pastikan notes tersedia untuk revisi
+            
             if (empty($validated['notes'])) {
-                return redirect()->back()->with('error', 'Mohon isi catatan/revisi sebelum mengirim permintaan revisi.');
+                return redirect()->back()->with('error', 'Catatan revisi wajib diisi.');
             }
-            // Simpan informasi audit revisi
+
+            // Logic simpan revisi (sama seperti kodemu)
             $kegiatan->revisi_by = auth()->id();
             $kegiatan->revisi_at = now();
-            // simpan level sesuai status yang ditetapkan
-            $level = str_replace('revisi_', '', $newStatus);
-            $kegiatan->revisi_level = $level;
+            $kegiatan->revisi_level = str_replace('revisi_', '', $newStatus);
             $kegiatan->revisi_notes = $validated['notes'];
-            // juga simpan di notes umum agar terlihat di tampilan kegiatan
             $kegiatan->notes = $validated['notes'];
+            $successMessage = 'Permintaan revisi dikirim ke pemohon.';
             break;
 
         default:
@@ -563,58 +635,58 @@ class KegiatanController extends Controller
                 ->with('success', $successMessage);
             }
         
-                    public function pinjamBarang(Request $request, Kegiatan $kegiatan)
-                    {
-                        $request->validate([
-                            'barang_id' => 'required|exists:barangs,id',
-                            'jumlah' => 'required|integer|min:1',
-                        ]);
-                
-                        $barang = Barang::find($request->barang_id);
-                        $jumlahPinjam = $request->jumlah;
-                
-                        if ($jumlahPinjam > $barang->stok) {
-                            return back()->with('error', 'Stok barang tidak mencukupi.');
-                        }
-                
-                        // Cek apakah barang ini sedang dalam status 'dipinjam' untuk kegiatan ini
-                        $borrowedItem = $kegiatan->barangs()
-                            ->where('barang_id', $barang->id)
-                            ->wherePivot('status', 'dipinjam')
-                            ->first();
-                
-                        if ($borrowedItem) {
-                            // Jika sudah ada dan statusnya 'dipinjam', update jumlahnya
-                            $borrowedItem->pivot->jumlah += $jumlahPinjam;
-                            $borrowedItem->pivot->save();
-                        } else {
-                            // Jika belum ada (atau sudah dikembalikan), buat record peminjaman baru
-                            $kegiatan->barangs()->attach($barang->id, ['jumlah' => $jumlahPinjam, 'status' => 'dipinjam']);
-                        }
-                
-                        $barang->stok -= $jumlahPinjam;
-                        $barang->save();
-                
-                        return back()->with('success', 'Barang berhasil dipinjam.');
-                    }        
-                    public function kembalikanBarang(Request $request, Kegiatan $kegiatan, Barang $barang)
-                    {
-                        $borrowedItem = $kegiatan->barangs()->where('barang_id', $barang->id)->wherePivot('status', 'dipinjam')->first();
-            
-                        if (!$borrowedItem) {
-                            return back()->with('error', 'Data peminjaman tidak ditemukan atau sudah dikembalikan.');
-                        }
-            
-                        $jumlahKembali = $borrowedItem->pivot->jumlah;
-            
-                        // Update status on the specific pivot record
-                        $borrowedItem->pivot->status = 'dikembalikan';
-                        $borrowedItem->pivot->save();
-            
-                        // Kembalikan stok barang
-                        $barang->stok += $jumlahKembali;
-                        $barang->save();
-            
-                        return back()->with('success', 'Barang berhasil dikembalikan.');
-                    }        }
+            public function pinjamBarang(Request $request, Kegiatan $kegiatan)
+            {
+                $request->validate([
+                    'barang_id' => 'required|exists:barangs,id',
+                    'jumlah' => 'required|integer|min:1',
+                ]);
+        
+                $barang = Barang::find($request->barang_id);
+                $jumlahPinjam = $request->jumlah;
+        
+                if ($jumlahPinjam > $barang->stok) {
+                    return back()->with('error', 'Stok barang tidak mencukupi.');
+                }
+        
+                // Cek apakah barang ini sedang dalam status 'dipinjam' untuk kegiatan ini
+                $borrowedItem = $kegiatan->barangs()
+                    ->where('barang_id', $barang->id)
+                    ->wherePivot('status', 'dipinjam')
+                    ->first();
+        
+                if ($borrowedItem) {
+                    // Jika sudah ada dan statusnya 'dipinjam', update jumlahnya
+                    $borrowedItem->pivot->jumlah += $jumlahPinjam;
+                    $borrowedItem->pivot->save();
+                } else {
+                    // Jika belum ada (atau sudah dikembalikan), buat record peminjaman baru
+                    $kegiatan->barangs()->attach($barang->id, ['jumlah' => $jumlahPinjam, 'status' => 'dipinjam']);
+                }
+        
+                $barang->stok -= $jumlahPinjam;
+                $barang->save();
+        
+                return back()->with('success', 'Barang berhasil dipinjam.');
+            }        
+            public function kembalikanBarang(Request $request, Kegiatan $kegiatan, Barang $barang)
+            {
+                $borrowedItem = $kegiatan->barangs()->where('barang_id', $barang->id)->wherePivot('status', 'dipinjam')->first();
+    
+                if (!$borrowedItem) {
+                    return back()->with('error', 'Data peminjaman tidak ditemukan atau sudah dikembalikan.');
+                }
+    
+                $jumlahKembali = $borrowedItem->pivot->jumlah;
+    
+                // Update status on the specific pivot record
+                $borrowedItem->pivot->status = 'dikembalikan';
+                $borrowedItem->pivot->save();
+    
+                // Kembalikan stok barang
+                $barang->stok += $jumlahKembali;
+                $barang->save();
+    
+                return back()->with('success', 'Barang berhasil dikembalikan.');
+            }        }
         

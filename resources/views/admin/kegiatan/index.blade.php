@@ -205,8 +205,8 @@ $(function () {
         // Default configuration
         config = {
             title: 'Verifikasi Kegiatan',
-            bodyText: 'Lanjutkan untuk memverifikasi kegiatan ini?',
-            verifyText: 'Verifikasi',
+            bodyText: 'Apakah Anda yakin ingin melanjutkan proses verifikasi ke tahap berikutnya?',
+            verifyText: 'Verifikasi & Lanjut',
             verifyClass: 'btn-primary',
             reviseText: 'Minta Revisi',
             reviseClass: 'btn-warning',
@@ -215,16 +215,49 @@ $(function () {
             notesLabel: 'Catatan (opsional)'
         };
 
-        if (actionType === 'verifikasi_akademik') {
-            config.title = 'Verifikasi Akademik';
-        } else if (actionType === 'setujui') {
-            config.title = 'Setujui Kegiatan';
+        // LOGIC BARU: KHUSUS OPERATOR (PENGAJUAN AWAL)
+        if (actionType === 'ajukan_ke_kemahasiswaan') {
+            config.title = 'Ajukan Kegiatan';
+            config.bodyText = 'Apakah data permohonan sudah benar? Klik "Ajukan" untuk mengirim ke bagian Kemahasiswaan.';
+            config.verifyText = 'Ya, Ajukan';
+            config.verifyClass = 'btn-primary';
+            
+            // Sembunyikan tombol revisi & tolak karena Operator tidak mungkin menolak/revisi diri sendiri
+            $('#modalReviseBtn').hide(); 
+            $('#modalRejectBtn').hide(); 
+        }
+
+        // 1. Verifikasi Kemahasiswaan
+        else if (actionType === 'verifikasi_kemahasiswaan') {
+            config.title = 'Verifikasi Kemahasiswaan';
+            config.bodyText = 'Setujui dan teruskan ke Kasubag Akademik?';
+        } 
+        // 2. Verifikasi Kasubag Akademik
+        else if (actionType === 'verifikasi_kasubag_akademik') {
+            config.title = 'Verifikasi Kasubag Akademik';
+            config.bodyText = 'Setujui dan teruskan ke Kasubag Sarpras?';
+        } 
+        // 3. Verifikasi Kasubag Sarpras
+        else if (actionType === 'verifikasi_kasubag_sarpras') {
+            config.title = 'Verifikasi Kasubag Sarpras';
+            config.bodyText = 'Setujui dan kembalikan ke Operator untuk finalisasi?';
+        }
+        // 4. Finalisasi (Setujui)
+        else if (actionType === 'setujui') {
+            config.title = 'Finalisasi Kegiatan';
+            config.bodyText = 'Pastikan semua data sudah benar. Kegiatan akan diterbitkan status DISETUJUI.';
             config.verifyText = 'Ya, Setujui';
             config.verifyClass = 'btn-success';
-        } else if (actionType === 'tolak') {
+            
+            // Biasanya di tahap final tidak ada tombol "Revisi" lagi ke diri sendiri, 
+            // tapi kalau mau tetap ada untuk balikin ke tahap sebelumnya, biarkan saja.
+        } 
+        // 5. Tolak
+        else if (actionType === 'tolak') {
             config.title = 'Tolak Kegiatan';
-            config.bodyText = 'Mohon isi alasan penolakan di bawah ini.';
+            config.bodyText = 'Kegiatan ini akan ditolak permanen. Mohon isi alasannya.';
             config.notesLabel = 'Alasan Penolakan (wajib diisi)';
+            config.verifyText = 'Konfirmasi Tolak'; // Tombol utama jadi tolak (di logic button click nanti handle actionnya)
         }
 
         // Terapkan konfigurasi ke modal
@@ -494,24 +527,46 @@ $(function () {
                 name: 'status',
                 className: 'text-center',
                 render: function(data, type, row) {
+                    // 1. Logic Status Text & Class (Tetap sama seperti sebelumnya)
                     let statusClass = data.replace(/_/g, '-');
                     let statusText = '';
+                    
                     switch (data) {
-                        case 'belum_disetujui': statusText = 'Menunggu Verifikasi Operator'; break;
-                        case 'verifikasi_sarpras': statusText = 'Menunggu Verifikasi Akademik'; break;
-                        case 'verifikasi_akademik': statusText = 'Menunggu Verifikasi Sarpras'; break;
-                        case 'revisi_operator': statusText = 'Permintaan Revisi (Operator)'; break;
-                        case 'revisi_sarpras': statusText = 'Permintaan Revisi (Akademik)'; break;
-                        case 'revisi_akademik': statusText = 'Permintaan Revisi (Sarpras)'; break;
+                        case 'belum_disetujui': statusText = 'Belum Diajukan'; break;
+                        case 'verifikasi_kemahasiswaan': statusText = 'Menunggu Verif. Kemahasiswaan'; break;
+                        case 'verifikasi_kasubag_akademik': statusText = 'Menunggu Verif. Akademik'; break;
+                        case 'verifikasi_kasubag_sarpras': statusText = 'Menunggu Verif. Sarpras'; break;
                         case 'disetujui': statusText = 'Disetujui'; break;
                         case 'ditolak': statusText = 'Ditolak'; break;
-                        default: statusText = data; break;
+                        
+                        // Status Revisi
+                        case 'revisi_operator': statusText = 'Perlu Revisi (Operator)'; break;
+                        case 'revisi_kemahasiswaan': statusText = 'Perlu Revisi (Kemahasiswaan)'; break;
+                        case 'revisi_kasubag_akademik': statusText = 'Perlu Revisi (Akademik)'; break;
+                        case 'revisi_kasubag_sarpras': statusText = 'Perlu Revisi (Sarpras)'; break;
+                        
+                        default: statusText = data.replace(/_/g, ' ').toUpperCase(); break;
                     }
-                    return `<span class="badge-status badge-status-${statusClass}">${statusText}</span>`;
+                    
+                    // Buat HTML Badge
+                    let html = `<span class="badge-status badge-status-${statusClass}">${statusText}</span>`;
+
+                    // 2. LOGIC TAMBAHAN: Tampilkan Catatan di bawah badge
+                    // Cek apakah ada notes dan tidak kosong
+                    if (row.notes && row.notes !== '-' && row.notes !== 'null') {
+                        // Opsional: Batasi panjang teks biar tabel gak meledak (misal max 50 karakter)
+                        let noteText = row.notes.length > 50 ? row.notes.substring(0, 50) + '...' : row.notes;
+                        
+                        html += `<div class="small text-muted mt-1 fst-italic" style="font-size: 0.85em; line-height: 1.2; max-width: 200px; margin: 0 auto;">
+                                    <i class="fas fa-comment-alt me-1"></i> "${noteText}"
+                                </div>`;
+                    }
+                    
+                    return html;
                 },
                 createdCell: function(td, cellData, rowData, row, col) {
-                    $(td).attr('data-label', 'Status'); // 👈 Tambahan untuk mobile
-                }      
+                    $(td).attr('data-label', 'Status');
+                }   
             },
             {
                 data: 'pinjam_barang',
@@ -523,17 +578,17 @@ $(function () {
                     $(td).attr('data-label', 'Pinjam Barang');
                 }
             },
-                        @if(auth()->user()->can('persetujuan_access') || auth()->user()->can('kegiatan_edit_status'))
-                        { data: 'persetujuan', 
-                            name: 'persetujuan',
-                            className: 'text-center', 
-                            orderable: false, 
-                            searchable: false,
-                            createdCell: function(td, cellData, rowData, row, col) {
-                                $(td).attr('data-label', 'Persetujuan'); // 👈 Tambahan untuk mobile
-                            }
-                        },
-                        @endif
+            @if(auth()->user()->can('persetujuan_access') || auth()->user()->can('kegiatan_edit_status'))
+            { data: 'persetujuan', 
+                name: 'persetujuan',
+                className: 'text-center', 
+                orderable: false, 
+                searchable: false,
+                createdCell: function(td, cellData, rowData, row, col) {
+                    $(td).attr('data-label', 'Persetujuan'); // 👈 Tambahan untuk mobile
+                }
+            },
+            @endif
             { data: 'actions', 
               name: 'actions', 
               className: 'text-center actions-cell', 

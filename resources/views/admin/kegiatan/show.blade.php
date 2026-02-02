@@ -30,7 +30,8 @@
             .timeline { position: relative; padding-left: 64px; }
             .timeline:before { content: ''; position: absolute; left: 32px; top: 8px; bottom: 8px; width: 2px; background: #e9ecef; z-index:1; }
             .timeline-item { position: relative; margin-bottom: 18px; }
-            /* Marker */
+            
+            /* Marker Base */
             .timeline-marker { position: absolute; left: -62px; top: 0; width: 34px; height: 34px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background:#fff; border:2px solid #dee2e6; z-index:2; }
             .timeline-marker.done { color:#fff; }
             .timeline-marker.pending { background:#fff; color:#6c757d; border-color:#ced4da; }
@@ -38,35 +39,53 @@
             .timeline-time { font-size: 12px; color: #6c757d; }
             .timeline-note { font-style: italic; color: #495057; }
 
-                /* Colors per action (applies when marker has .done)
-                    Customized according to requested mapping:
-                    - created: blue (bullet)
-                    - revisi_*: yellow (pencil)
-                    - edited: white (thumb icon)
-                    - verifikasi_*: green (check)
-                    - disetujui: green (flag)
-                    - ditolak: red (times)
-                */
-                .timeline-marker.marker-created.done { background:#0d6efd; border-color:#0d6efd; }
-                .timeline-marker.marker-revisi-operator.done,
-                .timeline-marker.marker-revisi-sarpras.done,
-                .timeline-marker.marker-revisi-akademik.done { background:#ffc107; border-color:#ffc107; }
-                .timeline-marker.marker-edited.done { background:#ffffff; border-color:#ced4da; }
-                .timeline-marker.marker-verifikasi-sarpras.done,
-                .timeline-marker.marker-verifikasi-akademik.done { background:#198754; border-color:#198754; }
-                .timeline-marker.marker-disetujui.done { background:#198754; border-color:#198754; }
-                .timeline-marker.marker-ditolak.done { background:#dc3545; border-color:#dc3545; }
+            /* --- COLORS MAPPING (NEW LOGIC) --- */
 
-                /* Icon color overrides for specific markers */
-                .timeline-marker.marker-edited.done i { color: #198754; } /* thumbs-up colored green on white bg */
-                .timeline-marker.marker-revisi-operator.done i,
-                .timeline-marker.marker-revisi-sarpras.done i,
-                .timeline-marker.marker-revisi-akademik.done i { color: #7a4100; } /* darker orange pencil */
-                .timeline-marker.marker-created.done i { color: #fff; }
-                .timeline-marker.marker-verifikasi-sarpras.done i,
-                .timeline-marker.marker-verifikasi-akademik.done i,
-                .timeline-marker.marker-disetujui.done i { color: #fff; }
-                .timeline-marker.marker-ditolak.done i { color: #fff; }
+            /* 1. CREATED (Blue) */
+            .timeline-marker.marker-created.done { background:#0d6efd; border-color:#0d6efd; }
+            .timeline-marker.marker-created.done i { color: #fff; }
+
+            /* 2. REVISIONS (Yellow/Warning) - Covers all revision levels */
+            .timeline-marker.marker-revisi-operator.done,
+            .timeline-marker.marker-revisi-kemahasiswaan.done,
+            .timeline-marker.marker-revisi-kasubag-akademik.done,
+            .timeline-marker.marker-revisi-kasubag-sarpras.done { 
+                background:#ffc107; 
+                border-color:#ffc107; 
+            }
+            
+            /* Icon color for revisions (Darker contrast on yellow) */
+            .timeline-marker.marker-revisi-operator.done i,
+            .timeline-marker.marker-revisi-kemahasiswaan.done i,
+            .timeline-marker.marker-revisi-kasubag-akademik.done i,
+            .timeline-marker.marker-revisi-kasubag-sarpras.done i { 
+                color: #7a4100; 
+            }
+
+            /* 3. EDITED (White with Green Icon) */
+            .timeline-marker.marker-edited.done { background:#ffffff; border-color:#ced4da; }
+            .timeline-marker.marker-edited.done i { color: #198754; } 
+
+            /* 4. VERIFICATION SUCCESS (Green) - Covers all approval stages */
+            .timeline-marker.marker-verifikasi-kemahasiswaan.done,
+            .timeline-marker.marker-verifikasi-kasubag-akademik.done,
+            .timeline-marker.marker-verifikasi-kasubag-sarpras.done,
+            .timeline-marker.marker-disetujui.done { 
+                background:#198754; 
+                border-color:#198754; 
+            }
+            
+            /* Icon color for success (White) */
+            .timeline-marker.marker-verifikasi-kemahasiswaan.done i,
+            .timeline-marker.marker-verifikasi-kasubag-akademik.done i,
+            .timeline-marker.marker-verifikasi-kasubag-sarpras.done i,
+            .timeline-marker.marker-disetujui.done i { 
+                color: #fff; 
+            }
+
+            /* 5. REJECTED (Red) */
+            .timeline-marker.marker-ditolak.done { background:#dc3545; border-color:#dc3545; }
+            .timeline-marker.marker-ditolak.done i { color: #fff; }
 
             /* Fallback small icon sizing */
             .timeline-marker i { font-size:12px; }
@@ -229,6 +248,8 @@
             <div class="col-lg-4">
                 <h5 class="mb-3 font-weight-bold">Status & Riwayat</h5>
                 <div class="p-3 bg-light rounded">
+                    
+                    {{-- SECTION 1: STATUS SAAT INI --}}
                     <div class="detail-item">
                         <div class="icon"><i class="fas fa-info-circle"></i></div>
                         <div class="content">
@@ -236,17 +257,24 @@
                             <div class="value">
                                 @php
                                     $statusClass = str_replace('_', '-', $kegiatan->status);
+                                    
+                                    // UPDATE 1: Mapping Status Baru untuk Tampilan Utama
                                     $statusMap = [
-                                        'belum_disetujui' => 'Menunggu Verifikasi Operator',
-                                        'verifikasi_sarpras' => 'Menunggu Verifikasi Akademik',
-                                        'verifikasi_akademik' => 'Menunggu Verifikasi Sarpras',
-                                        'disetujui' => 'Kegiatan Disetujui',
-                                        'ditolak' => 'Kegiatan Ditolak',
-                                        'revisi_operator' => 'Revisi Diminta (Operator)',
-                                        'revisi_akademik' => 'Revisi Diminta (Akademik)',
-                                        'revisi_sarpras' => 'Revisi Diminta (Sarpras)',
+                                        'belum_disetujui'             => 'Menunggu Verifikasi',
+                                        'verifikasi_kemahasiswaan'    => 'Menunggu Verif. Kemahasiswaan',
+                                        'verifikasi_kasubag_akademik' => 'Menunggu Verif. Kasubag Akademik',
+                                        'verifikasi_kasubag_sarpras'  => 'Menunggu Verif. Sarpras',
+                                        'disetujui'                   => 'Kegiatan Disetujui',
+                                        'ditolak'                     => 'Kegiatan Ditolak',
+                                        
+                                        // Mapping Revisi
+                                        'revisi_operator'             => 'Revisi Diminta (Operator)',
+                                        'revisi_kemahasiswaan'        => 'Revisi Diminta (Kemahasiswaan)',
+                                        'revisi_kasubag_akademik'     => 'Revisi Diminta (Akademik)',
+                                        'revisi_kasubag_sarpras'      => 'Revisi Diminta (Sarpras)',
                                     ];
-                                    $statusText = $statusMap[$kegiatan->status] ?? $kegiatan->status;
+                                    
+                                    $statusText = $statusMap[$kegiatan->status] ?? ucwords(str_replace('_', ' ', $kegiatan->status));
                                 @endphp
                                 <span class="badge-status badge-status-{{ $statusClass }}">
                                     {{ $statusText }}
@@ -255,7 +283,7 @@
                         </div>
                     </div>
 
-                    {{-- Catatan Terakhir (ambil dari history jika ada) --}}
+                    {{-- SECTION 2: CATATAN TERAKHIR --}}
                     @php
                         $histories = $kegiatan->histories ?? collect();
                         $lastNoteEntry = $histories->reverse()->first(function($h){ return !empty($h->note); });
@@ -269,7 +297,7 @@
                         </div>
                     </div>
 
-                    {{-- Riwayat (dari tabel kegiatan_histories). Jika entri hanya 'created' dan status disetujui oleh Admin, tampilkan pesan khusus --}}
+                    {{-- SECTION 3: RIWAYAT / TIMELINE --}}
                     <div class="detail-item mt-3">
                         <div class="icon"><i class="fas fa-history"></i></div>
                         <div class="content">
@@ -278,22 +306,31 @@
                                 @php
                                     $histCount = $histories->count();
                                     $first = $histories->first();
-                                    // Revert to original behavior: only use actual history entries
                                     $isAdminCreated = (optional($first)->action === 'created' && optional($first->user)->isAdmin());
                                     $isAdminCreatedSingle = $isAdminCreated && $histCount === 1 && $kegiatan->status === 'disetujui';
+
+                                    // UPDATE 2: Mapping Judul Aksi di Timeline
                                     $actionTitles = [
-                                        'created' => 'Permohonan Diajukan',
-                                        'edited' => 'Data Diperbarui',
-                                        'verifikasi_sarpras' => 'Verifikasi Operator',
-                                        'verifikasi_akademik' => 'Verifikasi Akademik',
-                                        'revisi_operator' => 'Permintaan Revisi (Operator)',
-                                        'revisi_sarpras' => 'Permintaan Revisi (Akademik)',
-                                        'revisi_akademik' => 'Permintaan Revisi (Sarpras)',
-                                        'resubmitted' => 'Perbaikan Dikirim Kembali',
-                                        'disetujui' => 'Disetujui',
-                                        'ditolak' => 'Ditolak',
+                                        'created'                     => 'Permohonan Diajukan',
+                                        'edited'                      => 'Data Diperbarui',
+                                        'resubmitted'                 => 'Perbaikan Dikirim Kembali',
+                                        
+                                        // Flow Verifikasi Baru
+                                        'verifikasi_kemahasiswaan'    => 'Diajukan ke Kemahasiswaan',
+                                        'verifikasi_kasubag_akademik' => 'Verifikasi Kemahasiswaaan',
+                                        'verifikasi_kasubag_sarpras'  => 'Verifikasi Akademik',
+                                        
+                                        // Flow Revisi Baru
+                                        'revisi_operator'             => 'Permintaan Revisi (Operator)',
+                                        'revisi_kemahasiswaan'        => 'Permintaan Revisi (Kemahasiswaan)',
+                                        'revisi_kasubag_akademik'     => 'Permintaan Revisi (Akademik)',
+                                        'revisi_kasubag_sarpras'      => 'Permintaan Revisi (Sarpras)',
+                                        
+                                        'disetujui'                   => 'Disetujui',
+                                        'ditolak'                     => 'Ditolak',
                                     ];
                                 @endphp
+
                                 @if($isAdminCreatedSingle)
                                     <div class="text-muted fst-italic"><i class="fas fa-user-shield me-1"></i> Kegiatan dibuat oleh Admin</div>
                                 @else
@@ -307,42 +344,41 @@
                                             @endphp
                                             <div class="timeline-item">
                                                 @php
-                                                    // If the very first history is 'created' by admin and we're rendering the first loop,
-                                                    // replace its title to 'Kegiatan dibuat oleh Admin' so it doesn't read as 'Permohonan Diajukan'.
                                                     $isFirstCreatedByAdmin = $loop->first && $h->action === 'created' && $isAdminCreated;
                                                     if ($isFirstCreatedByAdmin) {
                                                         $title = 'Kegiatan dibuat oleh Admin';
                                                     }
-                                                @endphp
-                                                @php
-                                                    // pilih ikon berdasarkan aksi (tampil untuk pending maupun done)
+
+                                                    // UPDATE 3: Mapping Icon Timeline
                                                     $map = [
-                                                        'created' => 'fas fa-circle',           // bullet (permohonan dibuat)
-                                                        'edited' => 'fas fa-thumbs-up',         // data diperbarui
-                                                        'verifikasi_sarpras' => 'fas fa-check',
-                                                        'verifikasi_akademik' => 'fas fa-check',
-                                                        'revisi_operator' => 'fas fa-pencil-alt',
-                                                        'revisi_sarpras' => 'fas fa-pencil-alt',
-                                                        'revisi_akademik' => 'fas fa-pencil-alt',
-                                                        'resubmitted' => 'fas fa-redo',
-                                                        'disetujui' => 'fas fa-flag-checkered',
-                                                        'ditolak' => 'fas fa-times',
+                                                        'created'                     => 'fas fa-circle',
+                                                        'edited'                      => 'fas fa-thumbs-up',
+                                                        'resubmitted'                 => 'fas fa-redo',
+                                                        
+                                                        // Icon Verifikasi (Check semua biar rapi)
+                                                        'verifikasi_kemahasiswaan'    => 'fas fa-check',
+                                                        'verifikasi_kasubag_akademik' => 'fas fa-check',
+                                                        'verifikasi_kasubag_sarpras'  => 'fas fa-check',
+                                                        
+                                                        // Icon Revisi (Pensil)
+                                                        'revisi_operator'             => 'fas fa-pencil-alt',
+                                                        'revisi_kemahasiswaan'        => 'fas fa-pencil-alt',
+                                                        'revisi_kasubag_akademik'     => 'fas fa-pencil-alt',
+                                                        'revisi_kasubag_sarpras'      => 'fas fa-pencil-alt',
+                                                        
+                                                        'disetujui'                   => 'fas fa-flag-checkered',
+                                                        'ditolak'                     => 'fas fa-times',
                                                     ];
+                                                    
                                                     $baseIcon = $map[$h->action] ?? 'far fa-circle';
 
-                                                    // Jika belum done (pending), tampilkan versi muted untuk membedakan
                                                     if (!$done) {
-                                                        if ($baseIcon === 'fas fa-circle') {
-                                                            // untuk created pending, gunakan outline bullet
-                                                            $iconClass = 'far fa-circle';
-                                                        } else {
-                                                            // tambahkan kelas text-muted agar ikon terlihat pending
-                                                            $iconClass = $baseIcon . ' text-muted';
-                                                        }
+                                                        $iconClass = ($baseIcon === 'fas fa-circle') ? 'far fa-circle' : $baseIcon . ' text-muted';
                                                     } else {
                                                         $iconClass = $baseIcon;
                                                     }
                                                 @endphp
+                                                
                                                 <div class="timeline-marker {{ $markerClass }}">
                                                     <i class="{{ $iconClass }}"></i>
                                                 </div>

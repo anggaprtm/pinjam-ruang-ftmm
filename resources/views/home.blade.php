@@ -316,7 +316,7 @@
                                         {{ \Carbon\Carbon::parse($keg->waktu_mulai)->format('d M, H:i') }}
                                     </div>
 
-                                    <span class="badge bg-info text-dark">
+                                    <span class="badge bg-info text-white">
                                         {{ $keg->ruangan->nama ?? 'TBA' }}
                                     </span>
                                 </div>

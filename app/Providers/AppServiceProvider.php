@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Kegiatan;
+use App\Models\PermintaanKegiatan;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,13 +23,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Provide pending kegiatan count to the sidebar view, cached for 60 seconds
+        // Update bagian View::composer ini
         View::composer('partials.menu', function ($view) {
-            $count = Cache::remember('pending_kegiatan_count', 60, function () {
+            
+            // 1. Hitung Pending Kegiatan (Logic lama kamu)
+            $kegiatanCount = Cache::remember('pending_kegiatan_count', 60, function () {
                 return Kegiatan::whereNotIn('status', ['disetujui', 'ditolak'])->count();
             });
 
-            $view->with('pendingKegiatanCount', $count);
+            // 2. Hitung Pending Permintaan (Logic baru)
+            $permintaanCount = Cache::remember('pending_permintaan_count', 60, function () {
+                return PermintaanKegiatan::where('status_permintaan', 'pending')->count();
+            });
+
+            // 3. Jumlahkan keduanya untuk Badge Dashboard
+            $totalDashboardPending = $kegiatanCount + $permintaanCount;
+
+            // Kirim semua variabel ke view
+            $view->with('pendingKegiatanCount', $kegiatanCount)
+                ->with('totalDashboardPending', $totalDashboardPending)
+                ->with('pendingPermintaanCount', $permintaanCount);
         });
     }
 }

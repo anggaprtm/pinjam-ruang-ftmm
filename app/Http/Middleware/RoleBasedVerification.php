@@ -9,26 +9,36 @@ class RoleBasedVerification
 {
     public function handle(Request $request, Closure $next)
     {
-        $user = auth()->user(); // Ambil user yang sedang login
-        $kegiatan = $request->route('kegiatan'); // Ambil model kegiatan dari route
+        $user = auth()->user();
+        $kegiatan = $request->route('kegiatan');
 
-        // Tentukan role yang diizinkan berdasarkan status kegiatan
         $allowedRoles = [];
         switch ($kegiatan->status) {
             case 'belum_disetujui':
-                $allowedRoles = ['Operator'];
+                $allowedRoles = ['Operator', 'Admin']; 
                 break;
 
-            case 'verifikasi_akademik':
-                $allowedRoles = ['Akademik'];
+            case 'verifikasi_kemahasiswaan':
+                // Masukkan nama Role yang sesuai di DB kamu untuk Kemahasiswaan
+                $allowedRoles = ['Kemahasiswaan', 'Staf Kemahasiswaan']; 
                 break;
 
-            case 'verifikasi_sarpras':
-                $allowedRoles = ['Sarpras'];
+            case 'verifikasi_kasubag_akademik':
+                $allowedRoles = ['Kasubag Akademik', 'Akademik'];
+                break;
+
+            case 'verifikasi_kasubag_sarpras':
+                // Jika tahap ini yang harus klik adalah Operator (untuk finalisasi),
+                // maka masukkan 'Operator'. Jika Sarpras yang klik, masukkan 'Sarpras'.
+                // Mengikuti request "Disetujui (operator yg aksi)":
+                $allowedRoles = ['Operator', 'Admin', 'Sarpras']; 
                 break;
 
             default:
-                return redirect()->back()->with('error', 'Status tidak valid untuk memverifikasi!');
+                // Jika status revisi, biasanya yang boleh akses adalah pembuat (Operator)
+                if (\Str::startsWith($kegiatan->status, 'revisi_')) {
+                    $allowedRoles = ['Operator', 'User'];
+                }
         }
 
         // Periksa apakah user memiliki salah satu role yang diizinkan
