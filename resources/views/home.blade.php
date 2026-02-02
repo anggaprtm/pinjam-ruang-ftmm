@@ -6,12 +6,12 @@
     {{-- WELCOME BANNER --}}
     <div class="welcome-banner mb-4">
         <h4 class="fw-bold text-white mb-1">
-            Selamat Datang, {{ Auth::user()->name }} !
+            Selamat Datang, {{ Auth::user()->name }}!
         </h4>
 
         @can('home_access')
             <p class="mb-0 text-white-50">
-                Dashboard monitoring aktivitas Sarpras & Akademik.
+                Dashboard monitoring layanan Sarana dan Prasarana.
             </p>
         @endcan
 
@@ -304,18 +304,43 @@
                     <div class="list-group list-group-flush flex-grow-1 dashboard-scroll">
                         @forelse($pendingApproval as $keg)
                             <a href="{{ route('admin.kegiatan.index') }}"
-                               class="list-group-item list-group-item-action border-0 border-bottom py-3">
+                               class="list-group-item list-group-item-action border-light border-bottom py-3">
 
-                                <div class="fw-bold text-dark mb-1 text-truncate">
-                                    {{ $keg->nama_kegiatan ?? '-' }}
+                                <div class="fw-bold text-dark mb-1 d-flex justify-content-between align-items-center gap-2">
+                                    <!-- Nama Kegiatan (KIRI) -->
+                                    <div class="text-truncate">
+                                        {{ $keg->nama_kegiatan ?? '-' }}
+                                    </div>
+
+                                    <!-- Status (KANAN) -->
+                                    <span class="badge bg-warning text-dark flex-shrink-0">
+                                        @php
+                                            $statusMap = [
+                                                'belum_disetujui'             => 'Belum Verifikasi',
+                                                'verifikasi_kemahasiswaan'    => 'Verif. Kemahasiswaan',
+                                                'verifikasi_kasubag_akademik' => 'Verif. Akademik',
+                                                'verifikasi_kasubag_sarpras'  => 'Verif. Sarpras',
+                                                'disetujui'                   => 'Disetujui',
+                                                'ditolak'                     => 'Ditolak',
+
+                                                'revisi_operator'             => 'Revisi (Operator)',
+                                                'revisi_kemahasiswaan'        => 'Revisi (Kemahasiswaan)',
+                                                'revisi_kasubag_akademik'     => 'Revisi (Akademik)',
+                                                'revisi_kasubag_sarpras'      => 'Revisi (Sarpras)',
+                                            ];
+
+                                            $statusText = $statusMap[$keg->status]
+                                                ?? ucwords(str_replace('_', ' ', $keg->status));
+                                        @endphp
+                                        {{ $statusText }}
+                                    </span>
                                 </div>
-
+                                 
                                 <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                                     <div class="small text-muted">
                                         <i class="far fa-clock me-1"></i>
                                         {{ \Carbon\Carbon::parse($keg->waktu_mulai)->format('d M, H:i') }}
                                     </div>
-
                                     <span class="badge bg-info text-white">
                                         {{ $keg->ruangan->nama ?? 'TBA' }}
                                     </span>

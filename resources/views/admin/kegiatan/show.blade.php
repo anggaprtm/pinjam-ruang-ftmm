@@ -100,7 +100,7 @@
                     <div class="content">
                         <div class="label">Jenis Kegiatan</div>
                         <div class="value">
-                            <span class="badge bg-info text-dark">{{ $kegiatan->jenis_kegiatan }}</span>
+                            <span class="badge bg-info text-white">{{ $kegiatan->jenis_kegiatan }}</span>
                         </div>
                     </div>
                 </div>

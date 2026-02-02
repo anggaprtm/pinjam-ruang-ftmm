@@ -29,7 +29,7 @@ class HomeController extends Controller
         // 1. DATA STATISTIK UTAMA
         // ==========================================
         $ruanganCount = Ruangan::count();
-        $kegiatanMenungguCount = Kegiatan::where('status', 'belum_disetujui')->count();
+        $kegiatanMenungguCount = Kegiatan::whereNotIn('status', ['disetujui', 'ditolak'])->count();
         $kegiatanDisetujuiCount = Kegiatan::where('status', 'disetujui')->count();
         $kegiatanTotalCount = Kegiatan::count();
 
@@ -84,7 +84,7 @@ class HomeController extends Controller
         $pendingPermintaan = PermintaanKegiatan::with(['user'])
             ->where('status_permintaan', 'pending')
             ->latest()
-            ->take(5)
+            ->take(10)
             ->get();
 
         // ------------------------------------------
@@ -93,7 +93,7 @@ class HomeController extends Controller
         $pendingApproval = Kegiatan::with(['ruangan', 'user'])
             ->whereNotIn('status', ['disetujui', 'ditolak'])
             ->orderBy('created_at', 'asc')
-            ->take(5)
+            ->take(10)
             ->get();
 
         // ==========================================

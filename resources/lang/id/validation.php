@@ -87,7 +87,7 @@ return [
     'password'             => 'Sandi salah.',
     'present'              => 'Bidang isian :attribute wajib ada.',
     'regex'                => 'format :attribut tidak cocok',
-    'required'             => ':attribute diperlukan',
+    'required'             => ':attribute diperlukan.',
     'required_if'          => ':attribute diperlukan ketika  :other adalah :value.',
     'required_unless'      => 'Bidang isian :attribute wajib diisi kecuali :other memiliki nilai :values.',
     'required_with'        => 'Bidang isian :attribute wajib diisi bila terdapat :values.',

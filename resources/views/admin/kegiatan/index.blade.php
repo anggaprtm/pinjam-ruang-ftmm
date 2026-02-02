@@ -532,7 +532,7 @@ $(function () {
                     let statusText = '';
                     
                     switch (data) {
-                        case 'belum_disetujui': statusText = 'Belum Diajukan'; break;
+                        case 'belum_disetujui': statusText = 'Menunggu Verifikasi'; break;
                         case 'verifikasi_kemahasiswaan': statusText = 'Menunggu Verif. Kemahasiswaan'; break;
                         case 'verifikasi_kasubag_akademik': statusText = 'Menunggu Verif. Akademik'; break;
                         case 'verifikasi_kasubag_sarpras': statusText = 'Menunggu Verif. Sarpras'; break;

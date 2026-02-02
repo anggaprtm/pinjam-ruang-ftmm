@@ -61,8 +61,8 @@ class BookingsController extends Controller
 
         $rules = [
             'nama_kegiatan'   => 'required',
+            'jenis_kegiatan'  => 'required|string',
             'ruangan_id'      => 'required',
-            // validate waktu fields passed from the search form
             'waktu_mulai'     => 'required|date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
             'waktu_selesai'   => 'required|date_format:' . config('panel.date_format') . ' ' . config('panel.time_format') . '|after:waktu_mulai',
             'nama_pic'      => ['required', 'string'],

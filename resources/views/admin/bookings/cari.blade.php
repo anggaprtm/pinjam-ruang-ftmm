@@ -115,17 +115,34 @@
                     <input type="hidden" name="ruangan_id" id="modal_ruangan_id">
                     <input type="hidden" name="waktu_mulai" value="{{ request()->input('waktu_mulai') }}">
                     <input type="hidden" name="waktu_selesai" value="{{ request()->input('waktu_selesai') }}">
-
+                    <div class="form-group mb-3">
+                        <label class="form-label required" for="jenis_kegiatan">Jenis Kegiatan</label>
+                        {{-- Saya ganti class 'select2' jadi 'form-select' biar aman di dalam modal --}}
+                        <select class="form-select {{ $errors->has('jenis_kegiatan') ? 'is-invalid' : '' }}" name="jenis_kegiatan" id="jenis_kegiatan" required>
+                            <option value="">{{ trans('global.pleaseSelect') }}</option>
+                            
+                            {{-- Loop Array Pilihan --}}
+                            @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'Lainnya'] as $jenis)
+                                <option value="{{ $jenis }}" {{ old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>
+                                    {{ $jenis }}
+                                </option>
+                            @endforeach
+                        </select>
+                        
+                        @if($errors->has('jenis_kegiatan'))
+                            <div class="invalid-feedback">{{ $errors->first('jenis_kegiatan') }}</div>
+                        @endif
+                    </div>
                     <div class="form-group mb-3">
                         <label class="form-label required" for="nama_kegiatan">{{ trans('cruds.kegiatan.fields.nama_kegiatan') }}</label>
-                        <input class="form-control {{ $errors->has('nama_kegiatan') ? 'is-invalid' : '' }}" type="text" name="nama_kegiatan" id="nama_kegiatan" value="{{ old('nama_kegiatan', '') }}" required>
+                        <input class="form-control {{ $errors->has('nama_kegiatan') ? 'is-invalid' : '' }}" type="text" name="nama_kegiatan" id="nama_kegiatan" value="{{ old('nama_kegiatan', '') }}" placeholder="Contoh: KARSA FTMM 2026" required>
                         @if($errors->has('nama_kegiatan'))
                             <div class="invalid-feedback">{{ $errors->first('nama_kegiatan') }}</div>
                         @endif
                     </div>
                     <div class="form-group mb-3">
-                        <label class="form-label" for="deskripsi">{{ trans('cruds.kegiatan.fields.deskripsi') }}</label>
-                        <textarea class="form-control {{ $errors->has('deskripsi') ? 'is-invalid' : '' }}" name="deskripsi" id="deskripsi">{{ old('deskripsi') }}</textarea>
+                        <label class="form-label" for="deskripsi">{{ trans('cruds.kegiatan.fields.deskripsi') }} <span class="text-muted">(Opsional)</span></label>
+                        <textarea class="form-control {{ $errors->has('deskripsi') ? 'is-invalid' : '' }}" name="deskripsi" id="deskripsi" placeholder="Isi dengan deskripsi kegiatan/catatan (Opsional)">{{ old('deskripsi') }}</textarea>
                         @if($errors->has('deskripsi'))
                             <div class="invalid-feedback">{{ $errors->first('deskripsi') }}</div>
                         @endif
@@ -137,6 +154,7 @@
                             id="nama_pic"
                             class="form-control {{ $errors->has('nama_pic') ? 'is-invalid' : '' }}"
                             value="{{ old('nama_pic') }}"
+                            placeholder="Contoh: Angga"
                             required>
                         @if($errors->has('nama_pic'))
                             <div class="invalid-feedback">{{ $errors->first('nama_pic') }}</div>
@@ -144,7 +162,12 @@
                     </div>
                     <div class="form-group mb-3">
                         <label class="form-label required" for="nomor_telepon">Nomor Telepon PIC</label>
-                        <input type="text" name="nomor_telepon" id="nomor_telepon" class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" value="{{ old('nomor_telepon') }}">
+                        <input type="text" name="nomor_telepon" id="nomor_telepon" class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" value="{{ old('nomor_telepon') }}" placeholder="Contoh: 08123456789">
+                        
+                        {{-- TAMBAHAN: Container Error Client Side --}}
+                        <div id="nomor-telepon-client-error" class="invalid-feedback d-none"></div> 
+                        
+                        {{-- Error Server Side (Bawaan Laravel) --}}
                         @if($errors->has('nomor_telepon'))
                             <div class="invalid-feedback">{{ $errors->first('nomor_telepon') }}</div>
                         @endif
@@ -199,6 +222,63 @@
 @parent
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    
+    // --- 1. LOGIC VALIDASI NO TELEPON (Copas dari Create Blade kamu) ---
+    const phoneMin = 9;
+    const phoneMax = 15;
+
+    function validatePhoneField() {
+        const $input = $('#nomor_telepon');
+        const $clientError = $('#nomor-telepon-client-error');
+        let val = $input.val() || '';
+
+        // Hapus karakter non-digit
+        const cleaned = val.replace(/\D/g, '');
+        if (val !== cleaned) {
+            $input.val(cleaned);
+            val = cleaned;
+        }
+
+        // Kalau kosong, biarkan server yang handle required (atau return false jika mau wajib diisi di frontend)
+        if (val.length === 0) {
+            $clientError.addClass('d-none').text('');
+            $input.removeClass('is-invalid');
+            // Kita return false biar gak bisa submit kalau kosong (karena field required)
+            // Tapi kalau mau ikut logic server side required, return true.
+            // Di sini saya set false biar aman (karena ada class 'required' di label)
+            $clientError.removeClass('d-none').text('Nomor telepon wajib diisi.'); 
+            $input.addClass('is-invalid');
+            return false; 
+        }
+
+        // Cek awalan 0
+        if (!/^0[0-9]+$/.test(val)) {
+            $clientError.removeClass('d-none').text('Nomor telepon harus dimulai dengan angka 0.');
+            $input.addClass('is-invalid');
+            return false;
+        }
+
+        // Cek panjang
+        if (val.length < phoneMin || val.length > phoneMax) {
+            $clientError.removeClass('d-none').text(`Panjang nomor harus antara ${phoneMin} sampai ${phoneMax} angka.`);
+            $input.addClass('is-invalid');
+            return false;
+        }
+
+        // Lolos Validasi
+        $clientError.addClass('d-none').text('');
+        $input.removeClass('is-invalid');
+        return true;
+    }
+
+    // Trigger validasi saat mengetik atau pindah kolom
+    $('#nomor_telepon').on('input blur', function() {
+        validatePhoneField();
+    });
+
+
+    // --- 2. MODAL & SUBMIT HANDLER ---
+    
     const bookRuangModal = document.getElementById('bookRuang');
     if (bookRuangModal) {
         bookRuangModal.addEventListener('show.bs.modal', function (event) {
@@ -211,51 +291,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
             modalTitle.textContent = ruanganNama;
             modalRuanganIdInput.value = ruanganId;
+            
+            // Reset form validation state saat modal dibuka
+            $('#nomor_telepon').removeClass('is-invalid');
+            $('#nomor-telepon-client-error').addClass('d-none');
         });
     }
 
     const submitBookingButton = document.getElementById('submitBooking');
     if (submitBookingButton) {
-        submitBookingButton.addEventListener('click', function () {
+        submitBookingButton.addEventListener('click', function (e) {
+            // --- CEK VALIDASI SEBELUM SUBMIT ---
+            const isPhoneValid = validatePhoneField();
+            
+            if (!isPhoneValid) {
+                // Stop proses, fokus ke input nomor telepon
+                e.preventDefault(); 
+                $('#nomor_telepon').focus();
+                return; 
+            }
+
+            // Jika valid, baru submit form
             document.getElementById('bookingForm').submit();
         });
     }
 
-    // Toggle datetimepicker when calendar icon clicked (search form)
+    // Toggle datetimepicker
     const waktuMulaiToggle = document.getElementById('waktu_mulai_toggle');
     if (waktuMulaiToggle) {
         waktuMulaiToggle.addEventListener('click', function (e) {
             e.preventDefault();
-            try {
-                $('#waktu_mulai').data('DateTimePicker').show();
-            } catch (err) {
-                document.getElementById('waktu_mulai').focus();
-            }
+            try { $('#waktu_mulai').data('DateTimePicker').show(); } catch (err) { document.getElementById('waktu_mulai').focus(); }
         });
     }
-
     const waktuSelesaiToggle = document.getElementById('waktu_selesai_toggle');
     if (waktuSelesaiToggle) {
         waktuSelesaiToggle.addEventListener('click', function (e) {
             e.preventDefault();
-            try {
-                $('#waktu_selesai').data('DateTimePicker').show();
-            } catch (err) {
-                document.getElementById('waktu_selesai').focus();
-            }
+            try { $('#waktu_selesai').data('DateTimePicker').show(); } catch (err) { document.getElementById('waktu_selesai').focus(); }
         });
     }
+    
+    // File display logic
     $('#surat_izin').on('change', function() {
-            // Ambil nama file
-            let fileName = $(this).val().split('\\').pop();
-            
-            // Jika ada file, tampilkan namanya di span #surat_izin_display
-            if (fileName) {
-                $('#surat_izin_display').text(fileName);
-            } else {
-                $('#surat_izin_display').text('Tidak ada file yang dipilih');
-            }
-        });
+        let fileName = $(this).val().split('\\').pop();
+        if (fileName) {
+            $('#surat_izin_display').text(fileName);
+        } else {
+            $('#surat_izin_display').text('Tidak ada file yang dipilih');
+        }
+    });
+
 });
 </script>
 @endsection
