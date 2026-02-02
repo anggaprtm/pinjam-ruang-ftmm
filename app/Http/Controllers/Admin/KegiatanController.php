@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Yajra\DataTables\Facades\DataTables;
+use App\Services\TelegramService;
 
 class KegiatanController extends Controller
 {
@@ -502,7 +503,7 @@ class KegiatanController extends Controller
         return Excel::download(new KegiatanTemplateExport, 'template_import_kegiatan.xlsx');
     }
 
-    public function updateStatus(Request $request, Kegiatan $kegiatan)
+    public function updateStatus(Request $request, Kegiatan $kegiatan, TelegramService $telegram)
     {
     // Validasi input
     $validated = $request->validate([
@@ -618,6 +619,51 @@ class KegiatanController extends Controller
         $kegiatan->revisi_notes = null;
     }
     $kegiatan->save();
+
+    if ($kegiatan->user && $kegiatan->user->telegram_chat_id) {
+        
+        $icon = '';
+        $pesanStatus = '';
+
+        switch ($newStatus) {
+            case 'verifikasi_kemahasiswaan':
+                // Biasanya ini dari draft -> diajukan
+                $icon = '📤';
+                $pesanStatus = "Permohonan kamu <b>berhasil diajukan</b>. Sekarang menunggu verifikasi Kemahasiswaan.";
+                break;
+            case 'verifikasi_kasubag_akademik':
+                $icon = '✅';
+                $pesanStatus = "Lolos Kemahasiswaan! Sekarang menunggu verifikasi <b>Kasubag Akademik</b>.";
+                break;
+            case 'verifikasi_kasubag_sarpras':
+                $icon = '✅';
+                $pesanStatus = "Lolos Akademik! Sekarang menunggu verifikasi <b>Kasubag Sarpras</b>.";
+                break;
+            case 'disetujui':
+                $icon = '🎉';
+                $pesanStatus = "Selamat! Kegiatan kamu <b>DISETUJUI</b> sepenuhnya. Silakan cek aplikasi untuk detailnya.";
+                break;
+            case 'ditolak':
+                $icon = '❌';
+                $pesanStatus = "Mohon maaf, kegiatan kamu <b>DITOLAK</b>.\nAlasan: <i>{$validated['notes']}</i>";
+                break;
+            default:
+                if (\Str::startsWith($newStatus, 'revisi_')) {
+                    $icon = '⚠️';
+                    $pesanStatus = "Terdapat permintan <b>REVISI</b>.\nCatatan: <i>{$validated['notes']}</i>\nSilakan perbaiki data kamu.";
+                }
+        }
+
+        if (!empty($pesanStatus)) {
+            $message = "{$icon} <b>Update Status Kegiatan</b>\n\n" .
+                       "Judul Kegiatan: <b>{$kegiatan->nama_kegiatan}</b>\n" .
+                       "Status: {$pesanStatus}\n\n" .
+                       "<i>Sistem Layanan Sarana Prasarana FTMM</i>";
+            
+            // Kirim!
+            $telegram->sendMessage($kegiatan->user->telegram_chat_id, $message);
+        }
+    }
 
     // Kirimkan pesan sukses yang sesuai dengan status baru
     // Simpan history khusus untuk aksi ini

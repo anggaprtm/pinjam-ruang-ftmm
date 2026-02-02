@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Mail\KegiatanNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Kegiatan;
+use App\Services\TelegramService;
+
 
 class BookingsController extends Controller
 {
@@ -55,7 +57,7 @@ class BookingsController extends Controller
     }
 
     // Method bookRuang Anda tidak perlu diubah
-    public function bookRuang(Request $request)
+    public function bookRuang(Request $request, TelegramService $telegram)
     {
         $request->merge([ 'user_id' => auth()->id() ]);
 
@@ -106,11 +108,23 @@ class BookingsController extends Controller
             'created_at' => $kegiatan->created_at,
         ]);
    
-        // $customEmails = ['angga.iryanto@staf.unair.ac.id'];
-        
-        // if (env('ENABLE_EMAIL_NOTIFICATIONS', true)) {
-        //     Mail::to($customEmails)->send(new KegiatanNotification($kegiatan));
-        // }
+        try {
+            $adminGroupId = env('TELEGRAM_ADMIN_GROUP_ID'); 
+            $namaOrmawa = auth()->user()->name;
+            if ($adminGroupId) {
+                $msg = "🆕 <b>Permohonan Kegiatan Baru</b>\n\n" .
+                       "Oleh: <b>{$request->nama_pic}</b> ({$namaOrmawa})\n" .
+                       "No. Whatsapp: <b>{$request->nomor_telepon}</b>\n".
+                       "Kegiatan: {$kegiatan->nama_kegiatan}\n" .
+                       "Ruang: " . ($kegiatan->ruangan->nama ?? 'Unknown') . "\n" .
+                       "Waktu: " . \Carbon\Carbon::parse($kegiatan->waktu_mulai)->format('d M Y H:i') . "\n\n" .
+                       "Mohon segera dicek di Aplikasi Layanan Sarpras (PinjamRuang).";
+
+                $telegram->sendMessage($adminGroupId, $msg);
+            }
+        } catch (\Exception $e) {
+            \Log::error("Gagal kirim notif telegram: " . $e->getMessage());
+        }
 
         return redirect()->route('admin.kegiatan.index')->with('success','Proses book ruang berhasil dibuat.');
     }

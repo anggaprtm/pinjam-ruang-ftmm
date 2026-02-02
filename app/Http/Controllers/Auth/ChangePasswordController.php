@@ -25,11 +25,24 @@ class ChangePasswordController extends Controller
         return redirect()->route('profile.password.edit')->with('message', __('global.change_password_success'));
     }
 
-    public function updateProfile(UpdateProfileRequest $request)
+    public function updateProfile(Request $request)
     {
         $user = auth()->user();
 
-        $user->update($request->validated());
+        $validated = $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'nip'   => 'required|string|max:50',
+            'telegram_chat_id' => 'nullable|numeric', 
+        ]);
+
+        // Update data
+        $user->update([
+            'name'  => $validated['name'],
+            'email' => $validated['email'],
+            'nip'   => $validated['nip'],
+            'telegram_chat_id' => $validated['telegram_chat_id'],
+        ]);
 
         return redirect()->route('profile.password.edit')->with('message', __('global.update_profile_success'));
     }

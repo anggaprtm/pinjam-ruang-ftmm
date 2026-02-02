@@ -34,6 +34,7 @@ class User extends Authenticatable
         'name',
         'email',
         'nip',
+        'telegram_chat_id',
         'email_verified_at',
         'password',
         'remember_token',

@@ -47,7 +47,43 @@
                                     <div class="invalid-feedback">{{ $errors->first('email') }}</div>
                                 @endif
                             </div>
-                            <div class="text-end">
+                            {{-- === TAMBAHAN: INPUT TELEGRAM ID === --}}
+                            <div class="form-group mb-3">
+                                <label class="form-label" for="telegram_chat_id">
+                                    <i class="fab fa-telegram text-info me-1"></i> Telegram Chat ID
+                                </label>
+                                <div class="input-group">
+                                    <input 
+                                        class="form-control {{ $errors->has('telegram_chat_id') ? 'is-invalid' : '' }}" 
+                                        type="text" 
+                                        name="telegram_chat_id" 
+                                        id="telegram_chat_id" 
+                                        value="{{ old('telegram_chat_id', auth()->user()->telegram_chat_id) }}" 
+                                        placeholder="Contoh: 123456789">
+                                        
+                                    {{-- Tombol Test (Opsional, visual only) --}}
+                                    <a href="https://t.me/ftmmunairbot" target="_blank" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Klik untuk cari ID kamu">
+                                        <i class="fas fa-question-circle"></i> Cari ID
+                                    </a>
+                                </div>
+
+                                @if($errors->has('telegram_chat_id'))
+                                    <div class="invalid-feedback d-block">{{ $errors->first('telegram_chat_id') }}</div>
+                                @endif
+
+                                {{-- Instruksi Cara Dapat ID --}}
+                                <div class="form-text text-muted small mt-2">
+                                    <strong>Cara mengaktifkan notifikasi:</strong>
+                                    <ol class="mb-0 ps-3">
+                                        <li>Buka Telegram dan cari bot: <strong>@ftmmunairbot</strong> (atau klik tombol tanya di atas).</li>
+                                        <li>Klik atau ketik /start pada bot tersebut, kamu akan mendapat angka <strong>ID</strong> (misal: <code>54321987</code>).</li>
+                                        <li>Copy angka tersebut dan paste di kolom ini.</li>
+                                        <li><strong>Catatan:</strong> ID Telegram sama dengan ID Telegram cybercampus.</li>
+                                        <li>Wajib chat <strong>/start</strong> untuk pertama kali ke bot aplikasi kita (<strong>@ftmmunairbot</strong>) agar bot bisa mengirim pesan ke kamu.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                                                        <div class="text-end">
                                 <button class="btn btn-primary" type="submit">
                                     {{ trans('global.save') }}
                                 </button>
