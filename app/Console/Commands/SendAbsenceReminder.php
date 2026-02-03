@@ -111,7 +111,7 @@ class SendAbsenceReminder extends Command
                             $msg = "🚨 <b>Peringatan Presensi Masuk</b>\n\n" .
                                    "Halo <b>{$user->name}</b>,\n" .
                                    "Sistem mendeteksi Anda belum melakukan <b>Scan Masuk</b> hari ini ($hariIni).\n\n" .
-                                   "Mohon segera melakukan presensi!";
+                                   "Jangan lupa melakukan presensi!!";
                             
                             $telegram->sendMessage($user->telegram_chat_id, $msg);
                             $this->warn("   -> Notif Masuk dikirim.");
