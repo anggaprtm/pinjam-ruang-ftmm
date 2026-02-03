@@ -34,7 +34,7 @@ class Kernel extends ConsoleKernel
         // Fungsinya: Rekap telat pagi & reminder pulang  
         $schedule->command('attendance:remind')
                  ->weekdays()
-                 ->at('20:30')
+                 ->at('19:30')
                  ->timezone('Asia/Jakarta');
 
 
