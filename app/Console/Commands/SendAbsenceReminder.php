@@ -137,11 +137,11 @@ class SendAbsenceReminder extends Command
                             } 
                             // B. Pulang Awal
                             elseif ($scanKeluar < $batasJamPulang) {
-                                $msg = "⚠️ <b>Konfirmasi Scan Pulang</b>\n\n" .
+                                $msg = "⚠️ <b>Pengingat Presensi Pulang</b>\n\n" .
                                        "Halo <b>{$user->name}</b>,\n" .
                                        "Sistem mencatat scan keluar Anda pukul <b>{$scanKeluar}</b>.\n\n" .
-                                       "• Jika lupa scan ulang, mohon segera scan.\n" .
-                                       "• <b>Jika Anda sedang LEMBUR</b>, semangat! Jangan lupa scan saat pulang nanti.";
+                                       "• Jangan lupa melakukan <b>Scan Keluar</b> sebelum meninggalkan kantor.\n" .
+                                       "• <b>Jika Anda sedang LEMBUR</b>, Semangat!";
 
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
                                 $this->warn("   -> Notif Pulang Awal dikirim.");
@@ -165,8 +165,8 @@ class SendAbsenceReminder extends Command
                                            "Terima kasih, data presensi Anda hari ini <b>LENGKAP & TEPAT WAKTU</b>.\n" .
                                            "✅ Masuk: {$scanMasuk}\n" .
                                            "✅ Pulang: {$scanKeluar}\n\n" .
-                                           "Selamat beristirahat, sampai jumpa besok! 👋" .
-                                           "Sorry yang dapet notif ini lagi, sek nyobak nyobak bro wkwk" ;
+                                           "Selamat beristirahat, sampai jumpa besok! 👋" ;
+                                            
                                     
                                     $telegram->sendMessage($user->telegram_chat_id, $msg);
                                     $this->warn("   -> Notif AMAN dikirim.");
