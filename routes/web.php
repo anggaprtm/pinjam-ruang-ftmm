@@ -21,6 +21,7 @@ use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Admin\RiwayatPerjalananController;
 use App\Http\Controllers\Admin\PermintaanKegiatanController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\Admin\AbsensiController;
 
 
 
@@ -118,6 +119,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     )->name('permintaan-kegiatan.prosesKonsumsi');
 
     Route::resource('permintaan-kegiatan', PermintaanKegiatanController::class);
+    Route::get('absensi', [AbsensiController::class, 'index'])->name('absensi.index');
 
 
     // API Holidays
