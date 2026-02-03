@@ -120,6 +120,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
 
     Route::resource('permintaan-kegiatan', PermintaanKegiatanController::class);
     Route::get('absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+    Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
 
 
     // API Holidays

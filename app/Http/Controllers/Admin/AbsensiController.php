@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AbsensiLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Carbon\Carbon;
 
 class AbsensiController extends Controller
@@ -45,5 +46,20 @@ class AbsensiController extends Controller
         ];
 
         return view('admin.absensi.index', compact('logs', 'stats', 'tanggal', 'lastSync', 'batasPulang'));
+    }
+
+    public function sync()
+    {
+        try {
+            // Jalankan command 'attendance:sync'
+            Artisan::call('attendance:sync');
+
+            // Ambil output pesan (opsional)
+            // $output = Artisan::output();
+
+            return back()->with('message', 'Sinkronisasi data presensi berhasil selesai!');
+        } catch (\Exception $e) {
+            return back()->withErrors('Gagal melakukan sinkronisasi: ' . $e->getMessage());
+        }
     }
 }

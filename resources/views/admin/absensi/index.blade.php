@@ -131,9 +131,20 @@
                 <i class="fas fa-list-ul me-2"></i> Detail Kehadiran 
                 <span class="text-muted fw-normal ms-1">— {{ \Carbon\Carbon::parse($tanggal)->translatedFormat('l, d F Y') }}</span>
             </h6>
-            <a href="{{ request()->fullUrl() }}" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3">
-                <i class="fas fa-sync-alt me-1"></i> Refresh
-            </a>
+            <div class="d-flex gap-2">
+                {{-- TOMBOL SINKRONISASI MANUAL --}}
+                <form action="{{ route('admin.absensi.sync') }}" method="POST" onsubmit="return showLoading(this)">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm btn-sync">
+                        <i class="fas fa-sync me-1"></i> Sinkronisasi Live
+                    </button>
+                </form>
+
+                {{-- Tombol Refresh Halaman (GET) --}}
+                <a href="{{ request()->fullUrl() }}" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3">
+                    <i class="fas fa-redo-alt me-1"></i> Refresh View
+                </a>
+            </div>
         </div>
         
         <div class="table-responsive">
@@ -238,4 +249,22 @@
     </div>
 
 </div>
+@endsection
+
+@section('scripts')
+@parent
+<script>
+    function showLoading(form) {
+        let btn = form.querySelector('.btn-sync');
+        let icon = btn.querySelector('i');
+        
+        // Ubah tampilan tombol saat loading
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Mengambil Data...';
+        
+        // Submit form manual karena tombol disabled tidak submit otomatis
+        form.submit(); 
+        return true;
+    }
+</script>
 @endsection

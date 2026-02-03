@@ -15,52 +15,72 @@ class SyncGoogleCalendar extends Command
 
     public function handle()
     {
-        $this->info('Memulai sinkronisasi Google Calendar...');
+        $this->info('🔄 Memulai sinkronisasi Google Calendar...');
 
-        // 1. Ambil event dari Google (Mulai hari ini sampai 1 tahun ke depan)
-        // Pastikan config/google-calendar.php sudah benar calendar_id nya
+        // 1. Tentukan Range Waktu (PENTING untuk konsistensi)
+        $startRange = Carbon::now();
+        $endRange   = Carbon::now()->addYear();
+
         try {
-            $events = Event::get(Carbon::now(), Carbon::now()->addYear());
+            // Ambil event dari Google
+            $googleEvents = Event::get($startRange, $endRange);
         } catch (\Exception $e) {
-            $this->error("Gagal konek ke Google: " . $e->getMessage());
+            $this->error("❌ Gagal konek ke Google: " . $e->getMessage());
             return;
         }
 
-        // 2. Setting Default (Karena Google Calendar gak tau ID user/ruangan di aplikasimu)
-        // GANTI ID INI SESUAI DATABASE KAMU
-        $defaultRuanganId = 40; // Misal ID 1 adalah Ruang Rapat Utama
-        $defaultUserId = 1;    // Misal ID 1 adalah Admin/Sekretaris
+        $defaultRuanganId = 40; 
+        $defaultUserId = 1;
 
-        $count = 0;
+        // --- STEP 1: Kumpulkan ID Event dari Google ---
+        $googleEventIds = [];
 
-        foreach ($events as $event) {
-            // Skip jika event tidak punya waktu mulai/selesai yang jelas (misal all day event yang kadang bikin error)
+        foreach ($googleEvents as $event) {
             if (!$event->startDateTime || !$event->endDateTime) continue;
 
+            $googleEventIds[] = $event->id; // Simpan ID-nya ke array
+
+            // Logic Update/Create yang lama (Tetap Dipakai)
             $start = Carbon::parse($event->startDateTime)->setTimezone('Asia/Jakarta');
             $end   = Carbon::parse($event->endDateTime)->setTimezone('Asia/Jakarta');
 
-            // 3. Simpan atau Update ke Database
             Kegiatan::updateOrCreate(
                 [
                     'google_event_id' => $event->id 
                 ],
                 [
                     'nama_kegiatan' => $event->name ?? '(Tanpa Judul)',
-                    'jenis_kegiatan'=> 'Rapat', // Default otomatis Rapat
+                    'jenis_kegiatan'=> 'Rapat',
                     'deskripsi'     => $event->description,
                     'waktu_mulai'   => $start,
                     'waktu_selesai' => $end,
                     'ruangan_id'    => $defaultRuanganId,
                     'user_id'       => $defaultUserId, 
-                    'nama_pic'      => '*Sinkron Google Calendar', // Penanda ini dari GCal
-                    'status'        => 'disetujui', // Langsung setujui
+                    'nama_pic'      => '*Sinkron Google Calendar',
+                    'status'        => 'disetujui',
                     'nomor_telepon' => '-'
                 ]
             );
-            $count++;
         }
 
-        $this->info("Berhasil sinkronisasi $count kegiatan!");
+        $this->info("✅ Berhasil update/create data dari Google.");
+
+        // --- STEP 2: Hapus Data Lokal yang Sudah Tidak Ada di Google ---
+        // Logic: Cari Kegiatan yang punya google_event_id, 
+        // TAPI id-nya TIDAK ADA di array $googleEventIds yang barusan kita ambil.
+        // DAN pastikan hanya menghapus yang rentang waktunya sesuai ($startRange) 
+        // supaya event masa lalu (sejarah) tidak ikut terhapus.
+
+        $deletedCount = Kegiatan::whereNotNull('google_event_id') // Hanya yang berasal dari Google
+            ->whereNotIn('google_event_id', $googleEventIds)      // Yang ID-nya sudah ga ada di Google
+            ->where('waktu_mulai', '>=', $startRange)             // Hanya hapus event masa depan (sesuai range fetch)
+            ->delete();
+
+        if ($deletedCount > 0) {
+            $this->warn("🗑️  Ditemukan $deletedCount event yang dihapus di Google, menghapus dari database lokal...");
+        }
+
+        $this->info("🎉 Sinkronisasi Selesai Sepenuhnya!");
     }
+
 }
