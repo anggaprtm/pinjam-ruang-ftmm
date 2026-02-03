@@ -30,6 +30,10 @@ class StoreUserRequest extends FormRequest
                 'string',
                 'unique:users',
             ],
+            'telegram_chat_id' => [
+                'string',
+                'nullable', // Boleh kosong jika user belum punya
+            ],
             'password' => [
                 'required',
             ],

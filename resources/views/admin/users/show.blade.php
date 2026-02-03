@@ -43,6 +43,21 @@
             </div>
         </div>
         <div class="detail-item">
+            <div class="icon">
+                <i class="fab fa-telegram-plane"></i> 
+            </div>
+            <div class="content">
+                <div class="label">Telegram Chat ID</div>
+                <div class="value">
+                    @if($user->telegram_chat_id)
+                        <span class="badge bg-info text-dark">{{ $user->telegram_chat_id }}</span>
+                    @else
+                        <span class="text-muted small">Belum terhubung</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="detail-item">
             <div class="icon"><i class="fas fa-briefcase"></i></div>
             <div class="content">
                 <div class="label">{{ trans('cruds.user.fields.roles') }}</div>

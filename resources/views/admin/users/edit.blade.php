@@ -41,7 +41,18 @@
                 @endif
                 <span class="help-block">{{ trans('cruds.user.fields.nip_helper') }}</span>
             </div>
-
+            <div class="form-group mt-3">
+                <label for="telegram_chat_id">Telegram Chat ID</label>
+                <input class="form-control {{ $errors->has('telegram_chat_id') ? 'is-invalid' : '' }}" type="text" name="telegram_chat_id" id="telegram_chat_id" value="{{ old('telegram_chat_id', $user->telegram_chat_id) }}">
+                @if($errors->has('telegram_chat_id'))
+                    <div class="invalid-feedback">
+                        {{ $errors->first('telegram_chat_id') }}
+                    </div>
+                @endif
+                <span class="help-block text-muted small">
+                    Pastikan ID ini valid agar notifikasi terkirim.
+                </span>
+            </div>
             <div class="form-group mb-3">
                 <label class="form-label" for="password">{{ trans('cruds.user.fields.password') }}</label>
                 <input class="form-control {{ $errors->has('password') ? 'is-invalid' : '' }}" type="password" name="password" id="password">

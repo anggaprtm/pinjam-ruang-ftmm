@@ -30,6 +30,10 @@ class UpdateUserRequest extends FormRequest
                 'string',
                 'unique:users,nip,' . request()->route('user')->id,
             ],
+            'telegram_chat_id' => [
+                'string',
+                'nullable', // Boleh kosong jika user belum punya
+            ],
             'roles.*' => [
                 'integer',
             ],

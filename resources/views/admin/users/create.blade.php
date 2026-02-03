@@ -28,6 +28,18 @@
                         @endif
                         <span class="help-block">{{ trans('cruds.user.fields.nip_helper') }}</span>
                     </div>
+                    <div class="form-group mt-3">
+                        <label for="telegram_chat_id">Telegram Chat ID</label>
+                        <input class="form-control {{ $errors->has('telegram_chat_id') ? 'is-invalid' : '' }}" type="text" name="telegram_chat_id" id="telegram_chat_id" value="{{ old('telegram_chat_id') }}" placeholder="Contoh: 123456789">
+                        @if($errors->has('telegram_chat_id'))
+                            <div class="invalid-feedback">
+                                {{ $errors->first('telegram_chat_id') }}
+                            </div>
+                        @endif
+                        <span class="help-block text-muted small">
+                            ID didapatkan setelah user chat bot & klik Start.
+                        </span>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group mb-3">
