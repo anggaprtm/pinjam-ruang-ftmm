@@ -29,6 +29,14 @@ class Kernel extends ConsoleKernel
                  ->at('17:00')
                  ->timezone('Asia/Jakarta');
 
+        // 3. REKAP MALAM 
+        // Jalan jam 20:30
+        // Fungsinya: Rekap telat pagi & reminder pulang  
+        $schedule->command('attendance:remind')
+                 ->weekdays()
+                 ->at('20:30')
+                 ->timezone('Asia/Jakarta');
+
 
 
 

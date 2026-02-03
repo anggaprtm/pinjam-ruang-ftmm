@@ -83,7 +83,7 @@ class TelegramBotListen extends Command
     {
         $message = "Halo, <b>$name</b>! 👋\n\n" .
                    "ID Telegram kamu adalah: <code>$chatId</code>\n\n" .
-                   "Silakan copy angka di atas dan paste ke halaman Profil di website.";
+                   "Silakan copy angka di atas dan paste ke halaman Profil di website. (Abaikan ini, karena sistem notifikasi akan aktif otomatis)";
 
         Http::post("{$this->baseUrl}/sendMessage", [
             'chat_id' => $chatId,
