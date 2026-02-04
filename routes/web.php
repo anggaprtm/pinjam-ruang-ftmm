@@ -124,9 +124,14 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
 
     Route::prefix('surat-undangan')->name('surat-undangan.')->group(function () {
-    Route::get('/', [SuratUndanganController::class, 'create'])->name('create'); // Halaman Form
-    Route::post('/preview', [SuratUndanganController::class, 'preview'])->name('preview'); // API Preview
-    Route::post('/store', [SuratUndanganController::class, 'store'])->name('store'); // Simpan & Download
+        Route::get('/', [SuratUndanganController::class, 'index'])->name('index');
+        Route::get('/create', [SuratUndanganController::class, 'create'])->name('create');
+        Route::post('/store', [SuratUndanganController::class, 'store'])->name('store');
+        Route::post('/preview', [SuratUndanganController::class, 'preview'])->name('preview');
+        
+        // Route Baru
+        Route::get('/{id}/download', [SuratUndanganController::class, 'download'])->name('download');
+        Route::delete('/{id}', [SuratUndanganController::class, 'destroy'])->name('destroy');
     });
 
 

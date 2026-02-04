@@ -29,7 +29,11 @@
         background-color: #525659;
     }
 
-    
+    label.required::after {
+        content: " *";
+        color: red;
+    }
+
     /* Fix Select2 agar sesuai tema bootstrap (yang tadi) */
     .select2-container { width: 100% !important; display: block; }
     .select2-container .select2-selection--multiple {
@@ -80,13 +84,56 @@
                     </div>
 
                     {{-- TUJUAN (SELECT2 TAGS) --}}
+                    {{-- LOGIC TUJUAN: PILIHAN MODE --}}
                     <div class="mb-3">
-                        <label class="form-label required">Tujuan (Pilih / Ketik Custom)</label>
-                        {{-- HAPUS class="form-control" agar tidak bentrok CSS --}}
-                        <select name="tujuan_surat[]" id="tujuan_surat" multiple="multiple" required style="width: 100%;">
-                        </select>
-                        <small class="text-muted">Ketik nama manual lalu tekan Enter jika tidak ada di list.</small>
+                        <label class="form-label fw-bold">Mode Tujuan Surat</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="mode_tujuan" id="mode_biasa" value="biasa" checked onchange="toggleTujuan()">
+                                <label class="form-check-label" for="mode_biasa">Tulis di Surat (Sedikit)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="mode_tujuan" id="mode_lampiran" value="lampiran" onchange="toggleTujuan()">
+                                <label class="form-check-label" for="mode_lampiran">Gunakan Lampiran (Banyak)</label>
+                            </div>
+                        </div>
                     </div>
+
+                    {{-- INPUT 1: SELECT2 (Mode Biasa) --}}
+                    <div class="mb-3" id="container_tujuan_biasa">
+                        <label class="form-label required">Tujuan (Yth.)</label>
+                        <select name="tujuan_surat[]" id="tujuan_surat" multiple="multiple" style="width: 100%;">
+                            {{-- Diisi JS --}}
+                        </select>
+                    </div>
+
+                    {{-- INPUT 2: TEXTAREA (Mode Lampiran) --}}
+                    <div class="mb-3 d-none" id="container_tujuan_lampiran">
+                        <label class="form-label required">Isi Lampiran (Copy-Paste dari Excel)</label>
+                        <div class="alert alert-info py-2 small">
+                            <i class="fas fa-info-circle me-1"></i> Format per baris: <b>Nama Lengkap [pemisah] Jabatan</b>.<br>
+                            Contoh: <i>Dr. Budi - Kaprodi SI</i> (Gunakan tanda strip "-" sebagai pemisah).
+                        </div>
+                        <textarea name="lampiran_content" class="form-control" rows="10" placeholder="Dr. Andi - Kaprodi TSD&#10;Dr. Budi - Kaprodi TRKB&#10;Prof. Siti - Dosen Senior"></textarea>
+                    </div>
+
+                    {{-- SCRIPT TOGGLE --}}
+                    <script>
+                        function toggleTujuan() {
+                            let mode = $('input[name="mode_tujuan"]:checked').val();
+                            
+                            if(mode === 'lampiran') {
+                                $('#container_tujuan_biasa').addClass('d-none');
+                                $('#container_tujuan_lampiran').removeClass('d-none');
+                                // Reset Select2 biar gak konflik validasi
+                                $('#tujuan_surat').val(null).trigger('change'); 
+                            } else {
+                                $('#container_tujuan_biasa').removeClass('d-none');
+                                $('#container_tujuan_lampiran').addClass('d-none');
+                            }
+                            updatePreview();
+                        }
+                    </script>
 
                     {{-- DETAIL ACARA --}}
                     <h6 class="fw-bold mt-4 mb-3 text-primary">DETAIL ACARA</h6>
@@ -120,18 +167,36 @@
                         <textarea name="agenda_acara" class="form-control" rows="2" placeholder="Penetapan Yudisium..." required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Dresscode</label>
+                        <label class="form-label">Dresscode (opsional)</label>
                         <input type="text" name="dresscode" class="form-control" placeholder="Menggunakan jas rapi">
                     </div>
 
                     {{-- PENANDATANGAN --}}
                     <h6 class="fw-bold mt-4 mb-3 text-primary">PEJABAT PENANDATANGAN</h6>
                     <div class="mb-3">
-                        <select name="penandatangan_index" class="form-select select2">
+                        <label class="form-label">Pilih Pejabat</label>
+                        <select name="penandatangan_index" class="form-select select2" onchange="updatePreview()">
                             @foreach($penandatangans as $index => $p)
                                 <option value="{{ $index }}">{{ $p['jabatan'] }} - {{ $p['nama'] }}</option>
                             @endforeach
                         </select>
+                    </div>
+
+                    {{-- FITUR BARU: SWITCH TTD DIGITAL --}}
+                    <div class="mb-3">
+                        <div class="form-check form-switch p-0">
+                            {{-- Class p-0 dan d-flex biar rapi --}}
+                            <div class="d-flex align-items-center">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" id="use_ttd" name="use_ttd" value="1" style="width: 2.5em; height: 1.5em; cursor: pointer;">
+                                <label class="form-check-label fw-bold" for="use_ttd" style="cursor: pointer; margin-top: 2px;">
+                                    <span style="margin-left:40px;">Terapkan Tanda Tangan Digital</span>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Jika aktif, gambar tanda tangan akan otomatis muncul di dokumen.
+                            </small>
+                        </div>
                     </div>
 
                     <div class="d-grid gap-2 mt-4">
@@ -268,5 +333,20 @@
             $('#datePreviewInfo').addClass('d-none');
         }
     });
+</script>
+<script>
+    function toggleTujuan() {
+        let mode = $('input[name="mode_tujuan"]:checked').val();
+        
+        if(mode === 'lampiran') {
+            $('#container_tujuan_biasa').addClass('d-none');
+            $('#container_tujuan_lampiran').removeClass('d-none');
+            // Reset Select2 biar gak konflik validasi
+            $('#tujuan_surat').val(null).trigger('change'); 
+        } else {
+            $('#container_tujuan_biasa').removeClass('d-none');
+            $('#container_tujuan_lampiran').addClass('d-none');
+        }
+    }
 </script>
 @endsection

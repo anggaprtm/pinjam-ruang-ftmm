@@ -15,21 +15,20 @@ class SuratUndangan extends Model
     // Daftar kolom yang boleh diisi via create()
     protected $fillable = [
         'nomor_surat',
-        'hal_surat',
         'tanggal_surat',
+        'hal_surat',
         'tujuan_surat',
-        
-        // Detail Acara
         'hari_tanggal_acara',
         'waktu_acara',
         'tempat_acara',
         'agenda_acara',
         'dresscode',
-
-        // Penandatangan
         'jabatan_penandatangan',
         'nama_penandatangan',
         'nip_penandatangan',
+        'use_lampiran',           // ← Sudah ada
+        'lampiran_content',       // ← Sudah ada
+        'lampiran_table',         // ← TAMBAHKAN INI
     ];
 
     // Opsional: Agar tanggal_surat otomatis jadi objek Carbon saat diambil
