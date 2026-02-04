@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\RiwayatPerjalananController;
 use App\Http\Controllers\Admin\PermintaanKegiatanController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\AbsensiController;
+use App\Http\Controllers\Admin\SuratUndanganController;
 
 
 
@@ -121,6 +122,12 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::resource('permintaan-kegiatan', PermintaanKegiatanController::class);
     Route::get('absensi', [AbsensiController::class, 'index'])->name('absensi.index');
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
+
+    Route::prefix('surat-undangan')->name('surat-undangan.')->group(function () {
+    Route::get('/', [SuratUndanganController::class, 'create'])->name('create'); // Halaman Form
+    Route::post('/preview', [SuratUndanganController::class, 'preview'])->name('preview'); // API Preview
+    Route::post('/store', [SuratUndanganController::class, 'store'])->name('store'); // Simpan & Download
+    });
 
 
     // API Holidays
