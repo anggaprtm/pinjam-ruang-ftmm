@@ -38,6 +38,20 @@ class Kernel extends ConsoleKernel
                  ->timezone('Asia/Jakarta');
 
 
+        $schedule->command('attendance:sync')
+                 ->weekdays()
+                 ->at('09:00')
+                 ->timezone('Asia/Jakarta');
+
+        
+
+        $schedule->command('attendance:sync')
+                 ->weekdays()
+                 ->at('23:00')
+                 ->timezone('Asia/Jakarta');
+
+
+
 
 
     }
