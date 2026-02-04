@@ -126,7 +126,7 @@ table.dataTable thead .sorting_desc {
     font-weight: 500;
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
-    margin: 4px 10px;
+    margin: 2px 10px;
     transition: all 0.2s ease-in-out;
 }
 
@@ -190,7 +190,7 @@ table.dataTable thead .sorting_desc {
     align-items: center;
     width: 44px;       
     height: 44px;    
-    margin: 4px auto;    
+    margin: 2px auto;    
     border-radius: 10px; 
     padding: 0;
     font-size: 0;
