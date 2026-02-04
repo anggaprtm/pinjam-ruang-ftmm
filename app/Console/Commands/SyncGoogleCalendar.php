@@ -30,7 +30,7 @@ class SyncGoogleCalendar extends Command
         }
 
         $defaultRuanganId = 40; 
-        $defaultUserId = 1;
+        $defaultUserId = 24;
 
         // --- STEP 1: Kumpulkan ID Event dari Google ---
         $googleEventIds = [];
