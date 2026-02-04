@@ -48,8 +48,9 @@ class KegiatanController extends Controller
                 $query->where('ruangan_id', $request->ruangan_id);
             }
 
-            if (auth()->user()->hasRole('User') || auth()->user()->hasRole('Pegawai')) {
-                $query->where('kegiatan.user_id', auth()->id());
+            // Filter hanya jika user punya role Pegawai/User DAN BUKAN Admin
+            if (!auth()->user()->isAdmin() && (auth()->user()->hasRole('User') || auth()->user()->hasRole('Pegawai'))) {
+                $query->where($tableName . '.user_id', auth()->id());
             }
 
             $table = Datatables::of($query);
