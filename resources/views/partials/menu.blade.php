@@ -123,6 +123,14 @@
                 </a>
             </li>
         @endcan
+        @can('presensi_access') 
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.absensi.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/absensi") || request()->is("admin/absensi/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Log Presensi">
+                    <i class="fa-fw fas fa-fingerprint c-sidebar-nav-icon"></i>
+                    Log Presensi
+                </a>
+            </li>
+        @endcan
         @if(file_exists(app_path('Http/Controllers/Auth/ChangePasswordController.php')))
             @can('profile_password_edit')
                 <li class="c-sidebar-nav-item">
