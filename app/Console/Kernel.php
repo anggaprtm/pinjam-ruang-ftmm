@@ -40,7 +40,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('attendance:sync')
                  ->weekdays()
-                 ->at('09:00')
+                 ->at('08:30')
                  ->timezone('Asia/Jakarta');
 
         
