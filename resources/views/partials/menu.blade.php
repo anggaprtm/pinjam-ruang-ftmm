@@ -93,7 +93,7 @@
         @endcan
         @can('kuliah_access')
             <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.jadwal-perkuliahan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/jadwal") || request()->is("admin/jadwal/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Jadwal Perkuliahan">
+                <a href="{{ route("admin.jadwal-perkuliahan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/jadwal") || request()->is("admin/jadwal-perkuliahan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Jadwal Perkuliahan">
                     <i class="fa-fw fa fa-calendar-alt c-sidebar-nav-icon"></i>
                     Jadwal Perkuliahan
                 </a>

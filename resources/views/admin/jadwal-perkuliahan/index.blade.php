@@ -3,13 +3,20 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold">Daftar Jadwal Perkuliahan</h3>
+    <h3 class="fw-bold mb-0">Daftar Jadwal Perkuliahan</h3>
+
     @can('kuliah_create')
-        <a class="btn btn-success" href="{{ route('admin.jadwal-perkuliahan.create') }}">
-            <i class="fas fa-plus-circle me-2"></i> Tambah Data
-        </a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-success" href="{{ route('admin.jadwal-perkuliahan.monitoring') }}">
+                <i class="fas fa-eye me-1"></i> Monitoring
+            </a>
+            <a class="btn btn-success" href="{{ route('admin.jadwal-perkuliahan.create') }}">
+                <i class="fas fa-plus-circle me-1"></i> Tambah Data
+            </a>
+        </div>
     @endcan
 </div>
+
 
 {{-- Filter Bar & Import --}}
 <div class="filter-bar">

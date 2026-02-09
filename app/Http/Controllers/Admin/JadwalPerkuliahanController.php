@@ -180,4 +180,53 @@ class JadwalPerkuliahanController extends Controller
             return redirect()->back()->withErrors(['msg' => $e->getMessage()]);
         }
     }
+
+    public function monitoring(Request $request)
+    {
+        // 1. Filter Hari (Default: Hari ini)
+        // Map nama hari Inggris (Carbon) ke Indonesia
+        $mapHari = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
+        
+        $today = $mapHari[date('l')]; // Hari ini dalam Bhs Indo
+        $selectedHari = $request->input('hari', $today);
+        
+        // Jika hari Minggu, default ke Senin biar gak kosong tampilannya
+        if ($selectedHari == 'Minggu') $selectedHari = 'Senin';
+
+        // 2. Ambil Semester Aktif
+        $activeSemester = \App\Models\Semester::active()->first();
+        $semesterId = $activeSemester ? $activeSemester->id : null;
+
+        // 3. Ambil Ruangan beserta Jadwalnya di Hari & Semester tersebut
+        // Kita eager load 'jadwal' dengan filter tertentu
+        $ruangans = Ruangan::with(['jadwalPerkuliahan' => function($q) use ($selectedHari, $semesterId) {
+            $q->where('hari', $selectedHari)
+            ->where('semester_id', $semesterId)
+            ->orderBy('waktu_mulai');
+        }])->orderBy('nama')->get();
+
+        // 4. Config Jam Operasional (Untuk hitung lebar grafik)
+        // Misal kampus buka jam 07:00 sampai 18:00
+        $startHour = 7; 
+        $endHour = 21; 
+
+        // FILTER QUERY: Tambahkan whereHas
+        $ruangans = Ruangan::whereHas('jadwalPerkuliahan', function($q) use ($selectedHari, $semesterId) {
+                // Hanya ambil ruangan yang punya jadwal di hari & semester ini
+                $q->where('hari', $selectedHari)
+                ->where('semester_id', $semesterId);
+            })
+            ->with(['jadwalPerkuliahan' => function($q) use ($selectedHari, $semesterId) {
+                $q->where('hari', $selectedHari)
+                ->where('semester_id', $semesterId)
+                ->orderBy('waktu_mulai');
+            }])
+            ->orderBy('nama')
+            ->get();
+
+        return view('admin.jadwal-perkuliahan.monitoring', compact('ruangans', 'selectedHari', 'startHour', 'endHour'));
+    }
 }

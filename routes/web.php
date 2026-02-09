@@ -86,7 +86,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::delete('barangs/destroy', [BarangController::class, 'massDestroy'])->name('barangs.massDestroy');
     Route::resource('barangs', BarangController::class);
 
-    //J Jadwal Perkuliahan
+    // Jadwal Perkuliahan
+    Route::get('jadwal-perkuliahan/monitoring', [JadwalPerkuliahanController::class, 'monitoring'])->name('jadwal-perkuliahan.monitoring');
     Route::get('jadwal-perkuliahan/template', [JadwalPerkuliahanTemplateExportController::class, 'export'])->name('jadwal-perkuliahan.template');
     Route::delete('jadwal-perkuliahan/destroy', [JadwalPerkuliahanController::class, 'massDestroy'])->name('jadwal-perkuliahan.massDestroy');
     Route::resource('jadwal-perkuliahan', JadwalPerkuliahanController::class);

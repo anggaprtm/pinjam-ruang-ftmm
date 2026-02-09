@@ -41,4 +41,10 @@ class Ruangan extends Model
     {
         return $this->hasMany(Kegiatan::class);
     }
+
+    public function jadwalPerkuliahan()
+    {
+        // Parameter ke-2 'ruangan_id' adalah foreign key di tabel jadwal_perkuliahan
+        return $this->hasMany(JadwalPerkuliahan::class, 'ruangan_id');
+    }
 }
