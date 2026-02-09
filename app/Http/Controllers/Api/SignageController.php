@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\JadwalPerkuliahan;
 use App\Models\Kegiatan;
+use App\Models\Semester;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -21,35 +22,48 @@ class SignageController extends Controller
         $filterGedung = $request->query('gedung');
 
         // ==========================================
-        // 1. QUERY JADWAL KULIAH
+        // 1. QUERY JADWAL KULIAH (UPDATED LOGIC)
         // ==========================================
-        $jadwalQuery = JadwalPerkuliahan::where('hari', $todayName)
-            ->whereDate('berlaku_mulai', '<=', $today)
-            ->whereDate('berlaku_sampai', '>=', $today)
-            ->with(['ruangan']);
+        
+        // A. Cari Semester yang Aktif saat ini
+        // Pastikan Model Semester sudah di-use di atas
+        $activeSemester = \App\Models\Semester::where('is_active', 1)
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->first();
 
-        // Filter Lantai & Gedung untuk Kuliah
-        if ($filterLantai) {
-            $jadwalQuery->whereHas('ruangan', function($q) use ($filterLantai) {
-                $q->where('lantai', 'LIKE', "%{$filterLantai}%");
+        // B. Default Kosong (jika libur semester)
+        $jadwalKuliah = collect([]);
+
+        // C. Jika ada semester aktif, baru query jadwalnya
+        if ($activeSemester) {
+            $jadwalQuery = JadwalPerkuliahan::where('hari', $todayName)
+                ->where('semester_id', $activeSemester->id) // Filter by Semester ID
+                ->with(['ruangan']);
+
+            // Filter Lantai & Gedung untuk Kuliah
+            if ($filterLantai) {
+                $jadwalQuery->whereHas('ruangan', function($q) use ($filterLantai) {
+                    $q->where('lantai', 'LIKE', "%{$filterLantai}%");
+                });
+            }
+            if ($filterGedung) {
+                $jadwalQuery->whereHas('ruangan', function($q) use ($filterGedung) {
+                    $q->where('gedung', 'LIKE', "%{$filterGedung}%");
+                });
+            }
+
+            $jadwalKuliah = $jadwalQuery->orderBy('waktu_mulai')->get()->map(function ($jadwal) {
+                return [
+                    'title' => $jadwal->mata_kuliah,
+                    'course_code' => $jadwal->kode_matkul ?? substr($jadwal->program_studi, 0, 2).'-'.$jadwal->id,
+                    'time' => Carbon::parse($jadwal->waktu_mulai)->format('H:i') . ' - ' . Carbon::parse($jadwal->waktu_selesai)->format('H:i'),
+                    'room' => $jadwal->ruangan->nama ?? '-',
+                    'pic' => $jadwal->dosen ?? '-',
+                    'type' => 'kuliah',
+                ];
             });
         }
-        if ($filterGedung) {
-            $jadwalQuery->whereHas('ruangan', function($q) use ($filterGedung) {
-                $q->where('gedung', 'LIKE', "%{$filterGedung}%");
-            });
-        }
-
-        $jadwalKuliah = $jadwalQuery->orderBy('waktu_mulai')->get()->map(function ($jadwal) {
-            return [
-                'title' => $jadwal->mata_kuliah,
-                'course_code' => $jadwal->kode_matkul ?? substr($jadwal->program_studi, 0, 2).'-'.$jadwal->id,
-                'time' => Carbon::parse($jadwal->waktu_mulai)->format('H:i') . ' - ' . Carbon::parse($jadwal->waktu_selesai)->format('H:i'),
-                'room' => $jadwal->ruangan->nama ?? '-',
-                'pic' => $jadwal->dosen ?? '-',
-                'type' => 'kuliah',
-            ];
-        });
 
         // ==========================================
         // 2. QUERY KEGIATAN (EVENTS) - FIX FILTER DISINI

@@ -42,6 +42,7 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data }) => {
             <AutoScrollList 
                 data={data}
                 threshold={1} // Kalau lebih dari 5 matkul, dia scroll
+                speedPerItem={4}
                 renderItem={(lecture, index) => {
                     const status = getStatus(lecture.time);
                     
@@ -83,10 +84,6 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data }) => {
                             
                             {/* Detail Info */}
                             <div className="flex flex-col gap-2 mt-2 border-t border-white/5 pt-3">
-                                <div className="flex items-center gap-2 text-sm text-gray-300 group-hover:text-white transition-colors">
-                                    <User className={`w-3.5 h-3.5 ${status === 'Now' ? 'text-electric-400' : 'text-gray-500'}`} />
-                                    <span>{lecture.pic !== '-' ? lecture.pic : '-'}</span>
-                                </div>
                                 <div className="flex items-center gap-2 text-sm text-gray-300 group-hover:text-white transition-colors">
                                     <MapPin className={`w-3.5 h-3.5 ${status === 'Now' ? 'text-electric-400' : 'text-gray-500'}`} />
                                     <span>{lecture.room}</span>
