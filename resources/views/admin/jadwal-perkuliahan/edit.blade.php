@@ -26,13 +26,14 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label class="form-label required" for="program_studi">Program Studi</label>
-                        <select class="form-control {{ $errors->has('program_studi') ? 'is-invalid' : '' }}" name="program_studi" id="program_studi" required>
-                            <option value="">-- Pilih Program Studi --</option>
-                            @foreach(['TSD', 'TI', 'RN', 'TRKB', 'TE'] as $program_studi)
-                                <option value="{{ $program_studi }}" {{ (old('program_studi', $jadwalPerkuliahan->program_studi) == $program_studi) ? 'selected' : '' }}>{{ $program_studi }}</option>
-                            @endforeach
-                        </select>
+                        <label class="form-label required" for="program_studi">Kelas / Prodi</label>
+                        <input class="form-control {{ $errors->has('program_studi') ? 'is-invalid' : '' }}" 
+                            type="text" 
+                            name="program_studi" 
+                            id="program_studi" 
+                            value="{{ old('program_studi', $jadwalPerkuliahan->program_studi) }}" 
+                            placeholder="Cth: TE-A1" 
+                            required>
                         @if($errors->has('program_studi'))
                             <div class="invalid-feedback">{{ $errors->first('program_studi') }}</div>
                         @endif

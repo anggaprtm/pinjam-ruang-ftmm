@@ -18,7 +18,7 @@ class UpdateJadwalPerkuliahanRequest extends FormRequest
             'ruangan_id' => ['required', 'integer', 'exists:ruangan,id'],
             'kode_matkul' => ['required', 'string', 'max:20'],
             'mata_kuliah' => ['required', 'string', 'max:255'],
-            'program_studi' => ['required', 'in:RN,TRKB,TI,TSD,TE'],
+            'program_studi' => ['required', 'string', 'max:255'],
             'dosen' => ['nullable', 'string', 'max:255'],
             'hari' => ['required', 'in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu'],
             'waktu_mulai' => ['required', 'date_format:H:i'],

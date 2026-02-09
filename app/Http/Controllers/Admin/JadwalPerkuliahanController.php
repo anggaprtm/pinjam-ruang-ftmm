@@ -52,7 +52,11 @@ class JadwalPerkuliahanController extends Controller
     $currentSemester = Semester::find($semesterId);
 
     // List Prodi (Hardcode sesuai Enum di database/Request validation)
-    $listProdi = ['TSD', 'TI', 'RN', 'TRKB', 'TE'];
+    $listProdi = JadwalPerkuliahan::select('program_studi')
+                    ->distinct()
+                    ->whereNotNull('program_studi')
+                    ->orderBy('program_studi')
+                    ->pluck('program_studi');
 
     // Jangan lupa pass $programStudi dan $listProdi ke compact
     return view('admin.jadwal-perkuliahan.index', compact('jadwals', 'hari', 'semesters', 'semesterId', 'currentSemester', 'programStudi', 'listProdi'));
@@ -159,16 +163,21 @@ class JadwalPerkuliahanController extends Controller
         return response(null, Response::HTTP_NO_CONTENT);
     }
 
-    public function import(Request $request)
+    public function import(Request $request, EventService $eventService) // Inject Service ke method controller
     {
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv'
         ]);
 
-        // Note: Kamu perlu update logic ImportJadwalPerkuliahan juga 
-        // agar otomatis set semester_id = Semester::active()->id
-        Excel::import(new JadwalPerkuliahanImport, $request->file('file'));
-
-        return redirect()->route('admin.jadwal-perkuliahan.index')->with('success', 'Data berhasil diimport!');
+        try {
+            // Pass $eventService ke constructor Import
+            Excel::import(new JadwalPerkuliahanImport($eventService), $request->file('file'));
+            
+            return redirect()->route('admin.jadwal-perkuliahan.index')->with('success', 'Data berhasil diimport dan tidak ada bentrok!');
+            
+        } catch (\Exception $e) {
+            // Tangkap error throw dari Import tadi dan tampilkan sebagai pesan error merah
+            return redirect()->back()->withErrors(['msg' => $e->getMessage()]);
+        }
     }
 }
