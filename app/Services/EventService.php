@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Kegiatan;
+use App\Models\Semester;
 use App\Models\JadwalPerkuliahan;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -201,30 +202,21 @@ class EventService
      */
     public function isRoomTakenForLecture(array $requestData)
     {
-        $jamMulai = $requestData['waktu_mulai']; // Mengharapkan format 'H:i:s'
+        $jamMulai = $requestData['waktu_mulai']; 
         $jamSelesai = $requestData['waktu_selesai'];
-        $berlakuMulai = Carbon::parse($requestData['berlaku_mulai']);
-        $berlakuSampai = Carbon::parse($requestData['berlaku_sampai']);
+        $semesterId = $requestData['semester_id']; // Wajib ada
 
-        $kuliahBentrok = JadwalPerkuliahan::where('ruangan_id', $requestData['ruangan_id'])
+        return JadwalPerkuliahan::where('ruangan_id', $requestData['ruangan_id'])
+            ->where('semester_id', $semesterId) // Kunci utama: Cek di semester yang sama
             ->where('hari', $requestData['hari'])
-            // Mengecualikan jadwal yang sedang diedit (jika ada 'id' di request)
             ->when(isset($requestData['id']), function ($query) use ($requestData) {
                 return $query->where('id', '!=', $requestData['id']);
             })
-            // Cek overlap waktu (jam)
             ->where(function ($query) use ($jamMulai, $jamSelesai) {
                 $query->where('waktu_mulai', '<', $jamSelesai)
                       ->where('waktu_selesai', '>', $jamMulai);
             })
-            // Cek overlap rentang tanggal semester
-            ->where(function ($query) use ($berlakuMulai, $berlakuSampai) {
-                $query->where('berlaku_mulai', '<=', $berlakuSampai)
-                      ->where('berlaku_sampai', '>=', $berlakuMulai);
-            })
             ->first();
-
-        return $kuliahBentrok; // Mengembalikan jadwal kuliah yang bentrok atau null
     }
 
     /**
@@ -235,12 +227,17 @@ class EventService
      */
     public function isRoomTakenByKegiatan(array $data)
     {
-        // 1. Buat daftar semua tanggal spesifik untuk jadwal kuliah baru
-        $lectureDates = [];
-        $startDate = Carbon::parse($data['berlaku_mulai']);
-        $endDate = Carbon::parse($data['berlaku_sampai']);
-        $dayOfWeek = ucfirst(strtolower($data['hari'])); // e.g., "Senin"
+        // 1. Cari tanggal spesifik kuliah berdasarkan rentang Semester
+        $semester = Semester::find($data['semester_id']);
 
+        if (!$semester) return null;
+
+        $lectureDates = [];
+        $startDate = $semester->tanggal_mulai; 
+        $endDate = $semester->tanggal_selesai;
+        $dayOfWeek = ucfirst(strtolower($data['hari'])); // Senin, Selasa...
+
+        // Loop generating tanggal
         $currentDate = $startDate->copy();
         while ($currentDate->lte($endDate)) {
             if ($currentDate->locale('id')->isoFormat('dddd') === $dayOfWeek) {
@@ -249,25 +246,21 @@ class EventService
             $currentDate->addDay();
         }
 
-        if (empty($lectureDates)) {
-            return null; // Tidak ada tanggal yang relevan untuk dicek
-        }
+        if (empty($lectureDates)) return null;
 
-        // 2. Cek kegiatan yang bentrok dalam SATU QUERY
-        $jamMulai = $data['waktu_mulai']; // Mengharapkan format 'H:i:s'
+        // 2. Cek database Kegiatan
+        $jamMulai = $data['waktu_mulai'];
         $jamSelesai = $data['waktu_selesai'];
 
-        $kegiatanBentrok = Kegiatan::where('ruangan_id', $data['ruangan_id'])
+        return Kegiatan::where('ruangan_id', $data['ruangan_id'])
             ->whereIn('status', ['disetujui', 'verifikasi_akademik', 'verifikasi_sarpras'])
-            // Filter efisien berdasarkan tanggal (tanpa memperhatikan waktu)
+            // Cek apakah tanggal kegiatan ada di dalam daftar tanggal kuliah
             ->whereIn(DB::raw('DATE(waktu_mulai)'), $lectureDates)
-            // Setelah difilter berdasarkan tanggal, cek overlap waktunya
+            // Cek irisan jam
             ->where(function ($query) use ($jamMulai, $jamSelesai) {
                 $query->whereTime('waktu_mulai', '<', $jamSelesai)
                       ->whereTime('waktu_selesai', '>', $jamMulai);
             })
             ->first();
-
-        return $kegiatanBentrok; // Mengembalikan kegiatan yang bentrok atau null
     }
 }

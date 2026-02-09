@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\JadwalPerkuliahanController;
 use App\Http\Controllers\Admin\JadwalPerkuliahanTemplateExportController;
 use App\Http\Controllers\Admin\KegiatanController;
 use App\Http\Controllers\Admin\SystemCalendarController;
+use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\BookingsController;
 use App\Http\Controllers\Admin\CalendarViewController;
 use App\Http\Controllers\Admin\MobilController;
@@ -85,12 +86,12 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::delete('barangs/destroy', [BarangController::class, 'massDestroy'])->name('barangs.massDestroy');
     Route::resource('barangs', BarangController::class);
 
-
-    // Jadwal Perkuliahan
+    //J Jadwal Perkuliahan
+    Route::get('jadwal-perkuliahan/template', [JadwalPerkuliahanTemplateExportController::class, 'export'])->name('jadwal-perkuliahan.template');
     Route::delete('jadwal-perkuliahan/destroy', [JadwalPerkuliahanController::class, 'massDestroy'])->name('jadwal-perkuliahan.massDestroy');
     Route::resource('jadwal-perkuliahan', JadwalPerkuliahanController::class);
     Route::post('jadwal-perkuliahan/import', [JadwalPerkuliahanController::class, 'import'])->name('jadwal-perkuliahan.import');
-    Route::get('jadwal-perkuliahan/template', [JadwalPerkuliahanTemplateExportController::class, 'export'])->name('jadwal-perkuliahan.template');
+    Route::resource('semesters', 'Admin\SemesterController');
 
     // Kalender & Booking
     Route::get('kalender', [SystemCalendarController::class, 'index'])->name('systemCalendar');

@@ -30,14 +30,6 @@ class StoreJadwalPerkuliahanRequest extends FormRequest
                 'date_format:H:i', 'after:waktu_mulai'
             ],
             'dosen' => ['nullable', 'string', 'max:255'],
-            'berlaku_mulai' => [
-                'required', 
-                'date_format:j M Y',
-            ],
-            'berlaku_sampai' => [
-                'required', 
-                'date_format:j M Y',
-            ],
         ];
     }
 }

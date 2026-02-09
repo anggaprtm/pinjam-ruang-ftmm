@@ -1,61 +1,87 @@
 @extends('layouts.admin')
 @section('content')
 
-<div class="card detail-view-card">
-    <div class="detail-header">
+<div class="card detail-view-card border-0 shadow-sm">
+    <div class="card-header bg-white p-4 border-bottom">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="detail-title">{{ $jadwalPerkuliahan->mata_kuliah }}</h2>
-                <p class="detail-sub-title mb-0">Detail untuk jadwal perkuliahan.</p>
+                <h2 class="fw-bold mb-1">{{ $jadwalPerkuliahan->mata_kuliah }}</h2>
+                <span class="badge bg-success">{{ $jadwalPerkuliahan->kode_matkul }}</span>
+                <span class="badge bg-info text-white">{{ $jadwalPerkuliahan->tipe }}</span>
             </div>
             <a href="{{ route('admin.jadwal-perkuliahan.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
+                <i class="fas fa-arrow-left me-2"></i> Kembali
             </a>
         </div>
     </div>
+
     <div class="card-body p-4">
-        <div class="detail-item">
-            <div class="icon"><i class="fas fa-id-card"></i></div>
-            <div class="content">
-                <div class="label">ID</div>
-                <div class="value">{{ $jadwalPerkuliahan->id }}</div>
+        <div class="row">
+            {{-- Kolom Kiri: Info Akademik --}}
+            <div class="col-md-6">
+                <h5 class="text-muted mb-3 small fw-bold text-uppercase">Informasi Akademik</h5>
+                
+                <div class="detail-item mb-3 d-flex">
+                    <div class="icon me-3 text-secondary" style="width: 30px;"><i class="fas fa-calendar-alt fa-lg"></i></div>
+                    <div class="content">
+                        <div class="label text-muted small">Semester</div>
+                        <div class="value fw-bold">{{ $jadwalPerkuliahan->semester->nama ?? '-' }}</div>
+                    </div>
+                </div>
+
+                <div class="detail-item mb-3 d-flex">
+                    <div class="icon me-3 text-secondary" style="width: 30px;"><i class="fas fa-graduation-cap fa-lg"></i></div>
+                    <div class="content">
+                        <div class="label text-muted small">Program Studi</div>
+                        <div class="value fw-bold">{{ $jadwalPerkuliahan->program_studi }}</div>
+                    </div>
+                </div>
+
+                <div class="detail-item mb-3 d-flex">
+                    <div class="icon me-3 text-secondary" style="width: 30px;"><i class="fas fa-user-tie fa-lg"></i></div>
+                    <div class="content">
+                        <div class="label text-muted small">Dosen Pengampu</div>
+                        <div class="value fw-bold">{{ $jadwalPerkuliahan->dosen ?? '-' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Kolom Kanan: Info Waktu & Tempat --}}
+            <div class="col-md-6">
+                <h5 class="text-muted mb-3 small fw-bold text-uppercase">Waktu & Tempat</h5>
+
+                <div class="detail-item mb-3 d-flex">
+                    <div class="icon me-3 text-secondary" style="width: 30px;"><i class="fas fa-door-open fa-lg"></i></div>
+                    <div class="content">
+                        <div class="label text-muted small">Ruangan</div>
+                        <div class="value fw-bold">{{ $jadwalPerkuliahan->ruangan->nama ?? '-' }}</div>
+                    </div>
+                </div>
+
+                <div class="detail-item mb-3 d-flex">
+                    <div class="icon me-3 text-secondary" style="width: 30px;"><i class="fas fa-calendar fa-lg"></i></div>
+                    <div class="content">
+                        <div class="label text-muted small">Hari</div>
+                        <div class="value fw-bold">{{ $jadwalPerkuliahan->hari }}</div>
+                    </div>
+                </div>
+
+                <div class="detail-item mb-3 d-flex">
+                    <div class="icon me-3 text-secondary" style="width: 30px;"><i class="fas fa-clock fa-lg"></i></div>
+                    <div class="content">
+                        <div class="label text-muted small">Jam Perkuliahan</div>
+                        <div class="value fw-bold">
+                            {{ \Carbon\Carbon::parse($jadwalPerkuliahan->waktu_mulai)->format('H:i') }} - 
+                            {{ \Carbon\Carbon::parse($jadwalPerkuliahan->waktu_selesai)->format('H:i') }} WIB
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="detail-item">
-            <div class="icon"><i class="fas fa-book"></i></div>
-            <div class="content">
-                <div class="label">Mata Kuliah</div>
-                <div class="value">{{ $jadwalPerkuliahan->mata_kuliah }}</div>
-            </div>
-        </div>
-        <div class="detail-item">
-            <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
-            <div class="content">
-                <div class="label">Dosen Pengampu</div>
-                <div class="value">{{ $jadwalPerkuliahan->dosen_pengampu }}</div>
-            </div>
-        </div>
-        <div class="detail-item">
-            <div class="icon"><i class="fas fa-door-open"></i></div>
-            <div class="content">
-                <div class="label">Ruangan</div>
-                <div class="value">{{ $jadwalPerkuliahan->ruangan->nama ?? '' }}</div>
-            </div>
-        </div>
-        <div class="detail-item">
-            <div class="icon"><i class="fas fa-calendar-check"></i></div>
-            <div class="content">
-                <div class="label">Hari</div>
-                <div class="value">{{ $jadwalPerkuliahan->hari }}</div>
-            </div>
-        </div>
-        <div class="detail-item">
-            <div class="icon"><i class="fas fa-clock"></i></div>
-            <div class="content">
-                <div class="label">Waktu</div>
-                <div class="value">{{ \Carbon\Carbon::parse($jadwalPerkuliahan->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwalPerkuliahan->jam_selesai)->format('H:i') }}</div>
-            </div>
-        </div>
+    </div>
+    
+    <div class="card-footer bg-light p-3 text-end text-muted small">
+        Data dibuat pada: {{ $jadwalPerkuliahan->created_at->format('d M Y H:i') }}
     </div>
 </div>
 

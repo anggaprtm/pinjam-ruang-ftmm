@@ -23,16 +23,17 @@ class JadwalPerkuliahan extends Model
         'tipe',
         'program_studi',
         'dosen',
-    ];
-
-    protected $casts = [
-        'berlaku_mulai' => 'date',
-        'berlaku_sampai' => 'date',
+        'semester_id',
     ];
 
     public function ruangan()
     {
         return $this->belongsTo(Ruangan::class, 'ruangan_id');
+    }
+
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class, 'semester_id');
     }
 }
 

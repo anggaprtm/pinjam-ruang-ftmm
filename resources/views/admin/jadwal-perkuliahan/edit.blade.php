@@ -109,26 +109,13 @@
                         @endif
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="berlaku_mulai">Berlaku Mulai</label>
-                        <input class="form-control date {{ $errors->has('berlaku_mulai') ? 'is-invalid' : '' }}" 
-                            type="text" name="berlaku_mulai" id="berlaku_mulai" 
-                            value="{{ old('berlaku_mulai', $jadwalPerkuliahan->berlaku_mulai ? $jadwalPerkuliahan->berlaku_mulai->format('Y-m-d') : '') }}" 
-                            required>
-                        @if($errors->has('berlaku_mulai'))
-                            <div class="invalid-feedback">{{ $errors->first('berlaku_mulai') }}</div>
-                        @endif
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="berlaku_sampai">Berlaku Sampai</label>
-                        <input class="form-control date {{ $errors->has('berlaku_sampai') ? 'is-invalid' : '' }}" 
-                            type="text" name="berlaku_sampai" id="berlaku_sampai" 
-                            value="{{ old('berlaku_sampai', $jadwalPerkuliahan->berlaku_sampai ? $jadwalPerkuliahan->berlaku_sampai->format('Y-m-d') : '') }}" 
-                            required>
-                        @if($errors->has('berlaku_sampai'))
-                            <div class="invalid-feedback">{{ $errors->first('berlaku_sampai') }}</div>
-                        @endif
+                    <div class="col-12 mb-3">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-lock me-2"></i>
+                            Jadwal ini terdaftar di semester: <strong>{{ $semester->nama ?? '-' }}</strong>.
+                            <br>
+                            <small>Mengubah hari/jam akan dicek bentroknya terhadap semester ini.</small>
+                        </div>
                     </div>
 
                 </div>

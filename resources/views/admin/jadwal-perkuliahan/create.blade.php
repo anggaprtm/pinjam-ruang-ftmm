@@ -112,22 +112,33 @@
                         @endif
                     </div>
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="berlaku_mulai">Berlaku Mulai</label>
-                        <input class="form-control date {{ $errors->has('berlaku_mulai') ? 'is-invalid' : '' }}" type="text" name="berlaku_mulai" id="berlaku_mulai" value="{{ old('berlaku_mulai') }}" required>
-                        @if($errors->has('berlaku_mulai'))
-                            <div class="invalid-feedback">{{ $errors->first('berlaku_mulai') }}</div>
-                        @endif
-                    </div>
+                    {{-- Di dalam form, HAPUS bagian input 'berlaku_mulai' dan 'berlaku_sampai' --}}
+                    {{-- GANTI dengan ini: --}}
 
-                    <div class="form-group mb-3">
-                        <label class="form-label required" for="berlaku_sampai">Berlaku Sampai</label>
-                        <input class="form-control date {{ $errors->has('berlaku_sampai') ? 'is-invalid' : '' }}" type="text" name="berlaku_sampai" id="berlaku_sampai" value="{{ old('berlaku_sampai') }}" required>
-                        @if($errors->has('berlaku_sampai'))
-                            <div class="invalid-feedback">{{ $errors->first('berlaku_sampai') }}</div>
-                        @endif
+                    <div class="col-12 mb-4">
+                        <div class="card bg-light border-primary">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-calendar-check fa-2x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-1">Semester Aktif</h5>
+                                        @if($activeSemester)
+                                            <p class="card-text mb-0">
+                                                Jadwal akan disimpan ke: <strong>{{ $activeSemester->nama }}</strong><br>
+                                                <small class="text-muted">Periode: {{ $activeSemester->tanggal_mulai->format('d M Y') }} s/d {{ $activeSemester->tanggal_selesai->format('d M Y') }}</small>
+                                            </p>
+                                        @else
+                                            <p class="card-text text-danger fw-bold mb-0">
+                                                <i class="fas fa-exclamation-triangle"></i> PERINGATAN: Belum ada Semester Aktif!
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
             </div>
 

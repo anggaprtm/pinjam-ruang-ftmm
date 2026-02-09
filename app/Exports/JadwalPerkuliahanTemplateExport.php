@@ -22,14 +22,15 @@ class JadwalPerkuliahanTemplateExport implements FromCollection, WithHeadings
     {
         return [
             'nama_ruangan',
+            'kode_matkul', // Tambahan wajib
             'mata_kuliah',
+            'dosen',
             'hari',
             'waktu_mulai',
             'waktu_selesai',
-            'berlaku_mulai',
-            'berlaku_sampai',
             'tipe',
             'program_studi',
+            // Tanggal dihapus
         ];
     }
 }
