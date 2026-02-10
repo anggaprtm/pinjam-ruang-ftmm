@@ -21,14 +21,15 @@ class EventService
      */
     public function isRoomTaken($requestData)
     {
-        // Definisikan format tanggal yang digunakan di form
+        // 1. Setup Format & Locale
+        Carbon::setLocale('id'); // Pastikan locale ID agar hari (Senin, Selasa) cocok
         $datetime_format = config('panel.date_format', 'd M Y') . ' ' . config('panel.time_format', 'H:i');
         $date_format = config('panel.date_format', 'd M Y');
 
         $ignoreId = $requestData['ignore_id'] ?? null;
-
-        // Kumpulkan semua rentang waktu yang perlu diperiksa
         $waktuUntukDicek = [];
+
+        // 2. Parsing Input Tanggal
         try {
             $waktuMulai = Carbon::createFromFormat($datetime_format, $requestData['waktu_mulai']);
             $waktuSelesai = Carbon::createFromFormat($datetime_format, $requestData['waktu_selesai']);
@@ -37,29 +38,34 @@ class EventService
                 ? Carbon::createFromFormat($date_format, $requestData['berulang_sampai'])->endOfDay()
                 : $waktuSelesai->copy()->endOfDay();
         } catch (\Exception $e) {
-            $raw = $requestData['waktu_mulai'] ?? null;
-            Log::error('[EventService::isRoomTaken] Carbon parsing failed: ' . $e->getMessage(), [
-                'input' => $raw,
-            ]);
-            // Lempar agar controller menangani sebagai validasi, bukan "room taken"
-            throw new \InvalidArgumentException('Format tanggal/waktu tidak valid. Harap gunakan format yang sesuai.');
+            throw new \InvalidArgumentException('Format tanggal/waktu tidak valid.');
         }
 
-        // Ambil tipe pengulangan dari request, default ke 'harian' jika tidak ada
+        // 3. Generate Loop Tanggal (Harian/Mingguan)
+        // Loop ini membuat array semua slot waktu yang harus diperiksa
         $tipeBerulang = $requestData['tipe_berulang'] ?? 'harian';
+        $currentMulai = $waktuMulai->copy();
+        $currentSelesai = $waktuSelesai->copy();
 
-        while ($waktuMulai->lte($recurringUntil)) {
+        while ($currentMulai->lte($recurringUntil)) {
             $waktuUntukDicek[] = [
-                'mulai' => $waktuMulai->copy(),
-                'selesai' => $waktuSelesai->copy(),
+                'mulai'   => $currentMulai->copy(),
+                'selesai' => $currentSelesai->copy(),
+                'tanggal' => $currentMulai->format('Y-m-d'), // Simpan format tanggal untuk query semester
+                'hari'    => $currentMulai->isoFormat('dddd'), // Simpan nama hari (Senin, dst)
+                'jam_start' => $currentMulai->format('H:i:s'),
+                'jam_end'   => $currentSelesai->format('H:i:s'),
             ];
-            
+
             if ($tipeBerulang === 'mingguan') {
-                $waktuMulai->addWeek();
-                $waktuSelesai->addWeek();
+                $currentMulai->addWeek();
+                $currentSelesai->addWeek();
             } else {
-                $waktuMulai->addDay();
-                $waktuSelesai->addDay();
+                // Default: anggap harian atau sekali saja (loop sekali)
+                // Jika logic 'sekali' maka recurringUntil biasanya sama dengan waktuSelesai, jadi loop stop otomatis.
+                // Jika harian:
+                $currentMulai->addDay();
+                $currentSelesai->addDay();
             }
         }
 
@@ -67,15 +73,17 @@ class EventService
             return null;
         }
 
-        // Cek bentrok dengan tabel KEGIATAN dalam SATU QUERY
+        // ---------------------------------------------------------
+        // A. CEK BENTROK KEGIATAN (Event Lain)
+        // ---------------------------------------------------------
         $kegiatanBentrok = Kegiatan::where('ruangan_id', $requestData['ruangan_id'])
             ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
             ->whereIn('status', ['disetujui', 'verifikasi_akademik', 'verifikasi_sarpras'])
             ->where(function (Builder $query) use ($waktuUntukDicek) {
-                foreach ($waktuUntukDicek as $waktu) {
-                    $query->orWhere(function (Builder $subQuery) use ($waktu) {
-                        $subQuery->where('waktu_mulai', '<', $waktu['selesai'])
-                                 ->where('waktu_selesai', '>', $waktu['mulai']);
+                foreach ($waktuUntukDicek as $slot) {
+                    $query->orWhere(function (Builder $subQuery) use ($slot) {
+                        $subQuery->where('waktu_mulai', '<', $slot['selesai'])
+                                ->where('waktu_selesai', '>', $slot['mulai']);
                     });
                 }
             })
@@ -85,32 +93,36 @@ class EventService
             return $kegiatanBentrok;
         }
 
-        // Cek bentrok dengan tabel JADWAL KULIAH dalam SATU QUERY
-        $hariUnik = collect($waktuUntukDicek)->map(function ($waktu) {
-            return $waktu['mulai']->locale('id')->isoFormat('dddd');
-        })->unique()->values()->all();
-
-        $jamMulai = Carbon::createFromFormat($datetime_format, $requestData['waktu_mulai'])->format('H:i:s');
-        $jamSelesai = Carbon::createFromFormat($datetime_format, $requestData['waktu_selesai'])->format('H:i:s');
-
+        // ---------------------------------------------------------
+        // B. CEK BENTROK JADWAL PERKULIAHAN (LOGIC BARU)
+        // ---------------------------------------------------------
+        // Kita cek apakah ada Jadwal Kuliah yang:
+        // 1. Harinya sama (Senin/Selasa..)
+        // 2. Jamnya tabrakan
+        // 3. Semesternya AKTIF pada tanggal yang diminta
+        
         $kuliahBentrok = JadwalPerkuliahan::where('ruangan_id', $requestData['ruangan_id'])
-            ->whereIn('hari', $hariUnik)
-            ->where('waktu_mulai', '<', $jamSelesai)
-            ->where('waktu_selesai', '>', $jamMulai)
             ->where(function (Builder $query) use ($waktuUntukDicek) {
-                foreach ($waktuUntukDicek as $waktu) {
-                    $tanggal = $waktu['mulai']->toDateString();
-                    $query->orWhere(function (Builder $dateQuery) use ($tanggal) {
-                        $dateQuery->whereDate('berlaku_mulai', '<=', $tanggal)
-                                  ->whereDate('berlaku_sampai', '>=', $tanggal);
+                foreach ($waktuUntukDicek as $slot) {
+                    $query->orWhere(function ($q) use ($slot) {
+                        $q->where('hari', $slot['hari']) // Cek Hari (misal: Senin)
+                        ->where('waktu_mulai', '<', $slot['jam_end'])   // Cek Jam Overlap
+                        ->where('waktu_selesai', '>', $slot['jam_start'])
+                        // Cek apakah Semester dari jadwal ini mencakup tanggal yang direquest
+                        ->whereHas('semester', function($qSemester) use ($slot) {
+                            $qSemester->whereDate('tanggal_mulai', '<=', $slot['tanggal'])
+                                        ->whereDate('tanggal_selesai', '>=', $slot['tanggal']);
+                        });
                     });
                 }
             })
+            ->with(['semester']) // Eager load untuk info tambahan
             ->first();
 
         if ($kuliahBentrok) {
+            // Return sebagai objek Kegiatan agar format error di frontend konsisten
             return new Kegiatan([
-                'nama_kegiatan' => 'Perkuliahan: ' . $kuliahBentrok->mata_kuliah
+                'nama_kegiatan' => 'Perkuliahan: ' . $kuliahBentrok->mata_kuliah . ' (' . ($kuliahBentrok->semester->nama ?? '') . ')'
             ]);
         }
 
