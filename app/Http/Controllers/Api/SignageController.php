@@ -109,7 +109,7 @@ class SignageController extends Controller
         });
 
         $sidangQuery = Kegiatan::where('status', 'disetujui')
-            ->whereDate('waktu_mulai', $today)
+            ->whereDate('waktu_mulai', '>=', $today)
             ->whereIn('jenis_kegiatan', ['Rapat', 'Seminar Proposal', 'Sidang Skripsi'])
             ->with(['ruangan', 'user']);
 
