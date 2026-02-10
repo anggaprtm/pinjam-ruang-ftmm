@@ -22,7 +22,7 @@
                     <label class="form-label required" for="jenis_kegiatan">Jenis Kegiatan</label>
                     <select class="form-control select2 {{ $errors->has('jenis_kegiatan') ? 'is-invalid' : '' }}" name="jenis_kegiatan" id="jenis_kegiatan" required>
                         <option value="">{{ trans('global.pleaseSelect') }}</option>
-                        @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'Lainnya'] as $jenis)
+                        @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'PHL', 'Kuliah Tamu', 'Lainnya'] as $jenis)
                             <option value="{{ $jenis }}" 
                                 {{ (isset($prefilledData['jenis_kegiatan']) && $prefilledData['jenis_kegiatan'] == $jenis) || old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>
                                 {{ $jenis }}

@@ -122,7 +122,7 @@
                             <option value="">{{ trans('global.pleaseSelect') }}</option>
                             
                             {{-- Loop Array Pilihan --}}
-                            @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'Lainnya'] as $jenis)
+                            @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'PHL', 'Kuliah Tamu', 'Lainnya'] as $jenis)
                                 <option value="{{ $jenis }}" {{ old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>
                                     {{ $jenis }}
                                 </option>

@@ -48,7 +48,7 @@
                     <div class="form-group mb-3">
                         <label class="required" for="jenis_kegiatan">Jenis Kegiatan</label>
                         <select class="form-control select2" name="jenis_kegiatan" required>
-                            @foreach(['Rapat', 'Seminar Proposal', 'Sidang Skripsi', 'Kegiatan Ormawa', 'Lainnya'] as $jenis)
+                            @foreach(['Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'PHL', 'Kuliah Tamu', 'Lainnya'] as $jenis)
                                 <option value="{{ $jenis }}">{{ $jenis }}</option>
                             @endforeach
                         </select>

@@ -16,7 +16,7 @@
                         <label class="form-label required" for="tipe">Tipe</label>
                         <select class="form-control {{ $errors->has('tipe') ? 'is-invalid' : '' }}" name="tipe" id="tipe" required>
                             <option value="">-- Pilih Tipe --</option>
-                            @foreach(['Kuliah Reguler', 'Seminar Proposal', 'Seminar Hasil', 'PHL'] as $tipe)
+                            @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'PHL', 'Kuliah Tamu', 'Lainnya']as $tipe)
                                 <option value="{{ $tipe }}" {{ (old('tipe', $jadwalPerkuliahan->tipe) == $tipe) ? 'selected' : '' }}>{{ $tipe }}</option>
                             @endforeach
                         </select>
