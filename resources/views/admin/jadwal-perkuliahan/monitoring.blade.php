@@ -216,10 +216,12 @@
                                 @endphp
 
                                 <div class="schedule-block {{ $prodiClass }}" 
-                                     style="left: {{ $leftPos }}px; width: {{ $widthPos }}px;"
-                                     data-bs-toggle="tooltip" 
-                                     data-bs-html="true"
-                                     title="<b>{{ $jadwal->mata_kuliah }}</b><br>{{ $start->format('H:i') }} - {{ $end->format('H:i') }}<br>{{ $jadwal->dosen }}">
+                                    style="left: {{ $leftPos }}px; width: {{ $widthPos }}px;"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-html="true"
+                                    data-bs-title="<b>{{ $jadwal->mata_kuliah }}</b><br>
+                                                    {{ $start->format('H:i') }} - {{ $end->format('H:i') }}<br>
+                                                    {{ $jadwal->dosen }}">
                                     
                                     <div class="fw-bold">{{ $jadwal->kode_matkul }}</div>
                                     <div style="font-size: 10px; opacity: 0.9;">{{ Str::limit($jadwal->mata_kuliah, 45) }} ({{ $jadwal->program_studi }})</div>
@@ -251,10 +253,20 @@
 @section('scripts')
 @parent
 <script>
-    $(function () {
-        $('[data-bs-toggle="tooltip"]').tooltip();
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    tooltipTriggerList.forEach(el => {
+        new bootstrap.Tooltip(el, {
+            html: true,
+            container: 'body',
+            trigger: 'hover'
+        })
+    })
+})
 </script>
+
+
+
 @endsection
 
 @endsection
