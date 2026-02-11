@@ -180,7 +180,7 @@
                 @foreach($ruangans as $ruangan)
                     <div class="room-row">
                         <div class="room-name">
-                            {{ $ruangan->nama }} ({{ $ruangan->kapasitas }})
+                            {{ Str::limit($ruangan->nama, 15)}} ({{ $ruangan->kapasitas }})
                         </div>
                         
                         <div class="room-timeline">
