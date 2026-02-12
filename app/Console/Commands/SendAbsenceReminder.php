@@ -28,7 +28,6 @@ class SendAbsenceReminder extends Command
         $hariKe = $now->dayOfWeekIso; // 1 (Senin) - 7 (Minggu)
         
         // --- ATURAN JAM PULANG ---
-        // Jumat (5) = 17:00, Senin-Kamis = 16:30
         $batasJamPulang = ($hariKe == 5) ? '17:00' : '16:30';
 
         // Skip hari libur (Sabtu/Minggu)
@@ -76,6 +75,7 @@ class SendAbsenceReminder extends Command
                 
                 if ($response->successful()) {
                     $crawler = new Crawler($response->body());
+                    // Gunakan logic pencarian robust yang baru (Opsional, tapi disarankan)
                     $node = $crawler->filter('tr')->reduce(fn (Crawler $node) => str_contains($node->text(), $hariIniStr));
 
                     $scanMasuk = '-';
@@ -86,7 +86,6 @@ class SendAbsenceReminder extends Command
                         $scanMasuk = trim($node->filter('td')->eq(5)->text());
                         $scanKeluar = trim($node->filter('td')->eq(8)->text());
 
-                        // Cek Status Kehadiran (Untuk Database)
                         $jamMasukLimit = '08:00'; 
                         if ($scanMasuk !== '-' && !empty($scanMasuk)) {
                             if ($scanMasuk > $jamMasukLimit) {
@@ -97,9 +96,11 @@ class SendAbsenceReminder extends Command
                         }
                     }
 
-                    // --- UPDATE DATABASE LOCAL ---
+                    // --- [MODIF 1] UPDATE DATABASE & AMBIL INSTANCE LOG ---
                     $tanggalDB = $now->format('Y-m-d');
-                    AbsensiLog::updateOrCreate(
+                    
+                    // Kita tampung ke variabel $log agar bisa akses kolom notif_history
+                    $log = AbsensiLog::updateOrCreate(
                         ['user_id' => $user->id, 'tanggal' => $tanggalDB],
                         [
                             'jam_masuk' => ($scanMasuk === '-' ? null : $scanMasuk),
@@ -109,51 +110,76 @@ class SendAbsenceReminder extends Command
                         ]
                     );
 
+                    // --- [MODIF 2] SIAPKAN VARIABEL HISTORY ---
+                    // Ambil history yg sudah ada, atau array kosong jika belum ada
+                    $history = $log->notif_history ?? [];
+                    $pesanTerkirim = false; // Flag penanda ada update
+
                     // ==========================================================
                     // LOGIC 2: DEADLINE PAGI (07:50)
                     // ==========================================================
                     if ($jam == 7 && $menit >= 45) {
                         if ($scanMasuk === '-' || empty($scanMasuk)) {
-                            $msg = "🚨 <b>Peringatan Presensi Masuk</b>\n\n" .
-                                   "Halo <b>{$user->name}</b>,\n" .
-                                   "Sistem mendeteksi Anda belum melakukan <b>Scan Masuk</b> hari ini ($hariIniStr).\n\n" .
-                                   "± 5 Menit lagi Anda bisa terlampat!!!";
                             
-                            $telegram->sendMessage($user->telegram_chat_id, $msg);
-                            $this->warn("   -> Notif Belum Masuk (07:55) dikirim.");
+                            // [CEK] Apakah sudah pernah dikirim 'telat_masuk'?
+                            if (!isset($history['telat_masuk'])) {
+                                $msg = "🚨 <b>Peringatan Presensi Masuk</b>\n\n" .
+                                       "Halo <b>{$user->name}</b>,\n" .
+                                       "Sistem mendeteksi Anda belum melakukan <b>Scan Masuk</b> hari ini ($hariIniStr).\n\n" .
+                                       "± 5 Menit lagi Anda bisa terlampat!!!";
+                                
+                                $telegram->sendMessage($user->telegram_chat_id, $msg);
+                                $this->warn("   -> Notif Belum Masuk dikirim.");
+
+                                // [CATAT] Masukkan ke history
+                                $history['telat_masuk'] = $now->format('H:i');
+                                $pesanTerkirim = true;
+                            }
                         }
                     }
 
                     // ==========================================================
                     // LOGIC 3: SORE (Check Jam 17:00)
                     // ==========================================================
-                    if ($jam == 17) { // Dijalankan jam 17:00 - 17:59
+                    if ($jam == 17) { 
                         
                         // KASUS A: Belum Scan Sama Sekali
                         if ($scanKeluar === '-' || empty($scanKeluar)) {
-                            $msg = "🔔 <b>Pengingat Presensi Pulang</b>\n\n" .
-                                   "Halo <b>{$user->name}</b>,\n" .
-                                   "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
-                                   "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
                             
-                            $telegram->sendMessage($user->telegram_chat_id, $msg);
-                            $this->warn("   -> Notif Belum Pulang dikirim.");
-                        } 
-                        // KASUS B: Sudah Scan, TAPI AWAL (Sebelum batas jam pulang)
-                        // Ini handle kasus "kepencet pagi" atau "pulang kecepetan"
-                        elseif ($scanKeluar < $batasJamPulang) {
-                            $msg = "⚠️ <b>Pengingat Presensi Pulang</b>\n\n" .
-                                   "Halo <b>{$user->name}</b>,\n" .
-                                   "Sistem mencatat scan keluar Anda pukul <b>{$scanKeluar}</b>.\n" .
-                                   "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
-                                   "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
+                            // [CEK] Apakah sudah pernah dikirim 'belum_pulang'?
+                            if (!isset($history['belum_pulang'])) {
+                                $msg = "🔔 <b>Pengingat Presensi Pulang</b>\n\n" .
+                                       "Halo <b>{$user->name}</b>,\n" .
+                                       "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
+                                       "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
+                                
+                                $telegram->sendMessage($user->telegram_chat_id, $msg);
+                                $this->warn("   -> Notif Belum Pulang dikirim.");
 
-                            $telegram->sendMessage($user->telegram_chat_id, $msg);
-                            $this->warn("   -> Notif Pulang Awal/Double Scan dikirim.");
+                                // [CATAT]
+                                $history['belum_pulang'] = $now->format('H:i');
+                                $pesanTerkirim = true;
+                            }
+                        } 
+                        // KASUS B: Pulang Awal
+                        elseif ($scanKeluar < $batasJamPulang) {
+                            
+                            // [CEK] Apakah sudah pernah dikirim 'pulang_awal'?
+                            if (!isset($history['pulang_awal'])) {
+                                $msg = "⚠️ <b>Pengingat Presensi Pulang</b>\n\n" .
+                                       "Halo <b>{$user->name}</b>,\n" .
+                                       "Sistem mencatat scan keluar Anda pukul <b>{$scanKeluar}</b>.\n" .
+                                       "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
+                                       "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
+
+                                $telegram->sendMessage($user->telegram_chat_id, $msg);
+                                $this->warn("   -> Notif Pulang Awal dikirim.");
+
+                                // [CATAT]
+                                $history['pulang_awal'] = $now->format('H:i');
+                                $pesanTerkirim = true;
+                            }
                         }
-                        
-                        // KASUS C: Pulang Aman (Scan Keluar > Batas)
-                        // User request: TIDAK PERLU DIKIRIM APA-APA (Silent)
                     }
 
                     // ==========================================================
@@ -168,7 +194,8 @@ class SendAbsenceReminder extends Command
                                 ->count();
                             
                             // Hanya kirim notif PADA HARI KEDUA telat itu terjadi
-                            if ($totalTelat == 2) {
+                            // [CEK] Tambahan biar aman: Cek history 'telat_2x'
+                            if ($totalTelat == 2 && !isset($history['telat_2x'])) {
                                 $msg = "⚠️ <b>PERINGATAN KEDISIPLINAN</b>\n\n" .
                                        "Halo <b>{$user->name}</b>,\n" .
                                        "Berdasarkan rekap data presensi, Anda tercatat sudah <b>2 KALI TERLAMBAT</b> di bulan ini.\n\n" .
@@ -177,8 +204,18 @@ class SendAbsenceReminder extends Command
                                 
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
                                 $this->warn("   -> Notif Telat ke-2 dikirim.");
+
+                                // [CATAT]
+                                $history['telat_2x'] = $now->format('H:i');
+                                $pesanTerkirim = true;
                             }
                         }
+                    }
+
+                    // --- [MODIF 3] SIMPAN PERUBAHAN HISTORY KE DB ---
+                    if ($pesanTerkirim) {
+                        $log->notif_history = $history;
+                        $log->save();
                     }
 
                 }

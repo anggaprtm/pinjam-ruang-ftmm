@@ -148,8 +148,9 @@
                                 <th class="ps-4">Pegawai</th>
                                 <th class="text-center">Masuk</th>
                                 <th class="text-center">Pulang</th>
-                                <th class="text-center">Durasi</th> <th class="text-center">Status</th>
-                            </tr>
+                                <th class="text-center">Durasi</th>
+                                <th class="text-center">Status Presensi</th>
+                                <th class="text-center">Status Bot</th> </tr>
                         </thead>
                         <tbody>
                             @forelse($pegawais as $pegawai)
@@ -160,7 +161,7 @@
                                     // Default Values
                                     $jamMasuk  = $log->jam_masuk ?? '-';
                                     $jamKeluar = $log->jam_keluar ?? '-';
-                                    $status    = $log->status ?? 'alpha'; // Default alpha jika tidak ada log
+                                    $status    = $log->status ?? 'alpha'; 
                                     
                                     // Cek Pulang Awal
                                     $isPulangAwal = ($jamKeluar !== '-' && $jamKeluar < $batasPulang);
@@ -171,13 +172,19 @@
                                         try {
                                             $start = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
                                             $end   = \Carbon\Carbon::createFromFormat('H:i', $jamKeluar);
-                                            // Handle case lintas hari atau error parsing
                                             if ($end->greaterThan($start)) {
                                                 $diff = $start->diff($end);
-                                                $durasiKerja = $diff->format('%Hj %Im'); // Contoh: 8j 30m
+                                                $durasiKerja = $diff->format('%Hj %Im'); 
                                             }
                                         } catch(\Exception $e) { $durasiKerja = 'err'; }
                                     }
+
+                                    // --- LOGIC STATUS BOT ---
+                                    // Cek Koneksi Telegram
+                                    $hasTelegram = !empty($pegawai->telegram_chat_id);
+                                    
+                                    // Ambil History Notif (Array) dari Database
+                                    $notifHistory = $log->notif_history ?? [];
                                 @endphp
 
                                 <tr class="{{ $isPulangAwal ? 'bg-soft-danger' : '' }}">
@@ -213,9 +220,67 @@
                                             <span class="badge bg-secondary rounded-pill">Belum Scan</span>
                                         @endif
                                     </td>
+                                    
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center align-items-center gap-1">
+                                            
+                                            {{-- 1. Icon Koneksi Telegram --}}
+                                            @if($hasTelegram)
+                                                <span 
+                                                    class="badge rounded-pill d-inline-flex align-items-center justify-content-center"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Telegram Terhubung"
+                                                    style="background-color: #0088cc; width: 28px; height: 28px;"
+                                                >
+                                                    <i class="fab fa-telegram-plane text-white" style="font-size: 14px;"></i>
+                                                </span>
+                                            @else
+
+                                                <span class="badge rounded-pill bg-light text-secondary border" data-bs-toggle="tooltip" title="Belum ada ID Telegram">
+                                                    <i class="fas fa-plug-circle-xmark"></i> No ID
+                                                </span>
+                                            @endif
+
+                                            {{-- 2. Icon History Notifikasi --}}
+                                            @if($hasTelegram && $log)
+                                                {{-- Notif Telat Masuk --}}
+                                                @if(isset($notifHistory['telat_masuk']))
+                                                    <span class="badge rounded-pill bg-danger" title="Diingatkan Telat Masuk jam {{ $notifHistory['telat_masuk'] }}">
+                                                        <i class="fas fa-bell"></i> Pagi
+                                                    </span>
+                                                @endif
+
+                                                {{-- Notif Pulang Awal --}}
+                                                @if(isset($notifHistory['pulang_awal']))
+                                                    <span class="badge rounded-pill bg-warning text-dark" title="Diingatkan Pulang Awal jam {{ $notifHistory['pulang_awal'] }}">
+                                                        <i class="fas fa-bell"></i> Pulang
+                                                    </span>
+                                                @endif
+
+                                                {{-- Notif Belum Pulang --}}
+                                                @if(isset($notifHistory['belum_pulang']))
+                                                    <span class="badge rounded-pill bg-info text-white" title="Diingatkan Scan Pulang jam {{ $notifHistory['belum_pulang'] }}">
+                                                        <i class="fas fa-bell"></i> Pulang
+                                                    </span>
+                                                @endif
+
+                                                {{-- Notif Telat 2x --}}
+                                                @if(isset($notifHistory['telat_2x']))
+                                                    <span class="badge rounded-pill bg-dark border border-warning text-warning" title="Peringatan Telat 2x jam {{ $notifHistory['telat_2x'] }}">
+                                                        <i class="fas fa-bell"></i> Peringatan Telat 2x
+                                                    </span>
+                                                @endif
+                                                
+                                                {{-- Jika Telegram ada tapi belum ada notif apa2 --}}
+                                                @if(empty($notifHistory))
+                                                    <small class="text-muted ms-1" style="font-size: 0.7rem;">Standby</small>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center py-4">Tidak ada data pegawai.</td></tr>
+                                <tr><td colspan="6" class="text-center py-4">Tidak ada data pegawai.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
