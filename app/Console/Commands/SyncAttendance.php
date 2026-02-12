@@ -11,102 +11,107 @@ use Carbon\Carbon;
 
 class SyncAttendance extends Command
 {
-    // UPDATE 1: Tambah parameter optional {date?}
     protected $signature = 'attendance:sync {date? : Tanggal format Y-m-d}';
-    
-    protected $description = 'Sync data presensi dari Info Absen (Bisa spesifik tanggal)';
+    protected $description = 'Sync data presensi presisi berdasarkan tabel';
 
     public function handle()
     {
-        // UPDATE 2: Tangkap input tanggal
+        // 1. Setup Tanggal
         $inputDate = $this->argument('date') ?? date('Y-m-d');
         $targetDate = Carbon::parse($inputDate);
 
-        // Setup Variabel Waktu berdasarkan TANGGAL TARGET (Bukan hari ini)
+        // Format URL (misal: 2026, 02)
         $tahun = $targetDate->year;
-        $bulan = $targetDate->month;
-        $hariCari = $targetDate->format('d-m-Y'); // Format text di web infoabsen (misal: 12-02-2026)
-        $tanggalDB = $targetDate->format('Y-m-d'); // Format buat simpan ke DB MySQL
+        $bulan = $targetDate->format('m'); 
 
-        // 1. Ambil User Pegawai
+        // Format Pencarian di Tabel (Sesuai Screenshot: 02-02-2026)
+        $hariCari = $targetDate->format('d-m-Y');
+        $tanggalDB = $targetDate->format('Y-m-d'); 
+
         $users = User::with('roles')
             ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
             ->whereNotNull('nip')
             ->get();
 
-        $this->info("🔄 Sinkronisasi Presensi Tanggal: {$hariCari}");
-        $this->info("👥 Total Pegawai: {$users->count()} orang...");
-
+        $this->info("🔄 Sync Target: {$hariCari} (Bulan: $bulan)");
+        
         $bar = $this->output->createProgressBar($users->count());
         $bar->start();
 
-        // Samakan batas telat dengan notif telegram (07:31)
-        $jamMasukLimit = '08:00'; 
+        $jamMasukLimit = '07:31'; 
 
         foreach ($users as $user) {
-            
-            // Skip jika NIP tidak valid
             if (strlen($user->nip) < 5) {
                 $bar->advance();
                 continue;
             }
 
-            // URL scraping pake tahun & bulan dari target date
             $url = "https://infoabsen.unair.ac.id/absen/api_absen_8.php?nip={$user->nip}&tahun={$tahun}&bulan={$bulan}";
 
             try {
-                $response = Http::timeout(10)->get($url);
+                $response = Http::timeout(15)->get($url);
 
                 if ($response->successful()) {
                     $crawler = new Crawler($response->body());
 
-                    // Cari baris yang mengandung tanggal target ($hariCari)
-                    $node = $crawler->filter('tr')->reduce(function (Crawler $node) use ($hariCari) {
-                        return str_contains($node->text(), $hariCari);
-                    });
+                    // --- LOGIC BARU: LOOPING BARIS TABEL ---
+                    // Kita cari manual baris yg kolom pertamanya == $hariCari
+                    $foundNode = null;
 
-                    if ($node->count() > 0) {
-                        $scanMasuk = trim($node->filter('td')->eq(5)->text());
-                        $scanKeluar = trim($node->filter('td')->eq(8)->text());
-
-                        // --- LOGIC STATUS ---
-                        $statusKehadiran = 'alpha'; 
-
-                        if ($scanMasuk !== '-' && !empty($scanMasuk)) {
-                            // Bandingkan String Jam
-                            if ($scanMasuk > $jamMasukLimit) {
-                                $statusKehadiran = 'terlambat';
-                            } else {
-                                $statusKehadiran = 'hadir';
+                    $crawler->filter('table tr')->each(function (Crawler $node) use ($hariCari, &$foundNode) {
+                        // Pastikan baris ini punya minimal 9 kolom (biar gak error pas ambil index 8)
+                        if ($node->filter('td')->count() > 8) {
+                            // Ambil teks di kolom pertama (Tanggal)
+                            $tanggalDiTabel = trim($node->filter('td')->eq(0)->text());
+                            
+                            // Bandingkan persis!
+                            if ($tanggalDiTabel === $hariCari) {
+                                $foundNode = $node;
+                                return false; // Stop looping (break)
                             }
                         }
+                    });
 
-                        // --- UPDATE DATABASE ---
+                    if ($foundNode) {
+                        // Ambil Data (Index 5 & 8 sesuai screenshot)
+                        $scanMasuk = trim($foundNode->filter('td')->eq(5)->text());
+                        $scanKeluar = trim($foundNode->filter('td')->eq(8)->text());
+
+                        // Bersihkan data jika isinya cuma strip "-" atau kosong
+                        $scanMasuk = ($scanMasuk === '-' || $scanMasuk === '') ? null : $scanMasuk;
+                        $scanKeluar = ($scanKeluar === '-' || $scanKeluar === '') ? null : $scanKeluar;
+
+                        // Tentukan Status
+                        $statusKehadiran = 'alpha';
+                        
+                        // Jika ada scan masuk
+                        if ($scanMasuk) {
+                            $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
+                        }
+                        // Jika Hari Libur (biasanya baris ada, tapi isinya - semua)
+                        // Cek kolom "Keterangan" atau "Status" (Index 11) jika perlu, tapi logic di atas cukup.
+
                         AbsensiLog::updateOrCreate(
+                            ['user_id' => $user->id, 'tanggal' => $tanggalDB],
                             [
-                                'user_id' => $user->id,
-                                'tanggal' => $tanggalDB // Pakai tanggal target
-                            ],
-                            [
-                                'jam_masuk'  => ($scanMasuk === '-' ? null : $scanMasuk),
-                                'jam_keluar' => ($scanKeluar === '-' ? null : $scanKeluar),
+                                'jam_masuk'  => $scanMasuk,
+                                'jam_keluar' => $scanKeluar,
                                 'status'     => $statusKehadiran,
-                                'updated_at' => now(), // Menandakan kapan terakhir di-sync
+                                'updated_at' => now(),
                             ]
                         );
                     }
                 }
             } catch (\Exception $e) {
-                // Silent fail agar loop tetap jalan
+                // Silent fail
             }
-
-            // Jeda sopan
-            usleep(200000); // 0.2 detik cukup
+            
+            usleep(100000); // Jeda 0.1 detik
             $bar->advance();
         }
 
         $bar->finish();
         $this->newLine();
-        $this->info("✅ Sinkronisasi Selesai!");
+        $this->info("✅ Selesai.");
     }
 }
