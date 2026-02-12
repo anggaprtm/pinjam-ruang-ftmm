@@ -38,7 +38,7 @@ class SyncAttendance extends Command
         $bar = $this->output->createProgressBar($users->count());
         $bar->start();
 
-        $jamMasukLimit = '07:31'; 
+        $jamMasukLimit = '08:00'; 
 
         foreach ($users as $user) {
             if (strlen($user->nip) < 5) {
