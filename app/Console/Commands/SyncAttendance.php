@@ -11,40 +11,47 @@ use Carbon\Carbon;
 
 class SyncAttendance extends Command
 {
-    // Nama command: attendance:sync
-    protected $signature = 'attendance:sync';
-    protected $description = 'Sync data presensi dari Info Absen ke Database lokal (Tanpa Notif)';
+    // UPDATE 1: Tambah parameter optional {date?}
+    protected $signature = 'attendance:sync {date? : Tanggal format Y-m-d}';
+    
+    protected $description = 'Sync data presensi dari Info Absen (Bisa spesifik tanggal)';
 
     public function handle()
     {
-        // 1. Ambil User Pegawai yang punya NIP
+        // UPDATE 2: Tangkap input tanggal
+        $inputDate = $this->argument('date') ?? date('Y-m-d');
+        $targetDate = Carbon::parse($inputDate);
+
+        // Setup Variabel Waktu berdasarkan TANGGAL TARGET (Bukan hari ini)
+        $tahun = $targetDate->year;
+        $bulan = $targetDate->month;
+        $hariCari = $targetDate->format('d-m-Y'); // Format text di web infoabsen (misal: 12-02-2026)
+        $tanggalDB = $targetDate->format('Y-m-d'); // Format buat simpan ke DB MySQL
+
+        // 1. Ambil User Pegawai
         $users = User::with('roles')
             ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
             ->whereNotNull('nip')
             ->get();
 
-        $this->info("🔄 Memulai Sinkronisasi Data Presensi ({$users->count()} Pegawai)...");
+        $this->info("🔄 Sinkronisasi Presensi Tanggal: {$hariCari}");
+        $this->info("👥 Total Pegawai: {$users->count()} orang...");
 
-        // Progress Bar biar keren kalau dijalankan manual
         $bar = $this->output->createProgressBar($users->count());
         $bar->start();
 
-        $tahun = date('Y');
-        $bulan = date('m');
-        $hariIni = date('d-m-Y'); 
-        $tanggalDB = Carbon::now()->format('Y-m-d'); // Format buat simpan ke DB
-
-        // Batas Jam Masuk (Untuk penentuan status Hadir/Terlambat)
+        // Samakan batas telat dengan notif telegram (07:31)
         $jamMasukLimit = '08:00'; 
 
         foreach ($users as $user) {
             
-            // Skip jika NIP kependekan (invalid)
+            // Skip jika NIP tidak valid
             if (strlen($user->nip) < 5) {
                 $bar->advance();
                 continue;
             }
 
+            // URL scraping pake tahun & bulan dari target date
             $url = "https://infoabsen.unair.ac.id/absen/api_absen_8.php?nip={$user->nip}&tahun={$tahun}&bulan={$bulan}";
 
             try {
@@ -53,50 +60,48 @@ class SyncAttendance extends Command
                 if ($response->successful()) {
                     $crawler = new Crawler($response->body());
 
-                    // Cari baris tanggal hari ini
-                    $node = $crawler->filter('tr')->reduce(function (Crawler $node) use ($hariIni) {
-                        return str_contains($node->text(), $hariIni);
+                    // Cari baris yang mengandung tanggal target ($hariCari)
+                    $node = $crawler->filter('tr')->reduce(function (Crawler $node) use ($hariCari) {
+                        return str_contains($node->text(), $hariCari);
                     });
 
                     if ($node->count() > 0) {
                         $scanMasuk = trim($node->filter('td')->eq(5)->text());
                         $scanKeluar = trim($node->filter('td')->eq(8)->text());
 
-                        // --- LOGIC TENTUKAN STATUS (Hadir/Terlambat/Alpha) ---
-                        // Default status
+                        // --- LOGIC STATUS ---
                         $statusKehadiran = 'alpha'; 
 
                         if ($scanMasuk !== '-' && !empty($scanMasuk)) {
-                            // Bandingkan String Jam: "07:55" <= "08:00"
-                            if ($scanMasuk <= $jamMasukLimit) {
-                                $statusKehadiran = 'hadir'; // Tepat Waktu
+                            // Bandingkan String Jam
+                            if ($scanMasuk > $jamMasukLimit) {
+                                $statusKehadiran = 'terlambat';
                             } else {
-                                $statusKehadiran = 'terlambat'; // Telat
+                                $statusKehadiran = 'hadir';
                             }
                         }
 
-                        // --- UPDATE DATABASE LOKAL ---
+                        // --- UPDATE DATABASE ---
                         AbsensiLog::updateOrCreate(
                             [
                                 'user_id' => $user->id,
-                                'tanggal' => $tanggalDB
+                                'tanggal' => $tanggalDB // Pakai tanggal target
                             ],
                             [
                                 'jam_masuk'  => ($scanMasuk === '-' ? null : $scanMasuk),
                                 'jam_keluar' => ($scanKeluar === '-' ? null : $scanKeluar),
                                 'status'     => $statusKehadiran,
-                                'updated_at' => now(), // Update timestamp biar ketahuan "Last Sync"
+                                'updated_at' => now(), // Menandakan kapan terakhir di-sync
                             ]
                         );
                     }
                 }
             } catch (\Exception $e) {
-                // Silent fail aja, jangan stop loop
-                // Log::error("Gagal sync user {$user->name}: " . $e->getMessage());
+                // Silent fail agar loop tetap jalan
             }
 
-            // Jeda dikit biar server sana gak keberatan
-            usleep(500000); // 0.5 detik
+            // Jeda sopan
+            usleep(200000); // 0.2 detik cukup
             $bar->advance();
         }
 

@@ -7,205 +7,187 @@ use Illuminate\Support\Facades\Http;
 use Symfony\Component\DomCrawler\Crawler;
 use App\Services\TelegramService;
 use App\Models\User;
+use App\Models\AbsensiLog;
+use Carbon\Carbon;
 
 class SendAbsenceReminder extends Command
 {
     protected $signature = 'attendance:remind';
-    protected $description = 'Cek presensi Info Absen (Khusus Pegawai)';
+    protected $description = 'Cek presensi Info Absen (Reminder Pagi, Telat, Pulang, & Evaluasi Bulanan)';
 
     public function handle(TelegramService $telegram)
     {
-        // 1. FILTER USER
-        // - Punya ID Telegram
-        // - Punya NIP
-        // - Punya Role "Pegawai"
+        // Setup Waktu
+        $now = Carbon::now();
+        $jam  = $now->hour;
+        $menit = $now->minute;
         
-        $users = User::with('roles') // Eager load biar ringan
-            ->whereHas('roles', function ($query) {
-                $query->where('title', 'Pegawai'); 
-            })
+        $tahun = $now->year;
+        $bulan = $now->month;
+        $hariIniStr = $now->format('d-m-Y'); 
+        $hariKe = $now->dayOfWeekIso; // 1 (Senin) - 7 (Minggu)
+        
+        // --- ATURAN JAM PULANG ---
+        // Jumat (5) = 17:00, Senin-Kamis = 16:30
+        $batasJamPulang = ($hariKe == 5) ? '17:00' : '16:30';
+
+        // Skip hari libur (Sabtu/Minggu)
+        if ($hariKe > 5) {
+            $this->info("Hari libur, script istirahat.");
+            return;
+        }
+
+        $users = User::with('roles')
+            ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
             ->whereNotNull('telegram_chat_id')
             ->where('telegram_chat_id', '!=', '')
             ->whereNotNull('nip')
             ->get();
 
-        $this->info("🚀 Memulai pengecekan presensi untuk " . $users->count() . " Pegawai...");
-
-        if ($users->isEmpty()) {
-            $this->warn("Tidak ada pegawai yang memenuhi syarat (Telegram ID & NIP).");
-            return;
-        }
-
-        $tahun = date('Y');
-        $bulan = date('m');
-        $hariIni = date('d-m-Y');
-        $hariKe = date('N');
-        $batasJamPulang = ($hariKe == 5) ? '17:00' : '16:30';
-        $batasTelatMasuk = '08:00';
-
-        
-        $this->info("📅 Hari ke-$hariKe. Batas Jam Pulang: $batasJamPulang");
+        $this->info("🚀 Memulai pengecekan presensi pukul {$now->format('H:i')} untuk " . $users->count() . " Pegawai...");
 
         foreach ($users as $user) {
-            $this->info("Checking Pegawai: {$user->name}...");
+            $this->info("Checking User: {$user->name}...");
 
-            // Skip jika NIP terlalu pendek (bukan format infoabsen) - Opsional
-            if (strlen($user->nip) < 10) {
-                $this->warn("   -> NIP tidak valid/pendek. Skip.");
-                continue;
+            // ==========================================================
+            // LOGIC 1: REMINDER PAGI (06:30) - TANPA SCRAPE
+            // ==========================================================
+            if ($jam == 6 && $menit >= 0 && $menit <= 59) {
+                $msg = "☀️ <b>Selamat Pagi, {$user->name}!</b>\n\n" .
+                       "Jangan lupa melakukan <b>Scan Masuk</b> sebelum pukul 08.00 ya.\n" .
+                       "Semoga hari ini menyenangkan! 💪";
+                
+                $telegram->sendMessage($user->telegram_chat_id, $msg);
+                $this->info("   -> Reminder 06:30 dikirim.");
+                sleep(1); 
+                continue; 
             }
+
+            // ==========================================================
+            // START SCRAPING (Untuk Logic 07:50, 17:00, & Evaluasi)
+            // ==========================================================
+            
+            if (strlen($user->nip) < 10) continue;
 
             $url = "https://infoabsen.unair.ac.id/absen/api_absen_8.php?nip={$user->nip}&tahun={$tahun}&bulan={$bulan}";
 
             try {
-                $response = Http::timeout(10)->get($url);
-
+                $response = Http::timeout(15)->get($url);
+                
                 if ($response->successful()) {
                     $crawler = new Crawler($response->body());
+                    $node = $crawler->filter('tr')->reduce(fn (Crawler $node) => str_contains($node->text(), $hariIniStr));
 
-                    // Cari baris tanggal hari ini
-                    $node = $crawler->filter('tr')->reduce(function (Crawler $node) use ($hariIni) {
-                        return str_contains($node->text(), $hariIni);
-                    });
+                    $scanMasuk = '-';
+                    $scanKeluar = '-';
+                    $statusKehadiran = 'alpha';
 
                     if ($node->count() > 0) {
                         $scanMasuk = trim($node->filter('td')->eq(5)->text());
                         $scanKeluar = trim($node->filter('td')->eq(8)->text());
 
-                        // --- LOGIC PENENTUAN STATUS ---
-                        $statusKehadiran = 'alpha';
-                        
-                        // Konversi jam masuk string ke format waktu untuk perbandingan
-                        // Asumsi jam masuk maksimal 08:00 (Sesuaikan aturan kampus)
+                        // Cek Status Kehadiran (Untuk Database)
                         $jamMasukLimit = '08:00'; 
-
                         if ($scanMasuk !== '-' && !empty($scanMasuk)) {
-                            if ($scanMasuk <= $jamMasukLimit) {
-                                $statusKehadiran = 'hadir'; // Tepat waktu
+                            if ($scanMasuk > $jamMasukLimit) {
+                                $statusKehadiran = 'terlambat';
                             } else {
-                                $statusKehadiran = 'terlambat'; // Telat
+                                $statusKehadiran = 'hadir';
                             }
                         }
+                    }
 
-                        // --- SIMPAN KE DATABASE LOKAL ---
-                        // Konversi tanggal scraper (02-02-2026) ke Format MySQL (2026-02-02)
-                        $tanggalDB = \Carbon\Carbon::createFromFormat('d-m-Y', $hariIni)->format('Y-m-d');
+                    // --- UPDATE DATABASE LOCAL ---
+                    $tanggalDB = $now->format('Y-m-d');
+                    AbsensiLog::updateOrCreate(
+                        ['user_id' => $user->id, 'tanggal' => $tanggalDB],
+                        [
+                            'jam_masuk' => ($scanMasuk === '-' ? null : $scanMasuk),
+                            'jam_keluar' => ($scanKeluar === '-' ? null : $scanKeluar),
+                            'status'     => $statusKehadiran,
+                            'updated_at' => now(),
+                        ]
+                    );
 
-                        \App\Models\AbsensiLog::updateOrCreate(
-                            [
-                                'user_id' => $user->id,
-                                'tanggal' => $tanggalDB
-                            ],
-                            [
-                                'jam_masuk' => ($scanMasuk === '-' ? null : $scanMasuk),
-                                'jam_keluar' => ($scanKeluar === '-' ? null : $scanKeluar),
-                                'status'     => $statusKehadiran,
-                                'updated_at' => now(),
-                            ]
-                        );
-
-                        // --- SKENARIO 1: BELUM MASUK ---
+                    // ==========================================================
+                    // LOGIC 2: DEADLINE PAGI (07:50)
+                    // ==========================================================
+                    if ($jam == 7 && $menit >= 45) {
                         if ($scanMasuk === '-' || empty($scanMasuk)) {
                             $msg = "🚨 <b>Peringatan Presensi Masuk</b>\n\n" .
                                    "Halo <b>{$user->name}</b>,\n" .
-                                   "Sistem mendeteksi Anda belum melakukan <b>Scan Masuk</b> hari ini ($hariIni).\n\n" .
-                                   "± 10 Menit lagi bisa terlambat, Jangan lupa melakukan presensi !!!";
+                                   "Sistem mendeteksi Anda belum melakukan <b>Scan Masuk</b> hari ini ($hariIniStr).\n\n" .
+                                   "± 5 Menit lagi Anda bisa terlampat!!!";
                             
                             $telegram->sendMessage($user->telegram_chat_id, $msg);
-                            $this->warn("   -> Notif Masuk dikirim.");
-                            
-                            sleep(1); 
-                            continue; // Lanjut ke user lain
+                            $this->warn("   -> Notif Belum Masuk (07:55) dikirim.");
                         }
+                    }
 
-                        // --- SKENARIO 2: CEK PULANG ---
-                        // Jalankan hanya jika waktu SEKARANG sudah melewati batas jam pulang
-                        if (date('H:i') >= $batasJamPulang) {
+                    // ==========================================================
+                    // LOGIC 3: SORE (Check Jam 17:00)
+                    // ==========================================================
+                    if ($jam == 17) { // Dijalankan jam 17:00 - 17:59
+                        
+                        // KASUS A: Belum Scan Sama Sekali
+                        if ($scanKeluar === '-' || empty($scanKeluar)) {
+                            $msg = "🔔 <b>Pengingat Presensi Pulang</b>\n\n" .
+                                   "Halo <b>{$user->name}</b>,\n" .
+                                   "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
+                                   "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
                             
-                            // A. Belum Scan Sama Sekali
-                            if ($scanKeluar === '-' || empty($scanKeluar)) {
-                                $msg = "🔔 <b>Pengingat Presensi Pulang</b>\n\n" .
-                                       "Halo <b>{$user->name}</b>,\n" .
-                                       "Jam kerja hari ini (hingga $batasJamPulang) telah usai.\n" .
-                                       "Jangan lupa melakukan <b>Scan Keluar</b> sebelum meninggalkan kantor.\n\n" .
-                                       "<i>Jika sedang Lembur, abaikan dan scan saat pulang nanti.</i>";
-                                
-                                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Belum Pulang dikirim.");
-                            } 
-                            // B. Pulang Awal
-                            elseif ($scanKeluar < $batasJamPulang) {
-                                $msg = "⚠️ <b>Pengingat Presensi Pulang</b>\n\n" .
-                                       "Halo <b>{$user->name}</b>,\n" .
-                                       "Sistem mencatat scan keluar Anda pukul <b>{$scanKeluar}</b>.\n\n" .
-                                       "• Jangan lupa melakukan <b>Scan Keluar</b> sebelum meninggalkan kantor.\n" .
-                                       "• <b>Jika Anda sedang LEMBUR</b>, Semangat!";
+                            $telegram->sendMessage($user->telegram_chat_id, $msg);
+                            $this->warn("   -> Notif Belum Pulang dikirim.");
+                        } 
+                        // KASUS B: Sudah Scan, TAPI AWAL (Sebelum batas jam pulang)
+                        // Ini handle kasus "kepencet pagi" atau "pulang kecepetan"
+                        elseif ($scanKeluar < $batasJamPulang) {
+                            $msg = "⚠️ <b>Pengingat Presensi Pulang</b>\n\n" .
+                                   "Halo <b>{$user->name}</b>,\n" .
+                                   "Sistem mencatat scan keluar Anda pukul <b>{$scanKeluar}</b>.\n" .
+                                   "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
+                                   "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
 
-                                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Pulang Awal dikirim.");
-                            }
-                            // C. PULANG AMAN (Masuk sini jika A dan B lolos)
-                            else {
-                                // C.1: Pagi Telat?
-                                if ($scanMasuk > $batasTelatMasuk) {
-                                    $msg = "🌙 <b>Rekap Presensi: Telat Masuk</b>\n\n" .
-                                           "Halo <b>{$user->name}</b>, presensi pulang Anda aman ({$scanKeluar}).\n\n" .
-                                           "📝 <b>Catatan:</b> Pagi ini Anda masuk pukul <b>{$scanMasuk}</b> (Lewat {$batasTelatMasuk}).\n" .
-                                           "Besok usahakan berangkat lebih awal ya supaya tidak terlambat. Semangat! 💪";
-                                    
-                                    $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                    $this->warn("   -> Notif Pagi telat dikirim.");
-                                } 
-                                // C.2: Pagi Aman & Pulang Aman (PERFECT)
-                                else {
-                                    $msg = "🌟 <b>Presensi Hari Ini: AMAN</b>\n\n" .
-                                           "Halo <b>{$user->name}</b>,\n" .
-                                           "Terima kasih, data presensi Anda hari ini <b>LENGKAP & TEPAT WAKTU</b>.\n" .
-                                           "✅ Masuk: {$scanMasuk}\n" .
-                                           "✅ Pulang: {$scanKeluar}\n\n" .
-                                           "Selamat beristirahat, sampai jumpa besok! 👋" ;
-                                            
-                                    
-                                    $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                    $this->warn("   -> Notif AMAN dikirim.");
-                                }
-                            } // End Else C
+                            $telegram->sendMessage($user->telegram_chat_id, $msg);
+                            $this->warn("   -> Notif Pulang Awal/Double Scan dikirim.");
+                        }
+                        
+                        // KASUS C: Pulang Aman (Scan Keluar > Batas)
+                        // User request: TIDAK PERLU DIKIRIM APA-APA (Silent)
+                    }
+
+                    // ==========================================================
+                    // LOGIC 4: EVALUASI MALAM (CEK TELAT 2x)
+                    // ==========================================================
+                    if ($jam >= 19) {
+                        if ($statusKehadiran === 'terlambat') {
+                            $totalTelat = AbsensiLog::where('user_id', $user->id)
+                                ->whereYear('tanggal', $tahun)
+                                ->whereMonth('tanggal', $bulan)
+                                ->where('status', 'terlambat')
+                                ->count();
                             
-                        } // End
-                    
-
-                    } else {
-                                
-                            // C.1: Pagi Telat?
-                            if ($scanMasuk > $batasTelatMasuk) {
-                                $msg = "🌙 <b>Rekap Presensi: Telat Masuk</b>\n\n" .
-                                        "Halo <b>{$user->name}</b>, presensi pulang Anda aman ({$scanKeluar}).\n\n" .
-                                        "📝 <b>Catatan:</b> Pagi ini Anda masuk pukul <b>{$scanMasuk}</b> (Lewat {$batasTelatMasuk}).\n" .
-                                        "Besok usahakan berangkat lebih awal ya supaya tidak terlambat. Semangat! 💪";
+                            // Hanya kirim notif PADA HARI KEDUA telat itu terjadi
+                            if ($totalTelat == 2) {
+                                $msg = "⚠️ <b>PERINGATAN KEDISIPLINAN</b>\n\n" .
+                                       "Halo <b>{$user->name}</b>,\n" .
+                                       "Berdasarkan rekap data presensi, Anda tercatat sudah <b>2 KALI TERLAMBAT</b> di bulan ini.\n\n" .
+                                       "Mohon perhatikan jam kehadiran Anda untuk hari-hari berikutnya agar tidak terkena sanksi/potongan.\n\n" .
+                                       "<i>Semangat dan usahakan besok lebih awal!</i> 🔥";
                                 
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Pagi telat dikirim.");
-                            } 
-                            // C.2: Pagi Aman & Pulang Aman (PERFECT)
-                            else {
-                                $msg = "🌟 <b>Presensi Hari Ini: AMAN</b>\n\n" .
-                                        "Halo <b>{$user->name}</b>,\n" .
-                                        "Terima kasih, data presensi Anda hari ini <b>LENGKAP & TEPAT WAKTU</b>.\n" .
-                                        "✅ Masuk: {$scanMasuk}\n" .
-                                        "✅ Pulang: {$scanKeluar}\n\n" .
-                                        "Selamat beristirahat, sampai jumpa besok! 👋";
-                                
-                                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif AMAN dikirim.");
+                                $this->warn("   -> Notif Telat ke-2 dikirim.");
                             }
                         }
+                    }
+
                 }
             } catch (\Exception $e) {
                 $this->error("   -> Error scraping: " . $e->getMessage());
             }
-
-            sleep(2); // Jeda sopan
-        }
+            
+            sleep(2); 
+        } 
 
         $this->info("✅ Selesai.");
     }

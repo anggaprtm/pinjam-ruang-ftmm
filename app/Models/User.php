@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\AbsensiLog;
 
 class User extends Authenticatable
 {
@@ -98,6 +99,11 @@ class User extends Authenticatable
     public function kegiatans()
     {
         return $this->hasMany(\App\Models\Kegiatan::class, 'user_id');
+    }
+
+    public function absensiLogs()
+    {
+        return $this->hasMany(AbsensiLog::class, 'user_id', 'id');
     }
 
 

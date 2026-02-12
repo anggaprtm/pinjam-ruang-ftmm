@@ -13,46 +13,40 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('sync:google-calendar')->everyFifteenMinutes();
-        // 1. PENGINGAT PAGI (Baru)
-        // Jalan jam 08:30 (Lewat batas masuk 08:00)
-        // Fungsinya: Ngingetin yang statusnya masih "-" (Belum scan)
+
+        // 1. Reminder Pagi (06:30) - Senin s/d Jumat
+        $schedule->command('attendance:remind')
+                 ->weekdays()
+                 ->at('06:30')
+                 ->timezone('Asia/Jakarta');
+
+        // 2. Warning Belum Masuk (07:50) - Senin s/d Jumat
         $schedule->command('attendance:remind')
                  ->weekdays()
                  ->at('07:50')
                  ->timezone('Asia/Jakarta');
 
-        // 2. REKAP MALAM (Tetap)
-        // Jalan jam 17:00
-        // Fungsinya: Rekap telat pagi & reminder pulang
+        // 3. Reminder Pulang (17:00) - Senin s/d Jumat
         $schedule->command('attendance:remind')
                  ->weekdays()
                  ->at('17:00')
                  ->timezone('Asia/Jakarta');
 
-        // 3. REKAP MALAM 
-        // Jalan jam 20:30
-        // Fungsinya: Rekap telat pagi & reminder pulang  
+        // 4. Evaluasi Malam (19:00) - Senin s/d Jumat 
         $schedule->command('attendance:remind')
                  ->weekdays()
-                 ->at('19:30')
+                 ->at('19:00')
                  ->timezone('Asia/Jakarta');
-
 
         $schedule->command('attendance:sync')
                  ->weekdays()
                  ->at('08:30')
                  ->timezone('Asia/Jakarta');
 
-        
-
         $schedule->command('attendance:sync')
                  ->weekdays()
                  ->at('23:00')
                  ->timezone('Asia/Jakarta');
-
-
-
-
 
     }
 
