@@ -2,7 +2,7 @@
 
     <div class="c-sidebar-brand d-md-down-none">
         <div class="c-sidebar-brand-full" href="#">
-            LAYANAN SARPRAS-FTMM
+            LAYANAN-FTMM
         </div>
         <div class="c-sidebar-brand-minimized">
             <i class="fas fa-toolbox" style="font-size: 23px; color: #2e2d2d; padding: 10px;"></i>
