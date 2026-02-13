@@ -219,6 +219,10 @@
                                         @else
                                             <span class="badge bg-secondary rounded-pill">Belum Scan</span>
                                         @endif
+
+                                        @if($isPulangAwal)
+                                            <span class="badge bg-danger rounded-pill ms-1">Pulang Awal</span>
+                                        @endif
                                     </td>
                                     
                                     <td class="text-center">
