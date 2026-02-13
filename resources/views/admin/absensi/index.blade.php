@@ -179,6 +179,25 @@
                                         } catch(\Exception $e) { $durasiKerja = 'err'; }
                                     }
 
+                                    // Hitung Durasi Keterlambatan
+                                    $durasiTelat = '';
+                                    if ($status == 'terlambat' && $jamMasuk !== '-') {
+                                        try {
+                                            // Tentukan batas masuk berdasarkan hari
+                                            $carbonDate = \Carbon\Carbon::parse($tanggal);
+                                            $batasMasuk = $carbonDate->isFriday() ? '08:30' : '08:00';
+                                            
+                                            $batasWaktu = \Carbon\Carbon::createFromFormat('H:i', $batasMasuk);
+                                            $waktuMasuk = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
+                                            
+                                            if ($waktuMasuk->greaterThan($batasWaktu)) {
+                                                $diff = $batasWaktu->diff($waktuMasuk);
+                                                $menit = ($diff->h * 60) + $diff->i;
+                                                $durasiTelat = "($menit menit)";
+                                            }
+                                        } catch(\Exception $e) { }
+                                    }
+
                                     // --- LOGIC STATUS BOT ---
                                     // Cek Koneksi Telegram
                                     $hasTelegram = !empty($pegawai->telegram_chat_id);
@@ -200,7 +219,10 @@
                                         </div>
                                     </td>
                                     <td class="text-center fw-bold {{ $status == 'terlambat' ? 'text-danger' : 'text-dark' }}">
-                                        {{ $jamMasuk }}
+                                        <div>{{ $jamMasuk }}</div>
+                                        @if($durasiTelat)
+                                            <div class="small text-danger mt-1" style="font-size: 0.75rem;">{{ $durasiTelat }}</div>
+                                        @endif
                                     </td>
                                     <td class="text-center fw-bold {{ $isPulangAwal ? 'text-danger' : 'text-dark' }}">
                                         {{ $jamKeluar }}
