@@ -185,7 +185,7 @@
                                         try {
                                             // Tentukan batas masuk berdasarkan hari
                                             $carbonDate = \Carbon\Carbon::parse($tanggal);
-                                            $batasMasuk = $carbonDate->isFriday() ? '08:30' : '08:00';
+                                            $batasMasuk = $carbonDate->isFriday() ? '08:00' : '08:00';
                                             
                                             $batasWaktu = \Carbon\Carbon::createFromFormat('H:i', $batasMasuk);
                                             $waktuMasuk = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
