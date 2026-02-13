@@ -329,6 +329,14 @@
                     </div>
                 @else
                     @foreach($topLate as $index => $late)
+                        @php
+                            // Format tanggal keterlambatan dengan padding 2 digit
+                            $dates = explode(',', $late->tanggal_telat);
+                            $formattedDates = array_map(function($day) {
+                                return str_pad($day, 2, '0', STR_PAD_LEFT);
+                            }, $dates);
+                            $tanggalList = implode(',', $formattedDates);
+                        @endphp
                         <div class="leaderboard-item">
                             <div class="d-flex align-items-center">
                                 <div class="rank-badge rank-{{ $index + 1 }}">{{ $index + 1 }}</div>
@@ -340,6 +348,7 @@
                             <div class="text-end">
                                 <div class="fw-bold text-danger h5 mb-0">{{ $late->total_telat }}x</div>
                                 <div class="small text-muted" style="font-size: 0.7rem;">Terlambat</div>
+                                <div class="small text-muted" style="font-size: 0.65rem;">({{ $tanggalList }})</div>
                             </div>
                         </div>
                     @endforeach
