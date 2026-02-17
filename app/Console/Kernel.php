@@ -4,6 +4,8 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Schema; 
+use App\Models\BotSetting;
 
 class Kernel extends ConsoleKernel
 {
@@ -13,40 +15,33 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('sync:google-calendar')->everyFifteenMinutes();
+        $schedule->command('attendance:sync')->weekdays()->at('08:30')->timezone('Asia/Jakarta');
+        $schedule->command('attendance:sync')->weekdays()->at('23:00')->timezone('Asia/Jakarta');
 
-        // 1. Reminder Pagi (06:30) - Senin s/d Jumat
-        $schedule->command('attendance:remind')
-                 ->weekdays()
-                 ->at('06:30')
-                 ->timezone('Asia/Jakarta');
+        // --- BACA SETTING DARI DATABASE ---
+        if (Schema::hasTable('bot_settings')) {
+            $bot = BotSetting::first();
 
-        // 2. Warning Belum Masuk (07:50) - Senin s/d Jumat
-        $schedule->command('attendance:remind')
-                 ->weekdays()
-                 ->at('07:50')
-                 ->timezone('Asia/Jakarta');
-
-        // 3. Reminder Pulang (17:00) - Senin s/d Jumat
-        $schedule->command('attendance:remind')
-                 ->weekdays()
-                 ->at('17:00')
-                 ->timezone('Asia/Jakarta');
-
-        // 4. Evaluasi Malam (19:00) - Senin s/d Jumat 
-        $schedule->command('attendance:remind')
-                 ->weekdays()
-                 ->at('19:00')
-                 ->timezone('Asia/Jakarta');
-
-        $schedule->command('attendance:sync')
-                 ->weekdays()
-                 ->at('08:30')
-                 ->timezone('Asia/Jakarta');
-
-        $schedule->command('attendance:sync')
-                 ->weekdays()
-                 ->at('23:00')
-                 ->timezone('Asia/Jakarta');
+            if ($bot) {
+                // Parameter 'pagi' dikirim ke Command
+                if ($bot->pagi_aktif) {
+                    $schedule->command('attendance:remind pagi')
+                             ->weekdays()->at(substr($bot->pagi_jam, 0, 5))->timezone('Asia/Jakarta');
+                }
+                if ($bot->masuk_aktif) {
+                    $schedule->command('attendance:remind masuk')
+                             ->weekdays()->at(substr($bot->masuk_jam, 0, 5))->timezone('Asia/Jakarta');
+                }
+                if ($bot->pulang_aktif) {
+                    $schedule->command('attendance:remind pulang')
+                             ->weekdays()->at(substr($bot->pulang_jam, 0, 5))->timezone('Asia/Jakarta');
+                }
+                if ($bot->evaluasi_aktif) {
+                    $schedule->command('attendance:remind evaluasi')
+                             ->weekdays()->at(substr($bot->evaluasi_jam, 0, 5))->timezone('Asia/Jakarta');
+                }
+            }
+        }
 
     }
 

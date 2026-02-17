@@ -73,6 +73,11 @@
         </div>
         
         <div class="d-flex gap-2">
+            {{-- TOMBOL AKSES KE PENGATURAN BOT --}}
+            <a href="{{ route('admin.bot-setting.index') }}" class="btn btn-outline-info fw-bold shadow-sm d-flex align-items-center" style="border-radius: 10px;">
+                <i class="fas fa-robot me-2"></i> Atur Bot
+            </a>
+
             {{-- TOMBOL AKSES KE CRUD HARI LIBUR --}}
             <a href="{{ route('admin.hari-libur.index') }}" class="btn btn-outline-danger fw-bold shadow-sm d-flex align-items-center" style="border-radius: 10px;">
                 <i class="fas fa-calendar-times me-2"></i> Atur Libur

@@ -8,36 +8,53 @@ use Symfony\Component\DomCrawler\Crawler;
 use App\Services\TelegramService;
 use App\Models\User;
 use App\Models\AbsensiLog;
+use App\Models\BotSetting;
+use App\Models\HariLibur;
 use Carbon\Carbon;
 
 class SendAbsenceReminder extends Command
 {
-    protected $signature = 'attendance:remind';
-    protected $description = 'Cek presensi Info Absen (Reminder Pagi, Telat, Pulang, & Evaluasi Bulanan)';
+    // Tambahkan parameter {tipe} agar dinamis dipanggil dari Kernel
+    protected $signature = 'attendance:remind {tipe}';
+    protected $description = 'Kirim reminder presensi dinamis (pagi, masuk, pulang, evaluasi)';
 
     public function handle(TelegramService $telegram)
     {
-        // Setup Waktu
-        $now = Carbon::now();
-        $jam  = $now->hour;
-        $menit = $now->minute;
-        
-        $tahun = $now->year;
-        $bulan = $now->month; // Bulan format integer (misal: 2)
-        $bulanStr = $now->format('m'); // Bulan format string (misal: "02") untuk URL jika perlu
-        
-        // Format Tanggal HARUS SAMA PERSIS dengan tampilan di Tabel Web (dd-mm-yyyy)
-        $hariIniStr = $now->format('d-m-Y'); 
-        $hariKe = $now->dayOfWeekIso; 
-        
-        // --- ATURAN JAM PULANG ---
-        $batasJamPulang = ($hariKe == 5) ? '17:00' : '16:30';
+        $tipe = $this->argument('tipe');
+        $validTypes = ['pagi', 'masuk', 'pulang', 'evaluasi'];
 
-        // Skip hari libur (Sabtu/Minggu)
-        if ($hariKe > 5) {
-            $this->info("Hari libur, script istirahat.");
+        if (!in_array($tipe, $validTypes)) {
+            $this->error("Tipe tidak valid! Gunakan: pagi, masuk, pulang, evaluasi");
             return;
         }
+
+        // 1. AMBIL SETTING DARI DATABASE
+        $botSetting = BotSetting::first();
+        if (!$botSetting) {
+            $this->error("Setting bot belum diatur di database (Tabel bot_settings kosong).");
+            return;
+        }
+
+        $now = Carbon::now();
+        $tahun = $now->year;
+        $bulan = $now->month; 
+        $bulanStr = $now->format('m'); 
+        $hariIniStr = $now->format('d-m-Y'); 
+        $tanggalDB = $now->format('Y-m-d');
+        $hariKe = $now->dayOfWeekIso; 
+
+        $isWeekend = $hariKe > 5; // Sabtu = 6, Minggu = 7
+        $liburNasional = HariLibur::whereDate('tanggal', $tanggalDB)->first(); // Cek di Database
+
+        if ($isWeekend || $liburNasional) {
+            // Tentukan alasan liburnya untuk dicatat di log terminal
+            $alasanLibur = $liburNasional ? $liburNasional->keterangan : 'Akhir Pekan (Sabtu/Minggu)';
+            
+            $this->info("🏝️ Hari ini libur ({$alasanLibur}). Bot istirahat, tidak ada notifikasi yang dikirim.");
+            return; // `return` akan langsung menghentikan seluruh eksekusi script di bawahnya
+        }
+
+        $batasJamPulang = ($hariKe == 5) ? '17:00' : '16:30';
 
         $users = User::with('roles')
             ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
@@ -46,33 +63,34 @@ class SendAbsenceReminder extends Command
             ->whereNotNull('nip')
             ->get();
 
-        $this->info("🚀 Memulai pengecekan presensi pukul {$now->format('H:i')} untuk " . $users->count() . " Pegawai...");
+        $this->info("🚀 Menjalankan Reminder tipe: [{$tipe}] untuk " . $users->count() . " Pegawai...");
 
         foreach ($users as $user) {
-            $this->info("Checking User: {$user->name}...");
+            $this->info("Processing: {$user->name}...");
 
             // ==========================================================
-            // LOGIC 1: REMINDER PAGI (06:30)
+            // LOGIC 1: REMINDER PAGI (Tanpa Scrape)
             // ==========================================================
-            if ($jam == 6 && $menit >= 0 && $menit <= 59) {
-                $msg = "☀️ <b>Selamat Pagi, {$user->name}!</b>\n\n" .
-                       "Jangan lupa melakukan <b>Scan Masuk</b> sebelum pukul 08.00 ya.\n" .
-                       "Semoga hari ini menyenangkan! 💪";
-                
-                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                $this->info("   -> Reminder 06:30 dikirim.");
-                sleep(1); 
-                continue; 
+            if ($tipe === 'pagi') {
+                if ($botSetting->pagi_aktif) {
+                    $msg = str_replace(
+                        ['{nama}', '{tanggal}'], 
+                        [$user->name, $hariIniStr], 
+                        $botSetting->pagi_pesan
+                    );
+                    
+                    $telegram->sendMessage($user->telegram_chat_id, $msg);
+                    $this->info("   -> Reminder Pagi dikirim.");
+                    sleep(1); 
+                }
+                continue; // Lanjut ke user berikutnya, gak perlu scrape
             }
 
             // ==========================================================
-            // START SCRAPING
+            // START SCRAPING (Khusus masuk, pulang, dan evaluasi)
             // ==========================================================
-            
             if (strlen($user->nip) < 10) continue;
 
-            // Pastikan URL pakai format bulan yang benar (gunakan $bulanStr "02" atau $bulan "2" sesuai yang jalan di Sync)
-            // Sesuai screenshot sebelumnya, Sync jalan pake format $bulanStr (02)
             $url = "https://infoabsen.unair.ac.id/absen/api_absen_8.php?nip={$user->nip}&tahun={$tahun}&bulan={$bulanStr}";
 
             try {
@@ -81,24 +99,22 @@ class SendAbsenceReminder extends Command
                 if ($response->successful()) {
                     $crawler = new Crawler($response->body());
                     
-                    // --- [FIX] LOGIC PENCARIAN ROBUST (Sama seperti SyncAttendance) ---
+                    // Logic Pencarian Robust
                     $foundNode = null;
                     $crawler->filter('table tr')->each(function (Crawler $node) use ($hariIniStr, &$foundNode) {
-                        // Pastikan kolom cukup & Cek Kolom 0 (Tanggal)
                         if ($node->filter('td')->count() > 8) {
                             $tanggalDiTabel = trim($node->filter('td')->eq(0)->text());
                             if ($tanggalDiTabel === $hariIniStr) {
                                 $foundNode = $node;
-                                return false; // Break loop
+                                return false; 
                             }
                         }
                     });
 
-                    // Default values
                     $scanMasuk = '-';
                     $scanKeluar = '-';
                     $statusKehadiran = 'alpha';
-                    $dataDitemukan = false; // Flag penanda
+                    $dataDitemukan = false;
 
                     if ($foundNode) {
                         $dataDitemukan = true;
@@ -107,102 +123,84 @@ class SendAbsenceReminder extends Command
 
                         $jamMasukLimit = '08:00'; 
                         if ($scanMasuk !== '-' && !empty($scanMasuk)) {
-                            if ($scanMasuk > $jamMasukLimit) {
-                                $statusKehadiran = 'terlambat';
-                            } else {
-                                $statusKehadiran = 'hadir';
-                            }
+                            $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
                         }
                     } else {
                         $this->warn("   -> Data tanggal $hariIniStr tidak ditemukan di tabel.");
                     }
 
-                    // --- [MODIF 1] UPDATE DATABASE ---
-                    // HANYA UPDATE JIKA DATA DITEMUKAN DI TABEL
-                    // Ini mencegah data yg sudah ada ter-overwrite jadi NULL kalau scraper gagal baca baris
-                    $tanggalDB = $now->format('Y-m-d');
-                    
+                    // UPDATE DATABASE
                     if ($dataDitemukan) {
                         $log = AbsensiLog::updateOrCreate(
                             ['user_id' => $user->id, 'tanggal' => $tanggalDB],
                             [
-                                'jam_masuk' => ($scanMasuk === '-' || $scanMasuk === '' ? null : $scanMasuk),
+                                'jam_masuk'  => ($scanMasuk === '-' || $scanMasuk === '' ? null : $scanMasuk),
                                 'jam_keluar' => ($scanKeluar === '-' || $scanKeluar === '' ? null : $scanKeluar),
                                 'status'     => $statusKehadiran,
                                 'updated_at' => now(),
                             ]
                         );
                     } else {
-                        // Kalau data tidak ditemukan di tabel (misal format tgl beda),
-                        // kita coba ambil data lama dari DB biar gak error saat akses notif_history
-                        $log = AbsensiLog::where('user_id', $user->id)
-                                         ->where('tanggal', $tanggalDB)
-                                         ->first();
+                        $log = AbsensiLog::where('user_id', $user->id)->where('tanggal', $tanggalDB)->first();
                     }
 
-                    // Kalau log masih null (artinya scraper gagal DAN belum ada data di DB), skip user ini
                     if (!$log) {
-                        $this->error("   -> Gagal proses user ini karena data kosong.");
                         continue; 
                     }
 
-                    // --- [MODIF 2] PROSES NOTIFIKASI ---
+                    // --- PROSES NOTIFIKASI BERDASARKAN TIPE ---
                     $history = $log->notif_history ?? [];
                     $pesanTerkirim = false; 
 
-                    // LOGIC 2: DEADLINE PAGI (07:50)
-                    if ($jam == 7 && $menit >= 45) {
-                        // Pastikan scanMasuk benar-benar kosong di DB
-                        if (empty($log->jam_masuk)) { 
-                            if (!isset($history['telat_masuk'])) {
-                                $msg = "🚨 <b>Peringatan Presensi Masuk</b>\n\n" .
-                                       "Halo <b>{$user->name}</b>,\n" .
-                                       "Sistem mendeteksi Anda belum melakukan <b>Scan Masuk</b> hari ini ($hariIniStr).\n\n" .
-                                       "± 5 Menit lagi Anda bisa terlampat!!!";
-                                
-                                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Belum Masuk dikirim.");
-                                $history['telat_masuk'] = $now->format('H:i');
-                                $pesanTerkirim = true;
-                            }
+                    // LOGIC 2: PERINGATAN MASUK
+                    if ($tipe === 'masuk' && $botSetting->masuk_aktif) {
+                        if (empty($log->jam_masuk) && !isset($history['telat_masuk'])) {
+                            $msg = str_replace(
+                                ['{nama}', '{tanggal}'], 
+                                [$user->name, $hariIniStr], 
+                                $botSetting->masuk_pesan
+                            );
+                            
+                            $telegram->sendMessage($user->telegram_chat_id, $msg);
+                            $this->warn("   -> Notif Belum Masuk dikirim.");
+                            $history['telat_masuk'] = $now->format('H:i');
+                            $pesanTerkirim = true;
                         }
                     }
 
-                    // LOGIC 3: SORE (17:00)
-                    if ($jam == 17) { 
-                        // KASUS A: Belum Scan Pulang
-                        if (empty($log->jam_keluar)) {
-                            if (!isset($history['belum_pulang'])) {
-                                $msg = "🔔 <b>Pengingat Presensi Pulang</b>\n\n" .
-                                       "Halo <b>{$user->name}</b>,\n" .
-                                       "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
-                                       "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
-                                
-                                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Belum Pulang dikirim.");
-                                $history['belum_pulang'] = $now->format('H:i');
-                                $pesanTerkirim = true;
-                            }
+                    // LOGIC 3: SORE / PULANG
+                    if ($tipe === 'pulang' && $botSetting->pulang_aktif) { 
+                        // Kasus A: Belum Scan Pulang
+                        if (empty($log->jam_keluar) && !isset($history['belum_pulang'])) {
+                            $msg = str_replace(
+                                ['{nama}', '{tanggal}', '{batas_jam}'], 
+                                [$user->name, $hariIniStr, $batasJamPulang],
+                                $botSetting->pulang_pesan
+                            );
+                            
+                            $telegram->sendMessage($user->telegram_chat_id, $msg);
+                            $this->warn("   -> Notif Belum Pulang dikirim.");
+                            $history['belum_pulang'] = $now->format('H:i');
+                            $pesanTerkirim = true;
                         } 
-                        // KASUS B: Pulang Awal
-                        elseif ($log->jam_keluar < $batasJamPulang) {
-                            if (!isset($history['pulang_awal'])) {
-                                $msg = "⚠️ <b>Pengingat Presensi Pulang</b>\n\n" .
-                                       "Halo <b>{$user->name}</b>,\n" .
-                                       "Sistem mencatat scan keluar Anda pukul <b>{$log->jam_keluar}</b>.\n" .
-                                       "Jam kerja telah usai ($batasJamPulang). Jangan lupa <b>Scan Keluar</b> sebelum meninggalkan kantor ya.\n\n" .
-                                       "<i>Jika sedang Lembur, abaikan dan jangan lupa presensi saat pulang nanti.</i>";
+                        // Kasus B: Pulang Awal
+                        elseif (!empty($log->jam_keluar) && $log->jam_keluar < $batasJamPulang && !isset($history['pulang_awal'])) {
+                            $prefix = "⚠️ <b>PERHATIAN!</b> Sistem mencatat Anda scan keluar pukul <b>{$log->jam_keluar}</b> (sebelum jam {$batasJamPulang}).\n\n";
+                            $msg = $prefix . str_replace(
+                                ['{nama}', '{tanggal}'], 
+                                [$user->name, $hariIniStr], 
+                                $botSetting->pulang_pesan
+                            );
 
-                                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Pulang Awal dikirim.");
-                                $history['pulang_awal'] = $now->format('H:i');
-                                $pesanTerkirim = true;
-                            }
+                            $telegram->sendMessage($user->telegram_chat_id, $msg);
+                            $this->warn("   -> Notif Pulang Awal dikirim.");
+                            $history['pulang_awal'] = $now->format('H:i');
+                            $pesanTerkirim = true;
                         }
                     }
 
                     // LOGIC 4: EVALUASI MALAM
-                    if ($jam >= 19) {
+                    if ($tipe === 'evaluasi' && $botSetting->evaluasi_aktif) {
                         if ($log->status === 'terlambat') {
                             $totalTelat = AbsensiLog::where('user_id', $user->id)
                                 ->whereYear('tanggal', $tahun)
@@ -211,11 +209,11 @@ class SendAbsenceReminder extends Command
                                 ->count();
                             
                             if ($totalTelat == 2 && !isset($history['telat_2x'])) {
-                                $msg = "⚠️ <b>PERINGATAN KEDISIPLINAN</b>\n\n" .
-                                       "Halo <b>{$user->name}</b>,\n" .
-                                       "Berdasarkan rekap data presensi, Anda tercatat sudah <b>2 KALI TERLAMBAT</b> di bulan ini.\n\n" .
-                                       "Mohon perhatikan jam kehadiran Anda untuk hari-hari berikutnya agar tidak terkena sanksi/potongan.\n\n" .
-                                       "<i>Semangat dan usahakan besok lebih awal!</i> 🔥";
+                                $msg = str_replace(
+                                    ['{nama}', '{tanggal}'], 
+                                    [$user->name, $hariIniStr], 
+                                    $botSetting->evaluasi_pesan
+                                );
                                 
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
                                 $this->warn("   -> Notif Telat ke-2 dikirim.");
@@ -225,7 +223,7 @@ class SendAbsenceReminder extends Command
                         }
                     }
 
-                    // --- [MODIF 3] SIMPAN PERUBAHAN HISTORY KE DB ---
+                    // SIMPAN PERUBAHAN HISTORY KE DB
                     if ($pesanTerkirim) {
                         $log->notif_history = $history;
                         $log->save();
@@ -239,6 +237,6 @@ class SendAbsenceReminder extends Command
             sleep(2); 
         } 
 
-        $this->info("✅ Selesai.");
+        $this->info("✅ Proses Reminder Tipe [{$tipe}] Selesai.");
     }
 }

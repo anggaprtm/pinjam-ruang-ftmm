@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\RiwayatPerjalananController;
 use App\Http\Controllers\Admin\PermintaanKegiatanController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\AbsensiController;
+use App\Http\Controllers\Admin\BotSettingController;
 
 
 
@@ -124,6 +125,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::resource('permintaan-kegiatan', PermintaanKegiatanController::class);
     Route::get('absensi', [AbsensiController::class, 'index'])->name('absensi.index');
     Route::resource('hari-libur', HariLiburController::class)->except(['show', 'edit', 'update']);
+    Route::get('bot-setting', [BotSettingController::class, 'index'])->name('bot-setting.index');
+    Route::post('bot-setting', [BotSettingController::class, 'update'])->name('bot-setting.update');
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
 
 

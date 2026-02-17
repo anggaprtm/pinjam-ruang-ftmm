@@ -133,7 +133,7 @@
                     @if(session('success'))
                         <div class="row mb-2">
                             <div class="col-lg-12">
-                                <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+                                <div class="alert alert-success" role="alert"><i class="fas fa-check-circle me-2"></i>{{ session('success') }}</div>
                             </div>
                         </div>
                     @endif
@@ -141,7 +141,7 @@
                         <div class="row mb-2">
                             <div class="col-lg-12">
                                 <div class="alert alert-danger" role="alert">
-                                    {{ session('error') }}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
                                 </div>
                             </div>
                         </div>
