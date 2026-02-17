@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AbsensiLog;
 use App\Models\User;
+use App\Models\HariLibur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Carbon\Carbon;
@@ -15,15 +16,53 @@ class AbsensiController extends Controller
     {
         // Default tanggal hari ini
         $tanggal = $request->input('tanggal', Carbon::now()->format('Y-m-d'));
-        $bulanIni = Carbon::now()->month;
-        $tahunIni = Carbon::now()->year;
+        $carbonDate = Carbon::parse($tanggal);
+        
+        $bulanIni = $carbonDate->month;
+        $tahunIni = $carbonDate->year;
+        // ==========================================================
+        // 1. LOGIKA CEK HARI LIBUR
+        // ==========================================================
+        
+        // Cek Libur di Database (Libur Nasional / Cuti Bersama)
+        $dataLibur = HariLibur::whereDate('tanggal', $tanggal)->first();
+        
+        // Cek Weekend (Sabtu/Minggu)
+        $isWeekend = $carbonDate->isWeekend();
 
-        // 1. DATA UTAMA: Ambil Semua Pegawai + Data Absen Tanggal Terpilih
-        // Kita pakai "with" dengan kondisi tanggal biar user tetap muncul walau belum ada log
-        $pegawais = User::whereHas('roles', function($q) {
-                $q->where('title', 'Pegawai');
-            })
-            ->with(['absensiLogs' => function($query) use ($tanggal) {
+        // Gabungkan Logic: Libur jika (Weekend) ATAU (Ada di Database)
+        $isLibur = $isWeekend || $dataLibur;
+
+        // Siapkan Teks Keterangan Libur untuk di View
+        $keteranganLibur = '-';
+        if ($dataLibur) {
+            $keteranganLibur = $dataLibur->keterangan; // Prioritas utama: Nama Libur Nasional
+        } elseif ($isWeekend) {
+            $keteranganLibur = 'Weekend (Sabtu/Minggu)';
+        }
+
+        // ==========================================================
+        // 2. DATA UTAMA: Ambil Pegawai (Dengan Filter Libur)
+        // ==========================================================
+        $query = User::whereHas('roles', function($q) {
+            $q->where('title', 'Pegawai');
+        });
+
+        // KONDISI LIBUR:
+        // Jika libur, HANYA ambil pegawai yang melakukan presensi (Lembur).
+        // Yang tidak ada jam masuk/keluar tidak akan ditarik datanya.
+        if ($isLibur) {
+            $query->whereHas('absensiLogs', function($q) use ($tanggal) {
+                $q->whereDate('tanggal', $tanggal)
+                  ->where(function($sub) {
+                      $sub->whereNotNull('jam_masuk')
+                          ->orWhereNotNull('jam_keluar');
+                  });
+            });
+        }
+
+        // Eksekusi query dengan meload relasi absensi hari tersebut
+        $pegawais = $query->with(['absensiLogs' => function($query) use ($tanggal) {
                 $query->whereDate('tanggal', $tanggal);
             }])
             ->orderBy('name', 'asc') // Urutkan nama A-Z
@@ -75,7 +114,8 @@ class AbsensiController extends Controller
         $lastSync = AbsensiLog::whereDate('tanggal', $tanggal)->max('updated_at');
 
         return view('admin.absensi.index', compact(
-            'pegawais', 'stats', 'topLate', 'tanggal', 'lastSync', 'batasPulang'
+            'pegawais', 'stats', 'topLate', 'tanggal', 'lastSync', 'batasPulang',
+            'isLibur', 'keteranganLibur'
         ));
     }
 

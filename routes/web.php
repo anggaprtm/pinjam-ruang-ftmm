@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\BookingsController;
 use App\Http\Controllers\Admin\CalendarViewController;
 use App\Http\Controllers\Admin\MobilController;
+use App\Http\Controllers\Admin\HariLiburController; 
 use App\Http\Controllers\Admin\KioskController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Admin\RiwayatPerjalananController;
@@ -122,6 +123,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
 
     Route::resource('permintaan-kegiatan', PermintaanKegiatanController::class);
     Route::get('absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+    Route::resource('hari-libur', HariLiburController::class)->except(['show', 'edit', 'update']);
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
 
 

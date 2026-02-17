@@ -45,16 +45,16 @@
     .badge-soft-danger { background-color: #fce8e6; color: #e74a3b; border: 1px solid #fadbd8; }
     .badge-soft-warning { background-color: #fff8e1; color: #f6c23e; border: 1px solid #fce8b2; }
     .last-sync-badge { font-size: 0.75rem; background: #e3e6f0; color: #5a5c69; padding: 5px 12px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
-    .last-sync-badge.active { background: #d1fae5; color: #065f46; } /* Hijau kalau baru update */
+    .last-sync-badge.active { background: #d1fae5; color: #065f46; } 
     /* Leaderboard Style */
     .leaderboard-card { background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.08); overflow: hidden; }
     .leaderboard-header { background: #f8f9fc; padding: 15px 20px; border-bottom: 1px solid #e3e6f0; font-weight: bold; color: #4e73df; }
     .leaderboard-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #f1f1f1; }
     .leaderboard-item:last-child { border-bottom: none; }
     .rank-badge { width: 25px; height: 25px; background: #e3e6f0; color: #5a5c69; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; margin-right: 10px; }
-    .rank-1 { background: #f6c23e; color: #fff; } /* Emas */
-    .rank-2 { background: #e6e6e6; color: #5a5c69; } /* Perak */
-    .rank-3 { background: #d78e48; color: #fff; } /* Perunggu */
+    .rank-1 { background: #f6c23e; color: #fff; } 
+    .rank-2 { background: #e6e6e6; color: #5a5c69; } 
+    .rank-3 { background: #d78e48; color: #fff; } 
 </style>
 @endsection
 
@@ -72,12 +72,20 @@
             @endif
         </div>
         
-        <form action="{{ route('admin.absensi.index') }}" method="GET">
-            <div class="input-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
-                <input type="date" name="tanggal" class="form-control border-0" value="{{ $tanggal }}">
-                <button type="submit" class="btn btn-primary fw-bold">Filter</button>
-            </div>
-        </form>
+        <div class="d-flex gap-2">
+            {{-- TOMBOL AKSES KE CRUD HARI LIBUR --}}
+            <a href="{{ route('admin.hari-libur.index') }}" class="btn btn-outline-danger fw-bold shadow-sm d-flex align-items-center" style="border-radius: 10px;">
+                <i class="fas fa-calendar-times me-2"></i> Atur Libur
+            </a>
+
+            {{-- FORM FILTER TANGGAL --}}
+            <form action="{{ route('admin.absensi.index') }}" method="GET">
+                <div class="input-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                    <input type="date" name="tanggal" class="form-control border-0" value="{{ $tanggal }}">
+                    <button type="submit" class="btn btn-primary fw-bold">Filter</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- STAT CARDS --}}
@@ -127,13 +135,20 @@
         <div class="col-lg-8 mb-4">
             <div class="card border-0 shadow-sm rounded-lg">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 fw-bold text-primary"><i class="fas fa-list me-2"></i>Log Harian ({{ \Carbon\Carbon::parse($tanggal)->format('d M Y') }})</h6>
+                    <h6 class="m-0 fw-bold text-primary">
+                        <i class="fas fa-list me-2"></i>Log Harian ({{ \Carbon\Carbon::parse($tanggal)->locale('id')->isoFormat('dddd, D MMMM YYYY') }})
+                        
+                        {{-- BADGE STATUS HARI LIBUR --}}
+                        @if(isset($isLibur) && $isLibur)
+                            <span class="badge bg-danger text-white ms-2" style="font-size: 0.8rem;">
+                                <i class="fas fa-calendar-times me-1"></i> {{ $keteranganLibur ?? 'Hari Libur' }}
+                            </span>
+                        @endif
+                    </h6>
                     
-                    {{-- Tombol Sync --}}
                     {{-- TOMBOL SINKRONISASI MANUAL --}}
                     <form action="{{ route('admin.absensi.sync') }}" method="POST" onsubmit="return showLoading(this)">
                         @csrf
-                        {{-- INI KUNCINYA: Kirim tanggal yang sedang difilter ke Controller --}}
                         <input type="hidden" name="tanggal" value="{{ $tanggal }}">
                         
                         <button type="submit" class="btn btn-sm btn-success text-white fw-bold rounded-pill px-3 shadow-sm btn-sync">
@@ -142,179 +157,197 @@
                     </form>
                 </div>
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-4">Pegawai</th>
-                                <th class="text-center">Masuk</th>
-                                <th class="text-center">Pulang</th>
-                                <th class="text-center">Durasi</th>
-                                <th class="text-center">Status Presensi</th>
-                                <th class="text-center">Status Bot</th> </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($pegawais as $pegawai)
-                                @php
-                                    // Ambil log hari ini (bisa null jika belum scan sama sekali)
-                                    $log = $pegawai->absensiLogs->first();
-                                    
-                                    // Default Values
-                                    $jamMasuk  = $log->jam_masuk ?? '-';
-                                    $jamKeluar = $log->jam_keluar ?? '-';
-                                    $status    = $log->status ?? 'alpha'; 
-                                    
-                                    // Cek Pulang Awal
-                                    $isPulangAwal = ($jamKeluar !== '-' && $jamKeluar < $batasPulang);
-
-                                    // Hitung Durasi Kerja
-                                    $durasiKerja = '-';
-                                    if ($jamMasuk !== '-' && $jamKeluar !== '-') {
-                                        try {
-                                            $start = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
-                                            $end   = \Carbon\Carbon::createFromFormat('H:i', $jamKeluar);
-                                            if ($end->greaterThan($start)) {
-                                                $diff = $start->diff($end);
-                                                $durasiKerja = $diff->format('%Hj %Im'); 
-                                            }
-                                        } catch(\Exception $e) { $durasiKerja = 'err'; }
-                                    }
-
-                                    // Hitung Durasi Keterlambatan
-                                    $durasiTelat = '';
-                                    if ($status == 'terlambat' && $jamMasuk !== '-') {
-                                        try {
-                                            // Tentukan batas masuk berdasarkan hari
-                                            $carbonDate = \Carbon\Carbon::parse($tanggal);
-                                            $batasMasuk = $carbonDate->isFriday() ? '08:00' : '08:00';
-                                            
-                                            $batasWaktu = \Carbon\Carbon::createFromFormat('H:i', $batasMasuk);
-                                            $waktuMasuk = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
-                                            
-                                            if ($waktuMasuk->greaterThan($batasWaktu)) {
-                                                $diff = $batasWaktu->diff($waktuMasuk);
-                                                $menit = ($diff->h * 60) + $diff->i;
-                                                $durasiTelat = "($menit menit)";
-                                            }
-                                        } catch(\Exception $e) { }
-                                    }
-
-                                    // --- LOGIC STATUS BOT ---
-                                    // Cek Koneksi Telegram
-                                    $hasTelegram = !empty($pegawai->telegram_chat_id);
-                                    
-                                    // Ambil History Notif (Array) dari Database
-                                    $notifHistory = $log->notif_history ?? [];
-                                @endphp
-
-                                <tr class="{{ $isPulangAwal ? 'bg-soft-danger' : '' }}">
-                                    <td class="ps-4">
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-circle me-3 text-uppercase">
-                                                {{ substr($pegawai->name, 0, 1) }}
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-dark">{{ $pegawai->name }}</div>
-                                                <div class="small text-muted">{{ $pegawai->nip }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="text-center fw-bold {{ $status == 'terlambat' ? 'text-danger' : 'text-dark' }}">
-                                        <div>{{ $jamMasuk }}</div>
-                                        @if($durasiTelat)
-                                            <div class="small text-danger mt-1" style="font-size: 0.75rem;">{{ $durasiTelat }}</div>
-                                        @endif
-                                    </td>
-                                    <td class="text-center fw-bold {{ $isPulangAwal ? 'text-danger' : 'text-dark' }}">
-                                        {{ $jamKeluar }}
-                                        @if($isPulangAwal)
-                                            <i class="fas fa-exclamation-circle text-danger ms-1" title="Pulang Awal"></i>
-                                        @endif
-                                    </td>
-                                    <td class="text-center text-primary fw-bold">
-                                        {{ $durasiKerja }}
-                                    </td>
-                                    <td class="text-center">
-                                        @if($status == 'hadir')
-                                            <span class="badge bg-success rounded-pill">Tepat Waktu</span>
-                                        @elseif($status == 'terlambat')
-                                            <span class="badge bg-warning text-dark rounded-pill">Terlambat</span>
-                                        @else
-                                            <span class="badge bg-secondary rounded-pill">Belum Scan</span>
-                                        @endif
-
-                                        @if($isPulangAwal)
-                                            <span class="badge bg-danger rounded-pill ms-1">Pulang Awal</span>
-                                        @endif
-                                    </td>
-                                    
-                                    <td class="text-center">
-                                        <div class="d-flex justify-content-center align-items-center gap-1">
-                                            
-                                            {{-- 1. Icon Koneksi Telegram --}}
-                                            @if($hasTelegram)
-                                                <span 
-                                                    class="badge rounded-pill d-inline-flex align-items-center justify-content-center"
-                                                    data-bs-toggle="tooltip"
-                                                    title="Telegram Terhubung"
-                                                    style="background-color: #0088cc; width: 28px; height: 28px;"
-                                                >
-                                                    <i class="fab fa-telegram-plane text-white" style="font-size: 14px;"></i>
-                                                </span>
-                                            @else
-
-                                                <span class="badge rounded-pill bg-light text-secondary border" data-bs-toggle="tooltip" title="Belum ada ID Telegram">
-                                                    <i class="fas fa-plug-circle-xmark"></i> No ID
-                                                </span>
-                                            @endif
-
-                                            {{-- 2. Icon History Notifikasi --}}
-                                            @if($hasTelegram && $log)
-                                                {{-- Notif Telat Masuk --}}
-                                                @if(isset($notifHistory['telat_masuk']))
-                                                    <span class="badge rounded-pill bg-danger" title="Diingatkan Telat Masuk jam {{ $notifHistory['telat_masuk'] }}">
-                                                        <i class="fas fa-bell"></i> Pagi
-                                                    </span>
-                                                @endif
-
-                                                {{-- Notif Pulang Awal --}}
-                                                @if(isset($notifHistory['pulang_awal']))
-                                                    <span class="badge rounded-pill bg-warning text-dark" title="Diingatkan Pulang Awal jam {{ $notifHistory['pulang_awal'] }}">
-                                                        <i class="fas fa-bell"></i> Pulang
-                                                    </span>
-                                                @endif
-
-                                                {{-- Notif Belum Pulang --}}
-                                                @if(isset($notifHistory['belum_pulang']))
-                                                    <span class="badge rounded-pill bg-info text-white" title="Diingatkan Scan Pulang jam {{ $notifHistory['belum_pulang'] }}">
-                                                        <i class="fas fa-bell"></i> Pulang
-                                                    </span>
-                                                @endif
-
-                                                {{-- Notif Telat 2x --}}
-                                                @if(isset($notifHistory['telat_2x']))
-                                                    <span class="badge rounded-pill bg-dark border border-warning text-warning" title="Peringatan Telat 2x jam {{ $notifHistory['telat_2x'] }}">
-                                                        <i class="fas fa-bell"></i> Peringatan Telat 2x
-                                                    </span>
-                                                @endif
-                                                
-                                                {{-- Jika Telegram ada tapi belum ada notif apa2 --}}
-                                                @if(empty($notifHistory))
-                                                    <small class="text-muted ms-1" style="font-size: 0.7rem;">Standby</small>
-                                                @endif
-                                            @endif
-                                        </div>
-                                    </td>
+                    
+                    {{-- LOGIC TAMPILAN KOSONG SAAT HARI LIBUR --}}
+                    @if(isset($isLibur) && $isLibur && $pegawais->isEmpty())
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-calendar-times fa-4x text-gray-300"></i>
+                            </div>
+                            <h5 class="fw-bold text-gray-600">{{ $keteranganLibur ?? 'Akhir Pekan' }}</h5>
+                            <p class="text-muted small mb-0">Tidak ada pegawai yang melakukan presensi (Lembur) pada tanggal ini.</p>
+                        </div>
+                    @else
+                        {{-- TABEL PRESENSI (Sama seperti biasa) --}}
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Pegawai</th>
+                                    <th class="text-center">Masuk</th>
+                                    <th class="text-center">Pulang</th>
+                                    <th class="text-center">Durasi</th>
+                                    <th class="text-center">Status Presensi</th>
+                                    <th class="text-center">Status Bot</th> 
                                 </tr>
-                            @empty
-                                <tr><td colspan="6" class="text-center py-4">Tidak ada data pegawai.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @forelse($pegawais as $pegawai)
+                                    @php
+                                        // Ambil log hari ini (bisa null jika belum scan sama sekali)
+                                        $log = $pegawai->absensiLogs->first();
+                                        
+                                        // Default Values
+                                        $jamMasuk  = $log->jam_masuk ?? '-';
+                                        $jamKeluar = $log->jam_keluar ?? '-';
+                                        $status    = $log->status ?? 'alpha'; 
+                                        
+                                        // Cek Pulang Awal
+                                        $isPulangAwal = ($jamKeluar !== '-' && $jamKeluar < $batasPulang);
+
+                                        // Hitung Durasi Kerja
+                                        $durasiKerja = '-';
+                                        if ($jamMasuk !== '-' && $jamKeluar !== '-') {
+                                            try {
+                                                $start = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
+                                                $end   = \Carbon\Carbon::createFromFormat('H:i', $jamKeluar);
+                                                if ($end->greaterThan($start)) {
+                                                    $diff = $start->diff($end);
+                                                    $durasiKerja = $diff->format('%Hj %Im'); 
+                                                }
+                                            } catch(\Exception $e) { $durasiKerja = 'err'; }
+                                        }
+
+                                        // Hitung Durasi Keterlambatan
+                                        $durasiTelat = '';
+                                        if ($status == 'terlambat' && $jamMasuk !== '-') {
+                                            try {
+                                                // Tentukan batas masuk berdasarkan hari
+                                                $carbonDate = \Carbon\Carbon::parse($tanggal);
+                                                $batasMasuk = $carbonDate->isFriday() ? '08:00' : '08:00';
+                                                
+                                                $batasWaktu = \Carbon\Carbon::createFromFormat('H:i', $batasMasuk);
+                                                $waktuMasuk = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
+                                                
+                                                if ($waktuMasuk->greaterThan($batasWaktu)) {
+                                                    $diff = $batasWaktu->diff($waktuMasuk);
+                                                    $menit = ($diff->h * 60) + $diff->i;
+                                                    $durasiTelat = "($menit menit)";
+                                                }
+                                            } catch(\Exception $e) { }
+                                        }
+
+                                        // Cek Koneksi Telegram
+                                        $hasTelegram = !empty($pegawai->telegram_chat_id);
+                                        
+                                        // Ambil History Notif dari Database
+                                        $notifHistory = $log->notif_history ?? [];
+                                    @endphp
+
+                                    <tr class="{{ $isPulangAwal ? 'bg-soft-danger' : '' }}">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-3 text-uppercase">
+                                                    {{ substr($pegawai->name, 0, 1) }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">{{ $pegawai->name }}</div>
+                                                    <div class="small text-muted">{{ $pegawai->nip }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-bold {{ $status == 'terlambat' ? 'text-danger' : 'text-dark' }}">
+                                            <div>{{ $jamMasuk }}</div>
+                                            @if($durasiTelat)
+                                                <div class="small text-danger mt-1" style="font-size: 0.75rem;">{{ $durasiTelat }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="text-center fw-bold {{ $isPulangAwal ? 'text-danger' : 'text-dark' }}">
+                                            {{ $jamKeluar }}
+                                            @if($isPulangAwal)
+                                                <i class="fas fa-exclamation-circle text-danger ms-1" title="Pulang Awal"></i>
+                                            @endif
+                                        </td>
+                                        <td class="text-center text-primary fw-bold">
+                                            {{ $durasiKerja }}
+                                        </td>
+                                        <td class="text-center">
+                                            @if($status == 'hadir')
+                                                {{-- Jika Hari Libur, ganti badge jadi "Masuk (Lembur)" --}}
+                                                @if(isset($isLibur) && $isLibur)
+                                                    <span class="badge bg-info text-white rounded-pill">Masuk (Lembur)</span>
+                                                @else
+                                                    <span class="badge bg-success rounded-pill">Tepat Waktu</span>
+                                                @endif
+                                            @elseif($status == 'terlambat')
+                                                <span class="badge bg-warning text-dark rounded-pill">Terlambat</span>
+                                            @else
+                                                <span class="badge bg-secondary rounded-pill">Belum Scan</span>
+                                            @endif
+
+                                            @if($isPulangAwal)
+                                                <span class="badge bg-danger rounded-pill ms-1">Pulang Awal</span>
+                                            @endif
+                                        </td>
+                                        
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center align-items-center gap-1">
+                                                
+                                                {{-- 1. Icon Koneksi Telegram --}}
+                                                @if($hasTelegram)
+                                                    <span 
+                                                        class="badge rounded-pill d-inline-flex align-items-center justify-content-center"
+                                                        data-bs-toggle="tooltip"
+                                                        title="Telegram Terhubung"
+                                                        style="background-color: #0088cc; width: 28px; height: 28px;"
+                                                    >
+                                                        <i class="fab fa-telegram-plane text-white" style="font-size: 14px;"></i>
+                                                    </span>
+                                                @else
+
+                                                    <span class="badge rounded-pill bg-light text-secondary border" data-bs-toggle="tooltip" title="Belum ada ID Telegram">
+                                                        <i class="fas fa-plug-circle-xmark"></i> No ID
+                                                    </span>
+                                                @endif
+
+                                                {{-- 2. Icon History Notifikasi --}}
+                                                @if($hasTelegram && $log)
+                                                    {{-- Notif Telat Masuk --}}
+                                                    @if(isset($notifHistory['telat_masuk']))
+                                                        <span class="badge rounded-pill bg-danger" title="Diingatkan Telat Masuk jam {{ $notifHistory['telat_masuk'] }}">
+                                                            <i class="fas fa-bell"></i> Pagi
+                                                        </span>
+                                                    @endif
+
+                                                    {{-- Notif Pulang Awal --}}
+                                                    @if(isset($notifHistory['pulang_awal']))
+                                                        <span class="badge rounded-pill bg-warning text-dark" title="Diingatkan Pulang Awal jam {{ $notifHistory['pulang_awal'] }}">
+                                                            <i class="fas fa-bell"></i> Pulang
+                                                        </span>
+                                                    @endif
+
+                                                    {{-- Notif Belum Pulang --}}
+                                                    @if(isset($notifHistory['belum_pulang']))
+                                                        <span class="badge rounded-pill bg-info text-white" title="Diingatkan Scan Pulang jam {{ $notifHistory['belum_pulang'] }}">
+                                                            <i class="fas fa-bell"></i> Pulang
+                                                        </span>
+                                                    @endif
+
+                                                    {{-- Notif Telat 2x --}}
+                                                    @if(isset($notifHistory['telat_2x']))
+                                                        <span class="badge rounded-pill bg-dark border border-warning text-warning" title="Peringatan Telat 2x jam {{ $notifHistory['telat_2x'] }}">
+                                                            <i class="fas fa-bell"></i> Peringatan Telat 2x
+                                                        </span>
+                                                    @endif
+                                                    
+                                                    {{-- Jika Telegram ada tapi belum ada notif apa2 --}}
+                                                    @if(empty($notifHistory))
+                                                        <small class="text-muted ms-1" style="font-size: 0.7rem;">Standby</small>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="6" class="text-center py-4">Tidak ada data pegawai.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    @endif
                 </div>
             </div>
         </div>
 
-        {{-- KOLOM KANAN: LEADERBOARD TELAT (Baru) --}}
+        {{-- KOLOM KANAN: LEADERBOARD TELAT --}}
         <div class="col-lg-4">
             <div class="leaderboard-card mb-4">
                 <div class="leaderboard-header d-flex justify-content-between align-items-center">
