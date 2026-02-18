@@ -97,7 +97,7 @@ class AbsensiController extends Controller
         foreach ($pegawais as $pegawai) {
             $log = $pegawai->absensiLogs->first(); // Data log hari ini (bisa null)
 
-            if (!$log) {
+            if ($log->status == 'alpha') {
                 $stats['alpha']++;
             } else {
                 if ($log->status == 'hadir') $stats['hadir']++;

@@ -115,7 +115,7 @@
         </div>
         <div class="col-xl-3 col-md-6 mb-2">
             <div class="dashboard-stat-card">
-                <div><div class="small fw-bold text-uppercase text-danger">Belum Absen</div><div class="h3 fw-bold mb-0">{{ $stats['alpha'] }}</div></div>
+                <div><div class="small fw-bold text-uppercase text-danger">Belum Presensi</div><div class="h3 fw-bold mb-0">{{ $stats['alpha'] }}</div></div>
                 <div class="icon-container bg-gradient-danger"><i class="fas fa-times"></i></div>
             </div>
         </div>
