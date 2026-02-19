@@ -23,7 +23,7 @@ class PeringatanKedisiplinanMail extends Mailable
 
     public function build()
     {
-        return $this->subject('Peringatan Kedisiplinan Kehadiran')
+        return $this->subject('Pengingat Kedisiplinan Kehadiran')
             ->from('kepegawaian@ftmm.unair.ac.id', 'Kepegawaian FTMM UNAIR')
             ->view('emails.peringatan_kedisiplinan');
     }
