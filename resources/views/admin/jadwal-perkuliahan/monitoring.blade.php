@@ -171,6 +171,8 @@
                         @for($i = $startHour; $i < $endHour; $i++)
                             <div class="header-slot">
                                 {{ sprintf('%02d:00', $i) }}
+                                <br>
+                                <small class="text-muted">(Jam ke-{{ $i - $startHour + 1 }})</small>
                             </div>
                         @endfor
                     </div>

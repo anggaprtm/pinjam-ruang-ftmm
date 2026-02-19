@@ -11,6 +11,8 @@ use App\Models\AbsensiLog;
 use App\Models\BotSetting;
 use App\Models\HariLibur;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PeringatanKedisiplinanMail;
 
 class SendAbsenceReminder extends Command
 {
@@ -202,26 +204,52 @@ class SendAbsenceReminder extends Command
                     // LOGIC 4: EVALUASI MALAM
                     if ($tipe === 'evaluasi' && $botSetting->evaluasi_aktif) {
                         if ($log->status === 'terlambat') {
+
                             $totalTelat = AbsensiLog::where('user_id', $user->id)
                                 ->whereYear('tanggal', $tahun)
                                 ->whereMonth('tanggal', $bulan)
                                 ->where('status', 'terlambat')
                                 ->count();
-                            
-                            if ($totalTelat == 2 && !isset($history['telat_2x'])) {
+
+                            // 🔴 TELAT KE-2 (TRIGGER RESMI)
+                            if ($totalTelat === 2 && !isset($history['telat_2x'])) {
+
+                                // ======================
+                                // 1️⃣ TELEGRAM
+                                // ======================
                                 $msg = str_replace(
-                                    ['{nama}', '{tanggal}'], 
-                                    [$user->name, $hariIniStr], 
+                                    ['{nama}', '{tanggal}'],
+                                    [$user->name, $hariIniStr],
                                     $botSetting->evaluasi_pesan
                                 );
-                                
+
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Telat ke-2 dikirim.");
-                                $history['telat_2x'] = $now->format('H:i');
+                                $this->warn("   -> Notif Telat ke-2 (Telegram) dikirim.");
+
+                                // ======================
+                                // 2️⃣ EMAIL
+                                // ======================
+                                if (!empty($user->email)) {
+                                    Mail::to($user->email)->queue(
+                                        new PeringatanKedisiplinanMail(
+                                            $user,
+                                            $totalTelat,
+                                            \Carbon\Carbon::create($tahun, $bulan)->translatedFormat('F Y')
+                                        )
+                                    );
+
+                                    $this->warn("   -> Email Peringatan Kedisiplinan dikirim.");
+                                }
+
+                                // ======================
+                                // 3️⃣ HISTORY
+                                // ======================
+                                $history['telat_2x'] = $now->format('Y-m-d H:i:s');
                                 $pesanTerkirim = true;
                             }
                         }
                     }
+
 
                     // SIMPAN PERUBAHAN HISTORY KE DB
                     if ($pesanTerkirim) {
