@@ -92,12 +92,12 @@ class AbsensiController extends Controller
 
         // Tentukan Batas Pulang
         $carbonDate = Carbon::parse($tanggal);
-        $batasPulang = $carbonDate->isFriday() ? '17:00' : '16:30';
+        $batasPulang = $carbonDate->isFriday() ? '15:00' : '15:30';
 
         foreach ($pegawais as $pegawai) {
             $log = $pegawai->absensiLogs->first(); // Data log hari ini (bisa null)
 
-            if ($log->status == 'alpha' || !$log) {
+            if (!$log || $log->status === 'alpha') {
                 $stats['alpha']++;
             } else {
                 if ($log->status == 'hadir') $stats['hadir']++;
