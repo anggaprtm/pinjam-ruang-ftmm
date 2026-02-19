@@ -54,7 +54,7 @@ class SendAbsenceReminder extends Command
             return; // `return` akan langsung menghentikan seluruh eksekusi script di bawahnya
         }
 
-        $batasJamPulang = ($hariKe == 5) ? '17:00' : '16:30';
+        $batasJamPulang = ($hariKe == 5) ? '15:00' : '15:30';
 
         $users = User::with('roles')
             ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
@@ -185,10 +185,10 @@ class SendAbsenceReminder extends Command
                         } 
                         // Kasus B: Pulang Awal
                         elseif (!empty($log->jam_keluar) && $log->jam_keluar < $batasJamPulang && !isset($history['pulang_awal'])) {
-                            $prefix = "⚠️ <b>PERHATIAN!</b> Sistem mencatat Anda scan keluar pukul <b>{$log->jam_keluar}</b> (sebelum jam {$batasJamPulang}).\n\n";
+                            $prefix = "⚠️ <b>PERHATIAN!</b> Sistem mencatat Anda scan keluar pukul <b>{$log->jam_keluar}.\n\n";
                             $msg = $prefix . str_replace(
-                                ['{nama}', '{tanggal}'], 
-                                [$user->name, $hariIniStr], 
+                                ['{nama}', '{tanggal}', {batas_jam}], 
+                                [$user->name, $hariIniStr, $batasJamPulang], 
                                 $botSetting->pulang_pesan
                             );
 
