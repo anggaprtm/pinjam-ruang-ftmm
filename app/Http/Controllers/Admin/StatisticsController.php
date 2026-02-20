@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Auth;
 
 class StatisticsController extends Controller
 {
+    private function safeCacheKey(string $prefix, $startDateTime, $endDateTime): string
+    {
+        return $prefix . ':' . md5(
+            ($startDateTime ?? 'all') . '|' . ($endDateTime ?? 'all')
+        );
+    }
+
     public function index(Request $request)
     {
         // Hanya Admin saja yang boleh mengakses
@@ -40,7 +47,7 @@ class StatisticsController extends Controller
         $endDateTime = $end ? $end->copy()->endOfDay()->toDateTimeString() : null;
 
         // Top Ruangan (by jumlah kegiatan dalam rentang)
-        $roomsCacheKey = 'stats:topRooms:' . ($startDateTime ?? 'all') . ':' . ($endDateTime ?? 'all');
+        $roomsCacheKey = $this->safeCacheKey('stats:topRooms', $startDateTime, $endDateTime);
         $topRooms = Cache::remember($roomsCacheKey, now()->addMinutes(5), function () use ($startDateTime, $endDateTime) {
             $q = DB::table('kegiatan')
                 ->join('ruangan', 'kegiatan.ruangan_id', '=', 'ruangan.id')
@@ -57,7 +64,7 @@ class StatisticsController extends Controller
         });
 
         // Top Pengguna (by jumlah kegiatan dalam rentang)
-        $usersCacheKey = 'stats:topUsers:' . ($startDateTime ?? 'all') . ':' . ($endDateTime ?? 'all');
+        $usersCacheKey = $this->safeCacheKey('stats:topUsers', $startDateTime, $endDateTime);
         $topUsers = Cache::remember($usersCacheKey, now()->addMinutes(5), function () use ($startDateTime, $endDateTime) {
             $q = DB::table('kegiatan')
                 ->join('users', 'kegiatan.user_id', '=', 'users.id')
@@ -78,7 +85,7 @@ class StatisticsController extends Controller
             return DB::table('ruangan')->count();
         });
 
-        $bookingsCacheKey = 'stats:totalBookings:' . ($startDateTime ?? 'all') . ':' . ($endDateTime ?? 'all');
+        $bookingsCacheKey = $this->safeCacheKey('stats:totalBookings', $startDateTime, $endDateTime);
         $totalBookings = Cache::remember($bookingsCacheKey, now()->addMinutes(5), function () use ($startDateTime, $endDateTime) {
             $q = DB::table('kegiatan');
             if ($startDateTime && $endDateTime) {
@@ -88,7 +95,8 @@ class StatisticsController extends Controller
         });
 
         // Trend peminjaman per hari
-        $trendCacheKey = 'stats:trendDaily:' . ($startDateTime ?? 'all') . ':' . ($endDateTime ?? 'all');
+        $trendCacheKey = $this->safeCacheKey('stats:trendDaily', $startDateTime, $endDateTime);
+
 
         $trendDaily = Cache::remember($trendCacheKey, now()->addMinutes(5), function () use ($startDateTime, $endDateTime) {
             $q = DB::table('kegiatan')
