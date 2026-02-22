@@ -42,7 +42,7 @@ Route::get('/home', function () {
 });
 
 // Kiosk Mode Vertical Signage (Lt.10)
-Route::get('kiosk', [KioskController::class, 'index'])->middleware(['auth'])->name('kiosk');
+Route::get('kiosk', [KioskController::class, 'index'])->name('kiosk');
 Route::get('api/kiosk/events', [KioskController::class, 'events'])->middleware(['auth'])->name('api.kiosk.events');
 
 // === Grup ADMIN (prefix + name + middleware=auth)
