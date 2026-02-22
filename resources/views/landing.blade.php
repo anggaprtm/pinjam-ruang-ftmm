@@ -263,7 +263,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <form action="{{ route('admin.bookRuang') }}" method="POST" id="bookingForm" enctype="multipart/form-data">
+                <form action="{{ route('landing.bookRuang') }}" method="POST" id="bookingForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="ruangan_id" id="modal_ruangan_id">
                     <input type="hidden" name="waktu_mulai" value="{{ request('waktu_mulai') }}">
@@ -271,30 +271,69 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold required">Nama Kegiatan</label>
-                        <input class="form-control" type="text" name="nama_kegiatan" required>
+                        <input class="form-control {{ $errors->has('nama_kegiatan') ? 'is-invalid' : '' }}" type="text" name="nama_kegiatan" value="{{ old('nama_kegiatan') }}" required>
+                        @if($errors->has('nama_kegiatan'))
+                            <div class="invalid-feedback">{{ $errors->first('nama_kegiatan') }}</div>
+                        @endif
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold required" for="jenis_kegiatan">Jenis Kegiatan</label>
+                        <select class="form-select {{ $errors->has('jenis_kegiatan') ? 'is-invalid' : '' }}" name="jenis_kegiatan" id="jenis_kegiatan" required>
+                            <option value="">{{ trans('global.pleaseSelect') }}</option>
+                            @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'PHL', 'Kuliah Tamu', 'Lainnya'] as $jenis)
+                                <option value="{{ $jenis }}" {{ old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>{{ $jenis }}</option>
+                            @endforeach
+                        </select>
+                        @if($errors->has('jenis_kegiatan'))
+                            <div class="invalid-feedback">{{ $errors->first('jenis_kegiatan') }}</div>
+                        @endif
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Deskripsi</label>
-                        <textarea class="form-control" name="deskripsi" rows="2"></textarea>
+                        <textarea class="form-control {{ $errors->has('deskripsi') ? 'is-invalid' : '' }}" name="deskripsi" rows="2">{{ old('deskripsi') }}</textarea>
+                        @if($errors->has('deskripsi'))
+                            <div class="invalid-feedback">{{ $errors->first('deskripsi') }}</div>
+                        @endif
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold required">Nama PIC</label>
-                            <input type="text" name="nama_pic" class="form-control" required>
+                            <input type="text" name="nama_pic" class="form-control {{ $errors->has('nama_pic') ? 'is-invalid' : '' }}" value="{{ old('nama_pic') }}" required>
+                            @if($errors->has('nama_pic'))
+                                <div class="invalid-feedback">{{ $errors->first('nama_pic') }}</div>
+                            @endif
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold required">No. HP PIC</label>
-                            <input type="text" name="nomor_telepon" class="form-control" required>
+                            <input type="text" name="nomor_telepon" id="nomor_telepon" class="form-control {{ $errors->has('nomor_telepon') ? 'is-invalid' : '' }}" value="{{ old('nomor_telepon') }}" required>
+                            <div id="nomor-telepon-client-error" class="invalid-feedback d-none"></div>
+                            @if($errors->has('nomor_telepon'))
+                                <div class="invalid-feedback">{{ $errors->first('nomor_telepon') }}</div>
+                            @endif
                         </div>
                     </div>
 
-                    @if(!auth()->user()->isAdmin())
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold required">Upload Surat Izin (PDF)</label>
-                        <input type="file" name="surat_izin" class="form-control" accept=".pdf" required>
-                        <small class="text-muted">Maks. 5MB</small>
+                        <label class="form-label fw-bold {{ !auth()->user()->isAdmin() ? 'required' : '' }}" for="surat_izin">Unggah Surat Izin Kegiatan (SIK)
+                            @if(auth()->user()->isAdmin())
+                                <span class="text-muted">(Opsional untuk Admin)</span>
+                            @endif
+                        </label>
+
+                        <div class="input-group">
+                            <input type="file" name="surat_izin" id="surat_izin" class="d-none" accept=".pdf" {{ !auth()->user()->isAdmin() ? 'required' : '' }}>
+                            <label for="surat_izin" class="btn btn-outline-dark mb-0 rounded-end-0">
+                                <i class="fas fa-folder-open me-2"></i>Pilih File
+                            </label>
+                            <span class="form-control rounded-start-0 {{ $errors->has('surat_izin') ? 'is-invalid' : '' }}" id="surat_izin_display">Tidak ada file yang dipilih</span>
+                            @if($errors->has('surat_izin'))
+                                <div class="invalid-feedback d-block">{{ $errors->first('surat_izin') }}</div>
+                            @endif
+                        </div>
+                        <small class="text-muted">Ekstensi .pdf, maksimal 2MB.</small>
+
                     </div>
-                    @endif
                 </form>
             </div>
             <div class="modal-footer bg-light">
@@ -372,6 +411,52 @@
             }
         });
 
+        const phoneMin = 9;
+        const phoneMax = 15;
+
+        function validatePhoneField() {
+            const $input = $('#nomor_telepon');
+            const $clientError = $('#nomor-telepon-client-error');
+            let val = $input.val() || '';
+            const cleaned = val.replace(/\D/g, '');
+            if (val !== cleaned) {
+                $input.val(cleaned);
+                val = cleaned;
+            }
+
+            if (val.length === 0) {
+                $clientError.removeClass('d-none').text('Nomor telepon wajib diisi.');
+                $input.addClass('is-invalid');
+                return false;
+            }
+
+            if (!/^0[0-9]+$/.test(val)) {
+                $clientError.removeClass('d-none').text('Nomor telepon harus dimulai dengan angka 0.');
+                $input.addClass('is-invalid');
+                return false;
+            }
+
+            if (val.length < phoneMin || val.length > phoneMax) {
+                $clientError.removeClass('d-none').text(`Panjang nomor harus antara ${phoneMin} sampai ${phoneMax} angka.`);
+                $input.addClass('is-invalid');
+                return false;
+            }
+
+            $clientError.addClass('d-none').text('');
+            $input.removeClass('is-invalid');
+            return true;
+        }
+
+        $('#nomor_telepon').on('input blur', function() {
+            validatePhoneField();
+        });
+
+        $('#surat_izin').on('change', function() {
+            let fileName = $(this).val().split('\\').pop();
+            $('#surat_izin_display').text(fileName || 'Tidak ada file yang dipilih');
+        });
+
+
         // --- LOGIC MODAL BOOKING ---
         const bookRuangModal = document.getElementById('bookRuang');
         if (bookRuangModal) {
@@ -387,9 +472,16 @@
             });
 
             // Submit form via tombol "Ajukan"
-            document.getElementById('submitBooking').addEventListener('click', function () {
+             document.getElementById('submitBooking').addEventListener('click', function (e) {
+                const isPhoneValid = validatePhoneField();
+                if (!isPhoneValid) {
+                    e.preventDefault();
+                    $('#nomor_telepon').focus();
+                    return;
+                }
                 document.getElementById('bookingForm').submit();
             });
+
         }
     });
 </script>

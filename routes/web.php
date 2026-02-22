@@ -27,16 +27,13 @@ use App\Http\Controllers\Admin\AbsensiController;
 use App\Http\Controllers\Admin\BotSettingController;
 
 
-
-// === Redirect root ke login (sesuai rute lama)
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-// Route::redirect('/', '/login');
+Route::post('book-ruang-landing', [LandingController::class, 'bookRuang'])->middleware(['auth'])->name('landing.bookRuang');
 
 Route::get('/dashboard', function () {
-    return redirect()->route('admin.home'); // atau redirect('/home')
+    return redirect()->route('admin.home'); 
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// === /home -> redirect ke admin.home + forward status (sesuai rute lama)
 Route::get('/home', function () {
     if (session('status')) {
         return redirect()->route('admin.home')->with('status', session('status'));
@@ -44,7 +41,7 @@ Route::get('/home', function () {
     return redirect()->route('admin.home');
 });
 
-// Kiosk Mode (fullscreen TV dashboard)
+// Kiosk Mode Vertical Signage (Lt.10)
 Route::get('kiosk', [KioskController::class, 'index'])->middleware(['auth'])->name('kiosk');
 Route::get('api/kiosk/events', [KioskController::class, 'events'])->middleware(['auth'])->name('api.kiosk.events');
 
@@ -128,7 +125,6 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('bot-setting', [BotSettingController::class, 'index'])->name('bot-setting.index');
     Route::post('bot-setting', [BotSettingController::class, 'update'])->name('bot-setting.update');
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
-
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
