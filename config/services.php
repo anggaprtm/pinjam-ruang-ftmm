@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'signage' => [
+        'key' => env('SIGNAGE_API_KEY', ''),
+    ],
+
 ];

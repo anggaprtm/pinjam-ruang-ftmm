@@ -13,7 +13,26 @@ class PermintaanKegiatan extends Model
 
     protected $table = 'permintaan_kegiatans';
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'user_id',
+        'pic_user_id',
+        'nama_kegiatan',
+        'jenis_kegiatan',
+        'tanggal_kegiatan',
+        'waktu_mulai',
+        'waktu_selesai',
+        'jumlah_peserta',
+        'deskripsi',
+        'request_konsumsi',
+        'waktu_konsumsi',
+        'catatan_konsumsi',
+        'request_ruang',
+        'lampiran',
+        'status_permintaan',
+        'status_ruang',
+        'status_konsumsi',
+        'kegiatan_id',
+    ];
 
     protected $dates = [
         'tanggal_kegiatan',

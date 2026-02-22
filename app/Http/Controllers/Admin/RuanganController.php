@@ -212,6 +212,8 @@ class RuanganController extends Controller
 
     public function toggle($id)
     {
+        abort_if(Gate::denies('ruangan_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
         $ruangan = Ruangan::findOrFail($id);
         $ruangan->is_active = !$ruangan->is_active;
         $ruangan->save();

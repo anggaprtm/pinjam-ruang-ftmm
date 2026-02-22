@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Bell, Clock, User, Users } from 'lucide-react';
 import AutoScrollList from './AutoScrollList';
 
+const getSignageApiKey = () => document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '';
+
 interface RequestItem {
     id: number;
     kegiatan: string;
@@ -18,7 +20,19 @@ const PendingRequestsWidget: React.FC = () => {
     const fetchRequests = async () => {
         try {
             const apiUrl = new URL('/api/v1/signage/requests', window.location.origin);
-            const response = await fetch(apiUrl.toString());
+            const apiKey = getSignageApiKey();
+      if (apiKey) apiUrl.searchParams.set('signage_key', apiKey);
+
+      const response = await fetch(apiUrl.toString(), {
+        headers: {
+          'Accept': 'application/json',
+          ...(apiKey ? { 'X-SIGNAGE-KEY': apiKey } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Signage API error: ${response.status}`);
+      }
             const data = await response.json();
             setRequests(data);
             setLoading(false);

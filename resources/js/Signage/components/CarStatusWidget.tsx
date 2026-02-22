@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Car, MapPin, User, Clock, Activity } from 'lucide-react';
 import GlassPanel from './GlassPanel';
 
+const getSignageApiKey = () => document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '';
+
 interface CarData {
   id: number;
   nama: string;
@@ -22,7 +24,19 @@ const CarStatusWidget: React.FC = () => {
   const fetchCars = async () => {
     try {
       const apiUrl = new URL('/api/v1/signage/cars', window.location.origin);
-      const response = await fetch(apiUrl.toString());
+      const apiKey = getSignageApiKey();
+      if (apiKey) apiUrl.searchParams.set('signage_key', apiKey);
+
+      const response = await fetch(apiUrl.toString(), {
+        headers: {
+          'Accept': 'application/json',
+          ...(apiKey ? { 'X-SIGNAGE-KEY': apiKey } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Signage API error: ${response.status}`);
+      }
       const data = await response.json();
       setCars(data);
       setLoading(false);
