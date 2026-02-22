@@ -45,8 +45,8 @@ Route::get('/home', function () {
 });
 
 // Kiosk Mode (fullscreen TV dashboard)
-Route::get('kiosk', [KioskController::class, 'index'])->name('kiosk');
-Route::get('api/kiosk/events', [KioskController::class, 'events'])->name('api.kiosk.events');
+Route::get('kiosk', [KioskController::class, 'index'])->middleware(['auth'])->name('kiosk');
+Route::get('api/kiosk/events', [KioskController::class, 'events'])->middleware(['auth'])->name('api.kiosk.events');
 
 // === Grup ADMIN (prefix + name + middleware=auth)
 Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {

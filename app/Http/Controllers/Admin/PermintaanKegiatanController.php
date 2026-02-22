@@ -20,6 +20,18 @@ class PermintaanKegiatanController extends Controller
     private $operatorRuangIds    = [1, 24]; // Contoh: ID User Admin Sarpras
     private $operatorKonsumsiIds = [20];    // Contoh: ID User Admin Umum/Konsumsi
 
+
+    private function canManagePermintaan(PermintaanKegiatan $permintaan): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->isAdmin() || $user->id === (int) $permintaan->user_id || $user->id === (int) $permintaan->pic_user_id);
+    }
+
+    private function authorizePermintaanAccess(PermintaanKegiatan $permintaan): void
+    {
+        abort_unless($this->canManagePermintaan($permintaan), Response::HTTP_FORBIDDEN, '403 Forbidden');
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -42,10 +54,11 @@ class PermintaanKegiatanController extends Controller
             $table->addColumn('actions', '&nbsp;');
 
             $table->editColumn('nama_kegiatan', function ($row) {
-                $userName = $row->user->name ?? '-';
-                $createdHuman = $row->created_at->diffForHumans();
-                
-                return '<div class="kegiatan-title-cell">'.$row->nama_kegiatan.'</div>
+                $userName = e($row->user->name ?? '-');
+                $createdHuman = e($row->created_at->diffForHumans());
+                $namaKegiatan = e($row->nama_kegiatan ?? '-');
+
+                return '<div class="kegiatan-title-cell">'.$namaKegiatan.'</div>
                         <div class="d-flex align-items-center mt-1">
                             <div class="user-avatar bg-secondary text-white d-flex justify-content-center align-items-center rounded-circle me-2" style="width:20px;height:20px;font-size:10px;">
                                 <i class="fas fa-user"></i>
@@ -65,7 +78,7 @@ class PermintaanKegiatanController extends Controller
 
             $table->editColumn('status_ruang', function ($row) {
                 if ($row->status_ruang == 'selesai') {
-                    $ruangNama = $row->kegiatan->ruangan->nama ?? '-';
+                    $ruangNama = e($row->kegiatan->ruangan->nama ?? '-');
                     return '<span class="badge-pill-modern badge-soft-secondary">'.$ruangNama.'</span>';
                 } elseif ($row->status_ruang == 'pending') {
                     return '<span class="badge-pill-modern badge-soft-warning">PENDING</span>';
@@ -167,9 +180,7 @@ class PermintaanKegiatanController extends Controller
     {
         $permintaan = PermintaanKegiatan::findOrFail($id);
 
-        if (auth()->user()->id !== $permintaan->user_id && !auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorizePermintaanAccess($permintaan);
 
         if ($permintaan->status_permintaan !== 'pending') {
             return redirect()->route('admin.permintaan-kegiatan.show', $id)
@@ -186,6 +197,7 @@ class PermintaanKegiatanController extends Controller
     public function update(StorePermintaanRequest $request, $id)
     {
         $permintaan = PermintaanKegiatan::findOrFail($id);
+        $this->authorizePermintaanAccess($permintaan);
 
         if ($permintaan->status_permintaan !== 'pending') {
             return back()->with('error', 'Permintaan sudah diproses, tidak bisa diubah.');
@@ -210,9 +222,7 @@ class PermintaanKegiatanController extends Controller
     {
         $permintaan = PermintaanKegiatan::findOrFail($id);
 
-        if (auth()->user()->id !== $permintaan->user_id && !auth()->user()->isAdmin()) {
-            abort(403);
-        }
+        $this->authorizePermintaanAccess($permintaan);
 
         if ($permintaan->status_permintaan !== 'pending') {
             return back()->with('error', 'Permintaan sudah diproses, tidak bisa dibatalkan.');
@@ -225,6 +235,7 @@ class PermintaanKegiatanController extends Controller
     public function show($id)
     {
         $permintaan = PermintaanKegiatan::with(['user', 'picUser', 'kegiatan.ruangan'])->findOrFail($id);
+        $this->authorizePermintaanAccess($permintaan);
         return view('admin.permintaan.show', compact('permintaan'));
     }
 
@@ -232,7 +243,9 @@ class PermintaanKegiatanController extends Controller
     public function prosesKonsumsi(Request $request, $id)
     {
         $permintaan = PermintaanKegiatan::findOrFail($id);
-        
+
+        abort_if(!auth()->user() || !auth()->user()->isAdmin(), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
         $permintaan->update([
             'status_konsumsi' => 'selesai',
         ]);

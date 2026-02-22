@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\SignageController;
 
 
-Route::group(['prefix' => 'v1', 'as' => 'api.'], function () {
+Route::group(['prefix' => 'v1', 'as' => 'api.', 'middleware' => ['auth:sanctum']], function () {
     Route::get('signage', [SignageController::class, 'index'])->name('signage.index');
     Route::get('signage/cars', [SignageController::class, 'getCars'])->name('signage.cars');
     Route::get('signage/requests', [SignageController::class, 'getPendingRequests'])->name('signage.requests');
