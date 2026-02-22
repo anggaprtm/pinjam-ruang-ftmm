@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FTMM Digital Signage</title>
+    <meta name="signage-api-key" content="{{ config('services.signage.key') }}">
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/Signage/index.tsx'])
 </head>

@@ -7,6 +7,8 @@ import CarStatusWidget from './components/CarStatusWidget'; // 1. IMPORT WIDGET
 import { AgendaItem, ApiResponse, Meeting } from './types';
 import PendingRequestsWidget from './components/PendingRequestsWidget';
 
+const getSignageApiKey = () => document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '';
+
 const App: React.FC = () => {
   // ... state lainnya tetap sama ...
   const [lectures, setLectures] = useState<AgendaItem[]>([]);
@@ -39,7 +41,19 @@ const App: React.FC = () => {
       if (lantai) apiUrl.searchParams.append('lantai', lantai);
       if (gedung) apiUrl.searchParams.append('gedung', gedung);
 
-      const response = await fetch(apiUrl.toString());
+      const apiKey = getSignageApiKey();
+      if (apiKey) apiUrl.searchParams.set('signage_key', apiKey);
+
+      const response = await fetch(apiUrl.toString(), {
+        headers: {
+          'Accept': 'application/json',
+          ...(apiKey ? { 'X-SIGNAGE-KEY': apiKey } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Signage API error: ${response.status}`);
+      }
       const data: ApiResponse = await response.json();
 
       setLectures(data.jadwal_kuliah_hari_ini);
