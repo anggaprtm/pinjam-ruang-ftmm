@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda Ruang Sidang</title>
+    <meta name="signage-api-key" content="{{ config('services.signage.key') }}">
 
     {{-- Font --}}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -237,6 +238,7 @@
     <script>
         const API_URL = "{{ route('api.signage.verticalData', ['room' => 'Lt. 10']) }}"; 
         const REFRESH_INTERVAL = 30000; 
+        const SIGNAGE_API_KEY = (document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '').trim();
 
         // JAM
 	function updateClock() {
@@ -265,11 +267,38 @@
         // FETCH DATA
         async function fetchSignageData() {
             try {
-                const response = await fetch(API_URL);
+                const url = new URL(API_URL, window.location.origin);
+                if (SIGNAGE_API_KEY) {
+                    url.searchParams.set('signage_key', SIGNAGE_API_KEY);
+                }
+
+                const response = await fetch(url.toString(), {
+                    headers: {
+                        'Accept': 'application/json',
+                        ...(SIGNAGE_API_KEY ? { 'X-SIGNAGE-KEY': SIGNAGE_API_KEY } : {}),
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Signage API error: ' + response.status);
+                }
+
+
                 const data = await response.json();
                 renderList(data);
             } catch (error) {
                 console.error("Gagal memuat data:", error);
+                const container = document.getElementById('list-container');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#fecaca; text-align:center;">
+                            <i class="fas fa-triangle-exclamation fa-2x" style="margin-bottom:12px;"></i>
+                            <p style="font-weight:700;">Gagal mengakses API signage</p>
+                            <p style="margin-top:6px; font-size:0.9rem; color:#fca5a5;">Cek SIGNAGE_API_KEY dan jalankan: php artisan optimize:clear</p>
+                        </div>
+                    `;
+                }
+
             }
         }
 
