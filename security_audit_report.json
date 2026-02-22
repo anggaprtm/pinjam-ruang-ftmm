@@ -1,0 +1,176 @@
+{
+  "vulnerabilities": [
+    {
+      "title": "Broken Access Control (IDOR) on Permintaan Kegiatan detail/update actions",
+      "type": "Broken Access Control / IDOR / BOLA",
+      "description": "Several controller actions fetch `PermintaanKegiatan` by ID but do not enforce ownership/role checks consistently, enabling authenticated users to access or modify other users' records.",
+      "affected_code": [
+        {
+          "file": "app/Http/Controllers/Admin/PermintaanKegiatanController.php",
+          "lines": "186-205",
+          "snippet": "$permintaan = PermintaanKegiatan::findOrFail($id); ... $permintaan->update($data);"
+        },
+        {
+          "file": "app/Http/Controllers/Admin/PermintaanKegiatanController.php",
+          "lines": "225-229",
+          "snippet": "$permintaan = PermintaanKegiatan::with([...])->findOrFail($id); return view(...);"
+        },
+        {
+          "file": "app/Http/Controllers/Admin/PermintaanKegiatanController.php",
+          "lines": "232-238",
+          "snippet": "$permintaan = PermintaanKegiatan::findOrFail($id); $permintaan->update(['status_konsumsi' => 'selesai']);"
+        }
+      ],
+      "severity": "High",
+      "owasp": "A01:2021 - Broken Access Control",
+      "poc": "Login as regular user A, then request `/admin/permintaan-kegiatan/{id}` with an ID owned by user B (or submit PATCH/POST to update/proses endpoints). Because no ownership/role check is present in those actions, unauthorized data disclosure/modification is possible.",
+      "remediation": [
+        "Add explicit authorization checks in every mutating/read action (policy or Gate).",
+        "Use route-model binding + policy methods (`view`, `update`, `delete`, custom `processConsumption`).",
+        "Return 403 on unauthorized access; do not rely on UI-level filtering only."
+      ],
+      "secure_rewrite": "public function show(PermintaanKegiatan $permintaan) { $this->authorize('view', $permintaan); return view('admin.permintaan.show', compact('permintaan')); }"
+    },
+    {
+      "title": "Missing authorization guard on room status toggle endpoint",
+      "type": "Broken Access Control",
+      "description": "`RuanganController::toggle` modifies room active state without Gate/policy authorization check, while route is only protected by `auth` middleware.",
+      "affected_code": [
+        {
+          "file": "app/Http/Controllers/Admin/RuanganController.php",
+          "lines": "213-220",
+          "snippet": "public function toggle($id) { $ruangan = Ruangan::findOrFail($id); $ruangan->is_active = !$ruangan->is_active; $ruangan->save(); }"
+        },
+        {
+          "file": "routes/web.php",
+          "lines": "88-90",
+          "snippet": "Route::patch('ruangan/{id}/toggle', [RuanganController::class, 'toggle'])->name('ruangan.toggle');"
+        }
+      ],
+      "severity": "High",
+      "owasp": "A01:2021 - Broken Access Control",
+      "poc": "Any authenticated low-privilege user can send PATCH `/admin/ruangan/{id}/toggle` and activate/deactivate rooms, impacting booking operations.",
+      "remediation": [
+        "Add `abort_if(Gate::denies('ruangan_edit'), 403);` or policy check in controller.",
+        "Add route middleware `can:ruangan_edit`.",
+        "Add feature tests asserting non-privileged users receive 403."
+      ],
+      "secure_rewrite": "Route::patch('ruangan/{id}/toggle', [RuanganController::class, 'toggle'])->middleware('can:ruangan_edit');"
+    },
+    {
+      "title": "Stored XSS risk in DataTables raw HTML rendering",
+      "type": "Cross-Site Scripting (Stored/Reflected in rendered table)",
+      "description": "User-controlled fields are concatenated directly into HTML for DataTables and marked as raw columns, bypassing Blade escaping.",
+      "affected_code": [
+        {
+          "file": "app/Http/Controllers/Admin/PermintaanKegiatanController.php",
+          "lines": "44-58",
+          "snippet": "return '<div class=\"kegiatan-title-cell\">'.$row->nama_kegiatan.'</div>...'.$userName...;"
+        },
+        {
+          "file": "app/Http/Controllers/Admin/PermintaanKegiatanController.php",
+          "lines": "120",
+          "snippet": "$table->rawColumns(['actions', 'placeholder', 'nama_kegiatan', ...]);"
+        }
+      ],
+      "severity": "High",
+      "owasp": "A03:2021 - Injection (XSS)",
+      "poc": "Submit `nama_kegiatan` as `<img src=x onerror=alert(document.domain)>` and open the listing page. The payload is rendered as HTML in the table.",
+      "remediation": [
+        "Escape dynamic output with `e()` before string concatenation, or avoid raw HTML concatenation.",
+        "Only use `rawColumns` for trusted static markup.",
+        "Add payload-based XSS regression tests for DataTables responses."
+      ],
+      "secure_rewrite": "$safeTitle = e($row->nama_kegiatan); return '<div class=\"kegiatan-title-cell\">'.$safeTitle.'</div>';"
+    },
+    {
+      "title": "Unauthenticated API endpoints expose operational and personal data",
+      "type": "Sensitive Data Exposure / API Security Misconfiguration",
+      "description": "Public API routes under `/api/v1/signage*` are unauthenticated and return internal data (requester name, participant count, driver/trip details, event metadata).",
+      "affected_code": [
+        {
+          "file": "routes/api.php",
+          "lines": "6-11",
+          "snippet": "Route::get('signage', ...); Route::get('signage/cars', ...); Route::get('signage/requests', ...);"
+        },
+        {
+          "file": "app/Http/Controllers/Api/SignageController.php",
+          "lines": "166-216",
+          "snippet": "getCars()/getPendingRequests() return driver names, tujuan, keperluan, pemohon, jumlah_peserta"
+        },
+        {
+          "file": "routes/web.php",
+          "lines": "47-48",
+          "snippet": "Route::get('kiosk'...); Route::get('api/kiosk/events'...); // no auth middleware"
+        }
+      ],
+      "severity": "Medium",
+      "owasp": "A01:2021 Broken Access Control / A05:2021 Security Misconfiguration",
+      "poc": "Anonymous users can call `/api/v1/signage/requests` or `/api/kiosk/events` directly and harvest scheduling/request data.",
+      "remediation": [
+        "Require authentication (Sanctum/API key) for non-public data.",
+        "Minimize returned fields for public signage endpoints.",
+        "Apply rate limiting and monitoring for scraping abuse."
+      ],
+      "secure_rewrite": "Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () { ... });"
+    },
+    {
+      "title": "Mass-assignment overexposure in PermintaanKegiatan model",
+      "type": "Mass Assignment",
+      "description": "Model uses `protected $guarded = ['id'];`, allowing nearly all attributes to be mass-assigned if controller validation is bypassed or future code uses `$request->all()` with create/update.",
+      "affected_code": [
+        {
+          "file": "app/Models/PermintaanKegiatan.php",
+          "lines": "14",
+          "snippet": "protected $guarded = ['id'];"
+        }
+      ],
+      "severity": "Medium",
+      "owasp": "A04:2021 - Insecure Design",
+      "poc": "If a future endpoint directly updates model from request, attacker can inject sensitive fields (e.g., `status_permintaan`, `user_id`, approval flags).",
+      "remediation": [
+        "Replace `guarded` with explicit `$fillable` allowlist.",
+        "Use DTO/FormRequest validated data only.",
+        "Add tests to ensure sensitive columns cannot be client-controlled."
+      ],
+      "secure_rewrite": "protected $fillable = ['pic_user_id','nama_kegiatan','jenis_kegiatan','tanggal_kegiatan','waktu_mulai','waktu_selesai','jumlah_peserta','lampiran','request_ruang','request_konsumsi','waktu_konsumsi','catatan_konsumsi'];"
+    },
+    {
+      "title": "Session cookie secure flag not enforced by default",
+      "type": "Session Management Weakness",
+      "description": "Session cookie `secure` depends on env and defaults to null, which may permit transmission over HTTP in misconfigured deployments.",
+      "affected_code": [
+        {
+          "file": "config/session.php",
+          "lines": "171",
+          "snippet": "'secure' => env('SESSION_SECURE_COOKIE'),"
+        }
+      ],
+      "severity": "Low",
+      "owasp": "A07:2021 - Identification and Authentication Failures",
+      "poc": "If deployed behind HTTP or missing env hardening, session cookies may be sent without `Secure` attribute and become interceptable on insecure transport.",
+      "remediation": [
+        "Set `SESSION_SECURE_COOKIE=true` in production.",
+        "Enforce HTTPS + HSTS.",
+        "Add deployment checks for cookie flags (`Secure`, `HttpOnly`, `SameSite`)."
+      ],
+      "secure_rewrite": "'secure' => env('SESSION_SECURE_COOKIE', true),"
+    }
+  ],
+  "summary": {
+    "total_findings": 6,
+    "critical": 0,
+    "high": 3,
+    "medium": 2,
+    "low": 1,
+    "notes": "Primary risks are broken access control and XSS in admin workflows; API data exposure is also significant for privacy/operations."
+  },
+  "recommendations": [
+    "Adopt Laravel Policies for PermintaanKegiatan/Ruangan and enforce via route middleware.",
+    "Eliminate raw HTML concatenation or strictly escape user input before `rawColumns` rendering.",
+    "Harden public APIs: authentication, response minimization, and rate-limits.",
+    "Move to explicit `$fillable` model allowlists across domain models.",
+    "Create automated security regression tests (authorization + XSS payload tests).",
+    "Add secure deployment baseline: `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, HTTPS-only, and periodic secret rotation."
+  ]
+}
