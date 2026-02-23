@@ -34,6 +34,13 @@ class PermintaanKegiatan extends Model
         'kegiatan_id',
     ];
 
+    protected $casts = [
+        'tanggal_kegiatan' => 'date',
+        'waktu_mulai' => 'datetime:H:i',
+        'waktu_selesai' => 'datetime:H:i',
+    ];
+
+
     protected $dates = [
         'tanggal_kegiatan',
         'created_at',
