@@ -126,6 +126,7 @@
                         @endif
                     </div>
 
+                    @if(auth()->user()->isAdmin())
                         <div class="form-group mb-3">
                             <label class="required" for="user_id">Peminjam</label>
                             <select class="form-control select2 {{ $errors->has('user_id') ? 'is-invalid' : '' }}" name="user_id" id="user_id" required>
@@ -142,6 +143,7 @@
                                 <div class="invalid-feedback">{{ $errors->first('user_id') }}</div>
                             @endif
                         </div>
+                    @endif
                     <div class="form-group mb-3">
                         <label for="poster" class="form-label">Poster Kegiatan (Opsional):</label>
 
