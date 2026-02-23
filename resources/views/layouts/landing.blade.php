@@ -131,6 +131,7 @@
             margin-bottom: 15px; transition: 0.2s;
             text-decoration: none;
         }
+        
         .sop-card:hover { background: #eef6ff; transform: translateX(5px); }
     </style>
 </head>
@@ -144,7 +145,7 @@
             </a>
             <div class="ms-auto">
                 @auth
-                    <a href="{{ route('admin.home') }}" class="btn btn-outline-primary btn-sm rounded-pill">
+                    <a href="{{ route('admin.home') }}" class="btn btn-primary-custom btn-sm shadow-sm">
                         <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                     </a>
                 @else
