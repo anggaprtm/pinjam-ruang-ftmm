@@ -10,7 +10,7 @@
         {{-- JUDUL UTAMA --}}
         <div class="text-center mb-5">
             <h1 class="display-4 fw-bold mb-3">Layanan Sarpras FTMM</h1>
-            <p class="lead mb-0" style="opacity: 0.9;">Portal Peminjaman Ruangan, Barang, & Logistik Terpadu</p>
+            <p class="lead mb-0" style="opacity: 0.9;">Portal Layanan Sarana Prasarana Terpadu Fakultas Teknologi Maju dan Multidisiplin</p>
         </div>
 
         {{-- SHORTCUT MENU (PINDAH KESINI) --}}
@@ -34,7 +34,7 @@
                 </a>
             </div>
 
-            {{-- 3. Layanan Konsumsi --}}
+            <!-- {{-- 3. Layanan Konsumsi --}}
             <div class="col-6 col-md-4">
                 <a href="{{ route('login') }}" class="service-card">
                     <div class="service-icon"><i class="fas fa-utensils"></i></div>
@@ -68,7 +68,7 @@
                     <h5 class="service-title">Lost & Found</h5>
                     <p class="service-desc d-none d-md-block">Portal barang temuan dan hilang.</p>
                 </a>
-            </div>
+            </div> -->
 
         </div>
 
