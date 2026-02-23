@@ -52,7 +52,7 @@
                 @if($errors->has('foto'))
                     <div class="invalid-feedback">{{ $errors->first('foto') }}</div>
                 @endif
-                <span class="help-block">{{ trans('cruds.ruangan.fields.foto_helper') }}</span>
+                <span class="help-block">JPG., PNG., Maksimal Ukuran 2MB</span>
             </div>
             <div class="form-group">
                 <button class="btn btn-danger" type="submit">
