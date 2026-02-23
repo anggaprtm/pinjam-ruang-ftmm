@@ -21,11 +21,6 @@ class StatisticsController extends Controller
 
     public function index(Request $request)
     {
-        // Hanya Admin saja yang boleh mengakses
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
         // Preset handling: preset=this_month | all_time | custom (start/end)
         $preset = $request->query('preset');
         $rawStart = $request->query('start');
@@ -96,8 +91,6 @@ class StatisticsController extends Controller
 
         // Trend peminjaman per hari
         $trendCacheKey = $this->safeCacheKey('stats:trendDaily', $startDateTime, $endDateTime);
-
-
         $trendDaily = Cache::remember($trendCacheKey, now()->addMinutes(5), function () use ($startDateTime, $endDateTime) {
             $q = DB::table('kegiatan')
                 ->select(DB::raw("DATE(waktu_mulai) as tanggal"), DB::raw("COUNT(*) as total"))
