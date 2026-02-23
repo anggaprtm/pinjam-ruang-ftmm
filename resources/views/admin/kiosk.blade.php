@@ -236,125 +236,164 @@
 
     {{-- JAVASCRIPT --}}
     <script>
-        const API_URL = "{{ route('api.signage.verticalData', [
-            'signage_key' => config('services.signage.key')
-        ]) }}";
+    /* =========================================================
+    CONFIG
+    ========================================================= */
+    var API_URL = "{{ route('api.signage.verticalData', [
+        'signage_key' => config('services.signage.key')
+    ]) }}";
 
-        const REFRESH_INTERVAL = 30000; 
-        const SIGNAGE_API_KEY = (document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '').trim();
+    var REFRESH_INTERVAL = 30000;
 
-        // JAM
-	function updateClock() {
-            var now = new Date();
-            
-            // Teknik '0' + angka lalu slice(-2) adalah cara paling aman di browser lama
-            var h = ('0' + now.getHours()).slice(-2);
-            var m = ('0' + now.getMinutes()).slice(-2);
-            var s = ('0' + now.getSeconds()).slice(-2);
-            var timeStr = h + ':' + m + ':' + s;
+    /* =========================================================
+    CLOCK (TV SAFE)
+    ========================================================= */
+    function updateClock() {
+        var now = new Date();
 
-            var dateStr = now.toLocaleDateString('id-ID', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-            });
-            
-            document.getElementById('clock-time').innerText = timeStr;
-            document.getElementById('clock-date').innerText = dateStr;
+        var h = ('0' + now.getHours()).slice(-2);
+        var m = ('0' + now.getMinutes()).slice(-2);
+        var s = ('0' + now.getSeconds()).slice(-2);
+
+        var clockTime = document.getElementById('clock-time');
+        if (clockTime) {
+            clockTime.innerHTML = h + ':' + m + ':' + s;
         }
 
-        setInterval(updateClock, 1000);
-        updateClock();
+        var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        var months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-        // FETCH DATA
-        async function fetchSignageData() {
-            try {
-                const response = await fetch(API_URL, {
-                    headers: {
-                        'Accept': 'application/json'
+        var dateStr =
+            days[now.getDay()] + ', ' +
+            now.getDate() + ' ' +
+            months[now.getMonth()] + ' ' +
+            now.getFullYear();
+
+        var clockDate = document.getElementById('clock-date');
+        if (clockDate) {
+            clockDate.innerHTML = dateStr;
+        }
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* =========================================================
+    FETCH DATA (XMLHttpRequest - TV SAFE)
+    ========================================================= */
+    function fetchSignageData() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', API_URL, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText);
+                        renderList(data);
+                    } catch (e) {
+                        showError('Format data tidak valid');
                     }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Signage API error: ' + response.status);
+                } else {
+                    showError('API error (' + xhr.status + ')');
                 }
-
-                const data = await response.json();
-                renderList(data);
-            } catch (error) {
-                console.error("Gagal memuat data:", error);
             }
+        };
+
+        xhr.onerror = function () {
+            showError('Gagal menghubungi server');
+        };
+
+        xhr.send();
+    }
+
+    /* =========================================================
+    RENDER LIST
+    ========================================================= */
+    function renderList(data) {
+        var container = document.getElementById('list-container');
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.4);text-align:center;">' +
+                    '<i class="fas fa-mug-hot fa-4x" style="margin-bottom:20px;opacity:0.6;"></i>' +
+                    '<p style="font-size:1.5rem;font-weight:700;color:white;">RUANGAN KOSONG</p>' +
+                    '<p style="margin-top:5px;">Tidak ada agenda terdekat</p>' +
+                '</div>';
+            return;
         }
 
+        var html = '';
+        var limit = data.length > 7 ? 7 : data.length;
 
-        // RENDER
-        function renderList(data) {
-            const container = document.getElementById('list-container');
-            
-            if (data.length === 0) {
-                container.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: rgba(255,255,255,0.4); text-align: center;">
-                        <i class="fas fa-mug-hot fa-4x" style="margin-bottom: 20px; opacity: 0.6;"></i>
-                        <p style="font-size: 1.5rem; font-weight: 700; color: white;">RUANGAN KOSONG</p>
-                        <p style="margin-top: 5px;">Tidak ada agenda terdekat</p>
-                    </div>
-                `;
-                return;
+        for (var i = 0; i < limit; i++) {
+            var item = data[i];
+
+            var dateFlag = item.date_flag ? item.date_flag : 'future';
+            var cardClass = 'card-' + dateFlag;
+            var badgeClass = 'badge-' + dateFlag;
+
+            var statusClass = 'status-reserved';
+            if (item.status && item.status.toLowerCase() === 'occupied') {
+                statusClass = 'status-occupied';
+            } else if (item.status && item.status.toLowerCase() === 'finished') {
+                statusClass = 'status-finished';
             }
 
-            // Batasi 5 item
-            const limitedData = data.slice(0, 7);
+            var statusText = item.status || '';
+            if (statusText === 'Occupied') statusText = '● BERLANGSUNG';
+            else if (statusText === 'Reserved') statusText = 'DIJADWALKAN';
+            else if (statusText === 'Finished') statusText = '✔ SELESAI';
 
-            const itemsHtml = limitedData.map(item => {
-                let statusClass = 'status-reserved';
-                let cardColorClass = 'card-' + (item.date_flag || 'future'); 
-                let badgeColorClass = 'badge-' + (item.date_flag || 'future');
+            var title = item.title ? item.title : '(Tanpa Judul)';
+            var time = item.time ? item.time : '--:--';
 
-                if ((item.status || "").toLowerCase() === 'occupied') statusClass = 'status-occupied';
-                if ((item.status || "").toLowerCase() === 'finished') statusClass = 'status-finished';
+            html +=
+                '<div class="event-card ' + cardClass + '">' +
+                    '<div class="card-top">' +
+                        '<div class="date-badge ' + badgeClass + '">' +
+                            (item.date_label || 'AGENDA') +
+                        '</div>' +
+                        '<span class="status-badge ' + statusClass + '">' +
+                            statusText +
+                        '</span>' +
+                    '</div>' +
 
-                // Fallback jika judul kosong
-                const titleText = item.title ? item.title : '(Tanpa Judul)';
+                    '<div class="card-title">' + title + '</div>' +
 
-                return `
-                <div class="event-card ${cardColorClass}">
-                    
-                    <div class="card-top">
-                        <div class="date-badge ${badgeColorClass}">
-                            ${item.date_label || 'AGENDA'}
-                        </div>
-                        <span class="status-badge ${statusClass}">
-                            ${item.status === 'Occupied'
-                                ? '● BERLANGSUNG'
-                                : item.status === 'Reserved'
-                                    ? 'DIJADWALKAN'
-                                    : item.status === 'Finished'
-                                        ? '✔ SELESAI'
-                                        : item.status
-                            }
-                        </span>
-                    </div>
-
-                    <div class="card-title">
-                        ${titleText}
-                    </div>
-
-                    <div class="card-bottom">
-                        <div class="time-display">
-                            <i class="far fa-clock"></i> ${item.time}
-                        </div>
-                    </div>
-
-                </div>
-                `;
-            }).join('');
-
-            container.innerHTML = itemsHtml;
+                    '<div class="card-bottom">' +
+                        '<div class="time-display">' +
+                            '<i class="far fa-clock"></i> ' + time +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
         }
 
-        fetchSignageData();
-        setInterval(fetchSignageData, REFRESH_INTERVAL);
+        container.innerHTML = html;
+    }
+
+    /* =========================================================
+    ERROR HANDLER
+    ========================================================= */
+    function showError(msg) {
+        var container = document.getElementById('list-container');
+        if (!container) return;
+
+        container.innerHTML =
+            '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#fecaca;text-align:center;">' +
+                '<i class="fas fa-triangle-exclamation fa-2x" style="margin-bottom:12px;"></i>' +
+                '<p style="font-weight:700;">' + msg + '</p>' +
+            '</div>';
+    }
+
+    /* =========================================================
+    INIT
+    ========================================================= */
+    fetchSignageData();
+    setInterval(fetchSignageData, REFRESH_INTERVAL);
     </script>
+
 </body>
 </html>
