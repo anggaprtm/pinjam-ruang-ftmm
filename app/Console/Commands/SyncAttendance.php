@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Symfony\Component\DomCrawler\Crawler;
 use App\Models\User;
 use App\Models\AbsensiLog;
+use App\Models\PeriodeJamKerja; // Jangan lupa import model ini
 use Carbon\Carbon;
 
 class SyncAttendance extends Command
@@ -24,9 +25,32 @@ class SyncAttendance extends Command
         $tahun = $targetDate->year;
         $bulan = $targetDate->format('m'); 
 
-        // Format Pencarian di Tabel (Sesuai Screenshot: 02-02-2026)
+        // Format Pencarian di Tabel
         $hariCari = $targetDate->format('d-m-Y');
         $tanggalDB = $targetDate->format('Y-m-d'); 
+
+        // ==========================================================
+        // 2. LOGIKA JADWAL DINAMIS (PENENTUAN BATAS JAM)
+        // ==========================================================
+        // Cari jadwal aktif di rentang tanggal sinkronisasi
+        $jadwalKerja = PeriodeJamKerja::whereDate('tanggal_mulai', '<=', $tanggalDB)
+            ->whereDate('tanggal_selesai', '>=', $tanggalDB)
+            ->first();
+
+        $isFriday = $targetDate->isFriday();
+
+        // Jika jadwal di DB ditemukan, pakai jadwal tersebut.
+        // JIKA TIDAK (belum diset), pakai nilai fallback di bawah ini:
+        $jamMasukLimit = $jadwalKerja ? \Carbon\Carbon::parse($jadwalKerja->jam_masuk)->format('H:i') : '08:00';
+
+        if ($jadwalKerja) {
+            $jamKeluarLimit = $isFriday 
+                ? \Carbon\Carbon::parse($jadwalKerja->jam_pulang_jumat)->format('H:i') 
+                : \Carbon\Carbon::parse($jadwalKerja->jam_pulang_senin_kamis)->format('H:i');
+        } else {
+            // FALLBACK REGULER (Senin-Kamis 16:30, Jumat 17:00)
+            $jamKeluarLimit = $isFriday ? '17:00' : '16:30'; 
+        }
 
         $users = User::with('roles')
             ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
@@ -34,11 +58,14 @@ class SyncAttendance extends Command
             ->get();
 
         $this->info("🔄 Sync Target: {$hariCari} (Bulan: $bulan)");
+        if ($jadwalKerja) {
+            $this->info("📅 Menggunakan Periode: {$jadwalKerja->nama_periode}");
+        } else {
+            $this->info("⚠️ Periode khusus tidak ditemukan. Menggunakan Jam Reguler Default.");
+        }
         
         $bar = $this->output->createProgressBar($users->count());
         $bar->start();
-
-        $jamMasukLimit = '08:00'; 
 
         foreach ($users as $user) {
             if (strlen($user->nip) < 5) {
@@ -53,51 +80,41 @@ class SyncAttendance extends Command
 
                 if ($response->successful()) {
                     $crawler = new Crawler($response->body());
-
-                    // --- LOGIC BARU: LOOPING BARIS TABEL ---
-                    // Kita cari manual baris yg kolom pertamanya == $hariCari
                     $foundNode = null;
 
                     $crawler->filter('table tr')->each(function (Crawler $node) use ($hariCari, &$foundNode) {
-                        // Pastikan baris ini punya minimal 9 kolom (biar gak error pas ambil index 8)
                         if ($node->filter('td')->count() > 8) {
-                            // Ambil teks di kolom pertama (Tanggal)
                             $tanggalDiTabel = trim($node->filter('td')->eq(0)->text());
-                            
-                            // Bandingkan persis!
                             if ($tanggalDiTabel === $hariCari) {
                                 $foundNode = $node;
-                                return false; // Stop looping (break)
+                                return false; 
                             }
                         }
                     });
 
                     if ($foundNode) {
-                        // Ambil Data (Index 5 & 8 sesuai screenshot)
                         $scanMasuk = trim($foundNode->filter('td')->eq(5)->text());
                         $scanKeluar = trim($foundNode->filter('td')->eq(8)->text());
 
-                        // Bersihkan data jika isinya cuma strip "-" atau kosong
                         $scanMasuk = ($scanMasuk === '-' || $scanMasuk === '') ? null : $scanMasuk;
                         $scanKeluar = ($scanKeluar === '-' || $scanKeluar === '') ? null : $scanKeluar;
 
-                        // Tentukan Status
                         $statusKehadiran = 'alpha';
                         
-                        // Jika ada scan masuk
                         if ($scanMasuk) {
                             $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
                         }
-                        // Jika Hari Libur (biasanya baris ada, tapi isinya - semua)
-                        // Cek kolom "Keterangan" atau "Status" (Index 11) jika perlu, tapi logic di atas cukup.
 
+                        // SIMPAN SNAPSHOT BATAS JAM KE DALAM LOG
                         AbsensiLog::updateOrCreate(
                             ['user_id' => $user->id, 'tanggal' => $tanggalDB],
                             [
-                                'jam_masuk'  => $scanMasuk,
-                                'jam_keluar' => $scanKeluar,
-                                'status'     => $statusKehadiran,
-                                'updated_at' => now(),
+                                'jam_masuk'        => $scanMasuk,
+                                'jam_keluar'       => $scanKeluar,
+                                'batas_jam_masuk'  => $jamMasukLimit,
+                                'batas_jam_keluar' => $jamKeluarLimit,
+                                'status'           => $statusKehadiran,
+                                'updated_at'       => now(),
                             ]
                         );
                     }
@@ -106,7 +123,7 @@ class SyncAttendance extends Command
                 // Silent fail
             }
             
-            usleep(100000); // Jeda 0.1 detik
+            usleep(100000); 
             $bar->advance();
         }
 

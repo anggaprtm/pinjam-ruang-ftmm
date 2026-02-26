@@ -83,6 +83,11 @@
                 <i class="fas fa-calendar-times me-2"></i> Atur Libur
             </a>
 
+            {{-- TOMBOL AKSES KE CRUD PERIODE JAM KERJA --}}
+            <a href="{{ route('admin.periode-jam-kerja.index') }}" class="btn btn-outline-success fw-bold shadow-sm d-flex align-items-center" style="border-radius: 10px;">
+                <i class="fas fa-clock me-2"></i> Atur Jadwal
+            </a>
+
             {{-- FORM FILTER TANGGAL --}}
             <form action="{{ route('admin.absensi.index') }}" method="GET">
                 <div class="input-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
@@ -129,7 +134,7 @@
         <div>
             <h6 class="alert-heading fw-bold mb-0 text-danger">Perhatian!</h6>
             <p class="mb-0 text-dark small">
-                Terdapat <b>{{ $stats['pulang_awal'] }} Pegawai</b> yang terdeteksi pulang sebelum jam {{ $batasPulang }}. Cek tabel di bawah untuk detail.
+                Terdapat <b>{{ $stats['pulang_awal'] }} Pegawai</b> yang terdeteksi pulang sebelum jam batas jadwalnya. Cek tabel di bawah untuk detail.
             </p>
         </div>
     </div>
@@ -190,14 +195,18 @@
                                     @php
                                         // Ambil log hari ini (bisa null jika belum scan sama sekali)
                                         $log = $pegawai->absensiLogs->first();
-                                        
+    
                                         // Default Values
                                         $jamMasuk  = $log->jam_masuk ?? '-';
                                         $jamKeluar = $log->jam_keluar ?? '-';
                                         $status    = $log->status ?? 'alpha'; 
                                         
-                                        // Cek Pulang Awal
-                                        $isPulangAwal = ($jamKeluar !== '-' && $jamKeluar < $batasPulang);
+                                        // AMBIL BATAS PULANG DARI DATABASE (SNAPSHOT)
+                                        // Jika data lama belum punya batas_jam_keluar, kita kasih fallback jam reguler
+                                        $batasPulangDb = $log->batas_jam_keluar ?? (\Carbon\Carbon::parse($tanggal)->isFriday() ? '17:00' : '16:30');
+
+                                        // Cek Pulang Awal menggunakan $batasPulangDb
+                                        $isPulangAwal = ($jamKeluar !== '-' && $jamKeluar < $batasPulangDb);
 
                                         // Hitung Durasi Kerja
                                         $durasiKerja = '-';
