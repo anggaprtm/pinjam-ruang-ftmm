@@ -19,12 +19,12 @@
                 <table class="table table-bordered align-middle">
                     <thead class="bg-light">
                         <tr>
-                            <th>Nama Periode</th>
-                            <th>Tanggal Berlaku</th>
-                            <th>Jam Masuk</th>
-                            <th>Pulang (Senin-Kamis)</th>
-                            <th>Pulang (Jumat)</th>
-                            <th class="text-center">Aksi</th>
+                            <th class="text-dark">Nama Periode</th>
+                            <th class="text-dark">Tanggal Berlaku</th>
+                            <th class="text-dark">Jam Masuk</th>
+                            <th class="text-dark">Pulang (Senin-Kamis)</th>
+                            <th class="text-dark">Pulang (Jumat)</th>
+                            <th class="text-dark text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
