@@ -106,6 +106,10 @@ class User extends Authenticatable
         return $this->hasMany(AbsensiLog::class, 'user_id', 'id');
     }
 
+    public function dosenDetail()
+    {
+        return $this->hasOne(DosenDetail::class, 'user_id');
+    }
 
     // public function isAdmin()
     // {
