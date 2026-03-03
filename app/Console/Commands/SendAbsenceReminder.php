@@ -85,13 +85,13 @@ class SendAbsenceReminder extends Command
         }
 
         $users = User::with('roles')
-            ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
+            ->whereHas('roles', fn($q) => $q->where('title', $targetRoles))
             ->whereNotNull('telegram_chat_id')
             ->where('telegram_chat_id', '!=', '')
             ->whereNotNull('nip')
             ->get();
 
-        $this->info("🚀 Menjalankan Reminder tipe: [{$tipe}] untuk " . $users->count() . " Pegawai...");
+        $this->info("🚀 Menjalankan Reminder tipe: [{$tipe}] untuk " . $users->count() . " User...");
         if ($jadwalKerja) {
             $this->info("📅 Menggunakan Periode: {$jadwalKerja->nama_periode} (Masuk: $jamMasukLimit, Pulang: $batasJamPulang)");
         } else {

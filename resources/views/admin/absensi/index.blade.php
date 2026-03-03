@@ -361,6 +361,20 @@
                                                         </span>
                                                     @endif
                                                     
+                                                    {{-- Notif Siang Dosen (Belum Absen) --}}
+                                                    @if(isset($notifHistory['siang_dosen_belum']))
+                                                        <span class="badge rounded-pill bg-danger" title="Peringatan Belum Absen Siang jam {{ $notifHistory['siang_dosen_belum'] }}">
+                                                            <i class="fas fa-exclamation-circle"></i> Siang (Belum)
+                                                        </span>
+                                                    @endif
+
+                                                    {{-- Notif Siang Dosen (Sudah Absen) --}}
+                                                    @if(isset($notifHistory['siang_dosen_sudah']))
+                                                        <span class="badge rounded-pill bg-success" title="Info Sudah Absen Siang dikirim jam {{ $notifHistory['siang_dosen_sudah'] }}">
+                                                            <i class="fas fa-check-circle"></i> Siang (OK)
+                                                        </span>
+                                                    @endif
+                                                    
                                                     {{-- Jika Telegram ada tapi belum ada notif apa2 --}}
                                                     @if(empty($notifHistory))
                                                         <small class="text-muted ms-1" style="font-size: 0.7rem;">Standby</small>
