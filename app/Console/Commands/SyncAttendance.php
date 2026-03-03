@@ -52,8 +52,8 @@ class SyncAttendance extends Command
             $jamKeluarLimit = $isFriday ? '17:00' : '16:30'; 
         }
 
-        $users = User::with('roles')
-            ->whereHas('roles', fn($q) => $q->whereIn('title', ['Pegawai', 'Dosen'])) // Tarik Keduanya
+        $users = User::with(['roles', 'dosenDetail'])
+            ->whereHas('roles', fn($q) => $q->whereIn('title', ['Pegawai', 'Dosen']))
             ->whereNotNull('nip')
             ->get();
 
@@ -71,6 +71,16 @@ class SyncAttendance extends Command
             if (strlen($user->nip) < 5) {
                 $bar->advance();
                 continue;
+            }
+
+            $isDosen = $user->roles->contains('title', 'Dosen');
+            if ($isDosen) {
+                $statusKeaktifan = $user->dosenDetail->status_keaktifan ?? 'Aktif';
+                if ($statusKeaktifan !== 'Aktif') {
+                    // Skip sinkronisasi untuk dosen ini
+                    $bar->advance();
+                    continue; 
+                }
             }
 
             $url = "https://infoabsen.unair.ac.id/absen/api_absen_8.php?nip={$user->nip}&tahun={$tahun}&bulan={$bulan}";

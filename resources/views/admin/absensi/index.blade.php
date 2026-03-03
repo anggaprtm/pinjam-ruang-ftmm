@@ -283,18 +283,29 @@
                                         
                                         {{-- PENYESUAIAN KOLOM BERDASARKAN ROLE --}}
                                         @if($roleFilter === 'Dosen')
+                                            @php
+                                                // Ambil status keaktifan khusus dosen
+                                                $statusKeaktifan = $pegawai->dosenDetail->status_keaktifan ?? 'Aktif';
+                                            @endphp
+
                                             {{-- TAMPILAN KHUSUS DOSEN --}}
                                             <td class="text-center fw-bold text-dark">
-                                                {{ $jamMasuk }}
+                                                {{ $statusKeaktifan === 'Aktif' ? $jamMasuk : '-' }}
                                             </td>
                                             <td class="text-center">
-                                                @if($jamMasuk !== '-')
-                                                    <span class="badge bg-success rounded-pill">Sudah Absen</span>
+                                                @if($statusKeaktifan !== 'Aktif')
+                                                    {{-- Jika Tugas Belajar, Cuti, Pensiun --}}
+                                                    <span class="badge bg-info rounded-pill px-3">{{ $statusKeaktifan }}</span>
                                                 @else
-                                                    <span class="badge bg-secondary rounded-pill">Belum Absen</span>
+                                                    {{-- Jika Aktif Mengajar --}}
+                                                    @if($jamMasuk !== '-')
+                                                        <span class="badge bg-success rounded-pill">Sudah Absen</span>
+                                                    @else
+                                                        <span class="badge bg-secondary rounded-pill">Belum Absen</span>
+                                                    @endif
                                                 @endif
                                             </td>
-                                        @else
+                                            
                                             {{-- TAMPILAN KHUSUS TENDIK (PEGAWAI) --}}
                                             <td class="text-center fw-bold {{ $status == 'terlambat' ? 'text-danger' : 'text-dark' }}">
                                                 <div>{{ $jamMasuk }}</div>

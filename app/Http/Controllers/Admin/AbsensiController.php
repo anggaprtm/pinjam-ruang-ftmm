@@ -69,8 +69,8 @@ class AbsensiController extends Controller
         // Eksekusi query dengan meload relasi absensi hari tersebut
         $pegawais = $query->with(['absensiLogs' => function($query) use ($tanggal) {
                 $query->whereDate('tanggal', $tanggal);
-            }])
-            ->orderBy('name', 'asc') // Urutkan nama A-Z
+            }, 'dosenDetail'])
+            ->orderBy('name', 'asc')
             ->get();
 
         // 2. LEADERBOARD TELAT (Bulan Berjalan)

@@ -84,8 +84,8 @@ class SendAbsenceReminder extends Command
             $targetRoles = ['Dosen']; // Siang eksklusif untuk dosen
         }
 
-        $users = User::with('roles')
-            ->whereHas('roles', fn($q) => $q->where('title', $targetRoles))
+        $users = User::with(['roles', 'dosenDetail']) // Tambahkan relasi dosenDetail
+            ->whereHas('roles', fn($q) => $q->whereIn('title', $targetRoles))
             ->whereNotNull('telegram_chat_id')
             ->where('telegram_chat_id', '!=', '')
             ->whereNotNull('nip')
@@ -100,6 +100,15 @@ class SendAbsenceReminder extends Command
 
         foreach ($users as $user) {
             $this->info("Processing: {$user->name}...");
+
+            $isDosen = $user->roles->contains('title', 'Dosen');
+            if ($isDosen) {
+                $statusKeaktifan = $user->dosenDetail->status_keaktifan ?? 'Aktif';
+                if ($statusKeaktifan !== 'Aktif') {
+                    $this->warn("   -> Di-skip (Status: {$statusKeaktifan})");
+                    continue; 
+                }
+            }
 
             // LOGIC 1: REMINDER PAGI
             if ($tipe === 'pagi') {
