@@ -26,6 +26,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\AbsensiController;
 use App\Http\Controllers\Admin\BotSettingController;
 use App\Http\Controllers\Admin\PeriodeJamKerjaController;
+use App\Http\Controllers\Admin\DosenController;
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -127,6 +128,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('bot-setting', [BotSettingController::class, 'index'])->name('bot-setting.index');
     Route::post('bot-setting', [BotSettingController::class, 'update'])->name('bot-setting.update');
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
+
+    Route::resource('dosen', DosenController::class);
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
