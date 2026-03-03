@@ -132,4 +132,16 @@
                 </div>
 
                 <div class="detail-item mb-3 d-flex align-items-start">
-                    <div class="icon text-success me-3 mt-1"><i class="fas
+                    <div class="icon text-success me-3 mt-1"><i class="fas fa-calendar-check fa-lg"></i></div>
+                    <div class="content">
+                        <div class="label text-muted small fw-bold text-uppercase">Tgl. Mulai Menjadi Dosen</div>
+                        <div class="value">
+                            {{ $dosen->dosenDetail->tgl_mulai_dosen ? \Carbon\Carbon::parse($dosen->dosenDetail->tgl_mulai_dosen)->translatedFormat('d F Y') : '-' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
