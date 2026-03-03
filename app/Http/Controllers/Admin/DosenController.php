@@ -105,6 +105,13 @@ class DosenController extends Controller
         }
     }
 
+    public function show(User $dosen)
+    {
+        // Load relasi detail dosen
+        $dosen->load('dosenDetail');
+        return view('admin.dosen.show', compact('dosen'));
+    }
+
     public function destroy(User $dosen)
     {
         // Fitur hapus (Otomatis menghapus dosenDetail karena onDelete cascade di database)
