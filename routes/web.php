@@ -27,6 +27,8 @@ use App\Http\Controllers\Admin\AbsensiController;
 use App\Http\Controllers\Admin\BotSettingController;
 use App\Http\Controllers\Admin\PeriodeJamKerjaController;
 use App\Http\Controllers\Admin\DosenController;
+use App\Http\Controllers\Admin\TendikController;
+
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -130,6 +132,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
 
     Route::resource('dosen', DosenController::class);
+    Route::resource('tendik', TendikController::class);
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');

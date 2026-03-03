@@ -111,6 +111,12 @@ class User extends Authenticatable
         return $this->hasOne(DosenDetail::class, 'user_id');
     }
 
+    // Relasi ke Tendik Detail
+    public function tendikDetail()
+    {
+        return $this->hasOne(TendikDetail::class, 'user_id');
+    }
+
     // public function isAdmin()
     // {
     //     return $this->roles()->where('role_id', 1)->exists(); 
