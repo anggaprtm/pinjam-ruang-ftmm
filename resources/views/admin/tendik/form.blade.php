@@ -80,15 +80,9 @@
                 <div class="card form-card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white py-3"><h6 class="m-0 fw-bold text-success">Detail Kepegawaian</h6></div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-primary">NIP <span class="text-danger">*</span></label>
-                                <input type="text" name="nip" class="form-control border-primary" value="{{ old('nip', $tendik->nip ?? '') }}" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">NIK Pegawai</label>
-                                <input type="text" name="nik" class="form-control" value="{{ old('nik', $tendik->tendikDetail->nik ?? '') }}" placeholder="Jika berbeda dg NIP">
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-primary">NIP <span class="text-danger">*</span></label>
+                            <input type="text" name="nip" class="form-control border-primary" value="{{ old('nip', $tendik->nip ?? '') }}" required>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">

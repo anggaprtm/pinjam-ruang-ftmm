@@ -34,9 +34,8 @@
                                 <div class="kegiatan-title-cell fw-bold">{{ $t->tendikDetail->nama_lengkap ?? $t->name }}</div>
                                 <div class="text-muted small">{{ $t->email }}</div>
                             </td>
-                            <td data-label="ID" class="text-center">
-                                <div class="small"><span class="fw-bold">NIP:</span> {{ $t->nip ?? '-' }}</div>
-                                <div class="small"><span class="fw-bold">NIK:</span> {{ $t->tendikDetail->nik ?? '-' }}</div>
+                            <td data-label="ID" class="text-center fw-bold text-primary">
+                                {{ $t->nip ?? '-' }}
                             </td>
                             <td data-label="Jabatan" class="text-center">
                                 <div class="fw-bold text-dark">{{ $t->tendikDetail->nama_jabatan ?? '-' }}</div>

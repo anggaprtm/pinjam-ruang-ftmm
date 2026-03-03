@@ -11,7 +11,7 @@ class TendikDetail extends Model
 
     protected $fillable = [
         'user_id', 'nama_lengkap', 'nik_ktp', 'jenis_kelamin', 'tempat_lahir', 
-        'tanggal_lahir', 'alamat', 'no_ponsel', 'npwp', 'nik', 'tmt', 
+        'tanggal_lahir', 'alamat', 'no_ponsel', 'npwp', 'tmt', 
         'pangkat_golongan', 'nama_jabatan', 'sub_bagian', 'status_kepegawaian'
     ];
 
