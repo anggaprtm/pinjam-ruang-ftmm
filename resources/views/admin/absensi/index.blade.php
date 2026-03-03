@@ -232,7 +232,7 @@
                                         // Cek Pulang Awal HANYA untuk Tendik
                                         $isPulangAwal = ($roleFilter === 'Pegawai' && $jamKeluar !== '-' && $jamKeluar < $batasPulangDb);
 
-                                        // Hitung Durasi Kerja (Hanya relevan untuk Tendik, tapi kita hitung saja)
+                                        // Hitung Durasi Kerja (Hanya relevan untuk Tendik)
                                         $durasiKerja = '-';
                                         if ($jamMasuk !== '-' && $jamKeluar !== '-') {
                                             try {
@@ -250,7 +250,7 @@
                                         if ($status == 'terlambat' && $jamMasuk !== '-' && $roleFilter === 'Pegawai') {
                                             try {
                                                 $carbonDate = \Carbon\Carbon::parse($tanggal);
-                                                $batasMasuk = $carbonDate->isFriday() ? '08:00' : '08:00';
+                                                $batasMasuk = '08:00';
                                                 
                                                 $batasWaktu = \Carbon\Carbon::createFromFormat('H:i', $batasMasuk);
                                                 $waktuMasuk = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
@@ -269,6 +269,7 @@
                                     @endphp
 
                                     <tr class="{{ $isPulangAwal ? 'bg-soft-danger' : '' }}">
+                                        {{-- 1. KOLOM PEGAWAI (SELALU TAMPIL) --}}
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-circle me-3 text-uppercase">
@@ -281,16 +282,24 @@
                                             </div>
                                         </td>
                                         
-                                        {{-- PENYESUAIAN KOLOM BERDASARKAN ROLE --}}
+                                        {{-- PERCABANGAN KOLOM BERDASARKAN ROLE --}}
                                         @if($roleFilter === 'Dosen')
                                             @php
-                                                // Ambil status keaktifan khusus dosen
-                                                $statusKeaktifan = $pegawai->dosenDetail->status_keaktifan ?? 'Aktif';
+                                                // Ambil status keaktifan khusus dosen (pakai nullsafe)
+                                                $statusKeaktifan = $pegawai->dosenDetail?->status_keaktifan ?? 'Aktif';
+                                                
+                                                // Logika Scan Fleksibel: Cek jam masuk ATAU jam keluar
+                                                $waktuScanDosen = '-';
+                                                if ($jamMasuk !== '-') {
+                                                    $waktuScanDosen = $jamMasuk;
+                                                } elseif ($jamKeluar !== '-') {
+                                                    $waktuScanDosen = $jamKeluar;
+                                                }
                                             @endphp
 
-                                            {{-- TAMPILAN KHUSUS DOSEN --}}
+                                            {{-- 2 & 3. TAMPILAN KHUSUS DOSEN --}}
                                             <td class="text-center fw-bold text-dark">
-                                                {{ $statusKeaktifan === 'Aktif' ? $jamMasuk : '-' }}
+                                                {{ $statusKeaktifan === 'Aktif' ? $waktuScanDosen : '-' }}
                                             </td>
                                             <td class="text-center">
                                                 @if($statusKeaktifan !== 'Aktif')
@@ -298,7 +307,7 @@
                                                     <span class="badge bg-info rounded-pill px-3">{{ $statusKeaktifan }}</span>
                                                 @else
                                                     {{-- Jika Aktif Mengajar --}}
-                                                    @if($jamMasuk !== '-')
+                                                    @if($waktuScanDosen !== '-')
                                                         <span class="badge bg-success rounded-pill">Sudah Absen</span>
                                                     @else
                                                         <span class="badge bg-secondary rounded-pill">Belum Absen</span>
@@ -306,7 +315,8 @@
                                                 @endif
                                             </td>
                                             
-                                            {{-- TAMPILAN KHUSUS TENDIK (PEGAWAI) --}}
+                                        @else
+                                            {{-- 2, 3, 4, 5. TAMPILAN KHUSUS TENDIK (PEGAWAI) --}}
                                             <td class="text-center fw-bold {{ $status == 'terlambat' ? 'text-danger' : 'text-dark' }}">
                                                 <div>{{ $jamMasuk }}</div>
                                                 @if($durasiTelat)
@@ -341,7 +351,7 @@
                                             </td>
                                         @endif
                                         
-                                        {{-- KOLOM STATUS BOT (TETAP SAMA UNTUK KEDUANYA) --}}
+                                        {{-- KOLOM TERAKHIR: STATUS BOT (SELALU TAMPIL) --}}
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center align-items-center gap-1">
                                                 
