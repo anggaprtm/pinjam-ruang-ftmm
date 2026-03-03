@@ -124,7 +124,7 @@ class AbsensiController extends Controller
         $lastSync = AbsensiLog::whereDate('tanggal', $tanggal)->max('updated_at');
 
         return view('admin.absensi.index', compact(
-            'pegawais', 'stats', 'topLate', 'tanggal', 'lastSync', 'batasPulang',
+            'pegawais', 'stats', 'topStats', 'tanggal', 'lastSync', 'batasPulang',
             'isLibur', 'keteranganLibur', 'roleFilter'
         ));
     }
