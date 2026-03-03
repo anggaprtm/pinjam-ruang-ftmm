@@ -18,15 +18,15 @@ use App\Mail\PeringatanKedisiplinanMail;
 class SendAbsenceReminder extends Command
 {
     protected $signature = 'attendance:remind {tipe}';
-    protected $description = 'Kirim reminder presensi dinamis (pagi, masuk, pulang, evaluasi)';
+    protected $description = 'Kirim reminder presensi dinamis (pagi, masuk, pulang, evaluasi, siang_dosen)';
 
     public function handle(TelegramService $telegram)
     {
         $tipe = $this->argument('tipe');
-        $validTypes = ['pagi', 'masuk', 'pulang', 'evaluasi'];
+        $validTypes = ['pagi', 'masuk', 'pulang', 'evaluasi','siang_dosen'];
 
         if (!in_array($tipe, $validTypes)) {
-            $this->error("Tipe tidak valid! Gunakan: pagi, masuk, pulang, evaluasi");
+            $this->error("Tipe tidak valid! Gunakan: pagi, masuk, pulang, evaluasi, siang_dosen");
             return;
         }
 
@@ -76,6 +76,14 @@ class SendAbsenceReminder extends Command
             $batasJamPulang = $isFriday ? '17:00' : '16:30'; 
         }
 
+        $targetRoles = ['Pegawai']; // Default
+        
+        if ($tipe === 'pagi') {
+            $targetRoles = ['Pegawai', 'Dosen']; // Pagi untuk semuanya
+        } elseif ($tipe === 'siang_dosen') {
+            $targetRoles = ['Dosen']; // Siang eksklusif untuk dosen
+        }
+
         $users = User::with('roles')
             ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
             ->whereNotNull('telegram_chat_id')
@@ -96,14 +104,30 @@ class SendAbsenceReminder extends Command
             // LOGIC 1: REMINDER PAGI
             if ($tipe === 'pagi') {
                 if ($botSetting->pagi_aktif) {
+                    
+                    // 1. Cek apakah user ini punya role "Dosen"
+                    $isDosen = $user->roles->contains('title', 'Dosen');
+
+                    // 2. Tentukan template pesan yang mau dipakai
+                    // Kalau Dosen, pakai pagi_pesan_dosen. Kalau di DB kosong, fallback ke pagi_pesan biasa.
+                    // Kalau bukan Dosen (Tendik), langsung pakai pagi_pesan biasa.
+                    $templatePesan = $isDosen 
+                        ? ($botSetting->pagi_pesan_dosen ?? $botSetting->pagi_pesan) 
+                        : $botSetting->pagi_pesan;
+
+                    // 3. Masukkan template yang sudah dipilih ke str_replace
                     $msg = str_replace(
                         ['{nama}', '{tanggal}'], 
                         [$user->name, $hariIniStr], 
-                        $botSetting->pagi_pesan
+                        $templatePesan // <-- Pakai variabel ini, jangan $botSetting->pagi_pesan langsung
                     );
                     
                     $telegram->sendMessage($user->telegram_chat_id, $msg);
-                    $this->info("   -> Reminder Pagi dikirim.");
+                    
+                    // Opsional: Biar di terminal kelihatan jelas bot ngirim template yang mana
+                    $roleLabel = $isDosen ? 'Dosen' : 'Tendik';
+                    $this->info("   -> Reminder Pagi ($roleLabel) dikirim.");
+                    
                     sleep(1); 
                 }
                 continue; 
@@ -172,6 +196,33 @@ class SendAbsenceReminder extends Command
                     // PROSES NOTIFIKASI
                     $history = $log->notif_history ?? [];
                     $pesanTerkirim = false; 
+
+                    if ($tipe === 'siang_dosen' && $botSetting->siang_dosen_aktif) {
+                        if (!empty($log->jam_masuk) && !isset($history['siang_dosen_sudah'])) {
+                            // Jika sudah absen masuk
+                            $msg = str_replace(
+                                ['{nama}', '{tanggal}', '{jam_masuk}'], 
+                                [$user->name, $hariIniStr, $log->jam_masuk], 
+                                $botSetting->siang_dosen_pesan_sudah
+                            );
+                            $telegram->sendMessage($user->telegram_chat_id, $msg);
+                            $this->warn("   -> Info Sudah Absen (Dosen) dikirim.");
+                            $history['siang_dosen_sudah'] = $now->format('H:i');
+                            $pesanTerkirim = true;
+                            
+                        } elseif (empty($log->jam_masuk) && !isset($history['siang_dosen_belum'])) {
+                            // Jika belum absen masuk
+                            $msg = str_replace(
+                                ['{nama}', '{tanggal}'], 
+                                [$user->name, $hariIniStr], 
+                                $botSetting->siang_dosen_pesan_belum
+                            );
+                            $telegram->sendMessage($user->telegram_chat_id, $msg);
+                            $this->warn("   -> Peringatan Belum Absen (Dosen) dikirim.");
+                            $history['siang_dosen_belum'] = $now->format('H:i');
+                            $pesanTerkirim = true;
+                        }
+                    }
 
                     // LOGIC 2: PERINGATAN MASUK
                     if ($tipe === 'masuk' && $botSetting->masuk_aktif) {

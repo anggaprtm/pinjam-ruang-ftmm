@@ -36,9 +36,13 @@
                                 <input type="time" name="pagi_jam" class="form-control" value="{{ $setting->pagi_jam ?? '06:30' }}">
                             </div>
                         </div>
-                        <div class="mb-2">
-                            <label class="form-label fw-bold">Isi Pesan</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Isi Pesan Pagi (Tendik)</label>
                             <textarea name="pagi_pesan" class="form-control" rows="3">{{ $setting->pagi_pesan ?? 'Selamat Pagi {nama}, jangan lupa absen ya!' }}</textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">Isi Pesan Pagi (Dosen)</label>
+                            <textarea name="pagi_pesan_dosen" class="form-control" rows="3">{{ $setting->pagi_pesan_dosen ?? 'Selamat Pagi Bpk/Ibu {nama}, selamat mengajar hari ini!' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -86,6 +90,33 @@
                         <div class="mb-2">
                             <label class="form-label fw-bold">Isi Pesan</label>
                             <textarea name="pulang_pesan" class="form-control" rows="3">{{ $setting->pulang_pesan }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4" style="border-left: 5px solid #36b9cc;">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold text-info"><i class="fas fa-chalkboard-teacher me-2"></i>Pengecekan Siang (Khusus Dosen)</h6>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="siang_dosen_aktif" id="siang_dosen_aktif" {{ $setting->siang_dosen_aktif ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold small ms-3" for="siang_dosen_aktif">Aktif</label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info py-2 small border-0"><i class="fas fa-info-circle me-1"></i> Bot akan mengecek kehadiran Dosen pada jam ini.</div>
+                        <div class="row mb-3">
+                            <label class="col-sm-3 col-form-label fw-bold">Jam Cek</label>
+                            <div class="col-sm-4">
+                                <input type="time" name="siang_dosen_jam" class="form-control" value="{{ $setting->siang_dosen_jam ?? '14:00' }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Pesan Jika BELUM Absen</label>
+                            <textarea name="siang_dosen_pesan_belum" class="form-control" rows="3">{{ $setting->siang_dosen_pesan_belum ?? '⚠️ Bpk/Ibu {nama}, Anda belum tercatat presensi masuk hingga siang ini.' }}</textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">Pesan Jika SUDAH Absen</label>
+                            <textarea name="siang_dosen_pesan_sudah" class="form-control" rows="3">{{ $setting->siang_dosen_pesan_sudah ?? '✅ Terima kasih Bpk/Ibu {nama}, sistem mencatat Anda sudah presensi pada pukul {jam_masuk}.' }}</textarea>
                         </div>
                     </div>
                 </div>

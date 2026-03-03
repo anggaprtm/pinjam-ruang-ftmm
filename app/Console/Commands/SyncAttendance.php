@@ -53,7 +53,7 @@ class SyncAttendance extends Command
         }
 
         $users = User::with('roles')
-            ->whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
+            ->whereHas('roles', fn($q) => $q->whereIn('title', ['Pegawai', 'Dosen'])) // Tarik Keduanya
             ->whereNotNull('nip')
             ->get();
 

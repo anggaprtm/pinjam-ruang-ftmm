@@ -16,6 +16,7 @@ class AbsensiController extends Controller
     {
         // Default tanggal hari ini
         $tanggal = $request->input('tanggal', Carbon::now()->format('Y-m-d'));
+        $roleFilter = $request->input('role', 'Pegawai');
         $carbonDate = Carbon::parse($tanggal);
         
         $bulanIni = $carbonDate->month;
@@ -51,6 +52,10 @@ class AbsensiController extends Controller
         // KONDISI LIBUR:
         // Jika libur, HANYA ambil pegawai yang melakukan presensi (Lembur).
         // Yang tidak ada jam masuk/keluar tidak akan ditarik datanya.
+        $query = User::whereHas('roles', function($q) use ($roleFilter) {
+            $q->where('title', $roleFilter); // Filter berdasarkan role yang dipilih
+        });
+
         if ($isLibur) {
             $query->whereHas('absensiLogs', function($q) use ($tanggal) {
                 $q->whereDate('tanggal', $tanggal)
@@ -71,13 +76,16 @@ class AbsensiController extends Controller
         // 2. LEADERBOARD TELAT (Bulan Berjalan)
         // Menghitung siapa yang paling sering 'terlambat' bulan ini
         $topLate = AbsensiLog::selectRaw('user_id, count(*) as total_telat, GROUP_CONCAT(DAY(tanggal) ORDER BY tanggal SEPARATOR ",") as tanggal_telat')
+            ->whereHas('user.roles', function($q) use ($roleFilter) {
+                $q->where('title', $roleFilter);
+            })
             ->whereMonth('tanggal', $bulanIni)
             ->whereYear('tanggal', $tahunIni)
             ->where('status', 'terlambat')
             ->groupBy('user_id')
-            ->orderByDesc('total_telat') // Paling banyak telat di atas
+            ->orderByDesc('total_telat') 
             ->with('user')
-            ->limit(5) // Ambil Top 5
+            ->limit(5) 
             ->get();
 
         // 3. STATISTIK REALTIME (Hitung dari collection $pegawais)
@@ -104,7 +112,7 @@ class AbsensiController extends Controller
                 if ($log->status == 'terlambat') $stats['terlambat']++;
                 
                 // Cek Pulang Awal
-                if (!empty($log->jam_keluar) && $log->jam_keluar !== '-' && $log->jam_keluar < $batasPulang) {
+                if ($roleFilter === 'Pegawai' && !empty($log->jam_keluar) && $log->jam_keluar !== '-' && $log->jam_keluar < $batasPulang) {
                     $stats['pulang_awal']++;
                 }
             }
@@ -115,7 +123,7 @@ class AbsensiController extends Controller
 
         return view('admin.absensi.index', compact(
             'pegawais', 'stats', 'topLate', 'tanggal', 'lastSync', 'batasPulang',
-            'isLibur', 'keteranganLibur'
+            'isLibur', 'keteranganLibur', 'roleFilter'
         ));
     }
 

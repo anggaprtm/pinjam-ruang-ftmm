@@ -98,6 +98,24 @@
         </div>
     </div>
 
+    {{-- SWITCHER TENDIK / DOSEN --}}
+    <div class="mb-4">
+        <ul class="nav nav-pills shadow-sm p-1 bg-white rounded-pill d-inline-flex">
+            <li class="nav-item">
+                <a class="nav-link rounded-pill fw-bold {{ $roleFilter == 'Pegawai' ? 'active bg-primary text-white' : 'text-dark' }} px-4" 
+                   href="{{ request()->fullUrlWithQuery(['role' => 'Pegawai']) }}">
+                   <i class="fas fa-user-tie me-2"></i>Tendik
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link rounded-pill fw-bold {{ $roleFilter == 'Dosen' ? 'active bg-primary text-white' : 'text-dark' }} px-4" 
+                   href="{{ request()->fullUrlWithQuery(['role' => 'Dosen']) }}">
+                   <i class="fas fa-chalkboard-teacher me-2"></i>Dosen
+                </a>
+            </li>
+        </ul>
+    </div>
+
     {{-- STAT CARDS --}}
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-2">
@@ -206,7 +224,7 @@
                                         $batasPulangDb = $log->batas_jam_keluar ?? (\Carbon\Carbon::parse($tanggal)->isFriday() ? '17:00' : '16:30');
 
                                         // Cek Pulang Awal menggunakan $batasPulangDb
-                                        $isPulangAwal = ($jamKeluar !== '-' && $jamKeluar < $batasPulangDb);
+                                        $isPulangAwal = ($roleFilter === 'Pegawai' && $jamKeluar !== '-' && $jamKeluar < $batasPulangDb);
 
                                         // Hitung Durasi Kerja
                                         $durasiKerja = '-';

@@ -23,6 +23,7 @@ class BotSettingController extends Controller
             'masuk_jam' => 'required',
             'pulang_jam' => 'required',
             'evaluasi_jam' => 'required',
+            'siang_dosen_jam' => 'required',
         ]);
 
         // Pastikan checkbox yang tidak dicentang tetap tersimpan sebagai 0 (false)
@@ -31,6 +32,7 @@ class BotSettingController extends Controller
         $data['masuk_aktif'] = $request->has('masuk_aktif');
         $data['pulang_aktif'] = $request->has('pulang_aktif');
         $data['evaluasi_aktif'] = $request->has('evaluasi_aktif');
+        $data['siang_dosen_aktif'] = $request->has('siang_dosen_aktif');
 
         // Update ID 1 (Single Row Configuration)
         BotSetting::updateOrCreate(['id' => 1], $data);
