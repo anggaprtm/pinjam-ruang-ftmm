@@ -416,21 +416,29 @@
         {{-- KOLOM KANAN: LEADERBOARD TELAT --}}
         <div class="col-lg-4">
             <div class="leaderboard-card mb-4">
+                @php
+                    $isDosen = $roleFilter === 'Dosen';
+                    $titleRank = $isDosen ? 'Top Belum Absen' : 'Top Terlambat';
+                    $labelRank = $isDosen ? 'Tidak Absen' : 'Terlambat';
+                    $colorClass = $isDosen ? 'text-secondary' : 'text-danger';
+                    $emptyMsg = $isDosen ? 'Semua dosen rajin absen bulan ini. Mantap!' : 'Belum ada yang terlambat bulan ini. Mantap!';
+                @endphp
+
                 <div class="leaderboard-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-trophy me-2"></i>Top Terlambat (Bulan Ini)</span>
+                    <span><i class="fas fa-trophy me-2"></i>{{ $titleRank }} (Bulan Ini)</span>
                     <span class="badge bg-white text-primary border">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</span>
                 </div>
                 
-                @if($topLate->isEmpty())
+                @if($topStats->isEmpty())
                     <div class="p-4 text-center text-muted">
                         <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                        <p class="mb-0 small">Belum ada yang terlambat bulan ini. Mantap!</p>
+                        <p class="mb-0 small">{{ $emptyMsg }}</p>
                     </div>
                 @else
-                    @foreach($topLate as $index => $late)
+                    @foreach($topStats as $index => $stat)
                         @php
-                            // Format tanggal keterlambatan dengan padding 2 digit
-                            $dates = explode(',', $late->tanggal_telat);
+                            // Format tanggal dengan padding 2 digit
+                            $dates = explode(',', $stat->tanggal_kasus);
                             $formattedDates = array_map(function($day) {
                                 return str_pad($day, 2, '0', STR_PAD_LEFT);
                             }, $dates);
@@ -440,13 +448,13 @@
                             <div class="d-flex align-items-center">
                                 <div class="rank-badge rank-{{ $index + 1 }}">{{ $index + 1 }}</div>
                                 <div>
-                                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ $late->user->name ?? 'Unknown' }}</div>
-                                    <div class="small text-muted">{{ $late->user->nip ?? '-' }}</div>
+                                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ $stat->user->name ?? 'Unknown' }}</div>
+                                    <div class="small text-muted">{{ $stat->user->nip ?? '-' }}</div>
                                 </div>
                             </div>
                             <div class="text-end">
-                                <div class="fw-bold text-danger h5 mb-0">{{ $late->total_telat }}x</div>
-                                <div class="small text-muted" style="font-size: 0.7rem;">Terlambat</div>
+                                <div class="fw-bold {{ $colorClass }} h5 mb-0">{{ $stat->total_kasus }}x</div>
+                                <div class="small text-muted" style="font-size: 0.7rem;">{{ $labelRank }}</div>
                                 <div class="small text-muted" style="font-size: 0.65rem;">({{ $tanggalList }})</div>
                             </div>
                         </div>

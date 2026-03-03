@@ -75,15 +75,17 @@ class AbsensiController extends Controller
 
         // 2. LEADERBOARD TELAT (Bulan Berjalan)
         // Menghitung siapa yang paling sering 'terlambat' bulan ini
-        $topLate = AbsensiLog::selectRaw('user_id, count(*) as total_telat, GROUP_CONCAT(DAY(tanggal) ORDER BY tanggal SEPARATOR ",") as tanggal_telat')
+        $statusTarget = ($roleFilter === 'Dosen') ? 'alpha' : 'terlambat';
+
+        $topStats = AbsensiLog::selectRaw('user_id, count(*) as total_kasus, GROUP_CONCAT(DAY(tanggal) ORDER BY tanggal SEPARATOR ",") as tanggal_kasus')
             ->whereHas('user.roles', function($q) use ($roleFilter) {
                 $q->where('title', $roleFilter);
             })
             ->whereMonth('tanggal', $bulanIni)
             ->whereYear('tanggal', $tahunIni)
-            ->where('status', 'terlambat')
+            ->where('status', $statusTarget)
             ->groupBy('user_id')
-            ->orderByDesc('total_telat') 
+            ->orderByDesc('total_kasus') 
             ->with('user')
             ->limit(5) 
             ->get();
