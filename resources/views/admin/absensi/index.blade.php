@@ -201,9 +201,16 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4">Pegawai</th>
-                                    <th class="text-center">Masuk</th>
-                                    <th class="text-center">Pulang</th>
-                                    <th class="text-center">Durasi</th>
+                                    
+                                    {{-- PENYESUAIAN HEADER BERDASARKAN ROLE --}}
+                                    @if($roleFilter === 'Dosen')
+                                        <th class="text-center">Waktu Scan</th>
+                                    @else
+                                        <th class="text-center">Masuk</th>
+                                        <th class="text-center">Pulang</th>
+                                        <th class="text-center">Durasi</th>
+                                    @endif
+                                    
                                     <th class="text-center">Status Presensi</th>
                                     <th class="text-center">Status Bot</th> 
                                 </tr>
@@ -213,20 +220,19 @@
                                     @php
                                         // Ambil log hari ini (bisa null jika belum scan sama sekali)
                                         $log = $pegawai->absensiLogs->first();
-    
+
                                         // Default Values
                                         $jamMasuk  = $log->jam_masuk ?? '-';
                                         $jamKeluar = $log->jam_keluar ?? '-';
                                         $status    = $log->status ?? 'alpha'; 
                                         
                                         // AMBIL BATAS PULANG DARI DATABASE (SNAPSHOT)
-                                        // Jika data lama belum punya batas_jam_keluar, kita kasih fallback jam reguler
                                         $batasPulangDb = $log->batas_jam_keluar ?? (\Carbon\Carbon::parse($tanggal)->isFriday() ? '17:00' : '16:30');
 
-                                        // Cek Pulang Awal menggunakan $batasPulangDb
+                                        // Cek Pulang Awal HANYA untuk Tendik
                                         $isPulangAwal = ($roleFilter === 'Pegawai' && $jamKeluar !== '-' && $jamKeluar < $batasPulangDb);
 
-                                        // Hitung Durasi Kerja
+                                        // Hitung Durasi Kerja (Hanya relevan untuk Tendik, tapi kita hitung saja)
                                         $durasiKerja = '-';
                                         if ($jamMasuk !== '-' && $jamKeluar !== '-') {
                                             try {
@@ -239,11 +245,10 @@
                                             } catch(\Exception $e) { $durasiKerja = 'err'; }
                                         }
 
-                                        // Hitung Durasi Keterlambatan
+                                        // Hitung Durasi Keterlambatan (Hanya relevan untuk Tendik)
                                         $durasiTelat = '';
-                                        if ($status == 'terlambat' && $jamMasuk !== '-') {
+                                        if ($status == 'terlambat' && $jamMasuk !== '-' && $roleFilter === 'Pegawai') {
                                             try {
-                                                // Tentukan batas masuk berdasarkan hari
                                                 $carbonDate = \Carbon\Carbon::parse($tanggal);
                                                 $batasMasuk = $carbonDate->isFriday() ? '08:00' : '08:00';
                                                 
@@ -258,10 +263,8 @@
                                             } catch(\Exception $e) { }
                                         }
 
-                                        // Cek Koneksi Telegram
+                                        // Cek Koneksi Telegram & History
                                         $hasTelegram = !empty($pegawai->telegram_chat_id);
-                                        
-                                        // Ambil History Notif dari Database
                                         $notifHistory = $log->notif_history ?? [];
                                     @endphp
 
@@ -277,40 +280,57 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="text-center fw-bold {{ $status == 'terlambat' ? 'text-danger' : 'text-dark' }}">
-                                            <div>{{ $jamMasuk }}</div>
-                                            @if($durasiTelat)
-                                                <div class="small text-danger mt-1" style="font-size: 0.75rem;">{{ $durasiTelat }}</div>
-                                            @endif
-                                        </td>
-                                        <td class="text-center fw-bold {{ $isPulangAwal ? 'text-danger' : 'text-dark' }}">
-                                            {{ $jamKeluar }}
-                                            @if($isPulangAwal)
-                                                <i class="fas fa-exclamation-circle text-danger ms-1" title="Pulang Awal"></i>
-                                            @endif
-                                        </td>
-                                        <td class="text-center text-primary fw-bold">
-                                            {{ $durasiKerja }}
-                                        </td>
-                                        <td class="text-center">
-                                            @if($status == 'hadir')
-                                                {{-- Jika Hari Libur, ganti badge jadi "Masuk (Lembur)" --}}
-                                                @if(isset($isLibur) && $isLibur)
-                                                    <span class="badge bg-info text-white rounded-pill">Masuk (Lembur)</span>
-                                                @else
-                                                    <span class="badge bg-success rounded-pill">Tepat Waktu</span>
-                                                @endif
-                                            @elseif($status == 'terlambat')
-                                                <span class="badge bg-warning text-dark rounded-pill">Terlambat</span>
-                                            @else
-                                                <span class="badge bg-secondary rounded-pill">Belum Scan</span>
-                                            @endif
-
-                                            @if($isPulangAwal)
-                                                <span class="badge bg-danger rounded-pill ms-1">Pulang Awal</span>
-                                            @endif
-                                        </td>
                                         
+                                        {{-- PENYESUAIAN KOLOM BERDASARKAN ROLE --}}
+                                        @if($roleFilter === 'Dosen')
+                                            {{-- TAMPILAN KHUSUS DOSEN --}}
+                                            <td class="text-center fw-bold text-dark">
+                                                {{ $jamMasuk }}
+                                            </td>
+                                            <td class="text-center">
+                                                @if($jamMasuk !== '-')
+                                                    <span class="badge bg-success rounded-pill">Sudah Absen</span>
+                                                @else
+                                                    <span class="badge bg-secondary rounded-pill">Belum Absen</span>
+                                                @endif
+                                            </td>
+                                        @else
+                                            {{-- TAMPILAN KHUSUS TENDIK (PEGAWAI) --}}
+                                            <td class="text-center fw-bold {{ $status == 'terlambat' ? 'text-danger' : 'text-dark' }}">
+                                                <div>{{ $jamMasuk }}</div>
+                                                @if($durasiTelat)
+                                                    <div class="small text-danger mt-1" style="font-size: 0.75rem;">{{ $durasiTelat }}</div>
+                                                @endif
+                                            </td>
+                                            <td class="text-center fw-bold {{ $isPulangAwal ? 'text-danger' : 'text-dark' }}">
+                                                {{ $jamKeluar }}
+                                                @if($isPulangAwal)
+                                                    <i class="fas fa-exclamation-circle text-danger ms-1" title="Pulang Awal"></i>
+                                                @endif
+                                            </td>
+                                            <td class="text-center text-primary fw-bold">
+                                                {{ $durasiKerja }}
+                                            </td>
+                                            <td class="text-center">
+                                                @if($status == 'hadir')
+                                                    @if(isset($isLibur) && $isLibur)
+                                                        <span class="badge bg-info text-white rounded-pill">Masuk (Lembur)</span>
+                                                    @else
+                                                        <span class="badge bg-success rounded-pill">Tepat Waktu</span>
+                                                    @endif
+                                                @elseif($status == 'terlambat')
+                                                    <span class="badge bg-warning text-dark rounded-pill">Terlambat</span>
+                                                @else
+                                                    <span class="badge bg-secondary rounded-pill">Belum Scan</span>
+                                                @endif
+
+                                                @if($isPulangAwal)
+                                                    <span class="badge bg-danger rounded-pill ms-1">Pulang Awal</span>
+                                                @endif
+                                            </td>
+                                        @endif
+                                        
+                                        {{-- KOLOM STATUS BOT (TETAP SAMA UNTUK KEDUANYA) --}}
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center align-items-center gap-1">
                                                 
@@ -325,7 +345,6 @@
                                                         <i class="fab fa-telegram-plane text-white" style="font-size: 14px;"></i>
                                                     </span>
                                                 @else
-
                                                     <span class="badge rounded-pill bg-light text-secondary border" data-bs-toggle="tooltip" title="Belum ada ID Telegram">
                                                         <i class="fas fa-plug-circle-xmark"></i> No ID
                                                     </span>
@@ -384,7 +403,8 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="6" class="text-center py-4">Tidak ada data pegawai.</td></tr>
+                                    {{-- Menggunakan colspan="100%" agar otomatis menyesuaikan jumlah kolom yang aktif --}}
+                                    <tr><td colspan="100%" class="text-center py-4">Tidak ada data pegawai.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
