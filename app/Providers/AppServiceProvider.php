@@ -44,5 +44,9 @@ class AppServiceProvider extends ServiceProvider
                 ->with('totalDashboardPending', $totalDashboardPending)
                 ->with('pendingPermintaanCount', $permintaanCount);
         });
+        Event::listen(
+            MessageSent::class,
+            LogSentEmail::class,
+        );
     }
 }
