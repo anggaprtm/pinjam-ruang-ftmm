@@ -287,6 +287,7 @@ class SendAbsenceReminder extends Command
                                 ->where('status', 'terlambat')
                                 ->count();
 
+                            // Evaluasi Telat 2x
                             if ($totalTelat === 2 && !isset($history['telat_2x'])) {
                                 // 1. TELEGRAM
                                 $msg = str_replace(
@@ -296,21 +297,30 @@ class SendAbsenceReminder extends Command
                                 );
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
                                 $this->warn("   -> Notif Telat ke-2 (Telegram) dikirim.");
+                                
+                                // Set history untuk Telegram
+                                $history['telat_2x'] = $now->format('H:i');
 
                                 // 2. EMAIL
                                 if (!empty($user->email)) {
-                                    Mail::to($user->email)->queue(
-                                        new PeringatanKedisiplinanMail(
-                                            $user,
-                                            $totalTelat,
-                                            \Carbon\Carbon::create($tahun, $bulan)->translatedFormat('F Y')
-                                        )
-                                    );
-                                    $this->warn("   -> Email Peringatan Kedisiplinan dikirim.");
+                                    try {
+                                        Mail::to($user->email)->queue(
+                                            new PeringatanKedisiplinanMail(
+                                                $user,
+                                                $totalTelat,
+                                                \Carbon\Carbon::create($tahun, $bulan)->translatedFormat('F Y')
+                                            )
+                                        );
+                                        $this->warn("   -> Email Peringatan Kedisiplinan masuk antrean (queued).");
+                                        
+                                        // Set history terpisah untuk Email (Status: QUEUED)
+                                        $history['email_telat_2x_queued'] = $now->format('H:i');
+                                    } catch (\Exception $e) {
+                                        $this->error("   -> Gagal antre email: " . $e->getMessage());
+                                    }
                                 }
 
                                 // 3. HISTORY
-                                $history['telat_2x'] = $now->format('Y-m-d H:i:s');
                                 $pesanTerkirim = true;
                             }
                         }

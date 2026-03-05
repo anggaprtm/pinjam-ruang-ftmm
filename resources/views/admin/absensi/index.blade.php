@@ -400,7 +400,18 @@
                                                             <i class="fas fa-bell"></i> Peringatan Telat 2x
                                                         </span>
                                                     @endif
-                                                    
+
+                                                    {{-- Status Email Peringatan --}}
+                                                    @if(isset($notifHistory['email_telat_2x_sent']))
+                                                        <span class="badge rounded-pill bg-success" title="Email SP sukses terkirim ke SMTP jam {{ $notifHistory['email_telat_2x_sent'] }}">
+                                                            <i class="fas fa-envelope-open-text"></i> Email SP (Sent)
+                                                        </span>
+                                                    @elseif(isset($notifHistory['email_telat_2x_queued']))
+                                                        <span class="badge rounded-pill bg-secondary text-white" title="Email SP sedang diantrekan (Queued) sejak jam {{ $notifHistory['email_telat_2x_queued'] }}">
+                                                            <i class="fas fa-envelope text-warning"></i> Email SP (Queued)
+                                                        </span>
+                                                    @endif
+                                                                                                        
                                                     {{-- Notif Siang Dosen (Belum Absen) --}}
                                                     @if(isset($notifHistory['siang_dosen_belum']))
                                                         <span class="badge rounded-pill bg-danger" title="Peringatan Belum Absen Siang jam {{ $notifHistory['siang_dosen_belum'] }}">

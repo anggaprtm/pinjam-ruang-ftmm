@@ -25,6 +25,11 @@ class PeringatanKedisiplinanMail extends Mailable
     {
         return $this->subject('Pengingat Kedisiplinan Kehadiran')
             ->from('kepegawaian@ftmm.unair.ac.id', 'Kepegawaian FTMM UNAIR')
-            ->view('emails.peringatan_kedisiplinan');
+            ->view('emails.peringatan_kedisiplinan')
+            ->withSymfonyMessage(function ($message) {
+                // Sisipkan custom header untuk ditangkap oleh Listener
+                $message->getHeaders()->addTextHeader('X-Mail-Type', 'SP-Kedisiplinan');
+                $message->getHeaders()->addTextHeader('X-User-Id', strval($this->pegawai->id));
+            });
     }
 }
