@@ -84,12 +84,19 @@ class SendAbsenceReminder extends Command
             $targetRoles = ['Dosen']; // Siang eksklusif untuk dosen
         }
 
-        $users = User::with(['roles', 'dosenDetail']) // Tambahkan relasi dosenDetail
+        // Bikin Query Builder awal
+        $query = User::with(['roles', 'dosenDetail'])
             ->whereHas('roles', fn($q) => $q->whereIn('title', $targetRoles))
-            ->whereNotNull('telegram_chat_id')
-            ->where('telegram_chat_id', '!=', '')
-            ->whereNotNull('nip')
-            ->get();
+            ->whereNotNull('nip');
+
+        // Jika BUKAN evaluasi, WAJIB punya Telegram
+        // Jika evaluasi, tarik semua (termasuk yang "No ID")
+        if ($tipe !== 'evaluasi') {
+            $query->whereNotNull('telegram_chat_id')
+                  ->where('telegram_chat_id', '!=', '');
+        }
+
+        $users = $query->get();
 
         $this->info("🚀 Menjalankan Reminder tipe: [{$tipe}] untuk " . $users->count() . " User...");
         if ($jadwalKerja) {
@@ -288,21 +295,25 @@ class SendAbsenceReminder extends Command
                                 ->count();
 
                             // Evaluasi Telat 2x
-                            if ($totalTelat === 2 && !isset($history['telat_2x'])) {
-                                // 1. TELEGRAM
-                                $msg = str_replace(
-                                    ['{nama}', '{tanggal}'],
-                                    [$user->name, $hariIniStr],
-                                    $botSetting->evaluasi_pesan
-                                );
-                                $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Telat ke-2 (Telegram) dikirim.");
+                            if ($totalTelat === 2) {
                                 
-                                // Set history untuk Telegram
-                                $history['telat_2x'] = $now->format('H:i');
+                                // 1. TELEGRAM (Jika Punya ID & Belum pernah dikirim)
+                                if (!empty($user->telegram_chat_id) && !isset($history['telat_2x'])) {
+                                    $msg = str_replace(
+                                        ['{nama}', '{tanggal}'],
+                                        [$user->name, $hariIniStr],
+                                        $botSetting->evaluasi_pesan
+                                    );
+                                    $telegram->sendMessage($user->telegram_chat_id, $msg);
+                                    $this->warn("   -> Notif Telat ke-2 (Telegram) dikirim.");
+                                    
+                                    // Set history untuk Telegram
+                                    $history['telat_2x'] = $now->format('H:i');
+                                    $pesanTerkirim = true;
+                                }
 
-                                // 2. EMAIL
-                                if (!empty($user->email)) {
+                                // 2. EMAIL (Wajib untuk semua, Jika punya email & Belum pernah diantrekan)
+                                if (!empty($user->email) && !isset($history['email_telat_2x_queued'])) {
                                     try {
                                         Mail::to($user->email)->queue(
                                             new PeringatanKedisiplinanMail(
@@ -315,13 +326,11 @@ class SendAbsenceReminder extends Command
                                         
                                         // Set history terpisah untuk Email (Status: QUEUED)
                                         $history['email_telat_2x_queued'] = $now->format('H:i');
+                                        $pesanTerkirim = true;
                                     } catch (\Exception $e) {
                                         $this->error("   -> Gagal antre email: " . $e->getMessage());
                                     }
                                 }
-
-                                // 3. HISTORY
-                                $pesanTerkirim = true;
                             }
                         }
                     }
