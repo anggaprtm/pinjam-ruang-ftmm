@@ -357,12 +357,7 @@
                                                 
                                                 {{-- 1. Icon Koneksi Telegram --}}
                                                 @if($hasTelegram)
-                                                    <span 
-                                                        class="badge rounded-pill d-inline-flex align-items-center justify-content-center"
-                                                        data-bs-toggle="tooltip"
-                                                        title="Telegram Terhubung"
-                                                        style="background-color: #0088cc; width: 28px; height: 28px;"
-                                                    >
+                                                    <span class="badge rounded-pill d-inline-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="Telegram Terhubung" style="background-color: #0088cc; width: 28px; height: 28px;">
                                                         <i class="fab fa-telegram-plane text-white" style="font-size: 14px;"></i>
                                                     </span>
                                                 @else
@@ -371,7 +366,24 @@
                                                     </span>
                                                 @endif
 
-                                                {{-- 2. Icon History Notifikasi --}}
+                                                {{-- ========================================== --}}
+                                                {{-- 2. ICON EMAIL (Tampil tanpa syarat Telegram) --}}
+                                                {{-- ========================================== --}}
+                                                @if($log)
+                                                    @if(isset($notifHistory['email_telat_2x_sent']))
+                                                        <span class="badge rounded-pill bg-success" title="Email SP sukses terkirim ke SMTP jam {{ $notifHistory['email_telat_2x_sent'] }}">
+                                                            <i class="fas fa-envelope-open-text"></i> Email SP (Sent)
+                                                        </span>
+                                                    @elseif(isset($notifHistory['email_telat_2x_queued']))
+                                                        <span class="badge rounded-pill bg-secondary text-white" title="Email SP sedang diantrekan (Queued) sejak jam {{ $notifHistory['email_telat_2x_queued'] }}">
+                                                            <i class="fas fa-envelope text-warning"></i> Email SP (Queued)
+                                                        </span>
+                                                    @endif
+                                                @endif
+
+                                                {{-- ========================================== --}}
+                                                {{-- 3. ICON TELEGRAM (Hanya jika punya Telegram) --}}
+                                                {{-- ========================================== --}}
                                                 @if($hasTelegram && $log)
                                                     {{-- Notif Telat Masuk --}}
                                                     @if(isset($notifHistory['telat_masuk']))
@@ -394,24 +406,13 @@
                                                         </span>
                                                     @endif
 
-                                                    {{-- Notif Telat 2x --}}
+                                                    {{-- Notif Telat 2x (Telegram) --}}
                                                     @if(isset($notifHistory['telat_2x']))
                                                         <span class="badge rounded-pill bg-dark border border-warning text-warning" title="Peringatan Telat 2x jam {{ $notifHistory['telat_2x'] }}">
                                                             <i class="fas fa-bell"></i> Peringatan Telat 2x
                                                         </span>
                                                     @endif
-
-                                                    {{-- Status Email Peringatan --}}
-                                                    @if(isset($notifHistory['email_telat_2x_sent']))
-                                                        <span class="badge rounded-pill bg-success" title="Email SP sukses terkirim ke SMTP jam {{ $notifHistory['email_telat_2x_sent'] }}">
-                                                            <i class="fas fa-envelope-open-text"></i> Email SP (Sent)
-                                                        </span>
-                                                    @elseif(isset($notifHistory['email_telat_2x_queued']))
-                                                        <span class="badge rounded-pill bg-secondary text-white" title="Email SP sedang diantrekan (Queued) sejak jam {{ $notifHistory['email_telat_2x_queued'] }}">
-                                                            <i class="fas fa-envelope text-warning"></i> Email SP (Queued)
-                                                        </span>
-                                                    @endif
-                                                                                                        
+                                                    
                                                     {{-- Notif Siang Dosen (Belum Absen) --}}
                                                     @if(isset($notifHistory['siang_dosen_belum']))
                                                         <span class="badge rounded-pill bg-danger" title="Peringatan Belum Absen Siang jam {{ $notifHistory['siang_dosen_belum'] }}">
@@ -426,7 +427,7 @@
                                                         </span>
                                                     @endif
                                                     
-                                                    {{-- Jika Telegram ada tapi belum ada notif apa2 --}}
+                                                    {{-- Jika Telegram ada tapi belum ada notif apa2 dan bukan email --}}
                                                     @if(empty($notifHistory))
                                                         <small class="text-muted ms-1" style="font-size: 0.7rem;">Standby</small>
                                                     @endif
