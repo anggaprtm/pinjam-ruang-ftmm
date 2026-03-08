@@ -17,6 +17,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:google-calendar')->everyFifteenMinutes();
         $schedule->command('attendance:sync')->weekdays()->at('08:30')->timezone('Asia/Jakarta');
         $schedule->command('attendance:sync')->weekdays()->at('23:00')->timezone('Asia/Jakarta');
+        $schedule->command('sik:remind-verification')->weekdays()->at('08:00')->timezone('Asia/Jakarta');
+        $schedule->command('sik:remind-verification')->weekdays()->at('14:00')->timezone('Asia/Jakarta');
 
         // --- BACA SETTING DARI DATABASE ---
         if (Schema::hasTable('bot_settings')) {

@@ -100,6 +100,23 @@
                         {{-- Client-side feedback placeholder --}}
                         <div id="nomor-telepon-client-error" class="invalid-feedback d-none"></div>
                     </div>
+
+                    @if(!auth()->user()->isAdmin() && auth()->user()->ormawas()->exists())
+                        <div class="form-group mb-3">
+                            <label class="form-label required" for="sik_application_id">SIK Terbit (Wajib)</label>
+                            <select class="form-control {{ $errors->has('sik_application_id') ? 'is-invalid' : '' }}" name="sik_application_id" id="sik_application_id" required>
+                                <option value="">-- Pilih SIK --</option>
+                                @foreach(($sikApplications ?? collect()) as $sik)
+                                    <option value="{{ $sik->id }}" {{ old('sik_application_id') == $sik->id ? 'selected' : '' }}>
+                                        #{{ $sik->id }} - {{ $sik->judul_final_kegiatan }} ({{ optional($sik->timeline_mulai_final)->format('d/m/Y') }} - {{ optional($sik->timeline_selesai_final)->format('d/m/Y') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @if($errors->has('sik_application_id'))
+                                <div class="invalid-feedback d-block">{{ $errors->first('sik_application_id') }}</div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Kolom Kanan --}}
@@ -141,6 +158,22 @@
                             </select>
                             @if($errors->has('user_id'))
                                 <div class="invalid-feedback">{{ $errors->first('user_id') }}</div>
+                            @endif
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label" for="sik_application_id_admin">SIK (Opsional)</label>
+                            <input class="form-control {{ $errors->has('sik_application_id') ? 'is-invalid' : '' }}" type="number" min="1" name="sik_application_id" id="sik_application_id_admin" value="{{ old('sik_application_id') }}" placeholder="Isi ID SIK jika tersedia">
+                            @if($errors->has('sik_application_id'))
+                                <div class="invalid-feedback d-block">{{ $errors->first('sik_application_id') }}</div>
+                            @endif
+                        </div>
+
+                        <div class="form-group mb-3 d-none" id="override-reason-wrapper">
+                            <label class="form-label required" for="override_reason">Alasan Override (Wajib jika Kegiatan Ormawa tanpa SIK)</label>
+                            <textarea class="form-control {{ $errors->has('override_reason') ? 'is-invalid' : '' }}" name="override_reason" id="override_reason" rows="2" placeholder="Jelaskan alasan override...">{{ old('override_reason') }}</textarea>
+                            @if($errors->has('override_reason'))
+                                <div class="invalid-feedback d-block">{{ $errors->first('override_reason') }}</div>
                             @endif
                         </div>
                     @endif
@@ -350,6 +383,19 @@
         $('#nomor_telepon').on('input blur', function() {
             validatePhoneField();
         });
+
+        function toggleOverrideReason() {
+            const jenis = $('#jenis_kegiatan').val();
+            const sikVal = $('#sik_application_id_admin').length ? $('#sik_application_id_admin').val() : '';
+            const shouldShow = (jenis === 'Kegiatan Ormawa' && (!sikVal || sikVal.trim() === ''));
+            if ($('#override-reason-wrapper').length) {
+                $('#override-reason-wrapper').toggleClass('d-none', !shouldShow);
+                $('#override_reason').prop('required', shouldShow);
+            }
+        }
+
+        $('#jenis_kegiatan, #sik_application_id_admin').on('change keyup', toggleOverrideReason);
+        toggleOverrideReason();
 
         // Prevent form submit if client-side phone validation fails
         $('form').on('submit', function(e) {
