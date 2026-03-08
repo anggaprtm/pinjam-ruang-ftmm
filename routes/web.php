@@ -146,6 +146,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::post('ormawa-plans/{ormawaPlan}/items', [OrmawaProgramPlanController::class, 'storeItem'])->name('ormawa-plans.items.store');
     Route::put('ormawa-plans/{ormawaPlan}/items/{item}', [OrmawaProgramPlanController::class, 'updateItem'])->name('ormawa-plans.items.update');
     Route::delete('ormawa-plans/{ormawaPlan}/items/{item}', [OrmawaProgramPlanController::class, 'destroyItem'])->name('ormawa-plans.items.destroy');
+    Route::post('ormawa-plans/{ormawaPlan}/import-items', [OrmawaProgramPlanController::class, 'importItems'])->name('ormawa-plans.items.import');
+    Route::get('ormawa-plans-template', [OrmawaProgramPlanController::class, 'downloadTemplate'])->name('ormawa-plans.template');
 
     // SIK Proker Ormawa
     Route::resource('sik-flows', SikVerificationFlowController::class)->except(['show'])->parameters(['sik-flows' => 'sikFlow']);

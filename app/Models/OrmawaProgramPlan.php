@@ -31,4 +31,10 @@ class OrmawaProgramPlan extends Model
     {
         return $this->hasMany(OrmawaProgramItem::class, 'plan_id');
     }
+
+    // Backward-compatible alias for existing controllers/views
+    public function items()
+    {
+        return $this->programItems();
+    }
 }
