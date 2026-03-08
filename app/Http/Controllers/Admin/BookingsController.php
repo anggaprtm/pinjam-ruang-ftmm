@@ -82,6 +82,7 @@ class BookingsController extends Controller
                                     'max:15',
                                 ],
             'sik_application_id' => ['nullable', 'integer', 'exists:sik_applications,id'],
+            'override_reason' => ['nullable', 'string', 'max:1000'],
 
         ];
 
@@ -96,6 +97,13 @@ class BookingsController extends Controller
         }
 
         $request->validate($rules);
+
+        if ($user->isAdmin()
+            && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa'
+            && empty($request->input('sik_application_id'))
+            && empty($request->input('override_reason'))) {
+            return redirect()->back()->withInput($request->input())->withErrors('Alasan override wajib diisi untuk kegiatan ormawa tanpa SIK.');
+        }
 
         if ($this->eventService->isRoomTaken($request->all())) {
             return redirect()->back()->withInput($request->input())->withErrors('Ruangan ini tidak tersedia pada waktu tersebut.');
@@ -127,7 +135,13 @@ class BookingsController extends Controller
 
         $data = $request->all();
         $data['surat_izin'] = $suratIzinPath; 
-        $data['status'] = $user->isAdmin() ? 'disetujui' : 'belum_disetujui'; 
+        $data['status'] = $user->isAdmin() ? 'disetujui' : 'belum_disetujui';
+
+        if ($user->isAdmin() && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa' && empty($request->input('sik_application_id'))) {
+            $data['is_admin_override_sik'] = true;
+            $data['override_reason'] = $request->input('override_reason');
+        }
+
         $kegiatan = Kegiatan::create($data);
 
         // Buat history untuk entri yang baru dibuat agar riwayat tampil di halaman show
@@ -156,6 +170,23 @@ class BookingsController extends Controller
             }
         } catch (\Exception $e) {
             \Log::error("Gagal kirim notif telegram: " . $e->getMessage());
+        }
+
+        if ($kegiatan->is_admin_override_sik) {
+            try {
+                $kemahasiswaanGroup = env('TELEGRAM_KEMAHASISWAAN_GROUP_ID');
+                if ($kemahasiswaanGroup) {
+                    $msgOverride = "⚠️ <b>ADMIN OVERRIDE SIK</b>\n\n" .
+                        "Kegiatan: <b>{$kegiatan->nama_kegiatan}</b>\n" .
+                        "Pemohon: <b>{$user->name}</b>\n" .
+                        "Jenis: {$kegiatan->jenis_kegiatan}\n" .
+                        "Alasan: <i>{$kegiatan->override_reason}</i>\n\n" .
+                        "Mohon kontrol Kemahasiswaan.";
+                    $telegram->sendMessage($kemahasiswaanGroup, $msgOverride);
+                }
+            } catch (\Exception $e) {
+                \Log::error("Gagal kirim notif override SIK: " . $e->getMessage());
+            }
         }
 
         return redirect()->route('admin.kegiatan.index')->with('success','Proses book ruang berhasil dibuat.');

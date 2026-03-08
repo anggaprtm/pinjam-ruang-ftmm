@@ -273,6 +273,13 @@ class KegiatanController extends Controller
             }
         }
 
+        if ($user->isAdmin()
+            && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa'
+            && empty($request->input('sik_application_id'))
+            && empty($request->input('override_reason'))) {
+            return redirect()->back()->withInput($request->input())->withErrors('Alasan override wajib diisi untuk kegiatan ormawa tanpa SIK.');
+        }
+
         // Pengecekan bentrok tetap sama
         $kegiatanBentrok = $eventService->isRoomTaken($request->all());
     
@@ -284,6 +291,11 @@ class KegiatanController extends Controller
     
         // PERUBAHAN UTAMA DI SINI
         $data = $request->all();
+
+        if ($user->isAdmin() && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa' && empty($request->input('sik_application_id'))) {
+            $data['is_admin_override_sik'] = true;
+            $data['override_reason'] = $request->input('override_reason');
+        }
 
         if ($request->hasFile('poster')) {
             $data['poster'] = $request->file('poster')->store('posters', 'public');
@@ -340,6 +352,23 @@ class KegiatanController extends Controller
                     'created_at' => $model->created_at,
                 ]);
             }
+
+            if ($user->isAdmin() && !empty($data['is_admin_override_sik'])) {
+                try {
+                    $kemahasiswaanGroup = env('TELEGRAM_KEMAHASISWAAN_GROUP_ID');
+                    if ($kemahasiswaanGroup) {
+                        $first = is_array($created) ? $created[0] : $created;
+                        $msgOverride = "⚠️ <b>ADMIN OVERRIDE SIK</b>\n\n" .
+                            "Kegiatan: <b>{$first->nama_kegiatan}</b>\n" .
+                            "Jenis: {$first->jenis_kegiatan}\n" .
+                            "Alasan: <i>{$first->override_reason}</i>\n\n" .
+                            "Mohon kontrol Kemahasiswaan.";
+                        app(\App\Services\TelegramService::class)->sendMessage($kemahasiswaanGroup, $msgOverride);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Gagal kirim notif override SIK: ' . $e->getMessage());
+                }
+            }
         }
 
         return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil disimpan!');
@@ -388,6 +417,11 @@ class KegiatanController extends Controller
 
         // Baru proses file (setelah aman)
         $data = $request->all();
+
+        if ($user->isAdmin() && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa' && empty($request->input('sik_application_id'))) {
+            $data['is_admin_override_sik'] = true;
+            $data['override_reason'] = $request->input('override_reason');
+        }
 
         if ($request->hasFile('poster')) {
             // Hapus poster lama jika ada
