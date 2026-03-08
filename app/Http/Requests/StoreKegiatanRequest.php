@@ -57,6 +57,16 @@ class StoreKegiatanRequest extends FormRequest
             'user_id' => [
                 'nullable',
             ],
+            'sik_application_id' => [
+                'nullable',
+                'integer',
+                'exists:sik_applications,id',
+            ],
+            'override_reason' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
             'custom_user_name' => [
                 'required_if:user_id,null',
                 'string',
