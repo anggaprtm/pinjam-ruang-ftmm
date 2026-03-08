@@ -49,6 +49,11 @@ class UpdateKegiatanRequest extends FormRequest
                 'required',
                 'integer',
             ],
+            'sik_application_id' => [
+                'nullable',
+                'integer',
+                'exists:sik_applications,id',
+            ],
             // 'nomor_telepon' => [
             //     'string',
             //     'nullable',

@@ -10,6 +10,8 @@ class SikApplication extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STATUS_ISSUED = 'issued';
+
     protected $fillable = [
         'program_item_id',
         'ormawa_id',
@@ -73,5 +75,10 @@ class SikApplication extends Model
     public function kegiatans()
     {
         return $this->hasMany(Kegiatan::class, 'sik_application_id');
+    }
+
+    public function scopeIssued($query)
+    {
+        return $query->where('status_sik', self::STATUS_ISSUED);
     }
 }

@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\BotSettingController;
 use App\Http\Controllers\Admin\PeriodeJamKerjaController;
 use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Admin\TendikController;
+use App\Http\Controllers\Admin\SikApplicationController;
 
 
 
@@ -133,6 +134,13 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
 
     Route::resource('dosen', DosenController::class);
     Route::resource('tendik', TendikController::class);
+
+    // SIK Proker Ormawa
+    Route::get('sik/active-prokers', [SikApplicationController::class, 'activeProgramItems'])->name('sik.activeProkers');
+    Route::get('sik-applications', [SikApplicationController::class, 'index'])->name('sik.index');
+    Route::post('sik-applications', [SikApplicationController::class, 'store'])->name('sik.store');
+    Route::post('sik-applications/{sikApplication}/process-step', [SikApplicationController::class, 'processStep'])->name('sik.processStep');
+    Route::post('sik-applications/{sikApplication}/issue', [SikApplicationController::class, 'issue'])->name('sik.issue');
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');

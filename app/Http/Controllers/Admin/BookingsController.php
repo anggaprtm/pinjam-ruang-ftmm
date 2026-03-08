@@ -5,20 +5,25 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Ruangan;
 use App\Services\EventService;
+use App\Services\SikApplicationService;
 use Illuminate\Http\Request;
 use App\Mail\KegiatanNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Kegiatan;
+use App\Models\SikApplication;
 use App\Services\TelegramService;
+use Carbon\Carbon;
 
 
 class BookingsController extends Controller
 {
     protected $eventService;
+    protected $sikService;
 
-    public function __construct(EventService $eventService)
+    public function __construct(EventService $eventService, SikApplicationService $sikService)
     {
         $this->eventService = $eventService;
+        $this->sikService = $sikService;
     }
 
     public function cariRuang(Request $request)
@@ -59,6 +64,7 @@ class BookingsController extends Controller
     // Method bookRuang Anda tidak perlu diubah
     public function bookRuang(Request $request, TelegramService $telegram)
     {
+        $user = auth()->user();
         $request->merge([ 'user_id' => auth()->id() ]);
 
         $rules = [
@@ -75,11 +81,18 @@ class BookingsController extends Controller
                                     'min:9',
                                     'max:15',
                                 ],
+            'sik_application_id' => ['nullable', 'integer', 'exists:sik_applications,id'],
 
         ];
 
-        if (!auth()->user()->isAdmin()) {
-            $rules['surat_izin'] = 'required|file|mimes:pdf|max:2048';
+        if (!$user->isAdmin()) {
+            // Operator Ormawa wajib memakai SIK terbit sebagai tiket peminjaman.
+            if ($user->ormawas()->exists()) {
+                $rules['sik_application_id'] = ['required', 'integer', 'exists:sik_applications,id'];
+            } else {
+                // fallback untuk user non-ormawa legacy
+                $rules['surat_izin'] = 'required|file|mimes:pdf|max:2048';
+            }
         }
 
         $request->validate($rules);
@@ -93,9 +106,28 @@ class BookingsController extends Controller
             $suratIzinPath = $request->file('surat_izin')->store('surat_izin', 'public');
         }
 
+        $sikId = $request->input('sik_application_id');
+        if (!$user->isAdmin() && $sikId) {
+            $sik = SikApplication::findOrFail($sikId);
+
+            $start = Carbon::createFromFormat(
+                config('panel.date_format') . ' ' . config('panel.time_format'),
+                $request->input('waktu_mulai')
+            );
+            $end = Carbon::createFromFormat(
+                config('panel.date_format') . ' ' . config('panel.time_format'),
+                $request->input('waktu_selesai')
+            );
+
+            [$canUse, $message] = $this->sikService->canBeUsedForBooking($sik, $user, $start, $end);
+            if (! $canUse) {
+                return redirect()->back()->withInput($request->input())->withErrors($message);
+            }
+        }
+
         $data = $request->all();
         $data['surat_izin'] = $suratIzinPath; 
-        $data['status'] = auth()->user()->isAdmin() ? 'disetujui' : 'belum_disetujui'; 
+        $data['status'] = $user->isAdmin() ? 'disetujui' : 'belum_disetujui'; 
         $kegiatan = Kegiatan::create($data);
 
         // Buat history untuk entri yang baru dibuat agar riwayat tampil di halaman show

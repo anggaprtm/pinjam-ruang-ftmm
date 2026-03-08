@@ -21,6 +21,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TelegramService;
+use App\Services\SikApplicationService;
+use App\Models\SikApplication;
 
 class KegiatanController extends Controller
 {
@@ -245,8 +247,32 @@ class KegiatanController extends Controller
         return view('admin.kegiatan.create', compact('ruangan', 'users', 'prefilledData'));
     }
 
-    public function store(StoreKegiatanRequest $request, EventService $eventService)
+    public function store(StoreKegiatanRequest $request, EventService $eventService, SikApplicationService $sikService)
     {
+        $user = auth()->user();
+
+        // Operator Ormawa wajib menggunakan SIK terbit untuk pengajuan kegiatan.
+        if (!$user->isAdmin() && $user->ormawas()->exists()) {
+            $request->validate([
+                'sik_application_id' => ['required', 'integer', 'exists:sik_applications,id'],
+            ]);
+
+            $sik = SikApplication::findOrFail($request->input('sik_application_id'));
+            $start = \Carbon\Carbon::createFromFormat(
+                config('panel.date_format') . ' ' . config('panel.time_format'),
+                $request->input('waktu_mulai')
+            );
+            $end = \Carbon\Carbon::createFromFormat(
+                config('panel.date_format') . ' ' . config('panel.time_format'),
+                $request->input('waktu_selesai')
+            );
+
+            [$canUse, $message] = $sikService->canBeUsedForBooking($sik, $user, $start, $end);
+            if (! $canUse) {
+                return redirect()->back()->withInput($request->input())->withErrors($message);
+            }
+        }
+
         // Pengecekan bentrok tetap sama
         $kegiatanBentrok = $eventService->isRoomTaken($request->all());
     
@@ -264,9 +290,9 @@ class KegiatanController extends Controller
         }
         
         // Logika status dan user_id tetap sama
-        if (auth()->user()->hasRole('User')) {
+        if ($user->hasRole('User')) {
             $data['status'] = 'belum_disetujui';
-        } elseif (auth()->user()->hasRole('Admin')) {
+        } elseif ($user->hasRole('Admin')) {
             $data['status'] = 'disetujui';
         }
         
