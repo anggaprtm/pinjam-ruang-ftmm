@@ -91,6 +91,14 @@
                 </a>
             </li>
         @endcan
+        @can('kegiatan_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.sik.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/sik-applications") || request()->is("admin/sik-applications/*") || request()->is("admin/sik/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="SIK Proker Ormawa">
+                    <i class="fa-fw fas fa-file-signature c-sidebar-nav-icon"></i>
+                    SIK Proker Ormawa
+                </a>
+            </li>
+        @endcan
         @can('kuliah_access')
             <li class="c-sidebar-nav-item">
                 <a href="{{ route("admin.jadwal-perkuliahan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/jadwal") || request()->is("admin/jadwal-perkuliahan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Jadwal Perkuliahan">

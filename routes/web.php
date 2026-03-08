@@ -138,6 +138,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     // SIK Proker Ormawa
     Route::get('sik/active-prokers', [SikApplicationController::class, 'activeProgramItems'])->name('sik.activeProkers');
     Route::get('sik-applications', [SikApplicationController::class, 'index'])->name('sik.index');
+    Route::get('sik-applications/create', [SikApplicationController::class, 'create'])->name('sik.create');
+    Route::get('sik-applications/{sikApplication}', [SikApplicationController::class, 'show'])->name('sik.show');
     Route::post('sik-applications', [SikApplicationController::class, 'store'])->name('sik.store');
     Route::post('sik-applications/{sikApplication}/process-step', [SikApplicationController::class, 'processStep'])->name('sik.processStep');
     Route::post('sik-applications/{sikApplication}/issue', [SikApplicationController::class, 'issue'])->name('sik.issue');

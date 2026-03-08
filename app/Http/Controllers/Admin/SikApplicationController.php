@@ -28,7 +28,49 @@ class SikApplicationController extends Controller
             $query->where('status_sik', $request->input('status_sik'));
         }
 
-        return response()->json($query->paginate(15));
+        $applications = $query->paginate(15)->withQueryString();
+
+        if ($request->expectsJson()) {
+            return response()->json($applications);
+        }
+
+        return view('admin.sik.index', compact('applications'));
+    }
+
+    public function create(Request $request)
+    {
+        $user = auth()->user();
+        $year = (int) ($request->input('tahun') ?: now()->year);
+
+        $query = OrmawaProgramItem::with(['plan.ormawa'])
+            ->whereHas('plan', function ($q) use ($year) {
+                $q->where('tahun', $year)->where('status_plan', 'published');
+            })
+            ->whereDoesntHave('sikApplication')
+            ->orderBy('nama_rencana');
+
+        if (! $user->isAdmin()) {
+            $query->whereHas('plan.ormawa.users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
+
+        $activeProgramItems = $query->get();
+
+        return view('admin.sik.create', compact('activeProgramItems', 'year'));
+    }
+
+    public function show(SikApplication $sikApplication)
+    {
+        $user = auth()->user();
+        $sikApplication->load(['ormawa', 'programItem.plan', 'steps.actor', 'issuer', 'histories.actor']);
+
+        if (! $user->isAdmin()) {
+            $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
+            abort_if(! $isMember, 403, 'Unauthorized');
+        }
+
+        return view('admin.sik.show', compact('sikApplication'));
     }
 
     public function activeProgramItems(Request $request)
@@ -136,10 +178,16 @@ class SikApplicationController extends Controller
                 'created_at' => now(),
             ]);
 
-            return response()->json([
+            $responseData = [
                 'message' => 'Pengajuan SIK berhasil dibuat dan masuk proses verifikasi.',
                 'data' => $sik->load(['steps', 'programItem.plan.ormawa']),
-            ], 201);
+            ];
+
+            if ($request->expectsJson()) {
+                return response()->json($responseData, 201);
+            }
+
+            return redirect()->route('admin.sik.show', $sik->id)->with('success', $responseData['message']);
         });
     }
 
@@ -164,7 +212,7 @@ class SikApplicationController extends Controller
             return response()->json(['message' => 'Anda tidak memiliki hak verifikasi pada step ini.'], 403);
         }
 
-        return DB::transaction(function () use ($validated, $sikApplication, $currentStep, $user) {
+        return DB::transaction(function () use ($validated, $sikApplication, $currentStep, $user, $request) {
             $statusStep = $validated['action'] === 'approve' ? 'approved' : ($validated['action'] === 'reject' ? 'rejected' : 'revised');
             $currentStep->update([
                 'status_step' => $statusStep,
@@ -205,10 +253,16 @@ class SikApplicationController extends Controller
                 'created_at' => now(),
             ]);
 
-            return response()->json([
+            $responseData = [
                 'message' => 'Proses verifikasi berhasil diperbarui.',
                 'data' => $sikApplication->fresh()->load('steps'),
-            ]);
+            ];
+
+            if ($request->expectsJson()) {
+                return response()->json($responseData);
+            }
+
+            return redirect()->route('admin.sik.show', $sikApplication->id)->with('success', $responseData['message']);
         });
     }
 
@@ -247,9 +301,15 @@ class SikApplicationController extends Controller
             'created_at' => now(),
         ]);
 
-        return response()->json([
+        $responseData = [
             'message' => 'SIK berhasil diterbitkan.',
             'data' => $sikApplication->fresh(['issuer', 'programItem']),
-        ]);
+        ];
+
+        if ($request->expectsJson()) {
+            return response()->json($responseData);
+        }
+
+        return redirect()->route('admin.sik.show', $sikApplication->id)->with('success', $responseData['message']);
     }
 }
