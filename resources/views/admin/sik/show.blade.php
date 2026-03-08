@@ -131,6 +131,11 @@
                             @if($step->status_step === 'pending')
                                 @if($hasUnfinishedPreviousStep)
                                     <span class="badge bg-light text-dark">Menunggu step sebelumnya</span>
+                                @elseif($sikApplication->status_sik === 'need_revision' && $currentPending && (int)$currentPending->step_order === (int)$step->step_order)
+                                    <span class="badge bg-warning text-dark">Menunggu revisi Ormawa</span>
+                                    @if(!empty($sikApplication->catatan_terakhir))
+                                        <div class="text-muted mt-1">{{ $sikApplication->catatan_terakhir }}</div>
+                                    @endif
                                 @elseif($currentPending && (int)$currentPending->step_order === (int)$step->step_order && $canActStep)
                                     @if($actionType === 'issue')
                                         <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">

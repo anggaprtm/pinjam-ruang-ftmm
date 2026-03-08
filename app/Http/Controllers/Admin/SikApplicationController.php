@@ -508,8 +508,7 @@ class SikApplicationController extends Controller
                     ]);
                     $sikApplication->programItem()->update(['status_item' => 'ditolak']);
                 } else {
-                    // Tetap di step yang sama sampai pemohon melakukan revisi
-                    $currentStep->update(['status_step' => 'pending']);
+                    // Step ditandai revised sampai pemohon mengirim revisi; setelah resubmit akan diaktifkan kembali menjadi pending
                     $sikApplication->update([
                         'status_sik' => 'need_revision',
                         'catatan_terakhir' => $validated['notes'] ?? 'Perlu revisi.',
