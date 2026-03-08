@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\OrmawaProgramItem;
+use App\Models\SikAmendment;
 use App\Models\SikApplication;
 use App\Models\SikApplicationStep;
 use App\Models\SikHistory;
@@ -63,7 +64,7 @@ class SikApplicationController extends Controller
     public function show(SikApplication $sikApplication)
     {
         $user = auth()->user();
-        $sikApplication->load(['ormawa', 'programItem.plan', 'steps.actor', 'issuer', 'histories.actor']);
+        $sikApplication->load(['ormawa', 'programItem.plan', 'steps.actor', 'issuer', 'histories.actor', 'amendments.requester']);
 
         if (! $user->isAdmin()) {
             $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
@@ -71,6 +72,108 @@ class SikApplicationController extends Controller
         }
 
         return view('admin.sik.show', compact('sikApplication'));
+    }
+
+    public function requestAmendment(Request $request, SikApplication $sikApplication)
+    {
+        $user = auth()->user();
+
+        if (! $user->isAdmin()) {
+            $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
+            abort_if(! $isMember, 403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'judul_final_kegiatan' => ['required', 'string', 'max:255'],
+            'timeline_mulai_final' => ['required', 'date'],
+            'timeline_selesai_final' => ['required', 'date', 'after_or_equal:timeline_mulai_final'],
+            'rencana_tempat' => ['nullable', 'string', 'max:255'],
+            'alasan_perubahan' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $amendment = SikAmendment::create([
+            'sik_application_id' => $sikApplication->id,
+            'requested_by_user_id' => $user->id,
+            'alasan_perubahan' => $validated['alasan_perubahan'],
+            'old_payload_json' => [
+                'judul_final_kegiatan' => $sikApplication->judul_final_kegiatan,
+                'timeline_mulai_final' => $sikApplication->timeline_mulai_final?->toDateString(),
+                'timeline_selesai_final' => $sikApplication->timeline_selesai_final?->toDateString(),
+                'rencana_tempat' => $sikApplication->rencana_tempat,
+            ],
+            'new_payload_json' => [
+                'judul_final_kegiatan' => $validated['judul_final_kegiatan'],
+                'timeline_mulai_final' => $validated['timeline_mulai_final'],
+                'timeline_selesai_final' => $validated['timeline_selesai_final'],
+                'rencana_tempat' => $validated['rencana_tempat'] ?? null,
+            ],
+            'status_amendment' => 'submitted',
+        ]);
+
+        SikHistory::create([
+            'sik_application_id' => $sikApplication->id,
+            'actor_user_id' => $user->id,
+            'event' => 'amendment_submitted',
+            'payload_json' => [
+                'amendment_id' => $amendment->id,
+                'alasan_perubahan' => $validated['alasan_perubahan'],
+            ],
+            'created_at' => now(),
+        ]);
+
+        return redirect()->route('admin.sik.show', $sikApplication->id)
+            ->with('success', 'Permintaan perubahan timeline/judul berhasil diajukan.');
+    }
+
+    public function processAmendment(Request $request, SikApplication $sikApplication, SikAmendment $amendment)
+    {
+        $user = auth()->user();
+        abort_if(! $user->isAdmin(), 403, 'Unauthorized');
+        abort_if((int) $amendment->sik_application_id !== (int) $sikApplication->id, 404);
+
+        $validated = $request->validate([
+            'action' => ['required', 'in:approve,reject'],
+        ]);
+
+        if ($amendment->status_amendment !== 'submitted') {
+            return redirect()->route('admin.sik.show', $sikApplication->id)
+                ->with('error', 'Amendment ini sudah diproses sebelumnya.');
+        }
+
+        DB::transaction(function () use ($validated, $sikApplication, $amendment, $user) {
+            if ($validated['action'] === 'approve') {
+                $newPayload = $amendment->new_payload_json ?? [];
+
+                $sikApplication->update([
+                    'judul_final_kegiatan' => $newPayload['judul_final_kegiatan'] ?? $sikApplication->judul_final_kegiatan,
+                    'timeline_mulai_final' => $newPayload['timeline_mulai_final'] ?? $sikApplication->timeline_mulai_final,
+                    'timeline_selesai_final' => $newPayload['timeline_selesai_final'] ?? $sikApplication->timeline_selesai_final,
+                    'rencana_tempat' => $newPayload['rencana_tempat'] ?? $sikApplication->rencana_tempat,
+                ]);
+
+                $amendment->update([
+                    'status_amendment' => 'approved',
+                    'effective_at' => now(),
+                ]);
+            } else {
+                $amendment->update([
+                    'status_amendment' => 'rejected',
+                ]);
+            }
+
+            SikHistory::create([
+                'sik_application_id' => $sikApplication->id,
+                'actor_user_id' => $user->id,
+                'event' => 'amendment_' . $validated['action'],
+                'payload_json' => [
+                    'amendment_id' => $amendment->id,
+                ],
+                'created_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.sik.show', $sikApplication->id)
+            ->with('success', 'Amendment berhasil diproses.');
     }
 
     public function activeProgramItems(Request $request)

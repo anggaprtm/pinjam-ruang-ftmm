@@ -145,6 +145,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('sik-applications/{sikApplication}', [SikApplicationController::class, 'show'])->name('sik.show');
     Route::post('sik-applications', [SikApplicationController::class, 'store'])->name('sik.store');
     Route::post('sik-applications/{sikApplication}/process-step', [SikApplicationController::class, 'processStep'])->name('sik.processStep');
+    Route::post('sik-applications/{sikApplication}/amendments', [SikApplicationController::class, 'requestAmendment'])->name('sik.amendments.request');
+    Route::post('sik-applications/{sikApplication}/amendments/{amendment}/process', [SikApplicationController::class, 'processAmendment'])->name('sik.amendments.process');
     Route::post('sik-applications/{sikApplication}/issue', [SikApplicationController::class, 'issue'])->name('sik.issue');
 
     // API Holidays

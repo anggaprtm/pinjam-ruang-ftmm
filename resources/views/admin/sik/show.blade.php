@@ -100,6 +100,84 @@
 </div>
 @endif
 
+<div class="card shadow-sm mb-3">
+    <div class="card-header"><strong>Amendment (Perubahan Judul/Timeline)</strong></div>
+    <div class="card-body">
+        <form action="{{ route('admin.sik.amendments.request', $sikApplication->id) }}" method="POST" class="mb-4">
+            @csrf
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Judul Final Baru</label>
+                    <input type="text" name="judul_final_kegiatan" class="form-control" value="{{ $sikApplication->judul_final_kegiatan }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Timeline Mulai Baru</label>
+                    <input type="date" name="timeline_mulai_final" class="form-control" value="{{ optional($sikApplication->timeline_mulai_final)->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Timeline Selesai Baru</label>
+                    <input type="date" name="timeline_selesai_final" class="form-control" value="{{ optional($sikApplication->timeline_selesai_final)->format('Y-m-d') }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Rencana Tempat Baru</label>
+                    <input type="text" name="rencana_tempat" class="form-control" value="{{ $sikApplication->rencana_tempat }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Alasan Perubahan</label>
+                    <input type="text" name="alasan_perubahan" class="form-control" required>
+                </div>
+                <div class="col-md-12">
+                    <button class="btn btn-warning" type="submit">Ajukan Amendment</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Pemohon</th>
+                        <th>Alasan</th>
+                        <th>Status</th>
+                        <th>Diajukan</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($sikApplication->amendments as $amendment)
+                        <tr>
+                            <td>{{ $amendment->id }}</td>
+                            <td>{{ $amendment->requester->name ?? '-' }}</td>
+                            <td>{{ $amendment->alasan_perubahan }}</td>
+                            <td>{{ strtoupper($amendment->status_amendment) }}</td>
+                            <td>{{ optional($amendment->created_at)->format('d M Y H:i') }}</td>
+                            <td>
+                                @if(optional(auth()->user())->isAdmin() && $amendment->status_amendment === 'submitted')
+                                    <form method="POST" action="{{ route('admin.sik.amendments.process', [$sikApplication->id, $amendment->id]) }}" class="d-inline">
+                                        @csrf
+                                        <input type="hidden" name="action" value="approve">
+                                        <button class="btn btn-xs btn-success">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.sik.amendments.process', [$sikApplication->id, $amendment->id]) }}" class="d-inline">
+                                        @csrf
+                                        <input type="hidden" name="action" value="reject">
+                                        <button class="btn btn-xs btn-danger">Reject</button>
+                                    </form>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="6" class="text-center text-muted">Belum ada amendment.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <div class="card shadow-sm">
     <div class="card-header"><strong>Riwayat</strong></div>
     <div class="card-body table-responsive">
