@@ -243,26 +243,42 @@ class SikApplicationController extends Controller
             $validated['surat_permohonan_path'] = $request->file('surat_permohonan')->store('sik/surat_permohonan', 'public');
         }
 
-        $sikApplication->update([
-            'judul_final_kegiatan' => $validated['judul_final_kegiatan'],
-            'timeline_mulai_final' => $validated['timeline_mulai_final'],
-            'timeline_selesai_final' => $validated['timeline_selesai_final'],
-            'rencana_tempat' => $validated['rencana_tempat'] ?? null,
-            'proposal_path' => $validated['proposal_path'] ?? $sikApplication->proposal_path,
-            'surat_permohonan_path' => $validated['surat_permohonan_path'] ?? $sikApplication->surat_permohonan_path,
-            'status_sik' => 'on_verification',
-            'catatan_terakhir' => null,
-        ]);
-
-        SikHistory::create([
-            'sik_application_id' => $sikApplication->id,
-            'actor_user_id' => auth()->id(),
-            'event' => 'revision_resubmitted',
-            'payload_json' => [
+        DB::transaction(function () use ($sikApplication, $validated) {
+            $sikApplication->update([
                 'judul_final_kegiatan' => $validated['judul_final_kegiatan'],
-            ],
-            'created_at' => now(),
-        ]);
+                'timeline_mulai_final' => $validated['timeline_mulai_final'],
+                'timeline_selesai_final' => $validated['timeline_selesai_final'],
+                'rencana_tempat' => $validated['rencana_tempat'] ?? null,
+                'proposal_path' => $validated['proposal_path'] ?? $sikApplication->proposal_path,
+                'surat_permohonan_path' => $validated['surat_permohonan_path'] ?? $sikApplication->surat_permohonan_path,
+                'status_sik' => 'on_verification',
+                'catatan_terakhir' => null,
+            ]);
+
+            $stepToResume = $sikApplication->steps()
+                ->where('status_step', 'revised')
+                ->orderBy('step_order')
+                ->first();
+
+            if ($stepToResume) {
+                $stepToResume->update([
+                    'status_step' => 'pending',
+                    'acted_by_user_id' => null,
+                    'acted_at' => null,
+                ]);
+            }
+
+            SikHistory::create([
+                'sik_application_id' => $sikApplication->id,
+                'actor_user_id' => auth()->id(),
+                'event' => 'revision_resubmitted',
+                'payload_json' => [
+                    'judul_final_kegiatan' => $validated['judul_final_kegiatan'],
+                    'resumed_step_order' => $stepToResume?->step_order,
+                ],
+                'created_at' => now(),
+            ]);
+        });
 
         return redirect()->route('admin.sik.show', $sikApplication->id)->with('success', 'Perbaikan pengajuan berhasil disimpan dan dikirim ulang.');
     }
