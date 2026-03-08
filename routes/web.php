@@ -30,6 +30,9 @@ use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Admin\TendikController;
 use App\Http\Controllers\Admin\SikApplicationController;
 use App\Http\Controllers\Admin\SikVerificationFlowController;
+use App\Http\Controllers\Admin\OrmawaProgramPlanController;
+use App\Http\Controllers\Admin\OrmawaController;
+use App\Http\Controllers\Admin\JenisOrmawaController;
 
 
 
@@ -135,6 +138,14 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
 
     Route::resource('dosen', DosenController::class);
     Route::resource('tendik', TendikController::class);
+
+    // Master Ormawa & Proker
+    Route::resource('jenis-ormawas', JenisOrmawaController::class)->except(['show'])->parameters(['jenis-ormawas' => 'jenisOrmava']);
+    Route::resource('ormawas-master', OrmawaController::class)->except(['show']);
+    Route::resource('ormawa-plans', OrmawaProgramPlanController::class)->except(['show'])->parameters(['ormawa-plans' => 'ormawaPlan']);
+    Route::post('ormawa-plans/{ormawaPlan}/items', [OrmawaProgramPlanController::class, 'storeItem'])->name('ormawa-plans.items.store');
+    Route::put('ormawa-plans/{ormawaPlan}/items/{item}', [OrmawaProgramPlanController::class, 'updateItem'])->name('ormawa-plans.items.update');
+    Route::delete('ormawa-plans/{ormawaPlan}/items/{item}', [OrmawaProgramPlanController::class, 'destroyItem'])->name('ormawa-plans.items.destroy');
 
     // SIK Proker Ormawa
     Route::resource('sik-flows', SikVerificationFlowController::class)->except(['show'])->parameters(['sik-flows' => 'sikFlow']);

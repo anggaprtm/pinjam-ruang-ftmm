@@ -107,6 +107,26 @@
                 </a>
             </li>
         @endif
+        @if(optional(auth()->user())->isAdmin() || optional(auth()->user())->hasRole('Kemahasiswaan') || optional(auth()->user())->hasRole('Staf Kemahasiswaan'))
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route('admin.jenis-ormawas.index') }}" class="c-sidebar-nav-link {{ request()->is('admin/jenis-ormawas*') ? 'c-active' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Master Jenis Ormawa">
+                    <i class="fa-fw fas fa-layer-group c-sidebar-nav-icon"></i>
+                    Master Jenis Ormawa
+                </a>
+            </li>
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route('admin.ormawas-master.index') }}" class="c-sidebar-nav-link {{ request()->is('admin/ormawas-master*') ? 'c-active' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Master Ormawa">
+                    <i class="fa-fw fas fa-users c-sidebar-nav-icon"></i>
+                    Master Ormawa
+                </a>
+            </li>
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route('admin.ormawa-plans.index') }}" class="c-sidebar-nav-link {{ request()->is('admin/ormawa-plans*') ? 'c-active' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Master Proker Ormawa">
+                    <i class="fa-fw fas fa-list-alt c-sidebar-nav-icon"></i>
+                    Master Proker Ormawa
+                </a>
+            </li>
+        @endif
         @can('kuliah_access')
             <li class="c-sidebar-nav-item">
                 <a href="{{ route("admin.jadwal-perkuliahan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/jadwal") || request()->is("admin/jadwal-perkuliahan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Jadwal Perkuliahan">
