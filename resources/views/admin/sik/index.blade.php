@@ -10,6 +10,13 @@
         'issued' => 'Sudah Terbit SIK',
         'cancelled' => 'Dibatalkan',
     ];
+    $urgencyClass = function ($dueAt) {
+        if (empty($dueAt)) return 'bg-light text-dark';
+        $hours = now()->diffInHours(\Carbon\Carbon::parse($dueAt), false);
+        if ($hours < 0) return 'bg-danger text-white';
+        if ($hours <= 24) return 'bg-warning text-dark';
+        return 'bg-info text-dark';
+    };
 @endphp
 
 @if(($mode ?? 'verifikator') === 'ormawa')
@@ -90,8 +97,40 @@
         </div>
     </div>
 
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('admin.sik.index') }}" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Filter Ormawa</label>
+                    <select name="filter_ormawa" class="form-control">
+                        <option value="">Semua Ormawa</option>
+                        @foreach(($ormawaOptions ?? collect()) as $ormawaId => $ormawaName)
+                            <option value="{{ $ormawaId }}" @selected((string)($selectedOrmawa ?? '') === (string)$ormawaId)>{{ $ormawaName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status Pengajuan</label>
+                    <select name="status_sik" class="form-control">
+                        <option value="">Semua Status</option>
+                        @foreach($statusLabels as $statusKey => $statusText)
+                            <option value="{{ $statusKey }}" @selected(request('status_sik') === $statusKey)>{{ $statusText }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-5 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Terapkan Filter</button>
+                    <a href="{{ route('admin.sik.index') }}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="row g-3 mb-3">
         @foreach(($ormawaCards ?? collect()) as $ormawaName => $meta)
+            @php
+                $due = !empty($meta['nearest_due']) ? \Carbon\Carbon::parse($meta['nearest_due']) : null;
+            @endphp
             <div class="col-md-6 col-xl-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -99,8 +138,22 @@
                         <div class="small text-muted">Perlu Verifikasi: {{ $meta['on_verification'] }}</div>
                         <div class="small text-muted">Perlu Revisi: {{ $meta['need_revision'] }}</div>
                         <div class="small text-muted">Sudah Terbit: {{ $meta['issued'] }}</div>
-                        @if(!empty($meta['nearest_due']))
-                            <div class="mt-2 badge bg-danger-subtle text-danger">Terdekat: {{ \Carbon\Carbon::parse($meta['nearest_due'])->format('d M Y H:i') }}</div>
+                        @if($due)
+                            <div class="mt-2">
+                                <span class="badge {{ $urgencyClass($meta['nearest_due']) }}">SLA terdekat: {{ $due->format('d M Y H:i') }}</span>
+                            </div>
+                            <div class="small mt-1 {{ $due->isPast() ? 'text-danger' : 'text-muted' }}">
+                                {{ $due->isPast() ? 'Melewati SLA' : 'Sisa ' . now()->diffForHumans($due, ['parts' => 2, 'short' => true]) }}
+                            </div>
+                        @endif
+
+                        @if(!empty($meta['nearest_application_id']))
+                            <div class="mt-3 d-flex gap-2 flex-wrap">
+                                <a href="{{ route('admin.sik.show', $meta['nearest_application_id']) }}" class="btn btn-sm btn-primary">
+                                    Quick Action Verifikasi
+                                </a>
+                                <span class="small text-muted align-self-center">{{ $meta['nearest_title'] }}</span>
+                            </div>
                         @endif
                     </div>
                 </div>

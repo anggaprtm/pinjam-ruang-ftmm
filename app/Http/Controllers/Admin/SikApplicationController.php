@@ -70,6 +70,8 @@ class SikApplicationController extends Controller
             ]);
         }
 
+        $selectedOrmawa = $request->input('filter_ormawa');
+
         $query = SikApplication::with(['ormawa', 'programItem.plan', 'steps'])
             ->orderBy('created_at');
 
@@ -77,23 +79,42 @@ class SikApplicationController extends Controller
             $query->where('status_sik', $request->input('status_sik'));
         }
 
+        if (! empty($selectedOrmawa)) {
+            $query->where('ormawa_id', (int) $selectedOrmawa);
+        }
+
         $applications = $query->get();
+
+        $ormawaOptions = SikApplication::query()
+            ->with('ormawa:id,nama')
+            ->select('ormawa_id')
+            ->distinct()
+            ->get()
+            ->pluck('ormawa.nama', 'ormawa_id')
+            ->filter()
+            ->sort();
 
         $ormawaCards = $applications
             ->groupBy(fn ($app) => $app->ormawa->nama ?? 'Tanpa Ormawa')
             ->map(function ($group) {
-                $nearestDue = $group
+                $nearestPendingStep = $group
                     ->flatMap(fn ($app) => $app->steps->where('status_step', 'pending'))
                     ->filter(fn ($step) => ! empty($step->due_at))
                     ->sortBy('due_at')
                     ->first();
+
+                $nearestPendingApp = $nearestPendingStep
+                    ? $group->firstWhere('id', $nearestPendingStep->sik_application_id)
+                    : null;
 
                 return [
                     'total' => $group->count(),
                     'need_revision' => $group->where('status_sik', 'need_revision')->count(),
                     'on_verification' => $group->where('status_sik', 'on_verification')->count(),
                     'issued' => $group->where('status_sik', 'issued')->count(),
-                    'nearest_due' => $nearestDue?->due_at,
+                    'nearest_due' => $nearestPendingStep?->due_at,
+                    'nearest_application_id' => $nearestPendingApp?->id,
+                    'nearest_title' => $nearestPendingApp?->judul_final_kegiatan,
                 ];
             });
 
@@ -101,6 +122,8 @@ class SikApplicationController extends Controller
             'mode' => 'verifikator',
             'applications' => $applications,
             'ormawaCards' => $ormawaCards,
+            'ormawaOptions' => $ormawaOptions,
+            'selectedOrmawa' => $selectedOrmawa,
         ]);
     }
 
