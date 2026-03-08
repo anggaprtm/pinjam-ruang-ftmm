@@ -27,6 +27,7 @@ class SikApplication extends Model
         'issued_at',
         'issued_by_user_id',
         'nomor_sik_eoffice',
+        'issued_document_path',
         'catatan_terakhir',
         'is_amendment_open',
         'amendment_opened_by_user_id',

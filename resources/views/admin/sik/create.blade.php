@@ -26,7 +26,7 @@
 <div class="row g-3 mb-4">
     @forelse($activeProgramItems as $item)
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm proker-card" style="cursor:pointer"
+            <div class="card h-100 border-0 shadow-sm proker-card" style="cursor:pointer"
                  data-id="{{ $item->id }}"
                  data-title="{{ e($item->nama_rencana) }}"
                  data-ormawa="{{ e($item->plan->ormawa->nama ?? '-') }}"
@@ -36,12 +36,12 @@
                  onclick="selectProker(this)">
                 <div class="card-body">
                     <div class="small text-muted mb-1">{{ $item->plan->ormawa->nama ?? '-' }} • {{ $item->plan->tahun ?? '-' }}</div>
-                    <h5 class="mb-2">{{ $item->nama_rencana }}</h5>
+                    <h5 class="mb-2 proker-title">{{ $item->nama_rencana }}</h5>
                     <div class="text-muted">Timeline rencana:</div>
                     <div>{{ $item->timeline_mulai_rencana ? $item->timeline_mulai_rencana->format('d M Y') : '-' }} - {{ $item->timeline_selesai_rencana ? $item->timeline_selesai_rencana->format('d M Y') : '-' }}</div>
                 </div>
-                <div class="card-footer bg-white">
-                    <button type="button" class="btn btn-sm btn-primary">Pilih Proker Ini</button>
+                <div class="card-footer bg-white border-0">
+                    <button type="button" class="btn btn-sm btn-primary">Pilih Proker</button>
                 </div>
             </div>
         </div>
@@ -92,10 +92,20 @@
     </div>
 </div>
 
+@endsection
+
+@section('scripts')
+@parent
+<style>
+.proker-card { transition: all .2s ease; }
+.proker-card:hover { transform: translateY(-4px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.1)!important; }
+.proker-card.is-selected { outline: 2px solid #0d6efd; background: #f8fbff; }
+.proker-title { min-height: 48px; }
+</style>
 <script>
 function selectProker(card) {
-    document.querySelectorAll('.proker-card').forEach((el) => el.classList.remove('border-primary'));
-    card.classList.add('border-primary');
+    document.querySelectorAll('.proker-card').forEach((el) => el.classList.remove('is-selected'));
+    card.classList.add('is-selected');
 
     const id = card.dataset.id;
     const title = card.dataset.title;

@@ -37,6 +37,10 @@
     $suratExt = $sikApplication->surat_permohonan_path ? strtolower(pathinfo($sikApplication->surat_permohonan_path, PATHINFO_EXTENSION)) : null;
     $suratPreviewable = in_array($suratExt, ['pdf'], true);
 
+    $issuedSikUrl = $sikApplication->issued_document_path ? asset('storage/' . $sikApplication->issued_document_path) : null;
+    $issuedSikExt = $sikApplication->issued_document_path ? strtolower(pathinfo($sikApplication->issued_document_path, PATHINFO_EXTENSION)) : null;
+    $issuedSikPreviewable = in_array($issuedSikExt, ['pdf'], true);
+
     $translateEvent = function ($event) {
         $map = [
             'submitted' => 'Pengajuan dibuat',
@@ -138,6 +142,23 @@
                     @endif
                 </div>
             </div>
+            <div class="col-md-12">
+                <div class="border rounded p-3 h-100 bg-light-subtle">
+                    <h6 class="mb-2">Dokumen SIK Terbit</h6>
+                    @if($issuedSikUrl)
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if($issuedSikPreviewable)
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#previewIssuedSikModal">Preview</button>
+                            @else
+                                <span class="badge bg-light text-dark">Preview tersedia untuk file PDF</span>
+                            @endif
+                            <a href="{{ $issuedSikUrl }}" target="_blank" class="btn btn-sm btn-outline-secondary">Unduh SIK Terbit</a>
+                        </div>
+                    @else
+                        <span class="text-muted">Dokumen SIK terbit belum diunggah.</span>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -168,6 +189,22 @@
             </div>
             <div class="modal-body p-0" style="height: 80vh;">
                 <iframe src="{{ $suratUrl }}" title="Preview Surat Permohonan" class="w-100 h-100 border-0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+@if($issuedSikUrl && $issuedSikPreviewable)
+<div class="modal fade" id="previewIssuedSikModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview Dokumen SIK Terbit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh;">
+                <iframe src="{{ $issuedSikUrl }}" title="Preview Dokumen SIK Terbit" class="w-100 h-100 border-0"></iframe>
             </div>
         </div>
     </div>
@@ -220,34 +257,18 @@
                                     @endif
                                 @elseif($currentPending && (int)$currentPending->step_order === (int)$step->step_order && $canActStep)
                                     @if($actionType === 'issue')
-                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
+                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline-flex align-items-center gap-2" enctype="multipart/form-data">
                                             @csrf
                                             <input type="hidden" name="step_order" value="{{ $step->step_order }}">
                                             <input type="hidden" name="action" value="issue">
-                                            <input type="text" name="nomor_sik_eoffice" class="form-control form-control-sm d-inline-block" style="width:220px" placeholder="Nomor SIK e-office" required>
+                                            <input type="text" name="nomor_sik_eoffice" class="form-control form-control-sm" style="width:220px" placeholder="Nomor SIK e-office" required>
+                                            <input type="file" name="issued_document" class="form-control form-control-sm" style="width:230px" accept=".pdf" required>
                                             <button class="btn btn-xs btn-primary">Terbitkan Surat Izin Kegiatan</button>
                                         </form>
                                     @else
-                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
-                                            @csrf
-                                            <input type="hidden" name="step_order" value="{{ $step->step_order }}">
-                                            <input type="hidden" name="action" value="approve">
-                                            <button class="btn btn-xs btn-success">Setujui</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
-                                            @csrf
-                                            <input type="hidden" name="step_order" value="{{ $step->step_order }}">
-                                            <input type="hidden" name="action" value="revise">
-                                            <input type="text" name="notes" class="form-control form-control-sm d-inline-block" style="width:180px" placeholder="Catatan revisi" required>
-                                            <button class="btn btn-xs btn-warning">Minta Revisi</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
-                                            @csrf
-                                            <input type="hidden" name="step_order" value="{{ $step->step_order }}">
-                                            <input type="hidden" name="action" value="reject">
-                                            <input type="text" name="notes" class="form-control form-control-sm d-inline-block" style="width:180px" placeholder="Alasan penolakan" required>
-                                            <button class="btn btn-xs btn-danger">Tolak</button>
-                                        </form>
+                                        <button type="button" class="btn btn-xs btn-success js-open-step-modal" data-action="approve" data-step-order="{{ $step->step_order }}">Setujui</button>
+                                        <button type="button" class="btn btn-xs btn-warning js-open-step-modal" data-action="revise" data-step-order="{{ $step->step_order }}">Minta Revisi</button>
+                                        <button type="button" class="btn btn-xs btn-danger js-open-step-modal" data-action="reject" data-step-order="{{ $step->step_order }}">Tolak</button>
                                     @endif
                                 @elseif($currentPending && (int)$currentPending->step_order !== (int)$step->step_order)
                                     <span class="badge bg-light text-dark">Menunggu step sebelumnya</span>
@@ -265,11 +286,36 @@
     </div>
 </div>
 
+<div class="modal fade" id="stepActionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" id="stepActionForm">
+            @csrf
+            <input type="hidden" name="step_order" id="stepActionOrder">
+            <input type="hidden" name="action" id="stepActionType">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stepActionTitle">Konfirmasi Aksi Verifikasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="stepActionHelp" class="mb-2 text-muted">Tambahkan catatan untuk proses verifikasi ini.</p>
+                    <label for="stepActionNotes" class="form-label" id="stepActionLabel">Catatan Verifikasi</label>
+                    <textarea name="notes" id="stepActionNotes" rows="4" class="form-control" placeholder="Tulis catatan..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="stepActionSubmit">Kirim</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @if($sikApplication->status_sik === 'approved_final' && !optional($sikApplication->flow)->steps?->contains('action_type', 'issue') && $canModerateAmendment)
 <div class="card shadow-sm mb-3">
     <div class="card-header"><strong>Terbitkan Surat Izin Kegiatan</strong></div>
     <div class="card-body">
-        <form action="{{ route('admin.sik.issue', $sikApplication->id) }}" method="POST">
+        <form action="{{ route('admin.sik.issue', $sikApplication->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="row g-2 align-items-end">
                 <div class="col-md-8">
@@ -277,6 +323,10 @@
                     <input type="text" name="nomor_sik_eoffice" class="form-control" required>
                 </div>
                 <div class="col-md-4">
+                    <label class="form-label">Unggah Dokumen SIK (PDF)</label>
+                    <input type="file" name="issued_document" class="form-control" accept=".pdf" required>
+                </div>
+                <div class="col-md-12">
                     <button class="btn btn-primary w-100" type="submit">Terbitkan</button>
                 </div>
             </div>
@@ -362,4 +412,47 @@
         </table>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+@parent
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('stepActionModal');
+    if (!modalEl) return;
+
+    const stepModal = new bootstrap.Modal(modalEl);
+    const actionInput = document.getElementById('stepActionType');
+    const orderInput = document.getElementById('stepActionOrder');
+    const title = document.getElementById('stepActionTitle');
+    const label = document.getElementById('stepActionLabel');
+    const notes = document.getElementById('stepActionNotes');
+    const submit = document.getElementById('stepActionSubmit');
+
+    const config = {
+        approve: { title: 'Setujui Verifikasi', label: 'Catatan Persetujuan', submit: 'Setujui', required: false, btnClass: 'btn-success' },
+        revise: { title: 'Minta Revisi', label: 'Catatan Revisi', submit: 'Kirim Permintaan Revisi', required: true, btnClass: 'btn-warning' },
+        reject: { title: 'Tolak Pengajuan', label: 'Catatan Penolakan', submit: 'Tolak Pengajuan', required: true, btnClass: 'btn-danger' },
+    };
+
+    document.querySelectorAll('.js-open-step-modal').forEach((btn) => {
+        btn.addEventListener('click', function () {
+            const action = this.dataset.action;
+            const stepOrder = this.dataset.stepOrder;
+            const conf = config[action] || config.approve;
+
+            actionInput.value = action;
+            orderInput.value = stepOrder;
+            title.textContent = conf.title;
+            label.textContent = conf.label;
+            submit.textContent = conf.submit;
+            notes.required = conf.required;
+            notes.value = '';
+            submit.className = 'btn ' + conf.btnClass;
+
+            stepModal.show();
+        });
+    });
+});
+</script>
 @endsection

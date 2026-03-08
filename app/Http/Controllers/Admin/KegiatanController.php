@@ -32,12 +32,14 @@ class KegiatanController extends Controller
 
         if ($request->ajax()) {
 
+            $tableName = (new Kegiatan())->getTable();
+
             $query = Kegiatan::with(['ruangan', 'user'])
                 ->withCount(['barangs as barangs_dipinjam_count' => function ($q) {
                     $q->where('barang_kegiatan.status', 'dipinjam');
                 }])
 
-                ->addSelect(sprintf('%s.*', (new Kegiatan())->table));
+                ->addSelect(sprintf('%s.*', $tableName));
 
 
             if ($request->filled('tanggal_mulai')) {

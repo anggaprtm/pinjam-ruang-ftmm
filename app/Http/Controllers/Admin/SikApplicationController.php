@@ -29,11 +29,11 @@ class SikApplicationController extends Controller
             $query->where('status_sik', $request->input('status_sik'));
         }
 
-        $applications = $query->paginate(15)->withQueryString();
-
         if ($request->expectsJson()) {
-            return response()->json($applications);
+            return response()->json($query->paginate(15)->withQueryString());
         }
+
+        $applications = $query->get();
 
         return view('admin.sik.index', compact('applications'));
     }
@@ -420,6 +420,7 @@ class SikApplicationController extends Controller
             'notes' => ['nullable', 'string'],
             'step_order' => ['nullable', 'integer', 'min:1'],
             'nomor_sik_eoffice' => ['nullable', 'string', 'max:255'],
+            'issued_document' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ]);
 
         $sikApplication->load('steps', 'programItem', 'flow.steps');
@@ -456,6 +457,10 @@ class SikApplicationController extends Controller
                 return response()->json(['message' => 'Nomor SIK e-office wajib diisi untuk step issue.'], 422);
             }
 
+            if (! $request->hasFile('issued_document')) {
+                return response()->json(['message' => 'Dokumen SIK terbit (PDF) wajib diunggah untuk step issue.'], 422);
+            }
+
             if (! $user->isAdmin() && ! $user->roles()->whereIn('title', ['Kemahasiswaan', 'Staf Kemahasiswaan'])->exists()) {
                 return response()->json(['message' => 'Hanya admin/kemahasiswaan yang dapat menerbitkan SIK.'], 403);
             }
@@ -470,7 +475,8 @@ class SikApplicationController extends Controller
                     'notes' => $validated['notes'] ?? null,
                 ]);
 
-                $this->issueApplication($sikApplication, $user->id, $validated['nomor_sik_eoffice']);
+                $issuedDocumentPath = $request->file('issued_document')->store('sik/issued_documents', 'public');
+                $this->issueApplication($sikApplication, $user->id, $validated['nomor_sik_eoffice'], $issuedDocumentPath);
 
                 SikHistory::create([
                     'sik_application_id' => $sikApplication->id,
@@ -497,9 +503,15 @@ class SikApplicationController extends Controller
                 if ($validated['action'] === 'approve') {
                     $nextStep = $sikApplication->steps()->where('status_step', 'pending')->orderBy('step_order')->first();
                     if ($nextStep) {
-                        $sikApplication->update(['status_sik' => 'on_verification']);
+                        $sikApplication->update([
+                            'status_sik' => 'on_verification',
+                            'catatan_terakhir' => $validated['notes'] ?? null,
+                        ]);
                     } else {
-                        $sikApplication->update(['status_sik' => 'approved_final']);
+                        $sikApplication->update([
+                            'status_sik' => 'approved_final',
+                            'catatan_terakhir' => $validated['notes'] ?? null,
+                        ]);
                     }
                 } elseif ($validated['action'] === 'reject') {
                     $sikApplication->update([
@@ -548,6 +560,7 @@ class SikApplicationController extends Controller
 
         $validated = $request->validate([
             'nomor_sik_eoffice' => ['required', 'string', 'max:255'],
+            'issued_document' => ['required', 'file', 'mimes:pdf', 'max:5120'],
         ]);
 
         if (! $user->isAdmin() && ! $user->roles()->whereIn('title', ['Kemahasiswaan', 'Staf Kemahasiswaan'])->exists()) {
@@ -558,7 +571,8 @@ class SikApplicationController extends Controller
             return response()->json(['message' => 'SIK belum mencapai status approved final.'], 422);
         }
 
-        $this->issueApplication($sikApplication, $user->id, $validated['nomor_sik_eoffice']);
+        $issuedDocumentPath = $request->file('issued_document')->store('sik/issued_documents', 'public');
+        $this->issueApplication($sikApplication, $user->id, $validated['nomor_sik_eoffice'], $issuedDocumentPath);
 
         SikHistory::create([
             'sik_application_id' => $sikApplication->id,
@@ -583,13 +597,14 @@ class SikApplicationController extends Controller
         return redirect()->route('admin.sik.show', $sikApplication->id)->with('success', $responseData['message']);
     }
 
-    private function issueApplication(SikApplication $sikApplication, int $issuerId, string $nomorSik): void
+    private function issueApplication(SikApplication $sikApplication, int $issuerId, string $nomorSik, string $issuedDocumentPath): void
     {
         $sikApplication->update([
             'status_sik' => 'issued',
             'issued_at' => now(),
             'issued_by_user_id' => $issuerId,
             'nomor_sik_eoffice' => $nomorSik,
+            'issued_document_path' => $issuedDocumentPath,
         ]);
 
         $sikApplication->programItem()->update(['status_item' => 'sik_terbit']);
