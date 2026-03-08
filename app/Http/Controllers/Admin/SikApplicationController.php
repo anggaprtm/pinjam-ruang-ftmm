@@ -100,6 +100,7 @@ class SikApplicationController extends Controller
         if (! $user->isAdmin()) {
             $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
             abort_if(! $isMember, 403, 'Unauthorized');
+            abort_if(! $sikApplication->is_amendment_open, 403, 'Akses amendment belum dibuka oleh Kemahasiswaan.');
         }
 
         $validated = $request->validate([
@@ -142,6 +143,27 @@ class SikApplicationController extends Controller
 
         return redirect()->route('admin.sik.show', $sikApplication->id)
             ->with('success', 'Permintaan perubahan timeline/judul berhasil diajukan.');
+    }
+
+
+    public function toggleAmendmentAccess(Request $request, SikApplication $sikApplication)
+    {
+        $user = auth()->user();
+        abort_if(! $user->isAdmin() && ! $user->hasRole('Kemahasiswaan') && ! $user->hasRole('Staf Kemahasiswaan'), 403, 'Unauthorized');
+
+        $validated = $request->validate([
+            'is_open' => ['required', 'boolean'],
+        ]);
+
+        $isOpen = (bool) $validated['is_open'];
+        $sikApplication->update([
+            'is_amendment_open' => $isOpen,
+            'amendment_opened_by_user_id' => $isOpen ? $user->id : null,
+            'amendment_opened_at' => $isOpen ? now() : null,
+        ]);
+
+        return redirect()->route('admin.sik.show', $sikApplication->id)
+            ->with('success', $isOpen ? 'Akses amendment dibuka.' : 'Akses amendment ditutup.');
     }
 
     public function processAmendment(Request $request, SikApplication $sikApplication, SikAmendment $amendment)
@@ -223,7 +245,7 @@ class SikApplicationController extends Controller
     {
         $user = auth()->user();
 
-        $validated = $request->validate([
+        $rules = [
             'program_item_id' => ['required', 'integer', 'exists:ormawa_program_items,id'],
             'judul_final_kegiatan' => ['required', 'string', 'max:255'],
             'timeline_mulai_final' => ['required', 'date'],
@@ -231,7 +253,14 @@ class SikApplicationController extends Controller
             'rencana_tempat' => ['nullable', 'string', 'max:255'],
             'proposal' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
             'surat_permohonan' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
-        ]);
+        ];
+
+        if (! $user->isAdmin() && $user->ormawas()->exists()) {
+            $rules['proposal'] = ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'];
+            $rules['surat_permohonan'] = ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'];
+        }
+
+        $validated = $request->validate($rules);
 
         $programItem = OrmawaProgramItem::with('plan.ormawa.jenisOrmawa')->findOrFail($validated['program_item_id']);
 

@@ -28,6 +28,9 @@ class SikApplication extends Model
         'issued_by_user_id',
         'nomor_sik_eoffice',
         'catatan_terakhir',
+        'is_amendment_open',
+        'amendment_opened_by_user_id',
+        'amendment_opened_at',
     ];
 
     protected $casts = [
