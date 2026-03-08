@@ -122,5 +122,16 @@ function selectProker(card) {
     document.getElementById('sik-form-card').style.display = 'block';
     document.getElementById('sik-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const preselectedId = @json(request('program_item_id'));
+    if (!preselectedId) return;
+
+    const target = document.querySelector(`.proker-card[data-id="${preselectedId}"]`);
+    if (target) {
+        selectProker(target);
+    }
+});
 </script>
 @endsection

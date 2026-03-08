@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const submit = document.getElementById('stepActionSubmit');
 
     const config = {
-        approve: { title: 'Setujui Verifikasi', label: 'Catatan Persetujuan', submit: 'Setujui', required: false, btnClass: 'btn-success' },
+        approve: { title: 'Setujui Verifikasi', label: 'Catatan Persetujuan', submit: 'Setujui', required: true, btnClass: 'btn-success' },
         revise: { title: 'Minta Revisi', label: 'Catatan Revisi', submit: 'Kirim Permintaan Revisi', required: true, btnClass: 'btn-warning' },
         reject: { title: 'Tolak Pengajuan', label: 'Catatan Penolakan', submit: 'Tolak Pengajuan', required: true, btnClass: 'btn-danger' },
     };

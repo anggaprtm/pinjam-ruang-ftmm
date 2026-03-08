@@ -17,25 +17,91 @@ class SikApplicationController extends Controller
     {
         $user = auth()->user();
 
-        $query = SikApplication::with(['ormawa', 'programItem.plan', 'steps', 'issuer'])
-            ->orderByDesc('created_at');
-
         if (! $user->isAdmin()) {
-            $ormawaIds = $user->ormawas()->pluck('ormawas.id');
-            $query->whereIn('ormawa_id', $ormawaIds);
+            $selectedYear = $request->filled('tahun') ? (int) $request->input('tahun') : null;
+            $search = trim((string) $request->input('q', ''));
+
+            $itemsQuery = OrmawaProgramItem::with(['plan.ormawa', 'sikApplication'])
+                ->whereHas('plan', function ($q) use ($selectedYear, $user) {
+                    $q->where('status_plan', 'published')
+                        ->whereHas('ormawa.users', function ($uq) use ($user) {
+                            $uq->where('users.id', $user->id);
+                        });
+
+                    if ($selectedYear) {
+                        $q->where('tahun', $selectedYear);
+                    }
+                })
+                ->when($search !== '', function ($q) use ($search) {
+                    $q->where(function ($sq) use ($search) {
+                        $sq->where('nama_rencana', 'like', "%{$search}%")
+                            ->orWhere('kode_proker', 'like', "%{$search}%")
+                            ->orWhereHas('plan.ormawa', function ($oq) use ($search) {
+                                $oq->where('nama', 'like', "%{$search}%");
+                            });
+                    });
+                })
+                ->orderBy('timeline_mulai_rencana')
+                ->orderBy('nama_rencana');
+
+            $programItems = $itemsQuery->get();
+
+            $availableYears = OrmawaProgramItem::query()
+                ->select('ormawa_program_plans.tahun')
+                ->join('ormawa_program_plans', 'ormawa_program_plans.id', '=', 'ormawa_program_items.plan_id')
+                ->where('ormawa_program_plans.status_plan', 'published')
+                ->whereExists(function ($sq) use ($user) {
+                    $sq->selectRaw('1')
+                        ->from('ormawas')
+                        ->join('ormawa_user', 'ormawa_user.ormawa_id', '=', 'ormawas.id')
+                        ->whereColumn('ormawas.id', 'ormawa_program_plans.ormawa_id')
+                        ->where('ormawa_user.user_id', $user->id);
+                })
+                ->distinct()
+                ->orderByDesc('ormawa_program_plans.tahun')
+                ->pluck('ormawa_program_plans.tahun');
+
+            return view('admin.sik.index', [
+                'mode' => 'ormawa',
+                'programItems' => $programItems,
+                'selectedYear' => $selectedYear,
+                'availableYears' => $availableYears,
+                'search' => $search,
+            ]);
         }
+
+        $query = SikApplication::with(['ormawa', 'programItem.plan', 'steps'])
+            ->orderBy('created_at');
 
         if ($request->filled('status_sik')) {
             $query->where('status_sik', $request->input('status_sik'));
         }
 
-        if ($request->expectsJson()) {
-            return response()->json($query->paginate(15)->withQueryString());
-        }
-
         $applications = $query->get();
 
-        return view('admin.sik.index', compact('applications'));
+        $ormawaCards = $applications
+            ->groupBy(fn ($app) => $app->ormawa->nama ?? 'Tanpa Ormawa')
+            ->map(function ($group) {
+                $nearestDue = $group
+                    ->flatMap(fn ($app) => $app->steps->where('status_step', 'pending'))
+                    ->filter(fn ($step) => ! empty($step->due_at))
+                    ->sortBy('due_at')
+                    ->first();
+
+                return [
+                    'total' => $group->count(),
+                    'need_revision' => $group->where('status_sik', 'need_revision')->count(),
+                    'on_verification' => $group->where('status_sik', 'on_verification')->count(),
+                    'issued' => $group->where('status_sik', 'issued')->count(),
+                    'nearest_due' => $nearestDue?->due_at,
+                ];
+            });
+
+        return view('admin.sik.index', [
+            'mode' => 'verifikator',
+            'applications' => $applications,
+            'ormawaCards' => $ormawaCards,
+        ]);
     }
 
     public function create(Request $request)
@@ -464,6 +530,8 @@ class SikApplicationController extends Controller
             if (! $user->isAdmin() && ! $user->roles()->whereIn('title', ['Kemahasiswaan', 'Staf Kemahasiswaan'])->exists()) {
                 return response()->json(['message' => 'Hanya admin/kemahasiswaan yang dapat menerbitkan SIK.'], 403);
             }
+        } elseif (empty(trim((string) ($validated['notes'] ?? '')))) {
+            return response()->json(['message' => 'Catatan wajib diisi untuk aksi verifikasi ini.'], 422);
         }
 
         return DB::transaction(function () use ($validated, $sikApplication, $currentStep, $user, $request, $actionType) {
