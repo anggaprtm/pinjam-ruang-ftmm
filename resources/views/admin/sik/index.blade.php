@@ -1,5 +1,16 @@
 @extends('layouts.admin')
 @section('content')
+@php
+    $statusLabels = [
+        'draft' => 'Draft',
+        'submitted' => 'Diajukan',
+        'on_verification' => 'Dalam Verifikasi',
+        'need_revision' => 'Memerlukan Revisi',
+        'approved_final' => 'Disetujui Final',
+        'issued' => 'Diterbitkan',
+        'cancelled' => 'Dibatalkan',
+    ];
+@endphp
 <div class="d-flex align-items-center mb-3">
     <h3 class="mb-0">SIK Proker Ormawa</h3>
     <div class="ms-auto">
@@ -32,7 +43,7 @@
                         <td>{{ $item->judul_final_kegiatan }}</td>
                         <td>
                             <span class="badge bg-{{ $item->status_sik === 'issued' ? 'success' : ($item->status_sik === 'need_revision' ? 'warning' : ($item->status_sik === 'cancelled' ? 'danger' : 'secondary')) }}">
-                                {{ strtoupper($item->status_sik) }}
+                                {{ $statusLabels[$item->status_sik] ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $item->status_sik)) }}
                             </span>
                         </td>
                         <td>{{ optional($item->timeline_mulai_final)->format('d M Y') }} - {{ optional($item->timeline_selesai_final)->format('d M Y') }}</td>

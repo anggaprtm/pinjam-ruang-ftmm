@@ -5,6 +5,56 @@
     $isApplicantMember = $viewer && ! $viewer->isAdmin() && $viewer->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
     $canModerateAmendment = $viewer && ($viewer->isAdmin() || $viewer->hasRole('Kemahasiswaan') || $viewer->hasRole('Staf Kemahasiswaan'));
     $canReviseSubmission = $viewer && ($viewer->isAdmin() || $isApplicantMember) && $sikApplication->status_sik === 'need_revision';
+
+    $statusLabels = [
+        'draft' => 'Draft',
+        'submitted' => 'Diajukan',
+        'on_verification' => 'Dalam Verifikasi',
+        'need_revision' => 'Memerlukan Revisi',
+        'approved_final' => 'Disetujui Final',
+        'issued' => 'Diterbitkan',
+        'cancelled' => 'Dibatalkan',
+    ];
+
+    $stepStatusLabels = [
+        'pending' => 'Menunggu',
+        'approved' => 'Disetujui',
+        'rejected' => 'Ditolak',
+        'revised' => 'Perlu Revisi',
+    ];
+
+    $amendmentStatusLabels = [
+        'submitted' => 'Diajukan',
+        'approved' => 'Disetujui',
+        'rejected' => 'Ditolak',
+    ];
+
+    $translateEvent = function ($event) {
+        $map = [
+            'submitted' => 'Pengajuan dibuat',
+            'amendment_submitted' => 'Amendment diajukan',
+            'amendment_approve' => 'Amendment disetujui',
+            'amendment_approved' => 'Amendment disetujui',
+            'amendment_reject' => 'Amendment ditolak',
+            'amendment_rejected' => 'Amendment ditolak',
+            'issued' => 'SIK diterbitkan',
+            'step_issue' => 'Step penerbitan diproses',
+            'step_approve' => 'Step disetujui',
+            'step_reject' => 'Step ditolak',
+            'step_revise' => 'Diminta revisi',
+            'revision_resubmitted' => 'Revisi dikirim ulang',
+        ];
+
+        if (isset($map[$event])) {
+            return $map[$event];
+        }
+
+        if (\Illuminate\Support\Str::startsWith($event, 'step_')) {
+            return 'Proses step: ' . str_replace('_', ' ', \Illuminate\Support\Str::after($event, 'step_'));
+        }
+
+        return \Illuminate\Support\Str::title(str_replace('_', ' ', $event));
+    };
 @endphp
 
 <div class="d-flex align-items-center mb-3">
@@ -18,7 +68,7 @@
     <div class="card-body">
         <div class="row">
             <div class="col-md-6"><strong>Ormawa:</strong> {{ $sikApplication->ormawa->nama ?? '-' }}</div>
-            <div class="col-md-6"><strong>Status:</strong> {{ strtoupper($sikApplication->status_sik) }}</div>
+            <div class="col-md-6"><strong>Status:</strong> {{ $statusLabels[$sikApplication->status_sik] ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $sikApplication->status_sik)) }}</div>
             <div class="col-md-12 mt-2"><strong>Judul:</strong> {{ $sikApplication->judul_final_kegiatan }}</div>
             <div class="col-md-6 mt-2"><strong>Timeline:</strong> {{ optional($sikApplication->timeline_mulai_final)->format('d M Y') }} - {{ optional($sikApplication->timeline_selesai_final)->format('d M Y') }}</div>
             <div class="col-md-6 mt-2"><strong>No SIK e-office:</strong> {{ $sikApplication->nomor_sik_eoffice ?? '-' }}</div>
@@ -70,32 +120,39 @@
                     <tr>
                         <td>#{{ $step->step_order }}</td>
                         <td>{{ $step->role_target }}</td>
-                        <td>{{ strtoupper($step->status_step) }}</td>
+                        <td>{{ $stepStatusLabels[$step->status_step] ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $step->status_step)) }}</td>
                         <td>{{ optional($step->due_at)->format('d M Y H:i') ?? '-' }}</td>
                         <td>
+                            @php
+                                $hasUnfinishedPreviousStep = $sikApplication->steps
+                                    ->where('step_order', '<', $step->step_order)
+                                    ->contains(fn($prev) => ! in_array($prev->status_step, ['approved'], true));
+                            @endphp
                             @if($step->status_step === 'pending')
-                                @if($currentPending && (int)$currentPending->step_order === (int)$step->step_order && $canActStep)
+                                @if($hasUnfinishedPreviousStep)
+                                    <span class="badge bg-light text-dark">Menunggu step sebelumnya</span>
+                                @elseif($currentPending && (int)$currentPending->step_order === (int)$step->step_order && $canActStep)
                                     @if($actionType === 'issue')
                                         <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
                                             @csrf
                                             <input type="hidden" name="step_order" value="{{ $step->step_order }}">
                                             <input type="hidden" name="action" value="issue">
                                             <input type="text" name="nomor_sik_eoffice" class="form-control form-control-sm d-inline-block" style="width:220px" placeholder="Nomor SIK e-office" required>
-                                            <button class="btn btn-xs btn-primary">Issue SIK</button>
+                                            <button class="btn btn-xs btn-primary">Terbitkan Surat Izin Kegiatan</button>
                                         </form>
                                     @else
                                         <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
                                             @csrf
                                             <input type="hidden" name="step_order" value="{{ $step->step_order }}">
                                             <input type="hidden" name="action" value="approve">
-                                            <button class="btn btn-xs btn-success">Approve</button>
+                                            <button class="btn btn-xs btn-success">Setujui</button>
                                         </form>
                                         <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
                                             @csrf
                                             <input type="hidden" name="step_order" value="{{ $step->step_order }}">
                                             <input type="hidden" name="action" value="revise">
                                             <input type="text" name="notes" class="form-control form-control-sm d-inline-block" style="width:180px" placeholder="Catatan revisi" required>
-                                            <button class="btn btn-xs btn-warning">Kirim Revisi</button>
+                                            <button class="btn btn-xs btn-warning">Minta Revisi</button>
                                         </form>
                                         <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
                                             @csrf
@@ -123,7 +180,7 @@
 
 @if($sikApplication->status_sik === 'approved_final' && !optional($sikApplication->flow)->steps?->contains('action_type', 'issue') && $canModerateAmendment)
 <div class="card shadow-sm mb-3">
-    <div class="card-header"><strong>Terbitkan SIK</strong></div>
+    <div class="card-header"><strong>Terbitkan Surat Izin Kegiatan</strong></div>
     <div class="card-body">
         <form action="{{ route('admin.sik.issue', $sikApplication->id) }}" method="POST">
             @csrf
@@ -143,20 +200,20 @@
 
 <div class="card shadow-sm mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Amendment (Perubahan Judul/Timeline)</strong>
+        <strong>Perubahan Judul/Timeline (Amendment)</strong>
         @if($canModerateAmendment)
             <form method="POST" action="{{ route('admin.sik.amendments.toggleAccess', $sikApplication->id) }}" class="d-inline">
                 @csrf
                 <input type="hidden" name="is_open" value="{{ $sikApplication->is_amendment_open ? 0 : 1 }}">
                 <button class="btn btn-sm {{ $sikApplication->is_amendment_open ? 'btn-outline-danger' : 'btn-outline-success' }}" type="submit">
-                    {{ $sikApplication->is_amendment_open ? 'Tutup Akses Amendment' : 'Buka Akses Amendment' }}
+                    {{ $sikApplication->is_amendment_open ? 'Tutup Akses Perubahan' : 'Buka Akses Perubahan' }}
                 </button>
             </form>
         @endif
     </div>
     <div class="card-body">
         @if($isApplicantMember && $sikApplication->is_amendment_open)
-            <button class="btn btn-warning btn-sm mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#amendmentFormCollapse">Ajukan Amendment (Urgent)</button>
+            <button class="btn btn-warning btn-sm mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#amendmentFormCollapse">Ajukan Amendment (Mendesak)</button>
             <div class="collapse" id="amendmentFormCollapse">
                 <form action="{{ route('admin.sik.amendments.request', $sikApplication->id) }}" method="POST" class="mb-4">
                     @csrf
@@ -166,7 +223,7 @@
                         <div class="col-md-3"><label class="form-label">Timeline Selesai Baru</label><input type="date" name="timeline_selesai_final" class="form-control" value="{{ optional($sikApplication->timeline_selesai_final)->format('Y-m-d') }}" required></div>
                         <div class="col-md-6"><label class="form-label">Rencana Tempat Baru</label><input type="text" name="rencana_tempat" class="form-control" value="{{ $sikApplication->rencana_tempat }}"></div>
                         <div class="col-md-6"><label class="form-label">Alasan Perubahan</label><input type="text" name="alasan_perubahan" class="form-control" required></div>
-                        <div class="col-md-12"><button class="btn btn-warning" type="submit">Kirim Amendment</button></div>
+                        <div class="col-md-12"><button class="btn btn-warning" type="submit">Kirim Perubahan</button></div>
                     </div>
                 </form>
             </div>
@@ -183,12 +240,12 @@
                             <td>{{ $amendment->id }}</td>
                             <td>{{ $amendment->requester->name ?? '-' }}</td>
                             <td>{{ $amendment->alasan_perubahan }}</td>
-                            <td>{{ strtoupper($amendment->status_amendment) }}</td>
+                            <td>{{ $amendmentStatusLabels[$amendment->status_amendment] ?? \Illuminate\Support\Str::title(str_replace('_', ' ', $amendment->status_amendment)) }}</td>
                             <td>{{ optional($amendment->created_at)->format('d M Y H:i') }}</td>
                             <td>
                                 @if($canModerateAmendment && $amendment->status_amendment === 'submitted')
-                                    <form method="POST" action="{{ route('admin.sik.amendments.process', [$sikApplication->id, $amendment->id]) }}" class="d-inline">@csrf<input type="hidden" name="action" value="approve"><button class="btn btn-xs btn-success">Approve</button></form>
-                                    <form method="POST" action="{{ route('admin.sik.amendments.process', [$sikApplication->id, $amendment->id]) }}" class="d-inline">@csrf<input type="hidden" name="action" value="reject"><button class="btn btn-xs btn-danger">Reject</button></form>
+                                    <form method="POST" action="{{ route('admin.sik.amendments.process', [$sikApplication->id, $amendment->id]) }}" class="d-inline">@csrf<input type="hidden" name="action" value="approve"><button class="btn btn-xs btn-success">Setujui</button></form>
+                                    <form method="POST" action="{{ route('admin.sik.amendments.process', [$sikApplication->id, $amendment->id]) }}" class="d-inline">@csrf<input type="hidden" name="action" value="reject"><button class="btn btn-xs btn-danger">Tolak</button></form>
                                 @else
                                     -
                                 @endif
@@ -210,7 +267,7 @@
             <thead><tr><th>Waktu</th><th>Event</th><th>Aktor</th></tr></thead>
             <tbody>
                 @forelse($sikApplication->histories as $history)
-                    <tr><td>{{ optional($history->created_at)->format('d M Y H:i') }}</td><td>{{ $history->event }}</td><td>{{ $history->actor->name ?? '-' }}</td></tr>
+                    <tr><td>{{ optional($history->created_at)->format('d M Y H:i') }}</td><td>{{ $translateEvent($history->event) }}</td><td>{{ $history->actor->name ?? '-' }}</td></tr>
                 @empty
                     <tr><td colspan="3" class="text-muted text-center">Belum ada riwayat.</td></tr>
                 @endforelse
