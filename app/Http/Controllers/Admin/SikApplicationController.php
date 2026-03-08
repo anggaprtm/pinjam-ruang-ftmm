@@ -85,10 +85,7 @@ class SikApplicationController extends Controller
         $user = auth()->user();
         $sikApplication->load(['ormawa', 'programItem.plan', 'flow.steps', 'steps.actor', 'issuer', 'histories.actor', 'amendments.requester']);
 
-        if (! $user->isAdmin()) {
-            $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
-            abort_if(! $isMember, 403, 'Unauthorized');
-        }
+        $this->authorize('view', $sikApplication);
 
         return view('admin.sik.show', compact('sikApplication'));
     }
@@ -97,9 +94,9 @@ class SikApplicationController extends Controller
     {
         $user = auth()->user();
 
+        $this->authorize('requestAmendment', $sikApplication);
+
         if (! $user->isAdmin()) {
-            $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
-            abort_if(! $isMember, 403, 'Unauthorized');
             abort_if(! $sikApplication->is_amendment_open, 403, 'Akses amendment belum dibuka oleh Kemahasiswaan.');
         }
 
@@ -149,7 +146,7 @@ class SikApplicationController extends Controller
     public function toggleAmendmentAccess(Request $request, SikApplication $sikApplication)
     {
         $user = auth()->user();
-        abort_if(! $user->isAdmin() && ! $user->hasRole('Kemahasiswaan') && ! $user->hasRole('Staf Kemahasiswaan'), 403, 'Unauthorized');
+        $this->authorize('toggleAmendmentAccess', SikApplication::class);
 
         $validated = $request->validate([
             'is_open' => ['required', 'boolean'],
@@ -169,7 +166,7 @@ class SikApplicationController extends Controller
     public function processAmendment(Request $request, SikApplication $sikApplication, SikAmendment $amendment)
     {
         $user = auth()->user();
-        abort_if(! $user->isAdmin(), 403, 'Unauthorized');
+        $this->authorize('process', $amendment);
         abort_if((int) $amendment->sik_application_id !== (int) $sikApplication->id, 404);
 
         $validated = $request->validate([
@@ -215,6 +212,59 @@ class SikApplicationController extends Controller
 
         return redirect()->route('admin.sik.show', $sikApplication->id)
             ->with('success', 'Amendment berhasil diproses.');
+    }
+
+    public function edit(SikApplication $sikApplication)
+    {
+        $this->authorize('updateAfterRevision', $sikApplication);
+        abort_if($sikApplication->status_sik !== 'need_revision', 403, 'Pengajuan ini tidak dalam status revisi.');
+
+        return view('admin.sik.edit', compact('sikApplication'));
+    }
+
+    public function update(Request $request, SikApplication $sikApplication)
+    {
+        $this->authorize('updateAfterRevision', $sikApplication);
+        abort_if($sikApplication->status_sik !== 'need_revision', 403, 'Pengajuan ini tidak dalam status revisi.');
+
+        $validated = $request->validate([
+            'judul_final_kegiatan' => ['required', 'string', 'max:255'],
+            'timeline_mulai_final' => ['required', 'date'],
+            'timeline_selesai_final' => ['required', 'date', 'after_or_equal:timeline_mulai_final'],
+            'rencana_tempat' => ['nullable', 'string', 'max:255'],
+            'proposal' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+            'surat_permohonan' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+        ]);
+
+        if ($request->hasFile('proposal')) {
+            $validated['proposal_path'] = $request->file('proposal')->store('sik/proposal', 'public');
+        }
+        if ($request->hasFile('surat_permohonan')) {
+            $validated['surat_permohonan_path'] = $request->file('surat_permohonan')->store('sik/surat_permohonan', 'public');
+        }
+
+        $sikApplication->update([
+            'judul_final_kegiatan' => $validated['judul_final_kegiatan'],
+            'timeline_mulai_final' => $validated['timeline_mulai_final'],
+            'timeline_selesai_final' => $validated['timeline_selesai_final'],
+            'rencana_tempat' => $validated['rencana_tempat'] ?? null,
+            'proposal_path' => $validated['proposal_path'] ?? $sikApplication->proposal_path,
+            'surat_permohonan_path' => $validated['surat_permohonan_path'] ?? $sikApplication->surat_permohonan_path,
+            'status_sik' => 'on_verification',
+            'catatan_terakhir' => null,
+        ]);
+
+        SikHistory::create([
+            'sik_application_id' => $sikApplication->id,
+            'actor_user_id' => auth()->id(),
+            'event' => 'revision_resubmitted',
+            'payload_json' => [
+                'judul_final_kegiatan' => $validated['judul_final_kegiatan'],
+            ],
+            'created_at' => now(),
+        ]);
+
+        return redirect()->route('admin.sik.show', $sikApplication->id)->with('success', 'Perbaikan pengajuan berhasil disimpan dan dikirim ulang.');
     }
 
     public function activeProgramItems(Request $request)
@@ -442,6 +492,8 @@ class SikApplicationController extends Controller
                     ]);
                     $sikApplication->programItem()->update(['status_item' => 'ditolak']);
                 } else {
+                    // Tetap di step yang sama sampai pemohon melakukan revisi
+                    $currentStep->update(['status_step' => 'pending']);
                     $sikApplication->update([
                         'status_sik' => 'need_revision',
                         'catatan_terakhir' => $validated['notes'] ?? 'Perlu revisi.',
