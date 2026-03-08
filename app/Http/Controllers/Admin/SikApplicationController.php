@@ -85,14 +85,7 @@ class SikApplicationController extends Controller
         $user = auth()->user();
         $sikApplication->load(['ormawa', 'programItem.plan', 'flow.steps', 'steps.actor', 'issuer', 'histories.actor', 'amendments.requester']);
 
-<<<<<<< HEAD
-        if (! $user->isAdmin()) {
-            $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
-            abort_if(! $isMember, 403, 'Unauthorized');
-        }
-=======
         $this->authorize('view', $sikApplication);
->>>>>>> origin/codex/understand-application-architecture-and-business-flow-4inpv8
 
         return view('admin.sik.show', compact('sikApplication'));
     }
@@ -101,15 +94,9 @@ class SikApplicationController extends Controller
     {
         $user = auth()->user();
 
-<<<<<<< HEAD
-        if (! $user->isAdmin()) {
-            $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
-            abort_if(! $isMember, 403, 'Unauthorized');
-=======
         $this->authorize('requestAmendment', $sikApplication);
 
         if (! $user->isAdmin()) {
->>>>>>> origin/codex/understand-application-architecture-and-business-flow-4inpv8
             abort_if(! $sikApplication->is_amendment_open, 403, 'Akses amendment belum dibuka oleh Kemahasiswaan.');
         }
 
@@ -159,11 +146,7 @@ class SikApplicationController extends Controller
     public function toggleAmendmentAccess(Request $request, SikApplication $sikApplication)
     {
         $user = auth()->user();
-<<<<<<< HEAD
-        abort_if(! $user->isAdmin() && ! $user->hasRole('Kemahasiswaan') && ! $user->hasRole('Staf Kemahasiswaan'), 403, 'Unauthorized');
-=======
         $this->authorize('toggleAmendmentAccess', SikApplication::class);
->>>>>>> origin/codex/understand-application-architecture-and-business-flow-4inpv8
 
         $validated = $request->validate([
             'is_open' => ['required', 'boolean'],
@@ -183,11 +166,7 @@ class SikApplicationController extends Controller
     public function processAmendment(Request $request, SikApplication $sikApplication, SikAmendment $amendment)
     {
         $user = auth()->user();
-<<<<<<< HEAD
-        abort_if(! $user->isAdmin(), 403, 'Unauthorized');
-=======
         $this->authorize('process', $amendment);
->>>>>>> origin/codex/understand-application-architecture-and-business-flow-4inpv8
         abort_if((int) $amendment->sik_application_id !== (int) $sikApplication->id, 404);
 
         $validated = $request->validate([
@@ -235,8 +214,6 @@ class SikApplicationController extends Controller
             ->with('success', 'Amendment berhasil diproses.');
     }
 
-<<<<<<< HEAD
-=======
     public function edit(SikApplication $sikApplication)
     {
         $this->authorize('updateAfterRevision', $sikApplication);
@@ -290,7 +267,6 @@ class SikApplicationController extends Controller
         return redirect()->route('admin.sik.show', $sikApplication->id)->with('success', 'Perbaikan pengajuan berhasil disimpan dan dikirim ulang.');
     }
 
->>>>>>> origin/codex/understand-application-architecture-and-business-flow-4inpv8
     public function activeProgramItems(Request $request)
     {
         $user = auth()->user();
@@ -516,11 +492,8 @@ class SikApplicationController extends Controller
                     ]);
                     $sikApplication->programItem()->update(['status_item' => 'ditolak']);
                 } else {
-<<<<<<< HEAD
-=======
                     // Tetap di step yang sama sampai pemohon melakukan revisi
                     $currentStep->update(['status_step' => 'pending']);
->>>>>>> origin/codex/understand-application-architecture-and-business-flow-4inpv8
                     $sikApplication->update([
                         'status_sik' => 'need_revision',
                         'catatan_terakhir' => $validated['notes'] ?? 'Perlu revisi.',
