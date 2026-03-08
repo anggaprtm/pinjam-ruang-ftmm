@@ -20,6 +20,12 @@ class OrmawaProgramItem extends Model
         'status_item',
     ];
 
+
+    protected $casts = [
+        'timeline_mulai_rencana' => 'date',
+        'timeline_selesai_rencana' => 'date',
+    ];
+
     public function plan()
     {
         return $this->belongsTo(OrmawaProgramPlan::class, 'plan_id');

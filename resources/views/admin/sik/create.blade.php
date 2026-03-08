@@ -30,13 +30,15 @@
                  data-id="{{ $item->id }}"
                  data-title="{{ e($item->nama_rencana) }}"
                  data-ormawa="{{ e($item->plan->ormawa->nama ?? '-') }}"
-                 data-timeline="{{ optional($item->timeline_mulai_rencana)->format('d M Y') }} - {{ optional($item->timeline_selesai_rencana)->format('d M Y') }}"
+                 data-timeline="{{ $item->timeline_mulai_rencana ? $item->timeline_mulai_rencana->format('d M Y') : '-' }} - {{ $item->timeline_selesai_rencana ? $item->timeline_selesai_rencana->format('d M Y') : '-' }}"
+                 data-start="{{ $item->timeline_mulai_rencana ? $item->timeline_mulai_rencana->format('Y-m-d') : '' }}"
+                 data-end="{{ $item->timeline_selesai_rencana ? $item->timeline_selesai_rencana->format('Y-m-d') : '' }}"
                  onclick="selectProker(this)">
                 <div class="card-body">
                     <div class="small text-muted mb-1">{{ $item->plan->ormawa->nama ?? '-' }} • {{ $item->plan->tahun ?? '-' }}</div>
                     <h5 class="mb-2">{{ $item->nama_rencana }}</h5>
                     <div class="text-muted">Timeline rencana:</div>
-                    <div>{{ optional($item->timeline_mulai_rencana)->format('d M Y') }} - {{ optional($item->timeline_selesai_rencana)->format('d M Y') }}</div>
+                    <div>{{ $item->timeline_mulai_rencana ? $item->timeline_mulai_rencana->format('d M Y') : '-' }} - {{ $item->timeline_selesai_rencana ? $item->timeline_selesai_rencana->format('d M Y') : '-' }}</div>
                 </div>
                 <div class="card-footer bg-white">
                     <button type="button" class="btn btn-sm btn-primary">Pilih Proker Ini</button>
@@ -60,7 +62,7 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Judul Final Kegiatan</label>
-                    <input type="text" name="judul_final_kegiatan" class="form-control" required>
+                    <input type="text" name="judul_final_kegiatan" id="judul_final_kegiatan" class="form-control" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Rencana Tempat</label>
@@ -68,11 +70,11 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Timeline Mulai Final</label>
-                    <input type="date" name="timeline_mulai_final" class="form-control" required>
+                    <input type="date" name="timeline_mulai_final" id="timeline_mulai_final" class="form-control" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Timeline Selesai Final</label>
-                    <input type="date" name="timeline_selesai_final" class="form-control" required>
+                    <input type="date" name="timeline_selesai_final" id="timeline_selesai_final" class="form-control" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Proposal</label>
@@ -99,8 +101,13 @@ function selectProker(card) {
     const title = card.dataset.title;
     const ormawa = card.dataset.ormawa;
     const timeline = card.dataset.timeline;
+    const start = card.dataset.start || '';
+    const end = card.dataset.end || '';
 
     document.getElementById('program_item_id').value = id;
+    document.getElementById('judul_final_kegiatan').value = title;
+    document.getElementById('timeline_mulai_final').value = start;
+    document.getElementById('timeline_selesai_final').value = end;
     document.getElementById('selected-proker-info').innerHTML = `<strong>Proker terpilih:</strong> ${title}<br><strong>Ormawa:</strong> ${ormawa}<br><strong>Timeline rencana:</strong> ${timeline}`;
     document.getElementById('sik-form-card').style.display = 'block';
     document.getElementById('sik-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
