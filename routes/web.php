@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\PeriodeJamKerjaController;
 use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Admin\TendikController;
 use App\Http\Controllers\Admin\SikApplicationController;
+use App\Http\Controllers\Admin\SikVerificationFlowController;
 
 
 
@@ -136,6 +137,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::resource('tendik', TendikController::class);
 
     // SIK Proker Ormawa
+    Route::resource('sik-flows', SikVerificationFlowController::class)->except(['show'])->parameters(['sik-flows' => 'sikFlow']);
+
     Route::get('sik/active-prokers', [SikApplicationController::class, 'activeProgramItems'])->name('sik.activeProkers');
     Route::get('sik-applications', [SikApplicationController::class, 'index'])->name('sik.index');
     Route::get('sik-applications/create', [SikApplicationController::class, 'create'])->name('sik.create');
