@@ -66,9 +66,9 @@ $initialSteps = collect($oldSteps ?: (($sikFlow->steps ?? collect())->map(fn($st
                     <div class="col-md-3">
                         <label class="form-label">Aksi</label>
                         <select class="form-control" name="steps[${index}][action_type]" required>
-                            <option value="approve_only" ${value.action_type === 'approve_only' ? 'selected' : ''}>Approve only</option>
-                            <option value="approve_or_revise" ${value.action_type === 'approve_or_revise' ? 'selected' : ''}>Approve / Revise</option>
-                            <option value="approve_or_reject_or_revise" ${value.action_type === 'approve_or_reject_or_revise' ? 'selected' : ''}>Approve / Reject / Revise</option>
+                            <option value="verify" ${value.action_type === 'verify' ? 'selected' : ''}>Verify</option>
+                            <option value="approve" ${value.action_type === 'approve' ? 'selected' : ''}>Approve</option>
+                            <option value="issue" ${value.action_type === 'issue' ? 'selected' : ''}>Issue</option>
                         </select>
                     </div>
                     <div class="col-md-1">
@@ -90,7 +90,7 @@ $initialSteps = collect($oldSteps ?: (($sikFlow->steps ?? collect())->map(fn($st
             return {
                 label_step: item.querySelector(`[name=\"steps[${idx}][label_step]\"]`)?.value ?? '',
                 role_target: item.querySelector(`[name=\"steps[${idx}][role_target]\"]`)?.value ?? '',
-                action_type: item.querySelector(`[name=\"steps[${idx}][action_type]\"]`)?.value ?? 'approve_only',
+                action_type: item.querySelector(`[name=\"steps[${idx}][action_type]\"]`)?.value ?? 'verify',
                 sla_days: item.querySelector(`[name=\"steps[${idx}][sla_days]\"]`)?.value ?? '',
             }
         });
@@ -119,7 +119,7 @@ $initialSteps = collect($oldSteps ?: (($sikFlow->steps ?? collect())->map(fn($st
 
     document.addEventListener('DOMContentLoaded', function () {
         const wrapper = document.getElementById('steps-wrapper');
-        const seedSteps = initialSteps.length > 0 ? initialSteps : [{ action_type: 'approve_or_reject_or_revise' }];
+        const seedSteps = initialSteps.length > 0 ? initialSteps : [{ action_type: 'verify' }];
 
         seedSteps.forEach((step, index) => {
             wrapper.insertAdjacentHTML('beforeend', stepTemplate(index, step));

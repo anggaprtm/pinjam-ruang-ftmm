@@ -110,7 +110,7 @@ class SikVerificationFlowController extends Controller
             'steps' => ['required', 'array', 'min:1'],
             'steps.*.label_step' => ['required', 'string', 'max:255'],
             'steps.*.role_target' => ['required', 'string', 'max:120'],
-            'steps.*.action_type' => ['required', 'in:approve_only,approve_or_revise,approve_or_reject_or_revise'],
+            'steps.*.action_type' => ['required', 'in:verify,approve,issue'],
             'steps.*.sla_days' => ['nullable', 'integer', 'min:0', 'max:365'],
         ]);
     }
