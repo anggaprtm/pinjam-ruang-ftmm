@@ -216,6 +216,15 @@ class KegiatanController extends Controller
 
         $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
         $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+        $sikApplications = collect();
+
+        if (!auth()->user()->isAdmin()) {
+            $ormawaIds = auth()->user()->ormawas()->pluck('ormawas.id');
+            $sikApplications = SikApplication::issued()
+                ->whereIn('ormawa_id', $ormawaIds)
+                ->orderByDesc('issued_at')
+                ->get();
+        }
 
         $prefilledData = [];
         if ($request->has('permintaan_id')) {
@@ -244,7 +253,7 @@ class KegiatanController extends Controller
             ];
         }
 
-        return view('admin.kegiatan.create', compact('ruangan', 'users', 'prefilledData'));
+        return view('admin.kegiatan.create', compact('ruangan', 'users', 'prefilledData', 'sikApplications'));
     }
 
     public function store(StoreKegiatanRequest $request, EventService $eventService, SikApplicationService $sikService)
@@ -386,10 +395,19 @@ class KegiatanController extends Controller
         $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
 
         $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+        $sikApplications = collect();
+
+        if (!auth()->user()->isAdmin()) {
+            $ormawaIds = auth()->user()->ormawas()->pluck('ormawas.id');
+            $sikApplications = SikApplication::issued()
+                ->whereIn('ormawa_id', $ormawaIds)
+                ->orderByDesc('issued_at')
+                ->get();
+        }
 
         $kegiatan->load('ruangan', 'user');
 
-        return view('admin.kegiatan.edit', compact('kegiatan', 'ruangan', 'users'));
+        return view('admin.kegiatan.edit', compact('kegiatan', 'ruangan', 'users', 'sikApplications'));
     }
 
     public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan, EventService $eventService)

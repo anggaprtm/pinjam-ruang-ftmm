@@ -198,6 +198,7 @@ class SikApplicationController extends Controller
         $validated = $request->validate([
             'action' => ['required', 'in:approve,reject,revise'],
             'notes' => ['nullable', 'string'],
+            'step_order' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $sikApplication->load('steps', 'programItem');
@@ -205,6 +206,10 @@ class SikApplicationController extends Controller
         $currentStep = $sikApplication->steps()->where('status_step', 'pending')->orderBy('step_order')->first();
         if (! $currentStep) {
             return response()->json(['message' => 'Tidak ada step verifikasi yang pending.'], 422);
+        }
+
+        if (! empty($validated['step_order']) && (int) $validated['step_order'] !== (int) $currentStep->step_order) {
+            return response()->json(['message' => 'Aksi hanya boleh pada step pending aktif.'], 422);
         }
 
         $userRoles = $user->roles->pluck('title')->map(fn ($role) => strtolower(trim($role)));

@@ -30,6 +30,15 @@ class BookingsController extends Controller
     {
         // Ganti nama variabel agar konsisten
         $ruangan = collect(); // Mulai dengan koleksi kosong
+        $sikApplications = collect();
+
+        if (auth()->check() && !auth()->user()->isAdmin()) {
+            $ormawaIds = auth()->user()->ormawas()->pluck('ormawas.id');
+            $sikApplications = SikApplication::issued()
+                ->whereIn('ormawa_id', $ormawaIds)
+                ->orderByDesc('issued_at')
+                ->get();
+        }
 
         // Cek apakah ada filter waktu dan kapasitas yang diisi
         if ($request->filled(['waktu_mulai', 'waktu_selesai', 'kapasitas'])) {
@@ -58,7 +67,10 @@ class BookingsController extends Controller
             $ruangan = Ruangan::where('is_active', true)->orderBy('nama', 'asc')->get();
         }
 
-        return view('admin.bookings.cari', ['ruangan' => $ruangan]);
+        return view('admin.bookings.cari', [
+            'ruangan' => $ruangan,
+            'sikApplications' => $sikApplications,
+        ]);
     }
 
     // Method bookRuang Anda tidak perlu diubah
