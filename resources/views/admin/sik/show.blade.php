@@ -29,6 +29,14 @@
         'rejected' => 'Ditolak',
     ];
 
+    $proposalUrl = $sikApplication->proposal_path ? asset('storage/' . $sikApplication->proposal_path) : null;
+    $proposalExt = $sikApplication->proposal_path ? strtolower(pathinfo($sikApplication->proposal_path, PATHINFO_EXTENSION)) : null;
+    $proposalPreviewable = in_array($proposalExt, ['pdf'], true);
+
+    $suratUrl = $sikApplication->surat_permohonan_path ? asset('storage/' . $sikApplication->surat_permohonan_path) : null;
+    $suratExt = $sikApplication->surat_permohonan_path ? strtolower(pathinfo($sikApplication->surat_permohonan_path, PATHINFO_EXTENSION)) : null;
+    $suratPreviewable = in_array($suratExt, ['pdf'], true);
+
     $translateEvent = function ($event) {
         $map = [
             'submitted' => 'Pengajuan dibuat',
@@ -91,6 +99,80 @@
         </div>
     </div>
 </div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header"><strong>Dokumen Pengajuan</strong></div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="mb-2">Proposal</h6>
+                    @if($proposalUrl)
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if($proposalPreviewable)
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#previewProposalModal">Preview</button>
+                            @else
+                                <span class="badge bg-light text-dark">Preview tersedia untuk file PDF</span>
+                            @endif
+                            <a href="{{ $proposalUrl }}" target="_blank" class="btn btn-sm btn-outline-secondary">Unduh</a>
+                        </div>
+                    @else
+                        <span class="text-muted">Dokumen proposal belum tersedia.</span>
+                    @endif
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="mb-2">Surat Permohonan</h6>
+                    @if($suratUrl)
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if($suratPreviewable)
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#previewSuratModal">Preview</button>
+                            @else
+                                <span class="badge bg-light text-dark">Preview tersedia untuk file PDF</span>
+                            @endif
+                            <a href="{{ $suratUrl }}" target="_blank" class="btn btn-sm btn-outline-secondary">Unduh</a>
+                        </div>
+                    @else
+                        <span class="text-muted">Dokumen surat permohonan belum tersedia.</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if($proposalUrl && $proposalPreviewable)
+<div class="modal fade" id="previewProposalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview Proposal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh;">
+                <iframe src="{{ $proposalUrl }}" title="Preview Proposal" class="w-100 h-100 border-0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+@if($suratUrl && $suratPreviewable)
+<div class="modal fade" id="previewSuratModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview Surat Permohonan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh;">
+                <iframe src="{{ $suratUrl }}" title="Preview Surat Permohonan" class="w-100 h-100 border-0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <div class="card shadow-sm mb-3">
     <div class="card-header"><strong>Tracker Verifikasi</strong></div>
