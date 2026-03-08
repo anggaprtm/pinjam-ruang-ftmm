@@ -4,6 +4,7 @@
     $viewer = auth()->user();
     $isApplicantMember = $viewer && ! $viewer->isAdmin() && $viewer->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
     $canModerateAmendment = $viewer && ($viewer->isAdmin() || $viewer->hasRole('Kemahasiswaan') || $viewer->hasRole('Staf Kemahasiswaan'));
+    $canReviseSubmission = $viewer && ($viewer->isAdmin() || $isApplicantMember) && $sikApplication->status_sik === 'need_revision';
 @endphp
 
 <div class="d-flex align-items-center mb-3">
@@ -23,6 +24,19 @@
             <div class="col-md-6 mt-2"><strong>No SIK e-office:</strong> {{ $sikApplication->nomor_sik_eoffice ?? '-' }}</div>
             @if(!empty($sikApplication->catatan_terakhir))
                 <div class="col-md-12 mt-2"><strong>Catatan Terakhir:</strong> {{ $sikApplication->catatan_terakhir }}</div>
+            @endif
+            @if($canReviseSubmission)
+                <div class="col-md-12 mt-3">
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-0">
+                        <div>
+                            <strong>Pengajuan perlu revisi.</strong>
+                            Silakan perbarui data/dokumen lalu kirim ulang agar proses verifikasi dapat dilanjutkan.
+                        </div>
+                        <a href="{{ route('admin.sik.edit', $sikApplication->id) }}" class="btn btn-warning ms-3">
+                            Revisi Pengajuan
+                        </a>
+                    </div>
+                </div>
             @endif
         </div>
     </div>

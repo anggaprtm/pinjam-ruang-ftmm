@@ -42,6 +42,11 @@
                             <a href="{{ route('admin.sik.show', $item->id) }}" class="btn btn-xs btn-info">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            @if($item->status_sik === 'need_revision')
+                                <a href="{{ route('admin.sik.edit', $item->id) }}" class="btn btn-xs btn-warning" title="Revisi Pengajuan">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @empty
