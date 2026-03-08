@@ -49,6 +49,16 @@ class UpdateKegiatanRequest extends FormRequest
                 'required',
                 'integer',
             ],
+            'sik_application_id' => [
+                'nullable',
+                'integer',
+                'exists:sik_applications,id',
+            ],
+            'override_reason' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
             // 'nomor_telepon' => [
             //     'string',
             //     'nullable',

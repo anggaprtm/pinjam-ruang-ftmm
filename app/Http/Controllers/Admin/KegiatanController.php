@@ -21,6 +21,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TelegramService;
+use App\Services\SikApplicationService;
+use App\Models\SikApplication;
 
 class KegiatanController extends Controller
 {
@@ -214,6 +216,15 @@ class KegiatanController extends Controller
 
         $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
         $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+        $sikApplications = collect();
+
+        if (!auth()->user()->isAdmin()) {
+            $ormawaIds = auth()->user()->ormawas()->pluck('ormawas.id');
+            $sikApplications = SikApplication::issued()
+                ->whereIn('ormawa_id', $ormawaIds)
+                ->orderByDesc('issued_at')
+                ->get();
+        }
 
         $prefilledData = [];
         if ($request->has('permintaan_id')) {
@@ -242,11 +253,42 @@ class KegiatanController extends Controller
             ];
         }
 
-        return view('admin.kegiatan.create', compact('ruangan', 'users', 'prefilledData'));
+        return view('admin.kegiatan.create', compact('ruangan', 'users', 'prefilledData', 'sikApplications'));
     }
 
-    public function store(StoreKegiatanRequest $request, EventService $eventService)
+    public function store(StoreKegiatanRequest $request, EventService $eventService, SikApplicationService $sikService)
     {
+        $user = auth()->user();
+
+        // Operator Ormawa wajib menggunakan SIK terbit untuk pengajuan kegiatan.
+        if (!$user->isAdmin() && $user->ormawas()->exists()) {
+            $request->validate([
+                'sik_application_id' => ['required', 'integer', 'exists:sik_applications,id'],
+            ]);
+
+            $sik = SikApplication::findOrFail($request->input('sik_application_id'));
+            $start = \Carbon\Carbon::createFromFormat(
+                config('panel.date_format') . ' ' . config('panel.time_format'),
+                $request->input('waktu_mulai')
+            );
+            $end = \Carbon\Carbon::createFromFormat(
+                config('panel.date_format') . ' ' . config('panel.time_format'),
+                $request->input('waktu_selesai')
+            );
+
+            [$canUse, $message] = $sikService->canBeUsedForBooking($sik, $user, $start, $end);
+            if (! $canUse) {
+                return redirect()->back()->withInput($request->input())->withErrors($message);
+            }
+        }
+
+        if ($user->isAdmin()
+            && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa'
+            && empty($request->input('sik_application_id'))
+            && empty($request->input('override_reason'))) {
+            return redirect()->back()->withInput($request->input())->withErrors('Alasan override wajib diisi untuk kegiatan ormawa tanpa SIK.');
+        }
+
         // Pengecekan bentrok tetap sama
         $kegiatanBentrok = $eventService->isRoomTaken($request->all());
     
@@ -259,14 +301,19 @@ class KegiatanController extends Controller
         // PERUBAHAN UTAMA DI SINI
         $data = $request->all();
 
+        if ($user->isAdmin() && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa' && empty($request->input('sik_application_id'))) {
+            $data['is_admin_override_sik'] = true;
+            $data['override_reason'] = $request->input('override_reason');
+        }
+
         if ($request->hasFile('poster')) {
             $data['poster'] = $request->file('poster')->store('posters', 'public');
         }
         
         // Logika status dan user_id tetap sama
-        if (auth()->user()->hasRole('User')) {
+        if ($user->hasRole('User')) {
             $data['status'] = 'belum_disetujui';
-        } elseif (auth()->user()->hasRole('Admin')) {
+        } elseif ($user->hasRole('Admin')) {
             $data['status'] = 'disetujui';
         }
         
@@ -314,6 +361,23 @@ class KegiatanController extends Controller
                     'created_at' => $model->created_at,
                 ]);
             }
+
+            if ($user->isAdmin() && !empty($data['is_admin_override_sik'])) {
+                try {
+                    $kemahasiswaanGroup = env('TELEGRAM_KEMAHASISWAAN_GROUP_ID');
+                    if ($kemahasiswaanGroup) {
+                        $first = is_array($created) ? $created[0] : $created;
+                        $msgOverride = "⚠️ <b>ADMIN OVERRIDE SIK</b>\n\n" .
+                            "Kegiatan: <b>{$first->nama_kegiatan}</b>\n" .
+                            "Jenis: {$first->jenis_kegiatan}\n" .
+                            "Alasan: <i>{$first->override_reason}</i>\n\n" .
+                            "Mohon kontrol Kemahasiswaan.";
+                        app(\App\Services\TelegramService::class)->sendMessage($kemahasiswaanGroup, $msgOverride);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Gagal kirim notif override SIK: ' . $e->getMessage());
+                }
+            }
         }
 
         return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil disimpan!');
@@ -331,10 +395,19 @@ class KegiatanController extends Controller
         $ruangan = Ruangan::pluck('nama', 'id')->prepend(trans('global.pleaseSelect'), '');
 
         $users = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+        $sikApplications = collect();
+
+        if (!auth()->user()->isAdmin()) {
+            $ormawaIds = auth()->user()->ormawas()->pluck('ormawas.id');
+            $sikApplications = SikApplication::issued()
+                ->whereIn('ormawa_id', $ormawaIds)
+                ->orderByDesc('issued_at')
+                ->get();
+        }
 
         $kegiatan->load('ruangan', 'user');
 
-        return view('admin.kegiatan.edit', compact('kegiatan', 'ruangan', 'users'));
+        return view('admin.kegiatan.edit', compact('kegiatan', 'ruangan', 'users', 'sikApplications'));
     }
 
     public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan, EventService $eventService)
@@ -362,6 +435,11 @@ class KegiatanController extends Controller
 
         // Baru proses file (setelah aman)
         $data = $request->all();
+
+        if ($user->isAdmin() && $request->input('jenis_kegiatan') === 'Kegiatan Ormawa' && empty($request->input('sik_application_id'))) {
+            $data['is_admin_override_sik'] = true;
+            $data['override_reason'] = $request->input('override_reason');
+        }
 
         if ($request->hasFile('poster')) {
             // Hapus poster lama jika ada
