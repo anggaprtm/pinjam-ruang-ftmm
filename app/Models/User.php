@@ -106,6 +106,12 @@ class User extends Authenticatable
         return $this->hasMany(AbsensiLog::class, 'user_id', 'id');
     }
 
+
+    public function ormawas()
+    {
+        return $this->belongsToMany(Ormawa::class, 'ormawa_user')->withTimestamps();
+    }
+
     public function dosenDetail()
     {
         return $this->hasOne(DosenDetail::class, 'user_id');

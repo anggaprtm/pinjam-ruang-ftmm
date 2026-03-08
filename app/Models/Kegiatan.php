@@ -46,6 +46,9 @@ class Kegiatan extends Model
         'revisi_level',
         'revisi_notes',
         'google_event_id',
+        'sik_application_id',
+        'is_admin_override_sik',
+        'override_reason',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -53,6 +56,7 @@ class Kegiatan extends Model
     
     protected $casts = [
         'status' => 'string',
+        'is_admin_override_sik' => 'boolean',
     ];
     
 
@@ -93,6 +97,11 @@ class Kegiatan extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function sikApplication()
+    {
+        return $this->belongsTo(SikApplication::class, 'sik_application_id');
     }
 
     public function revisiBy()
