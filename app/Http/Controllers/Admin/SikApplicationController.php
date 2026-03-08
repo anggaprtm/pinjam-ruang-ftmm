@@ -41,11 +41,14 @@ class SikApplicationController extends Controller
     public function create(Request $request)
     {
         $user = auth()->user();
-        $year = (int) ($request->input('tahun') ?: now()->year);
+        $selectedYear = $request->filled('tahun') ? (int) $request->input('tahun') : null;
 
         $query = OrmawaProgramItem::with(['plan.ormawa'])
-            ->whereHas('plan', function ($q) use ($year) {
-                $q->where('tahun', $year)->where('status_plan', 'published');
+            ->whereHas('plan', function ($q) use ($selectedYear) {
+                $q->where('status_plan', 'published');
+                if ($selectedYear) {
+                    $q->where('tahun', $selectedYear);
+                }
             })
             ->whereDoesntHave('sikApplication')
             ->orderBy('nama_rencana');
@@ -57,8 +60,24 @@ class SikApplicationController extends Controller
         }
 
         $activeProgramItems = $query->get();
+        $availableYears = OrmawaProgramItem::query()
+            ->select('ormawa_program_plans.tahun')
+            ->join('ormawa_program_plans', 'ormawa_program_plans.id', '=', 'ormawa_program_items.plan_id')
+            ->where('ormawa_program_plans.status_plan', 'published')
+            ->when(! $user->isAdmin(), function ($q) use ($user) {
+                $q->whereExists(function ($sq) use ($user) {
+                    $sq->selectRaw('1')
+                        ->from('ormawas')
+                        ->join('ormawa_user', 'ormawa_user.ormawa_id', '=', 'ormawas.id')
+                        ->whereColumn('ormawas.id', 'ormawa_program_plans.ormawa_id')
+                        ->where('ormawa_user.user_id', $user->id);
+                });
+            })
+            ->distinct()
+            ->orderByDesc('ormawa_program_plans.tahun')
+            ->pluck('ormawa_program_plans.tahun');
 
-        return view('admin.sik.create', compact('activeProgramItems', 'year'));
+        return view('admin.sik.create', compact('activeProgramItems', 'selectedYear', 'availableYears'));
     }
 
     public function show(SikApplication $sikApplication)
@@ -179,11 +198,14 @@ class SikApplicationController extends Controller
     public function activeProgramItems(Request $request)
     {
         $user = auth()->user();
-        $year = (int) ($request->input('tahun') ?: now()->year);
+        $selectedYear = $request->filled('tahun') ? (int) $request->input('tahun') : null;
 
         $query = OrmawaProgramItem::with(['plan.ormawa'])
-            ->whereHas('plan', function ($q) use ($year) {
-                $q->where('tahun', $year)->where('status_plan', 'published');
+            ->whereHas('plan', function ($q) use ($selectedYear) {
+                $q->where('status_plan', 'published');
+                if ($selectedYear) {
+                    $q->where('tahun', $selectedYear);
+                }
             })
             ->whereDoesntHave('sikApplication')
             ->orderBy('nama_rencana');
