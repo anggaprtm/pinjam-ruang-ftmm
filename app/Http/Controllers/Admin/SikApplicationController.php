@@ -64,7 +64,7 @@ class SikApplicationController extends Controller
     public function show(SikApplication $sikApplication)
     {
         $user = auth()->user();
-        $sikApplication->load(['ormawa', 'programItem.plan', 'steps.actor', 'issuer', 'histories.actor', 'amendments.requester']);
+        $sikApplication->load(['ormawa', 'programItem.plan', 'flow.steps', 'steps.actor', 'issuer', 'histories.actor', 'amendments.requester']);
 
         if (! $user->isAdmin()) {
             $isMember = $user->ormawas()->where('ormawas.id', $sikApplication->ormawa_id)->exists();
@@ -299,12 +299,13 @@ class SikApplicationController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'action' => ['required', 'in:approve,reject,revise'],
+            'action' => ['required', 'in:approve,reject,revise,issue'],
             'notes' => ['nullable', 'string'],
             'step_order' => ['nullable', 'integer', 'min:1'],
+            'nomor_sik_eoffice' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $sikApplication->load('steps', 'programItem');
+        $sikApplication->load('steps', 'programItem', 'flow.steps');
 
         $currentStep = $sikApplication->steps()->where('status_step', 'pending')->orderBy('step_order')->first();
         if (! $currentStep) {
@@ -315,51 +316,100 @@ class SikApplicationController extends Controller
             return response()->json(['message' => 'Aksi hanya boleh pada step pending aktif.'], 422);
         }
 
+        $flowStep = optional($sikApplication->flow)
+            ? $sikApplication->flow->steps->firstWhere('step_order', $currentStep->step_order)
+            : null;
+        $actionType = $flowStep->action_type ?? 'verify';
+
+        $allowedActions = $actionType === 'issue'
+            ? ['issue']
+            : ['approve', 'reject', 'revise'];
+
+        if (! in_array($validated['action'], $allowedActions, true)) {
+            return response()->json(['message' => 'Aksi tidak sesuai jenis step flow (' . $actionType . ').'], 422);
+        }
+
         $userRoles = $user->roles->pluck('title')->map(fn ($role) => strtolower(trim($role)));
         if (! $user->isAdmin() && ! $userRoles->contains(strtolower(trim($currentStep->role_target)))) {
             return response()->json(['message' => 'Anda tidak memiliki hak verifikasi pada step ini.'], 403);
         }
 
-        return DB::transaction(function () use ($validated, $sikApplication, $currentStep, $user, $request) {
-            $statusStep = $validated['action'] === 'approve' ? 'approved' : ($validated['action'] === 'reject' ? 'rejected' : 'revised');
-            $currentStep->update([
-                'status_step' => $statusStep,
-                'acted_by_user_id' => $user->id,
-                'acted_at' => now(),
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            if ($validated['action'] === 'approve') {
-                $nextStep = $sikApplication->steps()->where('status_step', 'pending')->orderBy('step_order')->first();
-                if ($nextStep) {
-                    $sikApplication->update(['status_sik' => 'on_verification']);
-                } else {
-                    $sikApplication->update(['status_sik' => 'approved_final']);
-                }
-            } elseif ($validated['action'] === 'reject') {
-                $sikApplication->update([
-                    'status_sik' => 'cancelled',
-                    'catatan_terakhir' => $validated['notes'] ?? 'Ditolak pada proses verifikasi.',
-                ]);
-                $sikApplication->programItem()->update(['status_item' => 'ditolak']);
-            } else {
-                $sikApplication->update([
-                    'status_sik' => 'need_revision',
-                    'catatan_terakhir' => $validated['notes'] ?? 'Perlu revisi.',
-                ]);
+        if ($validated['action'] === 'issue') {
+            if (empty($validated['nomor_sik_eoffice'])) {
+                return response()->json(['message' => 'Nomor SIK e-office wajib diisi untuk step issue.'], 422);
             }
 
-            SikHistory::create([
-                'sik_application_id' => $sikApplication->id,
-                'actor_user_id' => $user->id,
-                'event' => 'step_' . $validated['action'],
-                'payload_json' => [
-                    'step_order' => $currentStep->step_order,
-                    'role_target' => $currentStep->role_target,
+            if (! $user->isAdmin() && ! $user->roles()->whereIn('title', ['Kemahasiswaan', 'Staf Kemahasiswaan'])->exists()) {
+                return response()->json(['message' => 'Hanya admin/kemahasiswaan yang dapat menerbitkan SIK.'], 403);
+            }
+        }
+
+        return DB::transaction(function () use ($validated, $sikApplication, $currentStep, $user, $request, $actionType) {
+            if ($validated['action'] === 'issue') {
+                $currentStep->update([
+                    'status_step' => 'approved',
+                    'acted_by_user_id' => $user->id,
+                    'acted_at' => now(),
                     'notes' => $validated['notes'] ?? null,
-                ],
-                'created_at' => now(),
-            ]);
+                ]);
+
+                $this->issueApplication($sikApplication, $user->id, $validated['nomor_sik_eoffice']);
+
+                SikHistory::create([
+                    'sik_application_id' => $sikApplication->id,
+                    'actor_user_id' => $user->id,
+                    'event' => 'step_issue',
+                    'payload_json' => [
+                        'step_order' => $currentStep->step_order,
+                        'role_target' => $currentStep->role_target,
+                        'action_type' => $actionType,
+                        'nomor_sik_eoffice' => $validated['nomor_sik_eoffice'],
+                        'notes' => $validated['notes'] ?? null,
+                    ],
+                    'created_at' => now(),
+                ]);
+            } else {
+                $statusStep = $validated['action'] === 'approve' ? 'approved' : ($validated['action'] === 'reject' ? 'rejected' : 'revised');
+                $currentStep->update([
+                    'status_step' => $statusStep,
+                    'acted_by_user_id' => $user->id,
+                    'acted_at' => now(),
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+
+                if ($validated['action'] === 'approve') {
+                    $nextStep = $sikApplication->steps()->where('status_step', 'pending')->orderBy('step_order')->first();
+                    if ($nextStep) {
+                        $sikApplication->update(['status_sik' => 'on_verification']);
+                    } else {
+                        $sikApplication->update(['status_sik' => 'approved_final']);
+                    }
+                } elseif ($validated['action'] === 'reject') {
+                    $sikApplication->update([
+                        'status_sik' => 'cancelled',
+                        'catatan_terakhir' => $validated['notes'] ?? 'Ditolak pada proses verifikasi.',
+                    ]);
+                    $sikApplication->programItem()->update(['status_item' => 'ditolak']);
+                } else {
+                    $sikApplication->update([
+                        'status_sik' => 'need_revision',
+                        'catatan_terakhir' => $validated['notes'] ?? 'Perlu revisi.',
+                    ]);
+                }
+
+                SikHistory::create([
+                    'sik_application_id' => $sikApplication->id,
+                    'actor_user_id' => $user->id,
+                    'event' => 'step_' . $validated['action'],
+                    'payload_json' => [
+                        'step_order' => $currentStep->step_order,
+                        'role_target' => $currentStep->role_target,
+                        'action_type' => $actionType,
+                        'notes' => $validated['notes'] ?? null,
+                    ],
+                    'created_at' => now(),
+                ]);
+            }
 
             $responseData = [
                 'message' => 'Proses verifikasi berhasil diperbarui.',
@@ -390,14 +440,7 @@ class SikApplicationController extends Controller
             return response()->json(['message' => 'SIK belum mencapai status approved final.'], 422);
         }
 
-        $sikApplication->update([
-            'status_sik' => 'issued',
-            'issued_at' => now(),
-            'issued_by_user_id' => $user->id,
-            'nomor_sik_eoffice' => $validated['nomor_sik_eoffice'],
-        ]);
-
-        $sikApplication->programItem()->update(['status_item' => 'sik_terbit']);
+        $this->issueApplication($sikApplication, $user->id, $validated['nomor_sik_eoffice']);
 
         SikHistory::create([
             'sik_application_id' => $sikApplication->id,
@@ -405,6 +448,7 @@ class SikApplicationController extends Controller
             'event' => 'issued',
             'payload_json' => [
                 'nomor_sik_eoffice' => $validated['nomor_sik_eoffice'],
+                'source' => 'legacy_issue_endpoint',
             ],
             'created_at' => now(),
         ]);
@@ -419,5 +463,17 @@ class SikApplicationController extends Controller
         }
 
         return redirect()->route('admin.sik.show', $sikApplication->id)->with('success', $responseData['message']);
+    }
+
+    private function issueApplication(SikApplication $sikApplication, int $issuerId, string $nomorSik): void
+    {
+        $sikApplication->update([
+            'status_sik' => 'issued',
+            'issued_at' => now(),
+            'issued_by_user_id' => $issuerId,
+            'nomor_sik_eoffice' => $nomorSik,
+        ]);
+
+        $sikApplication->programItem()->update(['status_item' => 'sik_terbit']);
     }
 }

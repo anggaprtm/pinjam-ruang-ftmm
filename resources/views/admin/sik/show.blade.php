@@ -24,6 +24,7 @@
     <div class="card-body table-responsive">
         @php
             $currentPending = $sikApplication->steps->where('status_step', 'pending')->sortBy('step_order')->first();
+            $flowStepsByOrder = optional($sikApplication->flow)->steps ? $sikApplication->flow->steps->keyBy('step_order') : collect();
         @endphp
         <table class="table table-sm table-bordered">
             <thead>
@@ -43,29 +44,43 @@
                         <td>{{ strtoupper($step->status_step) }}</td>
                         <td>{{ optional($step->due_at)->format('d M Y H:i') ?? '-' }}</td>
                         <td>
+                            @php
+                                $flowStep = $flowStepsByOrder->get($step->step_order);
+                                $actionType = $flowStep->action_type ?? 'verify';
+                            @endphp
                             @if($step->status_step === 'pending')
                                 @if($currentPending && (int)$currentPending->step_order === (int)$step->step_order)
-                                <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="step_order" value="{{ $step->step_order }}">
-                                    <input type="hidden" name="action" value="approve">
-                                    <input type="hidden" name="notes" value="{{ old('notes') }}">
-                                    <button class="btn btn-xs btn-success">Approve</button>
-                                </form>
-                                <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="step_order" value="{{ $step->step_order }}">
-                                    <input type="hidden" name="action" value="revise">
-                                    <input type="text" name="notes" class="form-control form-control-sm d-inline-block" style="width:180px" placeholder="Catatan revisi" required>
-                                    <button class="btn btn-xs btn-warning">Kirim Revisi</button>
-                                </form>
-                                <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
-                                    @csrf
-                                    <input type="hidden" name="step_order" value="{{ $step->step_order }}">
-                                    <input type="hidden" name="action" value="reject">
-                                    <input type="text" name="notes" class="form-control form-control-sm d-inline-block" style="width:180px" placeholder="Alasan penolakan" required>
-                                    <button class="btn btn-xs btn-danger">Tolak</button>
-                                </form>
+                                    @if($actionType === 'issue')
+                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
+                                            @csrf
+                                            <input type="hidden" name="step_order" value="{{ $step->step_order }}">
+                                            <input type="hidden" name="action" value="issue">
+                                            <input type="text" name="nomor_sik_eoffice" class="form-control form-control-sm d-inline-block" style="width:220px" placeholder="Nomor SIK e-office" required>
+                                            <button class="btn btn-xs btn-primary">Issue SIK</button>
+                                        </form>
+                                    @else
+                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
+                                            @csrf
+                                            <input type="hidden" name="step_order" value="{{ $step->step_order }}">
+                                            <input type="hidden" name="action" value="approve">
+                                            <input type="hidden" name="notes" value="{{ old('notes') }}">
+                                            <button class="btn btn-xs btn-success">Approve</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
+                                            @csrf
+                                            <input type="hidden" name="step_order" value="{{ $step->step_order }}">
+                                            <input type="hidden" name="action" value="revise">
+                                            <input type="text" name="notes" class="form-control form-control-sm d-inline-block" style="width:180px" placeholder="Catatan revisi" required>
+                                            <button class="btn btn-xs btn-warning">Kirim Revisi</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.sik.processStep', $sikApplication->id) }}" class="d-inline">
+                                            @csrf
+                                            <input type="hidden" name="step_order" value="{{ $step->step_order }}">
+                                            <input type="hidden" name="action" value="reject">
+                                            <input type="text" name="notes" class="form-control form-control-sm d-inline-block" style="width:180px" placeholder="Alasan penolakan" required>
+                                            <button class="btn btn-xs btn-danger">Tolak</button>
+                                        </form>
+                                    @endif
                                 @else
                                     <span class="badge bg-light text-dark">Menunggu step sebelumnya</span>
                                 @endif
@@ -80,7 +95,7 @@
     </div>
 </div>
 
-@if($sikApplication->status_sik === 'approved_final')
+@if($sikApplication->status_sik === 'approved_final' && !optional($sikApplication->flow)->steps?->contains('action_type', 'issue'))
 <div class="card shadow-sm mb-3">
     <div class="card-header"><strong>Terbitkan SIK</strong></div>
     <div class="card-body">
