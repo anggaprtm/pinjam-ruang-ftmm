@@ -103,6 +103,28 @@ class AbsensiController extends Controller
             ->limit(5) 
             ->get();
 
+        // 3. LEADERBOARD LEMBUR (Bulan Berjalan)
+        // Hitung status 'hadir' yang terjadi di akhir pekan atau hari libur nasional
+        $topLembur = AbsensiLog::selectRaw('user_id, count(*) as total_lembur, GROUP_CONCAT(DAY(tanggal) ORDER BY tanggal SEPARATOR ",") as tanggal_lembur')
+            ->whereHas('user.roles', function($q) use ($roleFilter) {
+                $q->where('title', $roleFilter);
+            })
+            ->whereMonth('tanggal', $bulanIni)
+            ->whereYear('tanggal', $tahunIni)
+            ->where('status', 'hadir')
+            ->where(function($query) use ($liburDates) {
+                // Syarat lembur: Weekend (1=Minggu, 7=Sabtu) ATAU ada di tabel hari libur
+                $query->whereRaw('DAYOFWEEK(tanggal) IN (1, 7)');
+                if (count($liburDates) > 0) {
+                    $query->orWhereIn('tanggal', $liburDates);
+                }
+            })
+            ->groupBy('user_id')
+            ->orderByDesc('total_lembur')
+            ->with('user')
+            ->limit(5) 
+            ->get();
+
         // 3. STATISTIK REALTIME (Hitung dari collection $pegawais)
         // Kita cek manual dari collection di atas biar hemat query
         $stats = [
@@ -137,9 +159,79 @@ class AbsensiController extends Controller
         $lastSync = AbsensiLog::whereDate('tanggal', $tanggal)->max('updated_at');
 
         return view('admin.absensi.index', compact(
-            'pegawais', 'stats', 'topStats', 'tanggal', 'lastSync', 'batasPulang',
+            'pegawais', 'stats', 'topStats', 'topLembur', 'tanggal', 'lastSync', 'batasPulang',
             'isLibur', 'keteranganLibur', 'roleFilter'
         ));
+    }
+
+    public function rekapTelat(Request $request)
+    {
+        // Default bulan ini jika tidak ada parameter
+        $bulanParam = $request->input('bulan', Carbon::now()->format('Y-m'));
+        $roleFilter = $request->input('role', 'Pegawai');
+        
+        $parsedDate = Carbon::createFromFormat('Y-m', $bulanParam);
+        $bulanIni = $parsedDate->month;
+        $tahunIni = $parsedDate->year;
+
+        $statusTarget = ($roleFilter === 'Dosen') ? 'alpha' : 'terlambat';
+
+        $liburDates = HariLibur::whereMonth('tanggal', $bulanIni)
+            ->whereYear('tanggal', $tahunIni)
+            ->pluck('tanggal')->toArray();
+
+        $rekaps = AbsensiLog::selectRaw('user_id, count(*) as total_kasus, GROUP_CONCAT(DAY(tanggal) ORDER BY tanggal SEPARATOR ", ") as tanggal_kasus')
+            ->whereHas('user.roles', function($q) use ($roleFilter) {
+                $q->where('title', $roleFilter);
+            })
+            ->whereMonth('tanggal', $bulanIni)
+            ->whereYear('tanggal', $tahunIni)
+            ->where('status', $statusTarget)
+            ->whereRaw('DAYOFWEEK(tanggal) NOT IN (1, 7)') // Exclude weekend
+            ->when(count($liburDates) > 0, function($query) use ($liburDates) {
+                $query->whereNotIn('tanggal', $liburDates); // Exclude libur nasional
+            })
+            ->groupBy('user_id')
+            ->orderByDesc('total_kasus')
+            ->with('user')
+            ->get(); // Tanpa limit agar tampil semua
+
+        return view('admin.absensi.rekap-telat', compact('rekaps', 'bulanParam', 'roleFilter'));
+    }
+
+    public function rekapLembur(Request $request)
+    {
+        $bulanParam = $request->input('bulan', Carbon::now()->format('Y-m'));
+        $roleFilter = $request->input('role', 'Pegawai');
+        
+        $parsedDate = Carbon::createFromFormat('Y-m', $bulanParam);
+        $bulanIni = $parsedDate->month;
+        $tahunIni = $parsedDate->year;
+
+        $liburDates = HariLibur::whereMonth('tanggal', $bulanIni)
+            ->whereYear('tanggal', $tahunIni)
+            ->pluck('tanggal')->toArray();
+
+        $rekaps = AbsensiLog::selectRaw('user_id, count(*) as total_lembur, GROUP_CONCAT(DAY(tanggal) ORDER BY tanggal SEPARATOR ", ") as tanggal_kasus')
+            ->whereHas('user.roles', function($q) use ($roleFilter) {
+                $q->where('title', $roleFilter);
+            })
+            ->whereMonth('tanggal', $bulanIni)
+            ->whereYear('tanggal', $tahunIni)
+            ->where('status', 'hadir') // Syaratnya hadir
+            ->where(function($query) use ($liburDates) {
+                // Saat weekend atau libur nasional
+                $query->whereRaw('DAYOFWEEK(tanggal) IN (1, 7)');
+                if (count($liburDates) > 0) {
+                    $query->orWhereIn('tanggal', $liburDates);
+                }
+            })
+            ->groupBy('user_id')
+            ->orderByDesc('total_lembur')
+            ->with('user')
+            ->get();
+
+        return view('admin.absensi.rekap-lembur', compact('rekaps', 'bulanParam', 'roleFilter'));
     }
 
     public function sync(Request $request)

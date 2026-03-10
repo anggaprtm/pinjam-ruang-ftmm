@@ -130,6 +130,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('bot-setting', [BotSettingController::class, 'index'])->name('bot-setting.index');
     Route::post('bot-setting', [BotSettingController::class, 'update'])->name('bot-setting.update');
     Route::post('absensi/sync', [AbsensiController::class, 'sync'])->name('absensi.sync');
+    Route::get('absensi/rekap-telat', [AbsensiController::class, 'rekapTelat'])->name('absensi.rekap-telat');
+    Route::get('absensi/rekap-lembur', [AbsensiController::class, 'rekapLembur'])->name('absensi.rekap-lembur');
 
     Route::resource('dosen', DosenController::class);
     Route::resource('tendik', TendikController::class);

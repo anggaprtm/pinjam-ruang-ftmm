@@ -455,8 +455,10 @@
             </div>
         </div>
 
-        {{-- KOLOM KANAN: LEADERBOARD TELAT --}}
+        {{-- KOLOM KANAN: LEADERBOARD TELAT & LEMBUR --}}
         <div class="col-lg-4">
+            
+            {{-- 1. CARD LEADERBOARD TELAT --}}
             <div class="leaderboard-card mb-4">
                 @php
                     $isDosen = $roleFilter === 'Dosen';
@@ -467,8 +469,14 @@
                 @endphp
 
                 <div class="leaderboard-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-trophy me-2"></i>{{ $titleRank }} (Bulan Ini)</span>
-                    <span class="badge bg-white text-primary border">{{ \Carbon\Carbon::now()->translatedFormat('F Y') }}</span>
+                    <span><i class="fas fa-trophy me-2"></i>{{ $titleRank }}</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-white text-primary border">{{ \Carbon\Carbon::now()->translatedFormat('M Y') }}</span>
+                        {{-- Tombol Lihat Semua Telat --}}
+                        <a href="{{ route('admin.absensi.rekap-telat', ['bulan' => \Carbon\Carbon::now()->format('Y-m')]) }}" class="btn btn-sm btn-primary py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
+                            Semua <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
                 
                 @if($topStats->isEmpty())
@@ -479,11 +487,8 @@
                 @else
                     @foreach($topStats as $index => $stat)
                         @php
-                            // Format tanggal dengan padding 2 digit
                             $dates = explode(',', $stat->tanggal_kasus);
-                            $formattedDates = array_map(function($day) {
-                                return str_pad($day, 2, '0', STR_PAD_LEFT);
-                            }, $dates);
+                            $formattedDates = array_map(function($day) { return str_pad($day, 2, '0', STR_PAD_LEFT); }, $dates);
                             $tanggalList = implode(',', $formattedDates);
                         @endphp
                         <div class="leaderboard-item">
@@ -502,11 +507,51 @@
                         </div>
                     @endforeach
                 @endif
-                
-                <div class="p-3 bg-light text-center small text-muted border-top">
-                    Data dihitung akumulasi per bulan berjalan
-                </div>
             </div>
+
+            {{-- 2. CARD LEADERBOARD LEMBUR --}}
+            <div class="leaderboard-card mb-4" style="border-top: 4px solid #1cc88a;">
+                <div class="leaderboard-header d-flex justify-content-between align-items-center" style="background: #f4fdf8; color: #13855c; border-bottom: 1px solid #e3e6f0;">
+                    <span><i class="fas fa-business-time me-2"></i>Top Lembur</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-white text-success border">{{ \Carbon\Carbon::now()->translatedFormat('M Y') }}</span>
+                        {{-- Tombol Lihat Semua Lembur --}}
+                        <a href="{{ route('admin.absensi.rekap-lembur', ['bulan' => \Carbon\Carbon::now()->format('Y-m')]) }}" class="btn btn-sm btn-success py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
+                            Semua <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                @if($topLembur->isEmpty())
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-mug-hot fa-2x mb-2 text-success" style="opacity: 0.5;"></i>
+                        <p class="mb-0 small">Belum ada data lembur valid bulan ini.</p>
+                    </div>
+                @else
+                    @foreach($topLembur as $index => $stat)
+                        @php
+                            $dates = explode(',', $stat->tanggal_lembur);
+                            $formattedDates = array_map(function($day) { return str_pad($day, 2, '0', STR_PAD_LEFT); }, $dates);
+                            $tanggalList = implode(',', $formattedDates);
+                        @endphp
+                        <div class="leaderboard-item">
+                            <div class="d-flex align-items-center">
+                                <div class="rank-badge bg-success text-white">{{ $index + 1 }}</div>
+                                <div>
+                                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ $stat->user->name ?? 'Unknown' }}</div>
+                                    <div class="small text-muted">{{ $stat->user->nip ?? '-' }}</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-success h5 mb-0">{{ $stat->total_lembur }}x</div>
+                                <div class="small text-muted" style="font-size: 0.7rem;">Valid (≥ 4 Jam)</div>
+                                <div class="small text-muted" style="font-size: 0.65rem;">({{ $tanggalList }})</div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+
         </div>
     </div>
 </div>
