@@ -122,10 +122,27 @@ class SyncAttendance extends Command
 
                         if ($scanMasuk) {
                             if ($isLibur) {
-                                // Jika libur/weekend dan ada scan masuk, otomatis dianggap hadir (lembur)
-                                $statusKehadiran = 'hadir';
+                                // Syarat Lembur Valid: Harus ada jam masuk, jam keluar, dan minimal 4 jam
+                                if ($scanMasuk && $scanKeluar) {
+                                    try {
+                                        $masuk = \Carbon\Carbon::createFromFormat('H:i', $scanMasuk);
+                                        $keluar = \Carbon\Carbon::createFromFormat('H:i', $scanKeluar);
+                                        
+                                        if ($keluar->greaterThan($masuk)) {
+                                            $durasiMenit = $masuk->diffInMinutes($keluar);
+                                            if ($durasiMenit >= 240) { // 240 menit = 4 jam
+                                                $statusKehadiran = 'hadir';
+                                            }
+                                        }
+                                    } catch (\Exception $e) {
+                                        // Fallback aman jika API nge-return format jam yang aneh
+                                    }
+                                }
+                                // Catatan: Jika belum scan keluar ATAU durasi < 4 jam, status tetap 'alpha'.
+                                // Tapi data jam_masuk & jam_keluar tetap tersimpan di database.
+                                
                             } else {
-                                // Hari kerja normal, cek batas telat
+                                // Hari kerja normal
                                 $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
                             }
                         }

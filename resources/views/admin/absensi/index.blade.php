@@ -335,14 +335,23 @@
                                             <td class="text-center">
                                                 @if($status == 'hadir')
                                                     @if(isset($isLibur) && $isLibur)
-                                                        <span class="badge bg-info text-white rounded-pill">Masuk (Lembur)</span>
+                                                        <span class="badge bg-info text-white rounded-pill">Masuk (Lembur Valid)</span>
                                                     @else
                                                         <span class="badge bg-success rounded-pill">Tepat Waktu</span>
                                                     @endif
                                                 @elseif($status == 'terlambat')
                                                     <span class="badge bg-warning text-dark rounded-pill">Terlambat</span>
                                                 @else
-                                                    <span class="badge bg-secondary rounded-pill">Belum Scan</span>
+                                                    {{-- LOGIKA TAMPILAN JIKA STATUS ALPHA --}}
+                                                    @if(isset($isLibur) && $isLibur && ($jamMasuk !== '-' || $jamKeluar !== '-'))
+                                                        @if($jamMasuk !== '-' && $jamKeluar === '-')
+                                                            <span class="badge bg-warning text-dark rounded-pill">Sedang Lembur</span>
+                                                        @else
+                                                            <span class="badge bg-danger rounded-pill" title="Durasi kurang dari 4 jam">Tidak Valid (< 4 Jam)</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="badge bg-secondary rounded-pill">Belum Scan</span>
+                                                    @endif
                                                 @endif
 
                                                 @if($isPulangAwal)
