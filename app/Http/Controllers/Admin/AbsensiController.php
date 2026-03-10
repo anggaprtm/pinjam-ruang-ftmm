@@ -74,8 +74,12 @@ class AbsensiController extends Controller
             ->get();
 
         // 2. LEADERBOARD TELAT (Bulan Berjalan)
-        // Menghitung siapa yang paling sering 'terlambat' bulan ini
         $statusTarget = ($roleFilter === 'Dosen') ? 'alpha' : 'terlambat';
+
+        // Ambil array tanggal libur nasional bulan ini
+        $liburDates = HariLibur::whereMonth('tanggal', $bulanIni)
+            ->whereYear('tanggal', $tahunIni)
+            ->pluck('tanggal')->toArray();
 
         $topStats = AbsensiLog::selectRaw('user_id, count(*) as total_kasus, GROUP_CONCAT(DAY(tanggal) ORDER BY tanggal SEPARATOR ",") as tanggal_kasus')
             ->whereHas('user.roles', function($q) use ($roleFilter) {
@@ -84,6 +88,15 @@ class AbsensiController extends Controller
             ->whereMonth('tanggal', $bulanIni)
             ->whereYear('tanggal', $tahunIni)
             ->where('status', $statusTarget)
+            
+            // EXCLUDE WEEKEND (1 = Minggu, 7 = Sabtu di MySQL)
+            ->whereRaw('DAYOFWEEK(tanggal) NOT IN (1, 7)')
+            
+            // EXCLUDE HARI LIBUR NASIONAL
+            ->when(count($liburDates) > 0, function($query) use ($liburDates) {
+                $query->whereNotIn('tanggal', $liburDates);
+            })
+            
             ->groupBy('user_id')
             ->orderByDesc('total_kasus') 
             ->with('user')
@@ -113,8 +126,8 @@ class AbsensiController extends Controller
                 if ($log->status == 'hadir') $stats['hadir']++;
                 if ($log->status == 'terlambat') $stats['terlambat']++;
                 
-                // Cek Pulang Awal
-                if ($roleFilter === 'Pegawai' && !empty($log->jam_keluar) && $log->jam_keluar !== '-' && $log->jam_keluar < $batasPulang) {
+                // Cek Pulang Awal (Pastikan BUKAN hari libur)
+                if (!$isLibur && $roleFilter === 'Pegawai' && !empty($log->jam_keluar) && $log->jam_keluar !== '-' && $log->jam_keluar < $batasPulang) {
                     $stats['pulang_awal']++;
                 }
             }

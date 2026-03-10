@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Http;
 use Symfony\Component\DomCrawler\Crawler;
 use App\Models\User;
 use App\Models\AbsensiLog;
-use App\Models\PeriodeJamKerja; // Jangan lupa import model ini
+use App\Models\PeriodeJamKerja; 
+use App\Models\HariLibur;
 use Carbon\Carbon;
 
 class SyncAttendance extends Command
@@ -109,10 +110,24 @@ class SyncAttendance extends Command
                         $scanMasuk = ($scanMasuk === '-' || $scanMasuk === '') ? null : $scanMasuk;
                         $scanKeluar = ($scanKeluar === '-' || $scanKeluar === '') ? null : $scanKeluar;
 
+                        // ==========================================================
+                        // CEK HARI LIBUR / WEEKEND
+                        // ==========================================================
+                        $isWeekend = $targetDate->isWeekend();
+                        $isHariLibur = HariLibur::whereDate('tanggal', $tanggalDB)->exists();
+                        $isLibur = $isWeekend || $isHariLibur;
+
+                        // Menentukan status kehadiran
                         $statusKehadiran = 'alpha';
-                        
+
                         if ($scanMasuk) {
-                            $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
+                            if ($isLibur) {
+                                // Jika libur/weekend dan ada scan masuk, otomatis dianggap hadir (lembur)
+                                $statusKehadiran = 'hadir';
+                            } else {
+                                // Hari kerja normal, cek batas telat
+                                $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
+                            }
                         }
 
                         // SIMPAN SNAPSHOT BATAS JAM KE DALAM LOG

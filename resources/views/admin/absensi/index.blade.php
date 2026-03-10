@@ -229,8 +229,8 @@
                                         // AMBIL BATAS PULANG DARI DATABASE (SNAPSHOT)
                                         $batasPulangDb = $log->batas_jam_keluar ?? (\Carbon\Carbon::parse($tanggal)->isFriday() ? '17:00' : '16:30');
 
-                                        // Cek Pulang Awal HANYA untuk Tendik
-                                        $isPulangAwal = ($roleFilter === 'Pegawai' && $jamKeluar !== '-' && $jamKeluar < $batasPulangDb);
+                                        // Cek Pulang Awal HANYA untuk Tendik, dan pastikan BUKAN hari libur
+                                        $isPulangAwal = (!$isLibur && $roleFilter === 'Pegawai' && $jamKeluar !== '-' && $jamKeluar < $batasPulangDb);
 
                                         // Hitung Durasi Kerja (Hanya relevan untuk Tendik)
                                         $durasiKerja = '-';
