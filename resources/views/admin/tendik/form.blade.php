@@ -104,6 +104,16 @@
                                 <input type="text" name="pangkat_golongan" class="form-control" placeholder="cth: Penata Muda - III/a" value="{{ old('pangkat_golongan', $tendik->tendikDetail->pangkat_golongan ?? '') }}">
                             </div>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold text-warning"><i class="fas fa-toggle-on me-1"></i> Status Keaktifan</label>
+                                <select name="status_keaktifan" class="form-select border-warning">
+                                    <option value="Aktif" {{ old('status_keaktifan', $tendik->tendikDetail->status_keaktifan ?? 'Aktif') == 'Aktif' ? 'selected' : '' }}>Aktif (Presensi Berjalan)</option>
+                                    <option value="Cuti" {{ old('status_keaktifan', $tendik->tendikDetail->status_keaktifan ?? '') == 'Cuti' ? 'selected' : '' }}>Sedang Cuti</option>
+                                    <option value="Tugas Belajar" {{ old('status_keaktifan', $tendik->tendikDetail->status_keaktifan ?? '') == 'Tugas Belajar' ? 'selected' : '' }}>Tugas Belajar</option>
+                                </select>
+                            </div>
+                        </div>
                         <hr>
                         <div class="row mb-3">
                             <div class="col-md-6">

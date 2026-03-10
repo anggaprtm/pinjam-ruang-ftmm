@@ -341,6 +341,10 @@
                                                     @endif
                                                 @elseif($status == 'terlambat')
                                                     <span class="badge bg-warning text-dark rounded-pill">Terlambat</span>
+                                                @elseif(in_array($status, ['cuti', 'tugas belajar']))
+                                                    <span class="badge bg-secondary text-white rounded-pill px-3">
+                                                        <i class="fas fa-plane-departure me-1"></i> {{ ucwords($status) }}
+                                                    </span>
                                                 @else
                                                     {{-- LOGIKA TAMPILAN JIKA STATUS ALPHA --}}
                                                     @if(isset($isLibur) && $isLibur && ($jamMasuk !== '-' || $jamKeluar !== '-'))

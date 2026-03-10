@@ -141,17 +141,22 @@ class AbsensiController extends Controller
 
         foreach ($pegawais as $pegawai) {
             $log = $pegawai->absensiLogs->first(); // Data log hari ini (bisa null)
+            
+            // Default alpha jika belum ada log sama sekali
+            $statusLog = $log->status ?? 'alpha';
 
-            if (!$log || $log->status === 'alpha') {
+            if ($statusLog === 'alpha') {
                 $stats['alpha']++;
-            } else {
-                if ($log->status == 'hadir') $stats['hadir']++;
-                if ($log->status == 'terlambat') $stats['terlambat']++;
-                
-                // Cek Pulang Awal (Pastikan BUKAN hari libur)
-                if (!$isLibur && $roleFilter === 'Pegawai' && !empty($log->jam_keluar) && $log->jam_keluar !== '-' && $log->jam_keluar < $batasPulang) {
-                    $stats['pulang_awal']++;
-                }
+            } elseif ($statusLog === 'hadir') {
+                $stats['hadir']++;
+            } elseif ($statusLog === 'terlambat') {
+                $stats['terlambat']++;
+            } 
+            // Jika statusnya 'cuti' atau 'tugas belajar', dia tidak dihitung ke statistik manapun (atau bisa kamu buat variabel stat baru jika mau)
+
+            // Cek Pulang Awal (Pastikan BUKAN hari libur, dan statusnya masuk kerja normal)
+            if (!$isLibur && $roleFilter === 'Pegawai' && in_array($statusLog, ['hadir', 'terlambat']) && !empty($log->jam_keluar) && $log->jam_keluar !== '-' && $log->jam_keluar < $batasPulang) {
+                $stats['pulang_awal']++;
             }
         }
 

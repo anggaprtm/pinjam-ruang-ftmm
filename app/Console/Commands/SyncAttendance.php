@@ -53,7 +53,7 @@ class SyncAttendance extends Command
             $jamKeluarLimit = $isFriday ? '17:00' : '16:30'; 
         }
 
-        $users = User::with(['roles', 'dosenDetail'])
+        $users = User::with(['roles', 'dosenDetail', 'tendikDetail'])
             ->whereHas('roles', fn($q) => $q->whereIn('title', ['Pegawai', 'Dosen']))
             ->whereNotNull('nip')
             ->get();
@@ -74,14 +74,33 @@ class SyncAttendance extends Command
                 continue;
             }
 
+            // CEK STATUS KEAKTIFAN (Dosen & Tendik)
             $isDosen = $user->roles->contains('title', 'Dosen');
+            $statusKeaktifan = 'Aktif';
+
             if ($isDosen) {
                 $statusKeaktifan = $user->dosenDetail->status_keaktifan ?? 'Aktif';
-                if ($statusKeaktifan !== 'Aktif') {
-                    // Skip sinkronisasi untuk dosen ini
-                    $bar->advance();
-                    continue; 
-                }
+            } else {
+                $statusKeaktifan = $user->tendikDetail->status_keaktifan ?? 'Aktif';
+            }
+
+            // JIKA TIDAK AKTIF (Cuti / Tugas Belajar)
+            if (strtolower($statusKeaktifan) !== 'aktif') {
+                // Langsung catat log sebagai cuti/tugas belajar biar tidak dihitung Alpha
+                AbsensiLog::updateOrCreate(
+                    ['user_id' => $user->id, 'tanggal' => $tanggalDB],
+                    [
+                        'jam_masuk'        => '-',
+                        'jam_keluar'       => '-',
+                        'batas_jam_masuk'  => $jamMasukLimit,
+                        'batas_jam_keluar' => $jamKeluarLimit,
+                        'status'           => strtolower($statusKeaktifan), // 'cuti' atau 'tugas belajar'
+                        'updated_at'       => now(),
+                    ]
+                );
+                
+                $bar->advance();
+                continue; // Skip API request untuk orang ini
             }
 
             $url = "https://infoabsen.unair.ac.id/absen/api_absen_8.php?nip={$user->nip}&tahun={$tahun}&bulan={$bulan}";
