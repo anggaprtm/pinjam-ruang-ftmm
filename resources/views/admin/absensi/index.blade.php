@@ -518,7 +518,7 @@
             {{-- 2. CARD LEADERBOARD LEMBUR --}}
             <div class="leaderboard-card mb-4" style="border-top: 4px solid #1cc88a;">
                 <div class="leaderboard-header d-flex justify-content-between align-items-center" style="background: #f4fdf8; color: #13855c; border-bottom: 1px solid #e3e6f0;">
-                    <span><i class="fa-solid fa-business-time me-2"></i>Top Lembur</span>
+                    <span><i class="fas fa-business-time me-2"></i>Top Lembur</span>
                     <div class="d-flex align-items-center gap-2">
                         {{-- Badge Bulan (Dinamis) --}}
                         <span class="badge bg-white text-success border">{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('M Y') }}</span>
