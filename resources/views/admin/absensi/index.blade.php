@@ -249,11 +249,11 @@
                                         $durasiTelat = '';
                                         if ($status == 'terlambat' && $jamMasuk !== '-' && $roleFilter === 'Pegawai') {
                                             try {
-                                                $carbonDate = \Carbon\Carbon::parse($tanggal);
-                                                $batasMasuk = '08:00';
+                                                // Ambil batas jam masuk aktual dari database (snapshot hari itu)
+                                                $batasMasuk = $log->batas_jam_masuk ?? '08:00'; 
                                                 
-                                                $batasWaktu = \Carbon\Carbon::createFromFormat('H:i', $batasMasuk);
-                                                $waktuMasuk = \Carbon\Carbon::createFromFormat('H:i', $jamMasuk);
+                                                $batasWaktu = \Carbon\Carbon::parse($batasMasuk);
+                                                $waktuMasuk = \Carbon\Carbon::parse($jamMasuk);
                                                 
                                                 if ($waktuMasuk->greaterThan($batasWaktu)) {
                                                     $diff = $batasWaktu->diff($waktuMasuk);
@@ -475,9 +475,11 @@
                 <div class="leaderboard-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-trophy me-2"></i>{{ $titleRank }}</span>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-white text-primary border">{{ \Carbon\Carbon::now()->translatedFormat('M Y') }}</span>
-                        {{-- Tombol Lihat Semua Telat --}}
-                        <a href="{{ route('admin.absensi.rekap-telat', ['bulan' => \Carbon\Carbon::now()->format('Y-m')]) }}" class="btn btn-sm btn-primary py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
+                        {{-- Badge Bulan (Dinamis mengikuti filter tanggal) --}}
+                        <span class="badge bg-white text-primary border">{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('M Y') }}</span>
+                        
+                        {{-- Tombol Lihat Semua Telat (Link dinamis mengikuti filter bulan) --}}
+                        <a href="{{ route('admin.absensi.rekap-telat', ['bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m')]) }}" class="btn btn-sm btn-primary py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
                             Semua <i class="fas fa-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -516,11 +518,13 @@
             {{-- 2. CARD LEADERBOARD LEMBUR --}}
             <div class="leaderboard-card mb-4" style="border-top: 4px solid #1cc88a;">
                 <div class="leaderboard-header d-flex justify-content-between align-items-center" style="background: #f4fdf8; color: #13855c; border-bottom: 1px solid #e3e6f0;">
-                    <span><i class="fas fa-business-time me-2"></i>Top Lembur</span>
+                    <span><i class="fa-solid fa-business-time me-2"></i>Top Lembur</span>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-white text-success border">{{ \Carbon\Carbon::now()->translatedFormat('M Y') }}</span>
-                        {{-- Tombol Lihat Semua Lembur --}}
-                        <a href="{{ route('admin.absensi.rekap-lembur', ['bulan' => \Carbon\Carbon::now()->format('Y-m')]) }}" class="btn btn-sm btn-success py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
+                        {{-- Badge Bulan (Dinamis) --}}
+                        <span class="badge bg-white text-success border">{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('M Y') }}</span>
+                        
+                        {{-- Tombol Lihat Semua Lembur (Link dinamis) --}}
+                        <a href="{{ route('admin.absensi.rekap-lembur', ['bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m')]) }}" class="btn btn-sm btn-success py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
                             Semua <i class="fas fa-arrow-right ms-1"></i>
                         </a>
                     </div>

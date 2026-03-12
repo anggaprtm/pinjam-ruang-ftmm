@@ -24,7 +24,7 @@
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <a href="{{ route('admin.absensi.index') }}" class="btn btn-sm btn-light text-primary border shadow-sm">
+                <a href="{{ route('admin.absensi.index', ['tanggal' => $bulanParam . '-01']) }}" class="btn btn-sm btn-light text-primary border shadow-sm">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
                 <h3 class="h3 mb-0 text-gray-800 fw-bold">{{ $titlePage }}</h3>
