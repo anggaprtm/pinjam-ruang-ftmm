@@ -48,7 +48,7 @@
 @parent
 <script>
 $(function () {
-    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
+    let dtButtons = getStandardDtButtons();
 
     let table = $('.datatable-Barang').DataTable({
         buttons: dtButtons,
@@ -136,26 +136,16 @@ $(function () {
             style: 'multi',
             selector: 'td:first-child'
         },
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
     });
 
     $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
         $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
     });
 
-    $('.datatable-Barang').on('draw.dt', function () {
-        var wrapper = $(this).closest('.dataTables_wrapper');
-        var length = wrapper.find('.dataTables_length');
-        var filter = wrapper.find('.dataTables_filter');
-        var buttons = wrapper.find('.dt-buttons');
-
-        if (!wrapper.find('.dt-controls-row').length) {
-            var controlsRow = $('<div class="dt-controls-row"></div>');
-            var leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
-            var rightCol = $('<div class="dt-controls-right"></div>').append(filter);
-            controlsRow.append(leftCol).append(rightCol);
-            wrapper.prepend(controlsRow);
-        }
-    });
+    // Layout dihandle otomatis oleh dom config
 
 });
 </script>

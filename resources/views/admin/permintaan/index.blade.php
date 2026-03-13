@@ -60,13 +60,24 @@
 @parent
 <script>
 $(function () {
-    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
-    
-    // Tombol Salin/Excel/dll (Copy dari Kegiatan jika perlu)
-    // dtButtons.push(...) 
+    let dtButtons = getStandardDtButtons();
 
     let table = $('.datatable-Permintaan').DataTable({
         buttons: dtButtons,
+        language: {                                                    // ← TAMBAH INI
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            lengthMenu: "Tampilkan _MENU_ data",
+            search: "Cari:",
+            paginate: {
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            },
+            zeroRecords: "Tidak ada data ditemukan",
+            emptyTable: "Tidak ada data tersedia",
+            processing: "Memuat..."
+        },   
         processing: true,
         serverSide: true,
         retrieve: true,
@@ -97,8 +108,6 @@ $(function () {
                 data: 'status_ruang', 
                 name: 'status_ruang', 
                 className: 'text-center',
-                // Render sudah dihandle Controller (mengeluarkan HTML string)
-                // Kita cuma perlu createdCell untuk mobile label
                 createdCell: function(td, cellData, rowData, row, col) {
                     $(td).attr('data-label', 'Ruang');
                 }
@@ -133,6 +142,27 @@ $(function () {
         orderCellsTop: true,
         order: [[ 1, 'desc' ]],
         pageLength: 10,
+        columnDefs: [{
+            orderable: false,
+            className: 'select-checkbox',
+            targets: 0
+        }],
+        select: {
+            style: 'multi',
+            selector: 'td:first-child'
+        },
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+    });
+
+    table.on('select deselect', function () {
+        let selectedRows = table.rows({ selected: true }).count();
+        table.button(2).enable(selectedRows > 0); // Salin
+        table.button(3).enable(selectedRows > 0); // CSV
+        table.button(4).enable(selectedRows > 0); // Excel
+        table.button(5).enable(selectedRows > 0); // PDF
+        table.button(6).enable(selectedRows > 0); // Cetak
     });
 
     $('#filter-btn').on('click', function() {

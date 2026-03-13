@@ -1,158 +1,241 @@
-<div id="sidebar" class="c-sidebar c-sidebar-fixed c-sidebar-lg-show">
+{{-- menu.blade.php — CoreUI v4 --}}
 
-    <div class="c-sidebar-brand d-md-down-none">
-        <div class="c-sidebar-brand-full" href="#">
-            LAYANAN-FTMM
-        </div>
-        <div class="c-sidebar-brand-minimized">
-            <i class="fas fa-toolbox" style="font-size: 23px; color: #2e2d2d; padding: 10px;"></i>
-        </div>
+<div id="sidebar" class="sidebar sidebar-fixed border-end">
+
+    <div class="sidebar-brand">
+        <span class="sidebar-brand-full fw-bold">LAYANAN-FTMM</span>
+        <span class="sidebar-brand-narrow">
+            <i class="fas fa-toolbox"></i>
+        </span>
     </div>
 
-    <ul class="c-sidebar-nav">
-        <li class="c-sidebar-nav-item">
-            <a href="{{ route("admin.home") }}" class="c-sidebar-nav-link" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('global.dashboard') }}">
-                <i class="c-sidebar-nav-icon fas fa-fw fa-fire"></i>
+    {{-- KRITIS: data-coreui="navigation" wajib ada agar CoreUI v4 JS
+         mengaktifkan toggle dropdown. Tanpa ini semua nav-group-toggle
+         tidak bisa diklik. --}}
+    <ul class="sidebar-nav" data-coreui="navigation">
+
+        {{-- 1. DASHBOARD --}}
+        <li class="nav-item">
+            <a href="{{ route('admin.home') }}"
+               class="nav-link {{ request()->is('admin/home') || request()->is('admin') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-fire"></i>
                 {{ trans('global.dashboard') }}
-
-                {{-- Logic Badge Dashboard --}}
-                @if(optional(auth()->user())->isAdmin())
-                    @if(isset($totalDashboardPending) && $totalDashboardPending > 0)
-                        <span class="sidebar-badge bg-danger text-white">{{ $totalDashboardPending }}</span>
-                    @endif
+                @if(optional(auth()->user())->isAdmin() && !empty($totalDashboardPending))
+                    <span class="badge bg-danger ms-auto">{{ $totalDashboardPending }}</span>
                 @endif
+            </a>
+        </li>
 
+        {{-- 2. KEPEGAWAIAN --}}
+        @canany(['presensi_access', 'tendik_access', 'dosen_access'])
+            <li class="nav-group {{ request()->is('admin/absensi*') || request()->is('admin/tendik*') || request()->is('admin/dosen*') ? 'show' : '' }}">
+                <a class="nav-group-toggle" href="#">
+                    <i class="nav-icon fas fa-id-badge"></i>
+                    Kepegawaian
+                </a>
+                <ul class="nav-group-items compact">
+                    @can('presensi_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.absensi.index') }}"
+                               class="nav-link {{ request()->is('admin/absensi*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-fingerprint"></i></span>
+                                Log Presensi
+                            </a>
+                        </li>
+                    @endcan
+                    @can('tendik_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.tendik.index') }}"
+                               class="nav-link {{ request()->is('admin/tendik*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-user-tie"></i></span>
+                                Manajemen Tendik
+                            </a>
+                        </li>
+                    @endcan
+                    @can('dosen_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.dosen.index') }}"
+                               class="nav-link {{ request()->is('admin/dosen*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+                                Manajemen Dosen
+                            </a>
+                        </li>
+                    @endcan
+                </ul>
+            </li>
+        @endcanany
+
+        {{-- 3. AKADEMIK & KEGIATAN --}}
+        <li class="nav-group {{ request()->is('admin/kegiatan*') || request()->is('admin/jadwal*') || request()->is('admin/kalender*') || request()->is('admin/cari-ruang*') ? 'show' : '' }}">
+            <a class="nav-group-toggle" href="#">
+                <i class="nav-icon fas fa-graduation-cap"></i>
+                Akademik & Kegiatan
             </a>
+            <ul class="nav-group-items compact">
+                @can('kegiatan_access')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.kegiatan.index') }}"
+                           class="nav-link {{ request()->is('admin/kegiatan*') ? 'active' : '' }}">
+                            <span class="nav-icon"><i class="fas fa-calendar"></i></span>
+                            {{ trans('cruds.kegiatan.title') }}
+                            @if(optional(auth()->user())->isAdmin() && !empty($pendingKegiatanCount))
+                                <span class="badge bg-danger ms-auto">{{ $pendingKegiatanCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                @endcan
+                @can('kuliah_access')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.jadwal-perkuliahan.index') }}"
+                           class="nav-link {{ request()->is('admin/jadwal*') ? 'active' : '' }}">
+                            <span class="nav-icon"><i class="fas fa-calendar-alt"></i></span>
+                            Jadwal Perkuliahan
+                        </a>
+                    </li>
+                @endcan
+                @can('calendar_access')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.systemCalendar') }}"
+                           class="nav-link {{ request()->is('admin/kalender*') ? 'active' : '' }}">
+                            <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
+                            Kalender Sistem
+                        </a>
+                    </li>
+                @endcan
+                <li class="nav-item">
+                    <a href="{{ route('admin.cariRuang') }}"
+                       class="nav-link {{ request()->is('admin/cari-ruang') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="fas fa-search"></i></span>
+                        Cari Ruang
+                    </a>
+                </li>
+            </ul>
         </li>
-        @can('permission_access')
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.permissions.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/permissions") || request()->is("admin/permissions/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.permission.title') }}">
-                    <i class="fa-fw fas fa-unlock-alt c-sidebar-nav-icon"></i>
-                    {{ trans('cruds.permission.title') }}
+
+        {{-- 4. FASILITAS & LAYANAN --}}
+        @canany(['ruangan_access', 'barang_access', 'mobil_access', 'riwayat_perjalanan_access', 'permintaan_kegiatan_access'])
+            <li class="nav-group {{ request()->is('admin/ruangan*') || request()->is('admin/barangs*') || request()->is('admin/mobils*') || request()->is('admin/riwayat-perjalanan*') || request()->is('admin/permintaan-kegiatan*') ? 'show' : '' }}">
+                <a class="nav-group-toggle" href="#">
+                    <i class="nav-icon fas fa-building"></i>
+                    Fasilitas & Layanan
                 </a>
+                <ul class="nav-group-items compact">
+                    @can('ruangan_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.ruangan.index') }}"
+                               class="nav-link {{ request()->is('admin/ruangan*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-hotel"></i></span>
+                                {{ trans('cruds.ruangan.title') }}
+                            </a>
+                        </li>
+                    @endcan
+                    @can('barang_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.barangs.index') }}"
+                               class="nav-link {{ request()->is('admin/barangs*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-box"></i></span>
+                                Data Barang
+                            </a>
+                        </li>
+                    @endcan
+                    @can('mobil_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.mobils.index') }}"
+                               class="nav-link {{ request()->is('admin/mobils*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-car"></i></span>
+                                Data Kendaraan
+                            </a>
+                        </li>
+                    @endcan
+                    @can('riwayat_perjalanan_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.riwayat-perjalanan.index') }}"
+                               class="nav-link {{ request()->is('admin/riwayat-perjalanan*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-road"></i></span>
+                                Logbook Driver
+                            </a>
+                        </li>
+                    @endcan
+                    @can('permintaan_kegiatan_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.permintaan-kegiatan.index') }}"
+                               class="nav-link {{ request()->is('admin/permintaan-kegiatan*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-concierge-bell"></i></span>
+                                Permintaan Layanan
+                                @if(optional(auth()->user())->isAdmin() && !empty($pendingPermintaanCount))
+                                    <span class="badge bg-danger ms-auto">{{ $pendingPermintaanCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                    @endcan
+                </ul>
             </li>
-        @endcan
-        @can('role_access')
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.roles.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/roles") || request()->is("admin/roles/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.role.title') }}">
-                    <i class="fa-fw fas fa-briefcase c-sidebar-nav-icon"></i>
-                    {{ trans('cruds.role.title') }}
+        @endcanany
+
+        {{-- 5. MANAJEMEN AKSES --}}
+        @canany(['permission_access', 'role_access', 'user_access'])
+            <li class="nav-group {{ request()->is('admin/permissions*') || request()->is('admin/roles*') || request()->is('admin/users*') ? 'show' : '' }}">
+                <a class="nav-group-toggle" href="#">
+                    <i class="nav-icon fas fa-users-cog"></i>
+                    Manajemen Akses
                 </a>
+                <ul class="nav-group-items compact">
+                    @can('permission_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.permissions.index') }}"
+                               class="nav-link {{ request()->is('admin/permissions*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-unlock-alt"></i></span>
+                                {{ trans('cruds.permission.title') }}
+                            </a>
+                        </li>
+                    @endcan
+                    @can('role_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.roles.index') }}"
+                               class="nav-link {{ request()->is('admin/roles*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-briefcase"></i></span>
+                                {{ trans('cruds.role.title') }}
+                            </a>
+                        </li>
+                    @endcan
+                    @can('user_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.users.index') }}"
+                               class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-user"></i></span>
+                                {{ trans('cruds.user.title') }}
+                            </a>
+                        </li>
+                    @endcan
+                </ul>
             </li>
-        @endcan
-        @can('user_access')
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.users.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/users") || request()->is("admin/users/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.user.title') }}">
-                    <i class="fa-fw fas fa-user c-sidebar-nav-icon"></i>
-                    {{ trans('cruds.user.title') }}
-                </a>
-            </li>
-        @endcan
-        
-        @can('ruangan_access')
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.ruangan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/ruangan") || request()->is("admin/ruangan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.ruangan.title') }}">
-                    <i class="fa-fw fas fa-hotel c-sidebar-nav-icon"></i>
-                    {{ trans('cruds.ruangan.title') }}
-                </a>
-            </li>
-        @endcan
-        @can('barang_access')
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.barangs.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/barangs") || request()->is("admin/barangs/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Peminjaman Barang">
-                    <i class="fa-fw fas fa-box c-sidebar-nav-icon"></i>
-                    Data Barang
-                </a>
-            </li>
-        @endcan
-        @can('permintaan_kegiatan_access') {{-- Pastikan permission ini sudah dibuat di seeder --}}
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.permintaan-kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/permintaan-kegiatan") || request()->is("admin/permintaan-kegiatan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Permintaan Layanan">
-                    <i class="fa-fw fas fa-concierge-bell c-sidebar-nav-icon"></i>
-                    Permintaan Layanan
-                    @if(optional(auth()->user())->isAdmin())
-                        @if(!empty($pendingPermintaanCount))
-                            <span class="sidebar-badge bg-danger text-white">{{ $pendingPermintaanCount }}</span>
-                        @endif
-                    @endif
-                </a>
-            </li>
-        @endcan
-        @can('kegiatan_access')
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.kegiatan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/kegiatan") || request()->is("admin/kegiatan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('cruds.kegiatan.title') }}">
-                    <i class="fa-fw fas fa-calendar c-sidebar-nav-icon"></i>
-                    {{ trans('cruds.kegiatan.title') }}
-                    @if(optional(auth()->user())->isAdmin())
-                        @if(!empty($pendingKegiatanCount))
-                            <span class="sidebar-badge bg-danger text-white">{{ $pendingKegiatanCount }}</span>
-                        @endif
-                    @endif
-                </a>
-            </li>
-        @endcan
-        @can('kuliah_access')
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.jadwal-perkuliahan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/jadwal") || request()->is("admin/jadwal-perkuliahan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Jadwal Perkuliahan">
-                    <i class="fa-fw fa fa-calendar-alt c-sidebar-nav-icon"></i>
-                    Jadwal Perkuliahan
-                </a>
-            </li>
-        @endcan
-        @can('calendar_access')
-        <li class="c-sidebar-nav-item">
-            <a href="{{ route("admin.systemCalendar") }}" class="c-sidebar-nav-link {{ request()->is("admin/kalender") || request()->is("admin/kalender/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('global.systemCalendar') }}">
-                <i class="c-sidebar-nav-icon fa-fw fa fa-calendar-check"></i>
-                {{ trans('global.systemCalendar') }}
-            </a>
-        </li>
-        @endcan
-        @can('mobil_access') 
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.mobils.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/mobils") || request()->is("admin/mobils/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Data Kendaraan">
-                    <i class="fa-fw fas fa-car c-sidebar-nav-icon"></i>
-                    Data Kendaraan
-                </a>
-            </li>
-        @endcan
-        @can('riwayat_perjalanan_access') 
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.riwayat-perjalanan.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/riwayat-perjalanan") || request()->is("admin/riwayat-perjalanan/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Logbook Perjalanan">
-                    <i class="fa-fw fas fa-road c-sidebar-nav-icon"></i>
-                    Logbook Driver
-                </a>
-            </li>
-        @endcan
-        @can('presensi_access') 
-            <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.absensi.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/absensi") || request()->is("admin/absensi/*") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Log Presensi">
-                    <i class="fa-fw fas fa-fingerprint c-sidebar-nav-icon"></i>
-                    Log Presensi
-                </a>
-            </li>
-        @endcan
+        @endcanany
+
+        {{-- Spacer dorong profil & logout ke bawah --}}
+        <li class="nav-item nav-spacer"></li>
+
+        {{-- 6. PROFIL --}}
         @if(file_exists(app_path('Http/Controllers/Auth/ChangePasswordController.php')))
             @can('profile_password_edit')
-                <li class="c-sidebar-nav-item">
-                    <a class="c-sidebar-nav-link {{ request()->is('profile/password') || request()->is('profile/password/*') ? 'c-active' : '' }}" href="{{ route('profile.password.edit') }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('global.change_password') }}">
-                        <i class="fa-fw fas fa-key c-sidebar-nav-icon"></i>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->is('profile/password*') ? 'active' : '' }}"
+                       href="{{ route('profile.password.edit') }}">
+                        <i class="nav-icon fas fa-key"></i>
                         {{ trans('global.change_password') }}
                     </a>
                 </li>
             @endcan
         @endif
-        <li class="c-sidebar-nav-item">
-            <a href="{{ route("admin.cariRuang") }}" class="c-sidebar-nav-link {{ request()->is("admin/cari-ruang") ? "c-active" : "" }}" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Cari Ruang">
-                <i class="c-sidebar-nav-icon fa-fw fas fa-search"></i>
-                Cari Ruang
-            </a>
-        </li>
-        <li class="c-sidebar-nav-item" style="margin-top: auto; margin-bottom: 20px;">
-            <a href="#" class="c-sidebar-nav-link logout-btn" onclick="event.preventDefault(); document.getElementById('logoutform').submit();" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="{{ trans('global.logout') }}">
-                <i class="c-sidebar-nav-icon fas fa-fw fa-sign-out-alt"></i>
+
+        {{-- 7. LOGOUT --}}
+        <li class="nav-item mb-2">
+            <a href="#"
+               class="nav-link nav-link-logout"
+               onclick="event.preventDefault(); document.getElementById('logoutform').submit();">
+                <i class="nav-icon fas fa-sign-out-alt"></i>
                 {{ trans('global.logout') }}
             </a>
         </li>
-    </ul>
 
+    </ul>
 </div>

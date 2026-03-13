@@ -164,24 +164,31 @@ $(function () {
     // ======================
     // DATATABLE + MASS DELETE
     // ======================
-    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
+    // dtButtons didefinisikan manual — tidak pakai $.extend defaults karena
+    // delete button custom (server-side style: dt.rows().data()) tidak kompatibel dengan getStandardDtButtons
+    let dtButtons = [
+        { extend: 'selectAll',  text: '<i class="fas fa-check-double me-1"></i> Pilih Semua', className: 'btn-primary btn-sm' },
+        { extend: 'selectNone', text: '<i class="fas fa-times me-1"></i> Batal Pilih',        className: 'btn-primary btn-sm' },
+        { extend: 'copy',   text: '<i class="fas fa-copy me-1"></i> Salin',   className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'csv',    text: '<i class="fas fa-file-export me-1"></i> CSV',   className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'excel',  text: '<i class="fas fa-file-excel me-1"></i> Excel',  className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'pdf',    text: '<i class="fas fa-file-pdf me-1"></i> PDF',      className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'print',  text: '<i class="fas fa-print me-1"></i> Cetak',       className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'colvis', text: '<i class="fas fa-columns me-1"></i> Kolom',     className: 'btn-secondary btn-sm' },
+    ];
 
     @can('riwayat_perjalanan_delete')
-    let deleteButton = {
-        text: 'Hapus pilihan',
-        className: 'btn-danger',
+    dtButtons.push({
+        text: '<i class="fas fa-trash-alt me-1"></i> Hapus Terpilih',
+        className: 'btn-danger btn-sm',
+        enabled: false,
         action: function (e, dt, node, config) {
-
             let ids = $.map(dt.rows({ selected: true }).data(), function (entry) {
-                return entry.id
+                return entry.id;
             });
 
             if (ids.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Tidak ada data dipilih',
-                    text: 'Silahkan pilih data yang ingin dihapus terlebih dahulu.',
-                });
+                Swal.fire({ icon: 'warning', title: 'Tidak ada data dipilih', text: 'Silahkan pilih data terlebih dahulu.' });
                 return;
             }
 
@@ -194,45 +201,42 @@ $(function () {
                 cancelButtonText: 'Batal',
                 confirmButtonColor: '#d33',
             }).then((result) => {
-
                 if (!result.isConfirmed) return;
-                console.log("MASS DESTROY URL:", "{{ route('admin.riwayat-perjalanan.massDestroy') }}");
 
                 $.ajax({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                     method: 'DELETE',
                     url: "{{ route('admin.riwayat-perjalanan.massDestroy') }}",
                     data: { ids: ids }
                 })
                 .done(function () {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: 'Data terpilih berhasil dihapus.',
-                        timer: 1200,
-                        showConfirmButton: false
-                    });
-
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data terpilih berhasil dihapus.', timer: 1200, showConfirmButton: false });
                     $('.datatable-Riwayat').DataTable().ajax.reload(null, false);
                 })
-                .fail(function (xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: 'Terjadi kesalahan saat menghapus'
-                    });
+                .fail(function () {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan saat menghapus' });
                 });
-
             });
         }
-    }
-    dtButtons.push(deleteButton);
+    });
     @endcan
 
     let table = $('.datatable-Riwayat').DataTable({
         buttons: dtButtons,
+        language: {                                                    // ← TAMBAH INI
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            lengthMenu: "Tampilkan _MENU_ data",
+            search: "Cari:",
+            paginate: {
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            },
+            zeroRecords: "Tidak ada data ditemukan",
+            emptyTable: "Tidak ada data tersedia",
+            processing: "Memuat..."
+        },   
         processing: true,
         serverSide: true,
         retrieve: true,
@@ -259,6 +263,21 @@ $(function () {
             style: 'multi',
             selector: 'td:first-child'
         },
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+    });
+
+    table.on('select deselect', function () {
+        let selectedRows = table.rows({ selected: true }).count();
+        table.button(2).enable(selectedRows > 0); // Salin
+        table.button(3).enable(selectedRows > 0); // CSV
+        table.button(4).enable(selectedRows > 0); // Excel
+        table.button(5).enable(selectedRows > 0); // PDF
+        table.button(6).enable(selectedRows > 0); // Cetak
+        @can('riwayat_perjalanan_delete')
+        table.button(8).enable(selectedRows > 0); // Hapus Terpilih
+        @endcan
     });
 
     $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){

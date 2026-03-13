@@ -9,11 +9,14 @@ use App\Models\HariLibur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Carbon\Carbon;
+use Gate;
+use Symfony\Component\HttpFoundation\Response;
 
 class AbsensiController extends Controller
 {
     public function index(Request $request)
     {
+        abort_if(Gate::denies('presensi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         // Default tanggal hari ini
         $tanggal = $request->input('tanggal', Carbon::now()->format('Y-m-d'));
         $roleFilter = $request->input('role', 'Pegawai');

@@ -11,9 +11,6 @@ body {
     background-color: #f8fafc;
   }
 
-.fa-bars {
-    color:white;
-}
 .c-header {
     background-color: #741847;
 }
@@ -47,21 +44,7 @@ table.dataTable tbody th.select-checkbox::after {
     top: 50%;
 }
 
-.dataTables_length,
-.dataTables_filter,
-.dt-buttons {
-    margin-bottom: 0.333em;
-    margin-top: .2rem;
-}
-
-.dataTables_filter {
-    margin-right: .2rem;
-}
-
-.dt-buttons .btn {
-    margin-left: 0.333em;
-    border-radius: 0;
-}
+/* dt layout — dihandle di blok DATATABLES TOP BAR LAYOUT di bawah */
 
 .table.datatable {
     box-sizing: border-box;
@@ -99,165 +82,560 @@ table.dataTable thead .sorting_asc,
 table.dataTable thead .sorting_desc {
     background-image: none;
 }
-.c-header {
-    background-color: #741847;
-}
-
-.c-sidebar {
-    background-color: #ffffff;
-    border-right: 1px solid #e9ecef;
-}
-
-.c-sidebar .c-sidebar-brand {
-    background-color: #ffffff;
-    color: #333;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-}
+/* =============================================================================
+   SIDEBAR — CoreUI v4 + Bootstrap 5
+   
+   CARA APPLY di custom.css:
+   Hapus seluruh blok dari:
+     ".c-header { background-color: #741847; }"  (line ~102)
+   sampai:
+     ".logout-btn i { color: white !important; }" (line ~261)
+   
+   Lalu tempel semua CSS di bawah ini sebagai penggantinya.
+   Biarkan semua CSS lain di atas dan bawah blok itu tetap ada.
+   ============================================================================= */
 
 
-/* 2. TAMPILAN ITEM MENU (MODE MAXIMIZED) */
-/* ------------------------------------------------------------------------- */
-.c-sidebar .c-sidebar-nav-link,
-.c-sidebar .c-sidebar-nav-dropdown-toggle {
-    color: #5c6873;
-    font-weight: 500;
-    padding: 0.6rem 1.5rem;
-    border-radius: 8px;
-    margin: 2px 10px;
-    transition: all 0.2s ease-in-out;
-}
+/* ─── HEADER ─────────────────────────────────────────────────────────────── */
 
-/* Hover di parent li juga bikin link ungu */
-.c-sidebar .c-sidebar-nav-item:hover > .c-sidebar-nav-link,
-.c-sidebar .c-sidebar-nav-dropdown:hover > .c-sidebar-nav-dropdown-toggle {
-  background-color: #f1e4e9 !important;
-}
-
-/* Ikon ikut ungu */
-.c-sidebar .c-sidebar-nav-item:hover > .c-sidebar-nav-link.c-active .c-sidebar-nav-icon,
-.c-sidebar .c-sidebar-nav-dropdown:hover > .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
-  color: #ffffff !important;
-}
-
-/* Ikon ikut ungu */
-.c-sidebar .c-sidebar-nav-item:hover > .c-sidebar-nav-link .c-sidebar-nav-icon,
-.c-sidebar .c-sidebar-nav-dropdown:hover > .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
-  color: #741847 !important;
-}
-
-
-.c-sidebar .c-sidebar-nav-link .c-sidebar-nav-icon,
-.c-sidebar .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
-    color: #8a939c;
-    font-size: 14px;
-    transition: all 0.2s ease-in-out;
-}
-
-.c-sidebar .c-sidebar-nav-link:hover,
-.c-sidebar .c-sidebar-nav-dropdown-toggle:hover {
-    background-color: #f1e4e9;
-    color: #741847;
-}
-
-.c-sidebar .c-sidebar-nav-link:hover .c-sidebar-nav-icon,
-.c-sidebar .c-sidebar-nav-dropdown-toggle:hover .c-sidebar-nav-icon {
-    color: #741847;
-}
-
-.c-sidebar .c-sidebar-nav-link.c-active,
-.c-sidebar .c-sidebar-nav-dropdown.c-show > .c-sidebar-nav-dropdown-toggle {
-    background-color: #741847;
-    color: #ffffff;
-    box-shadow: 0 4px 8px -2px rgba(116, 24, 71, 0.4);
-}
-
-.c-sidebar .c-sidebar-nav-link.c-active .c-sidebar-nav-icon,
-.c-sidebar .c-sidebar-nav-dropdown.c-show > .c-sidebar-nav-dropdown-toggle .c-sidebar-nav-icon {
-    color: #ffffff;
-}
-
-#sidebar.c-sidebar-minimized {
-    overflow: visible !important;
-}
-
-#sidebar.c-sidebar-minimized .c-sidebar-nav-link,
-#sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown-toggle {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 44px;       
-    height: 44px;    
-    margin: 2px auto;    
-    border-radius: 10px; 
-    padding: 0;
-    font-size: 0;
-    position: relative;
-}
-
-.c-sidebar-minimized .c-sidebar-nav {
-    padding-bottom: 0px !important;
-}
-
-#sidebar.c-sidebar-minimized .c-sidebar-nav-link.c-active,
-#sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown.c-show > .c-sidebar-nav-dropdown-toggle {
+.header {
     background-color: #741847 !important;
+    border-bottom: none !important;
 }
 
-#sidebar.c-sidebar-minimized .c-sidebar-nav-link:hover,
-#sidebar.c-sidebar-minimized .c-sidebar-nav-dropdown-toggle:hover {
-    background-color: #f1e4e9 !important; 
-    color: #741847;
+/* =======================================================
+   FIX 1: HAMBURGER BUTTON (Harus Putih Terang!)
+   ======================================================= */
+.header-toggler {
+    color: #ffffff !important; /* Diubah jadi putih agar kontras dengan header ungu */
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.5rem;
+}
+.header-toggler:hover {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+/* Brand text di header mobile */
+.header-brand {
+    color: #ffffff !important;
+    font-weight: 700;
+    text-decoration: none;
 }
 
-#sidebar.c-sidebar-minimized .c-sidebar-nav-link:hover .c-sidebar-nav-icon {
-    color: #741847 !important;
-    background-color: #f1e4e9 !important; 
+/* Icon bars di header */
+.header .fas,
+.header .far,
+.header .fab {
+    color: #ffffff;
+}
+
+/* Avatar header */
+.header-nav .nav-link {
+    color: rgba(255,255,255,0.85) !important;
+}
+.header-nav .nav-link:hover {
+    color: #ffffff !important;
 }
 
 
-#sidebar.c-sidebar-minimized .c-sidebar-nav-icon {
+/* ─── SIDEBAR CONTAINER ──────────────────────────────────────────────────── */
+
+.sidebar {
+    --cui-sidebar-bg:               #ffffff;
+    --cui-sidebar-color:            #4b5563;
+    --cui-sidebar-brand-bg:         #741847;
+    --cui-sidebar-brand-color:      #ffffff;
+    --cui-sidebar-nav-group-bg:     transparent;
+
+    background-color: #ffffff !important;
+    border-right: 1px solid #e9ecef !important;
+    color: #4b5563;
+}
+
+/* Brand area */
+.sidebar-brand {
+    background-color: #741847 !important;
+    color: #ffffff !important;
+    min-height: 56px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    font-size: 0.82rem;
+}
+.sidebar-brand .fas {
+    color: #ffffff !important;
     font-size: 1.3rem;
-    margin: 0;
-    margin-bottom: 5px;
-}
-
-/* Sidebar badge visible both in expanded and minimized states */
-.c-sidebar .c-sidebar-nav-link .sidebar-badge {
-    margin-left: 8px;
-    font-size: 0.65rem;
-    padding: 3px 6px;
-    border-radius: 999px;
-    line-height: 1;
-    vertical-align: middle;
 }
 
 
-/* When sidebar is minimized, position badge over the icon */
-#sidebar.c-sidebar-minimized .c-sidebar-nav-link .sidebar-badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    margin-left: 0;
-    font-size: 0.6rem;
-    padding: 2px 5px;
-    transform: translate(0, 0);
+/* ─── NAV ITEMS — MAXIMIZED ──────────────────────────────────────────────── */
+
+/* Wrapper padding */
+.sidebar-nav {
+    padding: 0.5rem 0;
+    background: transparent !important;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-.logout-btn {
+/* FIX 3: Pastikan sidebar container juga flex agar nav-spacer bisa mendorong ke bawah */
+.sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Semua link & toggle */
+.sidebar-nav .nav-link,
+.sidebar-nav .nav-group-toggle {
+    color: #4b5563 !important;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.575rem 1rem !important;
+    margin: 1px 8px;
+    border-radius: 8px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    text-decoration: none !important;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    width: calc(100% - 16px);
+    cursor: pointer !important;
+}
+
+/* Semua link & toggle */
+.sidebar-nav .nav-link,
+.sidebar-nav .nav-group-toggle {
+    color: #4b5563 !important;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.575rem 1rem !important;
+    margin: 1px 8px;
+    border-radius: 8px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    text-decoration: none !important;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    width: calc(100% - 16px);
+    cursor: pointer !important;
+}
+
+/* FIX 1: Cursor pointer selalu muncul di nav-group-toggle, baik saat collapsed maupun expanded */
+.sidebar-nav .nav-group-toggle {
+    cursor: pointer !important;
+}
+.sidebar-nav .nav-group:not(.show) > .nav-group-toggle {
+    cursor: pointer !important;
+}
+
+/* Ikon parent */
+.sidebar-nav .nav-link .nav-icon,
+.sidebar-nav .nav-group-toggle .nav-icon {
+    color: #9ca3af !important;
+    font-size: 1rem;
+    width: 1.25rem;
+    min-width: 1.25rem;
+    margin-right: -0.1rem;
+    text-align: center;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+}
+/* Icon logout — putih karena bg merah */
+.sidebar-nav .nav-link-logout .nav-icon,
+.sidebar-nav .nav-link-logout .nav-icon i {
+    color: #ffffff !important;
+}
+/* Arrow CoreUI v4 (::after pseudo dari library) */
+.sidebar-nav .nav-group-toggle::after {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    /* CoreUI v4 pakai background-image SVG, bukan color */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    content: "" !important;
+    display: inline-block !important;
+}
+
+/* Saat group collapsed — pastikan tidak ter-rotate balik */
+.sidebar-nav .nav-group:not(.show) > .nav-group-toggle::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+
+/* HOVER */
+.sidebar-nav .nav-link:hover,
+.sidebar-nav .nav-group-toggle:hover {
+    background-color: #fdf0f5 !important;
+    color: #741847 !important;
+    text-decoration: none !important;
+}
+.sidebar-nav .nav-link:hover .nav-icon,
+.sidebar-nav .nav-group-toggle:hover .nav-icon,
+.sidebar-nav .nav-link:hover .nav-icon i,
+.sidebar-nav .nav-group-toggle:hover .nav-icon i {
+    color: #741847 !important;
+}
+.sidebar-nav .nav-group-toggle:hover::after {
+    color: #741847 !important;
+}
+
+/* ACTIVE link */
+.sidebar-nav .nav-link.active {
+    background-color: #741847 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px -2px rgba(116, 24, 71, 0.3);
+}
+.sidebar-nav .nav-link.active .nav-icon,
+.sidebar-nav .nav-link.active .nav-icon i {
+    color: #ffffff !important;
+}
+.sidebar-nav .nav-link.active:hover {
+    background-color: #8a1d55 !important;
+    color: #ffffff !important;
+}
+
+/* OPEN nav-group toggle */
+.sidebar-nav .nav-group.show > .nav-group-toggle {
+    background-color: #741847 !important;
+    color: #ffffff !important;
+    border-radius: 8px 8px 0 0;
+}
+.sidebar-nav .nav-group.show > .nav-group-toggle .nav-icon,
+.sidebar-nav .nav-group.show > .nav-group-toggle .nav-icon i {
+    color: #ffffff !important;
+}
+
+.sidebar-nav .nav-group.show > .nav-group-toggle::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+/* Hover pada open group — jangan override warna */
+.sidebar-nav .nav-group.show > .nav-group-toggle:hover {
+    background-color: #8a1d55 !important;
+    color: #ffffff !important;
+}
+
+
+/* ─── SUBMENU (nav-group-items) ──────────────────────────────────────────── */
+
+/* Container submenu */
+.sidebar-nav .nav-group-items {
+    background-color: #faf5f7 !important;
+    border-radius: 0 0 8px 8px;
+    padding: 4px 0 6px !important;
+    margin: 0 0px !important;
+}
+
+/* Link di dalam submenu */
+.sidebar-nav .nav-group-items .nav-link {
+    /* Indentasi submenu: lebih ke kanan dari parent */
+    padding: 0.42rem 0.75rem 0.42rem 0.1rem !important;
+    margin: 1px 4px !important;
+    width: calc(100% - 8px) !important;
+    font-size: 0.845rem !important;
+    color: #374151 !important;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Bullet titik penanda level */
+.sidebar-nav .nav-group-items .nav-link::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #d1d5db;
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+/* Ikon dalam submenu */
+.sidebar-nav .nav-group-items .nav-link .nav-icon,
+.sidebar-nav .nav-group-items .nav-link .nav-icon i {
+    font-size: 0.82rem !important;
+    color: #9ca3af !important;
+    width: 1rem !important;
+    min-width: 1rem !important;
+    margin-right: -0.5rem !important;
+}
+
+/* Hover submenu */
+.sidebar-nav .nav-group-items .nav-link:hover {
+    background-color: #f5dde7 !important;
+    color: #741847 !important;
+}
+.sidebar-nav .nav-group-items .nav-link:hover::before {
+    background-color: #741847;
+    transform: scale(1.5);
+}
+.sidebar-nav .nav-group-items .nav-link:hover .nav-icon,
+.sidebar-nav .nav-group-items .nav-link:hover .nav-icon i {
+    color: #741847 !important;
+}
+
+/* Active submenu */
+.sidebar-nav .nav-group-items .nav-link.active {
+    background-color: #f5dde7 !important;
+    color: #741847 !important;
+    font-weight: 600;
+    box-shadow: none !important;
+}
+.sidebar-nav .nav-group-items .nav-link.active::before {
+    background-color: #741847;
+    transform: scale(1.5);
+}
+.sidebar-nav .nav-group-items .nav-link.active .nav-icon,
+.sidebar-nav .nav-group-items .nav-link.active .nav-icon i {
+    color: #741847 !important;
+}
+/* =======================================================
+   FIX: SUBMENU SPACING & BADGE ALIGNMENT
+   ======================================================= */
+.sidebar-nav .nav-link, 
+.sidebar-nav .nav-group-items .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.1rem; /* Jarak aman antara teks dan badge */
+    padding-right: 1.25rem !important; /* Tambah ruang di sebelah kanan agar tidak nabrak border */
+}
+
+.sidebar-nav .nav-link .badge,
+.sidebar-nav .nav-group-toggle .badge {
+    margin-left: auto; /* Memaksa badge terdorong mentok ke kanan */
+    margin-right: 0.25rem; /* Tapi tetap diberi jarak sedikit dari ujung kanan box */
+}
+
+/* Reset margin icon (jika sebelumnya icon menabrak kiri) */
+.sidebar-nav .nav-group-items .nav-link .nav-icon {
+    margin-left: 0 !important;
+}
+.sidebar-nav .nav-group-items .nav-link::before {
+    display: none !important; /* Sembunyikan bullet default CoreUI */
+}
+/* =======================================================
+   FIX 2: DORONG WRAPPER AGAR HEADER TIDAK TERTIMPA
+   ======================================================= */
+@media (min-width: 992px) {
+    .sidebar {
+        width: 256px !important;
+        position: fixed !important;
+        top: 0; bottom: 0; left: 0;
+        z-index: 1031;
+    }
+    .wrapper {
+        margin-left: 256px !important; /* Dorong konten sejauh lebar sidebar */
+        transition: margin-left 0.2s ease;
+    }
+    .sidebar.sidebar-narrow {
+        width: 70px !important;
+    }
+    .sidebar.sidebar-narrow ~ .wrapper {
+        margin-left: 70px !important; /* Wrapper ikut mengecil saat sidebar minimized */
+    }
+}
+
+/* =======================================================
+   FIX 3: FLYOUT MENU NARROW (ANTI-POTONG & ANTI-JS)
+   ======================================================= */
+@media (min-width: 992px) {
+    /* 1. BUKA KUNCIAN OVERFLOW AGAR FLYOUT BISA KELUAR BATAS */
+    .sidebar.sidebar-narrow,
+    .sidebar.sidebar-narrow .sidebar-nav {
+        overflow: visible !important;
+    }
+
+    /* 2. MATIKAN FUNGSI KLIK MENU INDUK AGAR JS TIDAK ERROR/AKTIF SENDIRI */
+    .sidebar.sidebar-narrow .nav-group-toggle {
+        pointer-events: none !important; /* Kunci rahasianya ada di sini bro! */
+    }
+
+    /* Lenyapkan teks & panah di menu induk saat minimized */
+    .sidebar.sidebar-narrow .nav-link,
+    .sidebar.sidebar-narrow .nav-group-toggle {
+        font-size: 0 !important;
+        color: transparent !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        width: 48px !important;
+        height: 48px !important;
+        margin: 4px auto !important;
+    }
+    .sidebar.sidebar-narrow .nav-icon {
+        font-size: 1.25rem !important;
+        color: #9ca3af !important;
+        margin: 0 !important;
+    }
+    .sidebar.sidebar-narrow .nav-link-logout .nav-icon,
+    .sidebar.sidebar-narrow .nav-link-logout .nav-icon i {
+        color: #ffffff !important;
+    }
+    .sidebar.sidebar-narrow .nav-group-toggle::after,
+    .sidebar.sidebar-narrow .nav-link .badge,
+    .sidebar.sidebar-narrow .nav-group-items .nav-link::before {
+        display: none !important;
+    }
+
+    /* 3. SETELAN FLYOUT CONTAINER */
+    .sidebar.sidebar-narrow .nav-group {
+        position: relative !important;
+    }
+    
+    /* Default: sembunyikan submenu dan reset tinggi */
+    .sidebar.sidebar-narrow .nav-group-items {
+        display: none !important;
+        height: auto !important;
+    }
+
+    /* 4. MUNCULKAN FLYOUT SAAT HOVER SECARA PAKSA */
+    .sidebar.sidebar-narrow .nav-group:hover > .nav-group-items {
+        display: block !important;
+        position: absolute !important;
+        left: 70px !important; /* Sejajar dengan batas pinggir sidebar */
+        top: 0 !important;
+        width: 209px !important;
+        height: auto !important; /* Lawan injeksi tinggi 0px dari JS */
+        visibility: visible !important;
+        opacity: 1 !important;
+        background-color: #ffffff !important;
+        box-shadow: 4px 4px 20px rgba(0,0,0,0.15) !important;
+        border-radius: 0 12px 12px 0 !important;
+        padding: 0px !important;
+        z-index: 999999 !important; /* Wajib paling depan */
+        border: 1px solid #e9ecef !important;
+        border-left: none !important;
+    }
+
+    /* 5. KEMBALIKAN FORMAT TEKS DAN FUNGSI KLIK DI DALAM SUBMENU */
+    .sidebar.sidebar-narrow .nav-group:hover > .nav-group-items .nav-link {
+        font-size: 0.85rem !important;
+        color: #4b5563 !important;
+        width: 100% !important;
+        justify-content: flex-start !important;
+        height: auto !important;
+        padding: 10px 2px !important;
+        margin: 2px 0 !important;
+        pointer-events: auto !important; /* Wajib di-auto-kan agar link bisa diklik lagi */
+    }
+    
+    /* Percantik native scrollbar */
+    .sidebar-nav::-webkit-scrollbar { width: 6px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
+}
+
+/* ─── LOGOUT BUTTON ──────────────────────────────────────────────────────── */
+
+.nav-link-logout,
+.sidebar-nav .nav-link-logout,
+.sidebar-nav .nav-link.nav-link-logout {
     background-color: #b02a37 !important;
-    color: white !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+.nav-link-logout:hover,
+.sidebar-nav .nav-link-logout:hover {
+    background-color: #d32535 !important;
+    color: #ffffff !important;
+}
+/* FIX 2: Paksa teks, ikon, dan semua child element di logout jadi putih */
+.nav-link-logout *,
+.nav-link-logout .nav-icon,
+.nav-link-logout .nav-icon i,
+.nav-link-logout i,
+.sidebar-nav .nav-link-logout,
+.sidebar-nav .nav-link-logout * {
+    color: #ffffff !important;
 }
 
-.logout-btn:hover {
-    background-color: #e03232 !important;
-    color: white !important;
+
+/* ─── BADGE INLINE ───────────────────────────────────────────────────────── */
+
+.sidebar-nav .nav-link .badge,
+.sidebar-nav .nav-group-toggle .badge {
+    margin-left: auto;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-weight: 700;
+    flex-shrink: 0;
 }
 
-.logout-btn i {
-    color: white !important;
+
+/* ─── NAV SPACER ─────────────────────────────────────────────────────────── */
+
+.nav-spacer {
+    /* display: list-item membuat flex: 1 1 auto tidak bekerja — harus block */
+    display: block !important;
+    flex: 1 1 auto !important;
+    min-height: 20px;
+}
+
+/* Saat sidebar narrow, sidebar-nav tetap perlu flex agar spacer bisa push ke bawah */
+/* PENTING: overflow HARUS visible agar flyout submenu bisa keluar dari batas sidebar */
+@media (min-width: 992px) {
+    .sidebar.sidebar-narrow .sidebar-nav {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        overflow: visible !important; /* Jangan pakai auto/hidden — flyout akan terpotong */
+    }
+    .sidebar.sidebar-narrow .nav-spacer {
+        flex: 1 1 auto !important;
+        min-height: 20px;
+    }
+}
+
+/* Mereset margin negatif bawaan CoreUI v4 pada icon submenu */
+.sidebar-nav .nav-group-items .nav-link .nav-icon,
+.sidebar-nav .nav-group-items .nav-link .nav-icon i {
+    margin-left: 0 !important;
+}
+
+/* Menyembunyikan bullet titik karena submenu sudah menggunakan icon FontAwesome */
+.sidebar-nav .nav-group-items .nav-link::before {
+    display: none !important;
+}
+
+/* ─── RESPONSIVE MOBILE ──────────────────────────────────────────────────── */
+
+@media (max-width: 991.98px) {
+    /* Di mobile sidebar slide dari kiri */
+    .sidebar {
+        position: fixed !important;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1031;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        width: 256px !important;
+    }
+    .sidebar.show {
+        transform: translateX(0) !important;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+    }
+    /* Wrapper tidak butuh margin kiri di mobile */
+    .wrapper {
+        margin-left: 0 !important;
+    }
+}
+
+/* Backdrop mobile */
+#sidebarBackdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1030;
 }
 
 .statistics-page .trend-chart{
@@ -724,66 +1102,117 @@ h5 {
     margin: 0 2px;
 }
 
-.dt-controls-row {
+/* ─── DATATABLES TOP BAR LAYOUT ─────────────────────────────────────────── */
+
+/* Satu baris atas: [Show X entries] [..buttons..] [Search] */
+.dt-top-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem 0;
-    flex-wrap: wrap; /* Agar responsif */
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    margin-bottom: 0.25rem;
 }
 
-/* Atur tampilan "Show X entries" */
+.dt-top-left {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.dt-top-center {
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0;
+}
+
+.dt-top-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* Show X entries */
 .dataTables_length {
-    margin-right: 1rem;
+    margin-right: 0;
 }
-
 .dataTables_length label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 500;
+    margin: 0;
+    white-space: nowrap;
 }
-
 .dataTables_length select {
     border-radius: 8px !important;
     padding: 0.3rem 1.5rem 0.3rem 0.75rem !important;
+    font-size: 0.875rem;
 }
 
-/* Atur tampilan kotak pencarian */
+/* Search box */
 .dataTables_filter {
-    margin-left: 1rem;
+    margin-left: 0;
 }
 .dataTables_filter label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 500;
+    margin: 0;
+    white-space: nowrap;
 }
 .dataTables_filter input {
     border: 1px solid #ced4da;
     border-radius: 8px !important;
-    padding: 0.4rem 0.75rem !important;
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.875rem;
     transition: all 0.2s ease;
+    min-width: 180px;
 }
 .dataTables_filter input:focus {
     border-color: #741847;
     box-shadow: 0 0 0 0.25rem rgba(116, 24, 71, 0.25);
+    outline: none;
 }
 
-/* Atur tampilan tombol ekspor */
+/* Tombol-tombol DT */
+.dt-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0 0.5rem;
+}
 .dt-buttons .btn {
     border-radius: 8px !important;
     font-weight: 600 !important;
-    margin-left: 0.5rem !important;
+    font-size: 0.8rem !important;
+    padding: 0.3rem 0.65rem !important;
+    margin: 0 !important;
     background-color: #fff;
     border: 1px solid #ced4da;
     color: #333;
+    line-height: 1.4;
 }
 .dt-buttons .btn:hover {
     background-color: #f8f9fa;
     border-color: #adb5bd;
+}
+
+/* Legacy: dt-controls-row tidak lagi dipakai tapi jaga agar tidak rusak */
+.dt-controls-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
 }
 .btn-danger.dt-button {
     background-color: #f8d7da;
@@ -1743,7 +2172,6 @@ div.dt-button-collection .dt-button.active:hover::before {
   border-radius: 50%;
 }
 
-
 /* ================================================= */
 /* == GAYA RESPONSIVE UNTUK TAMPILAN MOBILE == */
 /* ================================================= */
@@ -1979,15 +2407,6 @@ div.dt-button-collection .dt-button.active:hover::before {
         opacity: 1;
         visibility: visible;
     }
-     .c-sidebar.c-sidebar-show .c-sidebar-nav .nav-link span,
-    .c-sidebar.c-sidebar-show .c-sidebar-nav .nav-link-text {
-        display: none !important;
-    }
-
-    /* Biar sidebar lebih ramping */
-    .c-sidebar.c-sidebar-show {
-        width: 70px; /* sesuaikan dengan ukuran icon */
-    }
     .calendar-container {
         flex-direction: column; /* Susun kalender dan sidebar secara vertikal */
     }
@@ -2127,3 +2546,40 @@ div.dt-button-collection .dt-button.active:hover::before {
     flex: 1 1 auto;
   }
 }
+
+/* ─── WARNA BARIS SELECTED (DataTables) ─────────────────────────────────── */
+
+/* Override default biru dari DataTables Select extension */
+table.dataTable tbody tr.selected > * {
+    box-shadow: inset 0 0 0 9999px rgba(116, 24, 71, 0.12) !important;
+    color: #212529 !important;
+}
+
+table.dataTable tbody tr.selected {
+    background-color: #e6dddd !important; /* Ganti warna ini sesuai selera */
+}
+
+table.dataTable tbody tr.selected td {
+    color: #212529 !important;
+}
+
+/* Untuk .modern-table — update yang sudah ada */
+.modern-table tbody tr.selected {
+    background-color: #e6dddd !important; /* Sama, biar konsisten */
+    box-shadow: 0 6px 15px rgba(116, 24, 71, 0.1);
+}
+
+/* ─── PAGINATION ─────────────────────────────────────────────────────────── */
+div.dataTables_wrapper div.dataTables_paginate ul.pagination li.page-item.active a.page-link,
+div.dataTables_wrapper div.dataTables_paginate ul.pagination li.page-item.active span.page-link {
+    background-color: #741847 !important;
+    border-color: #741847 !important;
+    color: #fff !important;
+}
+
+div.dataTables_wrapper div.dataTables_paginate ul.pagination li.page-item a.page-link:hover {
+    background-color: #fdf0f5 !important;
+    border-color: #741847 !important;
+    color: #741847 !important;
+}
+

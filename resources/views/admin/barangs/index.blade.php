@@ -125,28 +125,13 @@ $(function () {
     $('.select2').select2({ width: '100%' });
 
     // ========== VARIABLES ==========
-    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
+    let dtButtons = getStandardDtButtons();
 
     let currentMode = 'barang'; // default
     let tableBarang = null;
     let tableKegiatan = null;
 
-    // ========== HELPER: BUILD CONTROL ROW ==========
-    function buildControlsRow(tableSelector) {
-        let wrapper = $(tableSelector).closest('.dataTables_wrapper');
-        let length = wrapper.find('.dataTables_length');
-        let filter = wrapper.find('.dataTables_filter');
-        let buttons = wrapper.find('.dt-buttons');
-
-        // supaya gak dobel
-        if (!wrapper.find('.dt-controls-row').length) {
-            let controlsRow = $('<div class="dt-controls-row"></div>');
-            let leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
-            let rightCol = $('<div class="dt-controls-right"></div>').append(filter);
-            controlsRow.append(leftCol).append(rightCol);
-            wrapper.prepend(controlsRow);
-        }
-    }
+    // Layout dihandle otomatis oleh dom config
 
     // ========== DATATABLE: MODE PER BARANG ==========
     function initTableBarang() {
@@ -232,6 +217,20 @@ $(function () {
 
             orderCellsTop: true,
             pageLength: 10,
+            language: {                                                    // ← TAMBAH INI
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ total data)",
+                lengthMenu: "Tampilkan _MENU_ data",
+                search: "Cari:",
+                paginate: {
+                    next: "Berikutnya",
+                    previous: "Sebelumnya"
+                },
+                zeroRecords: "Tidak ada data ditemukan",
+                emptyTable: "Tidak ada data tersedia",
+                processing: "Memuat..."
+            },   
 
             columnDefs: [{
                 orderable: false,
@@ -243,14 +242,10 @@ $(function () {
                 style: 'multi',
                 selector: 'td:first-child'
             },
+            dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         });
-
-        // rapihin UI control row
-        $('.datatable-BarangDipinjam').on('draw.dt', function () {
-            buildControlsRow('.datatable-BarangDipinjam');
-        });
-
-        buildControlsRow('.datatable-BarangDipinjam');
     }
 
     // ========== DATATABLE: MODE PER KEGIATAN ==========
@@ -338,6 +333,20 @@ $(function () {
 
             orderCellsTop: true,
             pageLength: 10,
+            language: {                                                    // ← TAMBAH INI
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ total data)",
+                lengthMenu: "Tampilkan _MENU_ data",
+                search: "Cari:",
+                paginate: {
+                    next: "Berikutnya",
+                    previous: "Sebelumnya"
+                },
+                zeroRecords: "Tidak ada data ditemukan",
+                emptyTable: "Tidak ada data tersedia",
+                processing: "Memuat..."
+            },   
 
             columnDefs: [{
                 orderable: false,
@@ -349,13 +358,10 @@ $(function () {
                 style: 'multi',
                 selector: 'td:first-child'
             },
+            dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         });
-
-        $('.datatable-KegiatanDipinjam').on('draw.dt', function () {
-            buildControlsRow('.datatable-KegiatanDipinjam');
-        });
-
-        buildControlsRow('.datatable-KegiatanDipinjam');
     }
 
     // ========== APPLY MODE (SHOW / HIDE TABLES) ==========

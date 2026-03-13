@@ -1,126 +1,354 @@
 @extends('layouts.admin')
 @section('content')
 
-{{-- Header --}}
 <div class="d-flex align-items-center mb-4">
-    <h3 class="font-weight-bold mb-0">Daftar Kendaraan Dinas</h3>
+    <h3 class="font-weight-bold mb-0">Logbook Driver & Kendaraan</h3>
+
     <div class="ms-auto">
-        @can('mobil_create')
-            <a class="btn btn-success" href="{{ route('admin.mobils.create') }}">
-                <i class="fas fa-plus-circle me-2"></i> Tambah Mobil
+        @can('riwayat_perjalanan_create')
+            <a class="btn btn-success" href="{{ route('admin.riwayat-perjalanan.create') }}">
+                <i class="fas fa-plus-circle me-2"></i> Input Jalan / Booking
             </a>
         @endcan
     </div>
 </div>
 
-{{-- Tabel --}}
+{{-- ========== TABLE ONGOING / ON DUTY ========== --}}
+@if(isset($ongoing) && $ongoing->count() > 0)
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-road me-2"></i> Sedang Berlangsung
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>KENDARAAN</th>
+                            <th>DRIVER</th>
+                            <th>TUJUAN</th>
+                            <th>WAKTU BERANGKAT</th>
+                            <th class="text-center">AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($ongoing as $row)
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <span class="icon-circle icon-circle-sm">
+                                                <i class="fas fa-car"></i>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold text-dark">{{ $row->mobil->nama_mobil ?? '-' }}</span>
+                                            @if(!empty($row->mobil->plat_nomor))
+                                                <span class="plate-badge">{{ $row->mobil->plat_nomor }}</span>
+                                            @endif
+
+                                        </div>
+                                    </div>
+                                </td>
+
+
+                                <td>
+                                    @php
+                                        $driverName = $row->driver->name ?? '-';
+                                        $initial = strtoupper(substr(trim($driverName), 0, 1));
+                                    @endphp
+
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <span class="user-initial">{{ $initial }}</span>
+                                        </div>
+                                        <div class="fw-semibold text-dark">{{ $driverName }}</div>
+                                    </div>
+                                </td>
+
+
+                                <td>
+                                    <div class="d-flex align-items-start">
+                                        <div>
+                                            <div class="text-dark fw-bold">{{ $row->tujuan ?? '-' }}</div>
+                                            <small class="text-muted">{{ $row->keperluan ?? '' }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+
+                                <td>
+                                    @php
+                                        $waktu = $row->waktu_mulai
+                                            ? \Carbon\Carbon::parse($row->getRawOriginal('waktu_mulai'))->format('d M Y H:i')
+                                            : '-';
+                                    @endphp
+
+                                    <span class="fw-semibold text-dark">{{ $waktu }}</span>
+                                </td>
+
+
+                                <td class="text-center">
+                                    {{-- ✅ SweetAlert handled --}}
+                                    <form action="{{ route('admin.riwayat-perjalanan.selesaikan', $row->id) }}"
+                                          method="POST"
+                                          class="d-inline js-selesaikan-tugas">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check me-1"></i> Selesai
+                                        </button>
+                                    </form>
+
+                                    @can('riwayat_perjalanan_edit')
+                                        <a href="{{ route('admin.riwayat-perjalanan.edit', $row->id) }}"
+                                           class="btn btn-sm btn-info ms-1">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endcan
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+@endif
+
+
+{{-- ========== DATATABLE: JADWAL + RIWAYAT ========== --}}
 <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-list-alt me-2"></i> Jadwal Mendatang & Riwayat
+        </h5>
+    </div>
+
     <div class="card-body">
         <div class="table-responsive">
-            <table class="modern-table datatable datatable-Mobil">
+            <table class="modern-table ajaxTable datatable datatable-Riwayat w-100">
                 <thead>
                     <tr>
                         <th width="10"></th>
-                        <th>Nama Mobil</th>
-                        <th>Plat Nomor</th>
-                        <th>Warna</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-center" style="width: 150px;">Aksi</th>
+                        <th><i class="fas fa-info-circle me-2"></i> STATUS</th>
+                        <th><i class="fas fa-calendar-alt me-2"></i> JADWAL</th>
+                        <th><i class="fas fa-car me-2"></i> KENDARAAN</th>
+                        <th><i class="fas fa-user me-2"></i> DRIVER</th>
+                        <th><i class="fas fa-map-marker-alt me-2"></i> TUJUAN</th>
+                        <th class="text-center" style="width: 170px;"><i class="fas fa-cogs me-2"></i> AKSI</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach($mobils as $key => $mobil)
-                        <tr data-entry-id="{{ $mobil->id }}">
-                            <td></td>
-                            <td class="fw-bold">{{ $mobil->nama_mobil }}</td>
-                            <td><span class="badge bg-dark">{{ $mobil->plat_nomor }}</span></td>
-                            <td>{{ $mobil->warna ?? '-' }}</td>
-                            <td class="text-center">
-                                @if($mobil->status == 'tersedia')
-                                    <span class="badge bg-success">Tersedia</span>
-                                @elseif($mobil->status == 'dipakai')
-                                    <span class="badge bg-danger">Sedang Dipakai</span>
-                                @else
-                                    <span class="badge bg-warning text-dark">Maintenance</span>
-                                @endif
-                            </td>
-                            <td class="text-center actions-cell">
-                                @can('mobil_show')
-                                    <a class="btn btn-xs btn-primary" href="{{ route('admin.mobils.show', $mobil->id) }}">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                @endcan
-
-                                @can('mobil_edit')
-                                    <a class="btn btn-xs btn-info text-white" href="{{ route('admin.mobils.edit', $mobil->id) }}">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                @endcan
-
-                                @can('mobil_delete')
-                                    <form action="{{ route('admin.mobils.destroy', $mobil->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
-                                        <input type="hidden" name="_method" value="DELETE">
-                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-xs btn-danger">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                @endcan
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
             </table>
         </div>
     </div>
 </div>
+
 @endsection
+
 
 @section('scripts')
 @parent
+
 <script>
-    $(function () {
-        let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
-        
-        @can('mobil_delete')
-            let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
-            let deleteButton = {
-                text: deleteButtonTrans,
-                url: "{{ route('admin.mobils.massDestroy') }}",
-                className: 'btn-danger',
-                action: function (e, dt, node, config) {
-                    var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
-                        return $(entry).data('entry-id')
-                    });
+$(function () {
 
-                    if (ids.length === 0) {
-                        alert('{{ trans('global.datatables.zero_selected') }}')
-                        return
-                    }
+    // pastikan global token ada
+    if (typeof window._token === 'undefined') {
+        window._token = '{{ csrf_token() }}'
+    }
 
-                    if (confirm('{{ trans('global.areYouSure') }}')) {
-                        $.ajax({
-                            headers: {'x-csrf-token': _token},
-                            method: 'POST',
-                            url: config.url,
-                            data: { ids: ids, _method: 'DELETE' }
-                        }).done(function () { location.reload() })
-                    }
-                }
+    // ======================
+    // DATATABLE + MASS DELETE
+    // ======================
+    // Definisikan dtButtons manual agar kompatibel dengan server-side + custom delete
+    let dtButtons = [
+        { extend: 'selectAll',  text: '<i class="fas fa-check-double me-1"></i> Pilih Semua',  className: 'btn-primary btn-sm' },
+        { extend: 'selectNone', text: '<i class="fas fa-times me-1"></i> Batal Pilih', className: 'btn-primary btn-sm' },
+        { extend: 'copy',   text: '<i class="fas fa-copy me-1"></i> Salin',   className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'csv',    text: '<i class="fas fa-file-export me-1"></i> CSV',   className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'excel',  text: '<i class="fas fa-file-excel me-1"></i> Excel',  className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'pdf',    text: '<i class="fas fa-file-pdf me-1"></i> PDF',      className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'print',  text: '<i class="fas fa-print me-1"></i> Cetak',       className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+        { extend: 'colvis', text: '<i class="fas fa-columns me-1"></i> Kolom',     className: 'btn-secondary btn-sm' },
+    ];
+
+    @can('riwayat_perjalanan_delete')
+    dtButtons.push({
+        text: '<i class="fas fa-trash-alt me-1"></i> Hapus Terpilih',
+        className: 'btn-danger btn-sm',
+        enabled: false,
+        action: function (e, dt, node, config) {
+
+            let ids = $.map(dt.rows({ selected: true }).data(), function (entry) {
+                return entry.id;
+            });
+
+            if (ids.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Tidak ada data dipilih', text: 'Silahkan pilih data terlebih dahulu.' });
+                return;
             }
-            dtButtons.push(deleteButton)
-        @endcan
 
-        $.extend(true, $.fn.dataTable.defaults, {
-            orderCellsTop: true,
-            order: [[ 1, 'asc' ]], // Order by Nama Mobil
-            pageLength: 25,
+            Swal.fire({
+                title: 'Yakin hapus data terpilih?',
+                text: `Total: ${ids.length} data`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                $.ajax({
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                    method: 'DELETE',
+                    url: "{{ route('admin.riwayat-perjalanan.massDestroy') }}",
+                    data: { ids: ids }
+                })
+                .done(function () {
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data terpilih berhasil dihapus.', timer: 1200, showConfirmButton: false });
+                    $('.datatable-Riwayat').DataTable().ajax.reload(null, false);
+                })
+                .fail(function () {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan saat menghapus' });
+                });
+            });
+        }
+    });
+    @endcan
+
+    let table = $('.datatable-Riwayat').DataTable({
+        buttons: dtButtons,
+        language: {                                                    // ← TAMBAH INI
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            lengthMenu: "Tampilkan _MENU_ data",
+            search: "Cari:",
+            paginate: {
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            },
+            zeroRecords: "Tidak ada data ditemukan",
+            emptyTable: "Tidak ada data tersedia",
+            processing: "Memuat..."
+        },   
+        processing: true,
+        serverSide: true,
+        retrieve: true,
+        aaSorting: [],
+        ajax: "{{ route('admin.riwayat-perjalanan.index') }}",
+        columns: [
+            { data: 'placeholder', name: 'placeholder' },
+            { data: 'status', name: 'status' },
+            { data: 'waktu_mulai', name: 'waktu_mulai' },
+            { data: 'kendaraan', name: 'mobil.nama_mobil' },
+            { data: 'driver_display', name: 'driver.name' },
+            { data: 'tujuan', name: 'tujuan' },
+            { data: 'actions', name: 'actions', orderable: false, searchable: false }
+        ],
+        orderCellsTop: true,
+        order: [[ 2, 'desc' ]],
+        pageLength: 10,
+        columnDefs: [{
+            orderable: false,
+            className: 'select-checkbox',
+            targets: 0
+        }],
+        select: {
+            style: 'multi',
+            selector: 'td:first-child'
+        },
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+    });
+
+    table.on('select deselect', function () {
+        let selectedRows = table.rows({ selected: true }).count();
+        table.button(2).enable(selectedRows > 0); // Salin
+        table.button(3).enable(selectedRows > 0); // CSV
+        table.button(4).enable(selectedRows > 0); // Excel
+        table.button(5).enable(selectedRows > 0); // PDF
+        table.button(6).enable(selectedRows > 0); // Cetak
+        // colvis index 7 — tidak perlu di-enable/disable
+        @can('riwayat_perjalanan_delete')
+        table.button(8).enable(selectedRows > 0); // Hapus Terpilih
+        @endcan
+    });
+
+    $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
+        $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+    });
+
+    // ======================
+    // SWEETALERT: DELETE / MULAI
+    // ======================
+
+    // Delete per row (datatable)
+    $(document).on('submit', '.js-delete-riwayat', function(e) {
+        e.preventDefault();
+        let form = this;
+
+        Swal.fire({
+            title: 'Yakin hapus data ini?',
+            text: 'Data yang dihapus tidak bisa dikembalikan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#d33',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
         });
-        
-        $('.datatable-Mobil:not(.ajaxTable)').DataTable({ buttons: dtButtons })
-        $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+    });
+
+    // Mulai perjalanan (datatable)
+    $(document).on('submit', '.js-mulai-perjalanan', function(e) {
+        e.preventDefault();
+        let form = this;
+
+        Swal.fire({
+            title: 'Mulai perjalanan sekarang?',
+            text: 'Status akan berubah menjadi On Duty.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, mulai',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#16a34a',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
         });
-    })
+    });
+
+    // Selesaikan tugas (ongoing table)
+    $(document).on('submit', '.js-selesaikan-tugas', function(e) {
+        e.preventDefault();
+        let form = this;
+
+        Swal.fire({
+            title: 'Selesaikan tugas ini?',
+            text: 'Status akan berubah menjadi Selesai.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, selesai',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#16a34a',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+
+});
 </script>
 @endsection

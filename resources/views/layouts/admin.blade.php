@@ -1,451 +1,356 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>LayananSarpras FTMM</title>
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    {{-- ═══════════════════════════════════════════════════════
+         CSS — urutan sangat penting, jangan diubah
+         1. Bootstrap 5        (base)
+         2. Font Awesome       (icons)
+         3. DataTables         (pakai versi BS5)
+         4. Plugins
+         5. CoreUI v4          (harus SETELAH Bootstrap 5)
+         6. custom.css         (harus PALING BAWAH)
+    ══════════════════════════════════════════════════════════ --}}
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {{-- 1. Bootstrap 5 --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- DataTables -->
-    <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet" />
-    <link href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet" />
-    <link href="https://cdn.datatables.net/buttons/1.2.4/css/buttons.dataTables.min.css" rel="stylesheet" />
-    <link href="https://cdn.datatables.net/select/1.3.0/css/select.dataTables.min.css" rel="stylesheet" />
+    {{-- 2. Font Awesome 6 (lebih lengkap dari v5) --}}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
-    <!-- Plugins -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.5.0/css/perfect-scrollbar.min.css" rel="stylesheet" />
+    {{-- 3. DataTables — versi BS5 --}}
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/select/1.7.0/css/select.bootstrap5.min.css" rel="stylesheet">
 
-    <!-- CoreUI -->
-    <link href="https://unpkg.com/@coreui/coreui@3.2/dist/css/coreui.min.css" rel="stylesheet" />
+    {{-- 4. Plugins --}}
+    {{-- Select2 dengan tema BS5 --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
 
-    <!-- Custom CSS (HARUS PALING BAWAH) -->
-    <link href="{{ asset('css/custom.css') }}" rel="stylesheet" />
+    {{-- Tempus Dominus v6 — pengganti bootstrap-datetimepicker yang BS5-native --}}
+    <link href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.7.7/dist/css/tempus-dominus.min.css" rel="stylesheet">
+
+    {{-- Dropzone --}}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" rel="stylesheet">
+
+    {{-- 5. CoreUI v4 — harus setelah Bootstrap 5 --}}
+    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.3.0/dist/css/coreui.min.css" rel="stylesheet">
+
+    {{-- 6. Custom CSS — selalu paling bawah --}}
+    <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
 
     @yield('styles')
     @stack('styles')
 </head>
 
 
-<body class="c-app">
+<body class="sidebar-enable sidebar-fixed">
+
+    {{-- Sidebar dimuat via partial --}}
     @include('partials.menu')
-    <div class="sidebar-backdrop"></div>
-    <script>
-        (function() {
-            if (localStorage.getItem('sidebar_minimized') === 'true') {
-                var sidebar = document.getElementById('sidebar');
-                if (sidebar) {
-                    sidebar.classList.add('c-sidebar-minimized');
-                }
-            }
-        })();
-    </script>
-    <div class="c-wrapper">
-        <header class="c-header c-header-fixed px-3">
-            <button class="c-header-toggler c-class-toggler d-lg-none mfe-auto" type="button" data-target="#sidebar" data-class="c-sidebar-show">
-                <i class="fas fa-fw fa-bars"></i>
-            </button>
 
-            <a class="c-header-brand d-lg-none" href="#">LayananSarpras FTMM</a>
+    {{-- Wrapper utama konten --}}
+    <div class="wrapper d-flex flex-column min-vh-100">
 
-            <button class="c-header-toggler mfs-3 d-md-down-none" type="button" responsive="true">
-                <i class="fas fa-fw fa-bars"></i>
-            </button>
+        {{-- ═══════ HEADER ═══════ --}}
+        <header class="header header-sticky p-0">
+            <div class="container-fluid border-bottom px-4">
+                <div class="d-flex align-items-center justify-content-between w-100 h-100 py-2">
+                    
+                    <div class="d-flex align-items-center">
+                        {{-- Toggler mobile --}}
+                        <button class="header-toggler d-lg-none me-3" type="button" id="sidebarToggleMobile" aria-label="Toggle sidebar">
+                            <i class="fas fa-bars"></i>
+                        </button>
 
-            <ul class="c-header-nav ml-auto">
-                @auth
-                    <li class="c-header-nav-item dropdown">
-                        <a class="c-header-nav-link p-0"
-                        data-toggle="dropdown"
-                        href="#"
-                        role="button"
-                        aria-haspopup="true"
-                        aria-expanded="false">
+                        {{-- Brand mobile --}}
+                        <a class="header-brand d-lg-none" href="#">LayananSarpras FTMM</a>
 
-                            <div class="avatar-circle">
-                                @if(Auth::user()->photo)
-                                    <img src="{{ asset('storage/'.Auth::user()->photo) }}"
-                                        alt="{{ Auth::user()->name }}">
-                                @else
-                                    @php
-                                        $names = explode(' ', trim(Auth::user()->name));
-                                        $initials = strtoupper(
-                                            substr($names[0], 0, 1) .
-                                            (isset($names[1]) ? substr($names[1], 0, 1) : '')
-                                        );
-                                    @endphp
-                                    <div class="avatar-initial">
-                                        {{ $initials }}
+                        {{-- Toggler desktop --}}
+                        <button class="header-toggler d-none d-lg-inline-block me-3" type="button" id="sidebarToggleDesktop" aria-label="Toggle sidebar">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+
+                    <ul class="header-nav ms-auto">
+                        @auth
+                            <li class="nav-item dropdown">
+                                <a class="nav-link p-0" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                                    <div class="avatar-circle">
+                                        @if(Auth::user()->photo)
+                                            <img src="{{ asset('storage/'.Auth::user()->photo) }}" alt="{{ Auth::user()->name }}">
+                                        @else
+                                            @php
+                                                $names = explode(' ', trim(Auth::user()->name));
+                                                $initials = strtoupper(
+                                                    substr($names[0], 0, 1) .
+                                                    (isset($names[1]) ? substr($names[1], 0, 1) : '')
+                                                );
+                                            @endphp
+                                            <div class="avatar-initial">
+                                                {{ $initials }}
+                                            </div>
+                                        @endif
                                     </div>
-                                @endif
-                            </div>
+                                </a>
 
+                                <div class="dropdown-menu dropdown-menu-end pt-0 shadow-sm">
+                                    <div class="dropdown-header bg-light py-2 text-center">
+                                        <strong class="text-primary">{{ Auth::user()->name }}</strong><br>
+                                        <small class="text-muted">{{ Auth::user()->email }}</small>
+                                    </div>
 
-                        </a>
+                                    <a class="dropdown-item" href="{{ route('profile.password.edit') }}">
+                                        <i class="fas fa-user me-2"></i> Profil
+                                    </a>
 
-                        <div class="dropdown-menu dropdown-menu-right pt-0">
-                            <div class="dropdown-header bg-light py-2 text-center">
-                                <strong class="text-primary">{{ Auth::user()->name }}</strong><br>
-                                <small class="text-muted">{{ Auth::user()->email }}</small>
-                            </div>
+                                    <div class="dropdown-divider"></div>
 
-                            <a class="dropdown-item" href="{{ route('profile.password.edit') }}">
-                                <i class="cil-user mr-2"></i> Profil
-                            </a>
+                                    <a class="dropdown-item text-danger" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    </a>
 
-                            <div class="dropdown-divider"></div>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                    </form>
+                                </div>
+                            </li>
+                        @endauth
+                    </ul>
 
-                            <a class="dropdown-item text-danger"
-                            href="{{ route('logout') }}"
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="cil-account-logout mr-2"></i> Logout
-                            </a>
-
-                            <form id="logout-form"
-                                action="{{ route('logout') }}"
-                                method="POST"
-                                class="d-none">
-                                @csrf
-                            </form>
-                        </div>
-                    </li>
-                    @endauth
-
-
-
-            </ul>
+                </div>
+            </div>
         </header>
 
-        <div class="c-body">
-            <main class="c-main">
-                <div class="container-fluid">
-                    @if(session('success'))
-                        <div class="row mb-2">
-                            <div class="col-lg-12">
-                                <div class="alert alert-success" role="alert"><i class="fas fa-check-circle me-2"></i>{{ session('success') }}</div>
-                            </div>
-                        </div>
-                    @endif
-                    @if(session('error'))
-                        <div class="row mb-2">
-                            <div class="col-lg-12">
-                                <div class="alert alert-danger" role="alert">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                    @yield('content')
+        {{-- ═══════ KONTEN UTAMA ═══════ --}}
+        <div class="body flex-grow-1">
+            <main class="container-fluid px-4 py-3">
 
-                </div>
+                @if(session('success'))
+                    <div class="row mb-2">
+                        <div class="col-12">
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="row mb-2">
+                        <div class="col-12">
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @yield('content')
 
             </main>
-
-            <footer class="c-footer">
-                <div>
-                    <span>Dibuat dengan ❤️ dan kopi FamilyMart.</span>
-                </div>
-                <div class="mfs-auto">
-                    <span>&copy; {{ date('Y') }} <strong>FTMM Universitas Airlangga</strong></span>
-                </div>
-            </footer>
-
-            <form id="logoutform" action="{{ route('logout') }}" method="POST" style="display: none;">
-                {{ csrf_field() }}
-            </form>
         </div>
+
+        {{-- ═══════ FOOTER ═══════ --}}
+        <footer class="footer px-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center py-2">
+                <span class="text-muted small">Dibuat dengan ❤️ dan kopi FamilyMart.</span>
+                <span class="text-muted small">&copy; {{ date('Y') }} <strong>FTMM Universitas Airlangga</strong></span>
+            </div>
+        </footer>
+
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    {{-- Form logout tersembunyi --}}
+    <form id="logoutform" action="{{ route('logout') }}" method="POST" class="d-none">
+        {{ csrf_field() }}
+    </form>
+
+
+    {{-- ═══════════════════════════════════════════════════════
+         SCRIPTS — urutan penting
+         1. jQuery           (harus pertama)
+         2. Bootstrap 5      (popper sudah bundled)
+         3. CoreUI v4 JS     (harus setelah Bootstrap 5)
+         4. Plugins
+         5. main.js          (custom, harus paling akhir)
+    ══════════════════════════════════════════════════════════ --}}
+
+    {{-- 1. jQuery --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    {{-- 2. Bootstrap 5 --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    {{-- 3. CoreUI v4 --}}
+    <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.3.0/dist/js/coreui.bundle.min.js"></script>
+
+    {{-- 4. Plugins --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment-with-locales.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.perfect-scrollbar/1.5.0/perfect-scrollbar.min.js"></script>
-    <script src="https://unpkg.com/@coreui/coreui@3.2/dist/js/coreui.min.js"></script>
-    <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-    <script src="//cdn.datatables.net/buttons/1.2.4/js/dataTables.buttons.min.js"></script>
-    <script src="//cdn.datatables.net/buttons/1.2.4/js/buttons.flash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.print.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.colVis.min.js"></script>
-    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
-    <script src="https://cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/select/1.3.0/js/dataTables.select.min.js"></script>
-    <script src="https://cdn.ckeditor.com/ckeditor5/16.0.0/classic/ckeditor.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.js"></script>
+
+    {{-- Tempus Dominus v6 (datetime picker BS5-native) --}}
+    <script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.7.7/dist/js/tempus-dominus.min.js"></script>
+
+    {{-- DataTables BS5 --}}
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    {{-- Select2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
+
+    {{-- Dropzone --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+
+    {{-- CKEditor --}}
+    <script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+
+    {{-- 5. Custom JS — harus paling akhir --}}
     <script src="{{ asset('js/main.js') }}"></script>
+
+
+    {{-- ═══════ DATATABLES GLOBAL CONFIG ═══════ --}}
     <script>
-        $(function() {
-    let copyButtonTrans = '{{ trans('global.datatables.copy') }}'
-    let csvButtonTrans = '{{ trans('global.datatables.csv') }}'
-    let excelButtonTrans = '{{ trans('global.datatables.excel') }}'
-    let pdfButtonTrans = '{{ trans('global.datatables.pdf') }}'
-    let printButtonTrans = '{{ trans('global.datatables.print') }}'
-    let colvisButtonTrans = '{{ trans('global.datatables.colvis') }}'
-    let selectAllButtonTrans = '{{ trans('global.select_all') }}'
-    let selectNoneButtonTrans = '{{ trans('global.deselect_all') }}'
+    $(function () {
+        let copyButtonTrans  = '{{ trans('global.datatables.copy') }}';
+        let csvButtonTrans   = '{{ trans('global.datatables.csv') }}';
+        let excelButtonTrans = '{{ trans('global.datatables.excel') }}';
+        let pdfButtonTrans   = '{{ trans('global.datatables.pdf') }}';
+        let printButtonTrans = '{{ trans('global.datatables.print') }}';
+        let colvisButtonTrans = '{{ trans('global.datatables.colvis') }}';
 
-    let languages = {
-        'id': 'https://cdn.datatables.net/plug-ins/1.10.19/i18n/Indonesian.json'
-    };
-
-    $.extend(true, $.fn.dataTable.Buttons.defaults.dom.button, { className: 'btn' })
-    $.extend(true, $.fn.dataTable.defaults, {
-        language: {
-        url: languages['{{ app()->getLocale() }}']
-        },
-        columnDefs: [{
-            orderable: false,
-            className: 'select-checkbox',
-            targets: 0
-        }, {
-            orderable: false,
-            searchable: false,
-            targets: -1
-        }, {
-        targets: 4, 
-        type: 'date' 
-        }, {
-        targets: 5, 
-        type: 'date' 
-        }],
-        select: {
-        style:      'multi+shift',
-        selector: 'td:first-child'
-        },
-        order: [],
-        scrollX: true,
-        pageLength: 50,
-        dom: 'lBfrtip<"actions">',
-        buttons: [
-        {
-            extend: 'selectAll',
-            className: 'btn-primary',
-            text: selectAllButtonTrans,
-            exportOptions: {
-            columns: ':visible'
+        // CATATAN: buttons default di sini HANYA sebagai fallback untuk tabel sederhana.
+        // Tabel yang punya buttons kustom sendiri (seperti index kegiatan) akan override ini.
+        // dom: 'Bfrtip' wajib ada agar DataTables tahu di mana harus inject tombol ke DOM.
+        $.extend(true, $.fn.dataTable.defaults, {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/id.json'
             },
-            action: function(e, dt) {
-            e.preventDefault()
-            dt.rows().deselect();
-            dt.rows({ search: 'applied', page: 'current' }).select();
-            }
-        },
-        {
-            extend: 'selectNone',
-            className: 'btn-primary',
-            text: selectNoneButtonTrans,
-            exportOptions: {
-            columns: ':visible'
-            }
-        },
-        {
-            extend: 'copy',
-            className: 'btn-default',
-            text: copyButtonTrans,
-            exportOptions: {
-            columns: ':visible'
-            }
-        },
-        {
-            extend: 'csv',
-            className: 'btn-default',
-            text: csvButtonTrans,
-            exportOptions: {
-            columns: ':visible'
-            }
-        },
-        {
-            extend: 'excel',
-            className: 'btn-default',
-            text: excelButtonTrans,
-            exportOptions: {
-            columns: ':visible'
-            }
-        },
-        {
-            extend: 'pdf',
-            className: 'btn-default',
-            text: pdfButtonTrans,
-            exportOptions: {
-            columns: ':visible'
-            }
-        },
-        {
-            extend: 'print',
-            className: 'btn-default',
-            text: printButtonTrans,
-            exportOptions: {
-            columns: ':visible'
-            }
-        },
-        {
-            extend: 'colvis',
-            className: 'btn-default',
-            text: colvisButtonTrans,
-            exportOptions: {
-            columns: ':visible'
-            }
-        }
-        ]
+            dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            buttons: [
+                { extend: 'copy',   className: 'btn-secondary btn-sm', text: copyButtonTrans,   exportOptions: { columns: ':visible' } },
+                { extend: 'csv',    className: 'btn-secondary btn-sm', text: csvButtonTrans,    exportOptions: { columns: ':visible' } },
+                { extend: 'excel',  className: 'btn-secondary btn-sm', text: excelButtonTrans,  exportOptions: { columns: ':visible' } },
+                { extend: 'pdf',    className: 'btn-secondary btn-sm', text: pdfButtonTrans,    exportOptions: { columns: ':visible' } },
+                { extend: 'print',  className: 'btn-secondary btn-sm', text: printButtonTrans,  exportOptions: { columns: ':visible' } },
+                { extend: 'colvis', className: 'btn-secondary btn-sm', text: colvisButtonTrans }
+            ]
+        });
+
+        $.fn.dataTable.ext.classes.sPageButton = '';
     });
 
-    $.fn.dataTable.ext.classes.sPageButton = '';
-    });
-
-    // Expose a helper to get a standardized set of DataTables buttons.
-    // Use: let dtButtons = getStandardDtButtons();
-    window.getStandardDtButtons = function(options) {
+    window.getStandardDtButtons = function (options) {
         options = options || {};
-        // default translations (same variables from above closure)
-        let copyBtn = '{{ trans('global.datatables.copy') }}';
-        let csvBtn = '{{ trans('global.datatables.csv') }}';
-        let excelBtn = '{{ trans('global.datatables.excel') }}';
-        let pdfBtn = '{{ trans('global.datatables.pdf') }}';
-        let printBtn = '{{ trans('global.datatables.print') }}';
-        let colvisBtn = '{{ trans('global.datatables.colvis') }}';
-        let selectAllBtn = '{{ trans('global.select_all') }}';
+        let selectAllBtn  = '{{ trans('global.select_all') }}';
         let selectNoneBtn = '{{ trans('global.deselect_all') }}';
 
-        let buttons = [];
-        buttons.push(
-            { extend: 'selectAll', text: '<i class="fas fa-check-double me-2"></i> ' + selectAllBtn, className: 'btn-primary' },
-            { extend: 'selectNone', text: '<i class="fas fa-times me-2"></i> ' + selectNoneBtn, className: 'btn-primary' }
-        );
+        let buttons = [
+            { extend: 'selectAll',  text: '<i class="fas fa-check-double me-1"></i> ' + selectAllBtn,  className: 'btn-primary btn-sm' },
+            { extend: 'selectNone', text: '<i class="fas fa-times me-1"></i> ' + selectNoneBtn, className: 'btn-primary btn-sm' }
+        ];
 
-        // Copy button: allow caller to pass a custom action function in options.copyAction
         if (options.copyAction && typeof options.copyAction === 'function') {
-            buttons.push({
-                text: '<i class="fas fa-copy me-2"></i> ' + copyBtn,
-                className: 'btn-secondary',
-                enabled: false,
-                action: options.copyAction
-            });
+            buttons.push({ text: '<i class="fas fa-copy me-1"></i> Copy', className: 'btn-secondary btn-sm', enabled: false, action: options.copyAction });
         } else {
-            buttons.push({ extend: 'copy', text: '<i class="fas fa-copy me-2"></i> ' + copyBtn, className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } });
+            buttons.push({ extend: 'copy', text: '<i class="fas fa-copy me-1"></i> Copy', className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } });
         }
 
-        // Exports (disabled until selection)
         buttons.push(
-            { extend: 'csv', text: '<i class="fas fa-file-export me-2"></i> CSV', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-            { extend: 'excel', text: '<i class="fas fa-file-excel me-2"></i> Excel', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-            { extend: 'pdf', text: '<i class="fas fa-file-pdf me-2"></i> PDF', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-            { extend: 'print', text: '<i class="fas fa-print me-2"></i> Cetak', className: 'btn-secondary', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } }
+            { extend: 'csv',    text: '<i class="fas fa-file-export me-1"></i> CSV',    className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+            { extend: 'excel',  text: '<i class="fas fa-file-excel me-1"></i> Excel',  className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+            { extend: 'pdf',    text: '<i class="fas fa-file-pdf me-1"></i> PDF',      className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+            { extend: 'print',  text: '<i class="fas fa-print me-1"></i> Cetak',       className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
+            { extend: 'colvis', text: '<i class="fas fa-columns me-1"></i> Kolom',     className: 'btn-secondary btn-sm' }
         );
-
-        // Column visibility
-        buttons.push({ extend: 'colvis', text: '<i class="fas fa-columns me-2"></i> ' + colvisBtn, className: 'btn-secondary' });
 
         return buttons;
     };
-
     </script>
+
+
+    {{-- ═══════ UTILITIES ═══════ --}}
     <script>
-        function confirmDelete(id) {
-            Swal.fire({
-                title: "Yakin hapus?",
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Ya, hapus!",
-                cancelButtonText: "Batal"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById("delete-form-" + id).submit();
-                }
-            });
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Yakin hapus?',
+            text: 'Data yang dihapus tidak dapat dikembalikan!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('delete-form-' + id).submit();
+            }
+        });
+    }
+    </script>
+
+    @if(session('success'))
+    <script>
+    Swal.fire({
+        title: 'Berhasil!',
+        text: '{{ session('success') }}',
+        icon: 'success',
+        confirmButtonColor: '#741847',
+        confirmButtonText: 'OK'
+    });
+    </script>
+    @endif
+
+    @if($errors->any())
+    <script>
+    Swal.fire({
+        title: 'Gagal!',
+        text: '{{ $errors->first() }}',
+        icon: 'error',
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Coba Lagi'
+    });
+    </script>
+    @endif
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Jam realtime di header (jika ada elemen #current-time)
+        const el = document.getElementById('current-time');
+        if (!el) return;
+        const days   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        function tick() {
+            const n = new Date();
+            el.innerText = `${days[n.getDay()]}, ${n.getDate()} ${months[n.getMonth()]} ${n.getFullYear()} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
         }
-    </script>
-    <script>
-        @if(session('success'))
-            Swal.fire({
-                title: "Berhasil!",
-                text: "{{ session('success') }}",
-                icon: "success",
-                confirmButtonColor: "#3085d6",
-                confirmButtonText: "OK"
-            });
-        @endif
-    </script>
-    <script>
-        @if ($errors->any())
-            Swal.fire({
-                title: "Gagal!",
-                text: "{{ $errors->first() }}",
-                icon: "error",
-                confirmButtonColor: "#d33",
-                confirmButtonText: "Coba Lagi"
-            });
-        @endif
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const selectElement = document.querySelector('select[name="item"]');
-            if (selectElement) { // Check if the element exists
-                selectElement.addEventListener('invalid', function (e) {
-                if (e.target.value === "") {
-                    e.target.setCustomValidity("Silakan pilih item terlebih dahulu");
-                }
-                });
-                selectElement.addEventListener('input', function (e) {
-                e.target.setCustomValidity("");
-                });
-            }
-        });
+        setInterval(tick, 1000);
+        tick();
+    });
     </script>
 
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            function updateTime() {
-                const now = new Date();
-                const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
-                const day = days[now.getDay()];
-                const date = now.getDate();
-                const month = months[now.getMonth()];
-                const year = now.getFullYear();
-                const hours = now.getHours().toString().padStart(2, '0');
-                const minutes = now.getMinutes().toString().padStart(2, '0');
-                const seconds = now.getSeconds().toString().padStart(2, '0');
-
-                const currentTimeString = `${day}, ${date} ${month} ${year} ${hours}:${minutes}:${seconds}`;
-                
-                // FIX: Check if the element exists before trying to update it
-                const currentTimeEl = document.getElementById('current-time');
-                if (currentTimeEl) {
-                    currentTimeEl.innerText = currentTimeString;
-                }
-            }
-
-            setInterval(updateTime, 1000);
-            updateTime(); // Panggilan awal untuk mengatur waktu segera
-        });
-    </script>
-    
     @yield('scripts')
-    
-    <!-- No more custom calendar scripts needed, Bootstrap handles the modal popup via data attributes -->
+
 </body>
-
 </html>
-

@@ -107,8 +107,22 @@
       @endcan
 
       // Inisialisasi DataTables dengan semua konfigurasi yang diperlukan
-            let table = $('.datatable-Permission').DataTable({
+    let table = $('.datatable-Permission').DataTable({
         buttons: dtButtons,
+        language: {                                                    // ← TAMBAH INI
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            lengthMenu: "Tampilkan _MENU_ data",
+            search: "Cari:",
+            paginate: {
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            },
+            zeroRecords: "Tidak ada data ditemukan",
+            emptyTable: "Tidak ada data tersedia",
+            processing: "Memuat..."
+        },   
         order: [[ 1, 'asc' ]],
         pageLength: 50,
         // PERBAIKAN: Menambahkan columnDefs dan select untuk fungsionalitas checkbox
@@ -129,7 +143,9 @@
             selector: 'td:first-child'
         },
         // PERBAIKAN: Secara eksplisit mendefinisikan DOM untuk menampilkan semua kontrol
-        dom: 'lBfrtip'
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+              "<'row'<'col-sm-12'tr>>" +
+              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
       });
       
       $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
@@ -137,23 +153,7 @@
               .columns.adjust();
       });
 
-      // Atur ulang tata letak kontrol DataTables
-      $('.datatable-Permission').on('draw.dt', function () {
-          var wrapper = $(this).closest('.dataTables_wrapper');
-          var length = wrapper.find('.dataTables_length');
-          var filter = wrapper.find('.dataTables_filter');
-          var buttons = wrapper.find('.dt-buttons');
-
-          if (!wrapper.find('.dt-controls-row').length) {
-              var controlsRow = $('<div class="dt-controls-row"></div>');
-              var leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
-              var rightCol = $('<div class="dt-controls-right"></div>').append(filter);
-              controlsRow.append(leftCol).append(rightCol);
-              wrapper.prepend(controlsRow);
-          }
-      });
-
-      table.draw();
+      // Layout dihandle otomatis oleh dom config
 
       table.on('select deselect', function () {
           let selectedRows = table.rows({ selected: true }).count();

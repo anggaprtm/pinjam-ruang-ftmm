@@ -473,7 +473,24 @@ $(function () {
 
     // 2. KITA GUNAKAN INISIALISASI SERVER-SIDE YANG BARU
     let table = $('.datatable-Kegiatan').DataTable({
-        buttons: dtButtons, // <- Tombol hapus massal dimasukkan di sini
+        buttons: dtButtons,
+        language: {                                                    // ← TAMBAH INI
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            lengthMenu: "Tampilkan _MENU_ data",
+            search: "Cari:",
+            paginate: {
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            },
+            zeroRecords: "Tidak ada data ditemukan",
+            emptyTable: "Tidak ada data tersedia",
+            processing: "Memuat..."
+        },   
+        dom:  "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+              "<'row'<'col-sm-12'tr>>" +
+              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         processing: true,
         serverSide: true,
         ajax: {
@@ -603,6 +620,8 @@ $(function () {
         ],
         orderCellsTop: true,
         pageLength: 10,
+        // initComplete: tidak perlu manipulasi DOM manual lagi karena
+        // dom: dengan 'B' sudah otomatis render buttons di posisi yang benar
         columnDefs: [ {
             orderable: false,
             className: 'select-checkbox',
@@ -635,21 +654,7 @@ $(function () {
         $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
     });
     
-    // 4. KITA PERTAHANKAN KODE UNTUK PENYESUAIAN LAYOUT
-    $('.datatable-Kegiatan').on('draw.dt', function () {
-        var wrapper = $(this).closest('.dataTables_wrapper');
-        var length = wrapper.find('.dataTables_length');
-        var filter = wrapper.find('.dataTables_filter');
-        var buttons = wrapper.find('.dt-buttons');
-
-        if (!wrapper.find('.dt-controls-row').length) {
-            var controlsRow = $('<div class="dt-controls-row"></div>');
-            var leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
-            var rightCol = $('<div class="dt-controls-right"></div>').append(filter);
-            controlsRow.append(leftCol).append(rightCol);
-            wrapper.prepend(controlsRow);
-        }
-    });
+    // 4. Layout dihandle otomatis oleh dom config di atas
 
     // Listener untuk tombol filter
 $('#filter-btn').on('click', function(e) {
