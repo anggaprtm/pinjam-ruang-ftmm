@@ -11,7 +11,7 @@
 
         @can('home_access')
             <p class="mb-0 text-white-50">
-                Dashboard monitoring layanan Sarana dan Prasarana.
+                Dashboard monitoring layanan Fakultas Teknologi Maju dan Multidisiplin.
             </p>
         @endcan
 

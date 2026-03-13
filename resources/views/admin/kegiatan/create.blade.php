@@ -275,115 +275,65 @@
 @section('scripts')
 @parent
 <script>
-    $(document).ready(function() {
-        // === BAGIAN TOGGLE BERULANG ===
-        function checkRecurringToggle() {
-            if ($('#toggle-recurring').is(':checked')) {
-                $('#recurring-options').show();
-            } else {
-                $('#recurring-options').hide();
-            }
-        }
+$(document).ready(function() {
 
-        checkRecurringToggle();
-
-        $('#toggle-recurring').on('change', function() {
-            if ($(this).is(':checked')) {
-                $('#recurring-options').slideDown();
-            } else {
-                $('#recurring-options').slideUp();
-                $('#berulang_sampai').val('');
-                $('#tipe_berulang').val('harian');
-            }
-        });
-
-        // === BAGIAN FILE UPLOAD (UNGGAH SURAT IZIN) ===
-        $('#surat_izin').on('change', function() {
-            const fileNameDisplay = $('#surat-izin-display');
-            if (this.files.length > 0) {
-                fileNameDisplay.text(this.files[0].name);
-            } else {
-                fileNameDisplay.text("Tidak ada file yang dipilih");
-            }
-        });
-
-        // === VALIDASI NOMOR TELEPON (CLIENT-SIDE) ===
-        // Asumsi: minimal 9 digit, maksimal 15 digit
-        const phoneMin = 9;
-        const phoneMax = 15;
-
-        function validatePhoneField() {
-            const $input = $('#nomor_telepon');
-            const $clientError = $('#nomor-telepon-client-error');
-            let val = $input.val() || '';
-
-            // Hapus karakter non-digit
-            const cleaned = val.replace(/\D/g, '');
-            if (val !== cleaned) {
-                $input.val(cleaned);
-                val = cleaned;
-            }
-
-            if (val.length === 0) {
-                $clientError.addClass('d-none').text('');
-                $input.removeClass('is-invalid');
-                return true; // biarkan server cek required
-            }
-
-            if (!/^0[0-9]+$/.test(val)) {
-                $clientError.removeClass('d-none').text('Nomor telepon harus berupa angka dan dimulai dengan angka 0.');
-                $input.addClass('is-invalid');
-                return false;
-            }
-
-            if (val.length < phoneMin || val.length > phoneMax) {
-                $clientError.removeClass('d-none').text(`Panjang nomor harus antara ${phoneMin} sampai ${phoneMax} angka.`);
-                $input.addClass('is-invalid');
-                return false;
-            }
-
-            $clientError.addClass('d-none').text('');
-            $input.removeClass('is-invalid');
-            return true;
-        }
-
-        $('#nomor_telepon').on('input blur', function() {
-            validatePhoneField();
-        });
-
-        // Prevent form submit if client-side phone validation fails
-        $('form').on('submit', function(e) {
-            const ok = validatePhoneField();
-            if (!ok) {
-                e.preventDefault();
-                const $firstInvalid = $('#nomor_telepon');
-                $('html, body').animate({ scrollTop: $firstInvalid.offset().top - 120 }, 200);
-                $firstInvalid.focus();
-                return false;
-            }
-            return true;
-        });
-
-        // Toggle datetimepicker when calendar icon clicked
-        $('#waktu_mulai_toggle').on('click', function(e) {
-            e.preventDefault();
-            try {
-                $('#waktu_mulai').data('DateTimePicker').show();
-            } catch (err) {
-                // fallback: focus input
-                $('#waktu_mulai').focus();
-            }
-        });
-
-        $('#waktu_selesai_toggle').on('click', function(e) {
-            e.preventDefault();
-            try {
-                $('#waktu_selesai').data('DateTimePicker').show();
-            } catch (err) {
-                $('#waktu_selesai').focus();
-            }
-        });
+    // === TOGGLE ICON KALENDER — akses instance dari main.js ===
+    $('#waktu_mulai_toggle').on('click', function(e) {
+        e.preventDefault();
+        const el = document.getElementById('waktu_mulai');
+        if (el && el._tdp) el._tdp.show();
     });
+
+    $('#waktu_selesai_toggle').on('click', function(e) {
+        e.preventDefault();
+        const el = document.getElementById('waktu_selesai');
+        if (el && el._tdp) el._tdp.show();
+    });
+
+    // === TOGGLE BERULANG ===
+    function checkRecurringToggle() {
+        $('#toggle-recurring').is(':checked') ? $('#recurring-options').show() : $('#recurring-options').hide();
+    }
+    checkRecurringToggle();
+    $('#toggle-recurring').on('change', function() {
+        $(this).is(':checked') ? $('#recurring-options').slideDown() : $('#recurring-options').slideUp();
+        if (!$(this).is(':checked')) { $('#berulang_sampai').val(''); $('#tipe_berulang').val('harian'); }
+    });
+
+    // === FILE UPLOAD ===
+    $('#surat_izin').on('change', function() {
+        $('#surat-izin-display').text(this.files.length > 0 ? this.files[0].name : "Tidak ada file yang dipilih");
+    });
+
+    // === VALIDASI NOMOR TELEPON ===
+    function validatePhoneField() {
+        const $input = $('#nomor_telepon');
+        const $clientError = $('#nomor-telepon-client-error');
+        let val = $input.val() || '';
+        const cleaned = val.replace(/\D/g, '');
+        if (val !== cleaned) { $input.val(cleaned); val = cleaned; }
+        if (val.length === 0) { $clientError.addClass('d-none').text(''); $input.removeClass('is-invalid'); return true; }
+        if (!/^0[0-9]+$/.test(val)) {
+            $clientError.removeClass('d-none').text('Nomor telepon harus berupa angka dan dimulai dengan angka 0.');
+            $input.addClass('is-invalid'); return false;
+        }
+        if (val.length < 9 || val.length > 15) {
+            $clientError.removeClass('d-none').text('Panjang nomor harus antara 9 sampai 15 angka.');
+            $input.addClass('is-invalid'); return false;
+        }
+        $clientError.addClass('d-none').text(''); $input.removeClass('is-invalid'); return true;
+    }
+    $('#nomor_telepon').on('input blur', validatePhoneField);
+    $('form').on('submit', function(e) {
+        if (!validatePhoneField()) {
+            e.preventDefault();
+            $('html, body').animate({ scrollTop: $('#nomor_telepon').offset().top - 120 }, 200);
+            $('#nomor_telepon').focus();
+            return false;
+        }
+    });
+
+});
 </script>
 <script>
     $(document).ready(function() {

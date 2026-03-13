@@ -619,9 +619,8 @@ $(function () {
             
         ],
         orderCellsTop: true,
+        order: [],
         pageLength: 10,
-        // initComplete: tidak perlu manipulasi DOM manual lagi karena
-        // dom: dengan 'B' sudah otomatis render buttons di posisi yang benar
         columnDefs: [ {
             orderable: false,
             className: 'select-checkbox',

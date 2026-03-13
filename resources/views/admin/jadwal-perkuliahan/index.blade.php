@@ -78,7 +78,7 @@
                             {{-- Filter Program Studi --}}
                             <div class="col-md-3">
                                 <label for="program_studi" class="form-label fw-bold">
-                                    Filter Prodi
+                                    Filter Kelas
                                 </label>
                                 <select
                                     name="program_studi"
@@ -212,7 +212,7 @@
                     <tr>
                         <th width="10"></th>
                         <th><i class="fas fa-book"></i>Mata Kuliah</th>
-                        <th><i class="fas fa-chalkboard-teacher"></i>Prodi & Tipe</th>
+                        <th><i class="fas fa-chalkboard-teacher"></i>Kelas & Tipe</th>
                         <th><i class="fas fa-door-open"></i>Ruangan</th>
                         <th><i class="fas fa-calendar-day"></i>Jadwal Hari & Jam</th>
                         <th class="text-center" style="width: 150px;"><i class="fas fa-cogs"></i>Aksi</th>

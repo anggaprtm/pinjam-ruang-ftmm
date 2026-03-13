@@ -32,7 +32,7 @@
                 <div class="detail-item mb-3 d-flex">
                     <div class="icon me-3 text-secondary" style="width: 30px;"><i class="fas fa-graduation-cap fa-lg"></i></div>
                     <div class="content">
-                        <div class="label text-muted small">Program Studi</div>
+                        <div class="label text-muted small">Kelas</div>
                         <div class="value fw-bold">{{ $jadwalPerkuliahan->program_studi }}</div>
                     </div>
                 </div>
