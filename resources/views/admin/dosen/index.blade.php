@@ -95,43 +95,47 @@
       let table = $('.datatable-Dosen').DataTable({
         buttons: dtButtons,
         order: [[ 1, 'asc' ]],
+        language: {                                                    // ← TAMBAH INI
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            lengthMenu: "Tampilkan _MENU_ data",
+            search: "Cari:",
+            paginate: {
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            },
+            zeroRecords: "Tidak ada data ditemukan",
+            emptyTable: "Tidak ada data tersedia",
+            processing: "Memuat..."
+        },   
         pageLength: 50,
         columnDefs: [
             { orderable: false, className: 'select-checkbox', targets: 0 }, 
             { orderable: false, searchable: false, targets: -1 }
         ],
         select: { style: 'multi+shift', selector: 'td:first-child' },
-        dom: 'lBfrtip'
-      });
-      
-      $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-          $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
-      });
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+              "<'row'<'col-sm-12'tr>>" +
+              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
+        });
+        
+        $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
+            $($.fn.dataTable.tables(true)).DataTable()
+                .columns.adjust();
+        });
 
-      $('.datatable-Dosen').on('draw.dt', function () {
-          var wrapper = $(this).closest('.dataTables_wrapper');
-          var length = wrapper.find('.dataTables_length');
-          var filter = wrapper.find('.dataTables_filter');
-          var buttons = wrapper.find('.dt-buttons');
+        // Layout dihandle otomatis oleh dom config
 
-          if (!wrapper.find('.dt-controls-row').length) {
-              var controlsRow = $('<div class="dt-controls-row"></div>');
-              var leftCol = $('<div class="dt-controls-left"></div>').append(length).append(buttons);
-              var rightCol = $('<div class="dt-controls-right"></div>').append(filter);
-              controlsRow.append(leftCol).append(rightCol);
-              wrapper.prepend(controlsRow);
-          }
-      });
-
-      table.draw();
-      table.on('select deselect', function () {
-          let selectedRows = table.rows({ selected: true }).count();
-          table.button(2).enable(selectedRows > 0); // Salin
-          table.button(3).enable(selectedRows > 0); // CSV
-          table.button(4).enable(selectedRows > 0); // Excel
-          table.button(5).enable(selectedRows > 0); // PDF
-          table.button(6).enable(selectedRows > 0); // Print
-      });
-    });
+        table.on('select deselect', function () {
+            let selectedRows = table.rows({ selected: true }).count();
+            table.button(2).enable(selectedRows > 0); // Salin
+            table.button(3).enable(selectedRows > 0); // CSV
+            table.button(4).enable(selectedRows > 0); // Excel
+            table.button(5).enable(selectedRows > 0); // PDF
+            table.button(6).enable(selectedRows > 0); // Print
+            if (typeof deleteIndex !== 'undefined') table.button(deleteIndex).enable(selectedRows > 0);
+        });
+        });
 </script>
 @endsection
