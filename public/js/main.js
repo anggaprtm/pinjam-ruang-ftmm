@@ -55,6 +55,13 @@ $(document).ready(function () {
         if (isMobile()) closeMobileSidebar();
     });
 
+    const tooltipTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.forEach(function (el) {
+        new bootstrap.Tooltip(el);
+    });
+
 
     /* =========================================================================
        DATETIME PICKER — Tempus Dominus v6
