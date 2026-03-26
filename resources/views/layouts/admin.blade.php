@@ -72,7 +72,7 @@
                         </button>
 
                         {{-- Brand mobile --}}
-                        <a class="header-brand d-lg-none" href="#">LayananSarpras FTMM</a>
+                        <a class="header-brand d-lg-none" href="#">LayananFTMM</a>
 
                         {{-- Toggler desktop --}}
                         <button class="header-toggler d-none d-lg-inline-block me-3" type="button" id="sidebarToggleDesktop" aria-label="Toggle sidebar">
