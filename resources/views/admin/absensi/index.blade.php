@@ -68,7 +68,7 @@
     {{-- HEADER & FILTER --}}
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
         <div>
-            <h3 class="h3 mb-1 text-gray-800 fw-bold">Dashboard Presensi</h3>
+            <h3 class="h3 mb-1 text-gray-800 fw-bold text-nowrap">Dashboard Presensi</h3>
             @if($lastSync)
                 <div class="badge bg-light text-dark border p-2">
                     <i class="fas fa-history text-primary"></i> Last Update: {{ \Carbon\Carbon::parse($lastSync)->format('H:i') }} WIB
@@ -181,7 +181,7 @@
                     </h6>
                     
                     {{-- TOMBOL SINKRONISASI MANUAL --}}
-                    <form action="{{ route('admin.absensi.sync') }}" method="POST" onsubmit="return showLoading(this)" class="w-100 w-md-auto text-end">
+                    <form action="{{ route('admin.absensi.sync') }}" method="POST" onsubmit="return showLoading(this)" class="flex-shrink-0">
                         @csrf
                         <input type="hidden" name="tanggal" value="{{ $tanggal }}">
                         
