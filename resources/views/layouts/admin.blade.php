@@ -109,13 +109,12 @@
                                     </div>
 
                                     <a class="dropdown-item" href="{{ route('profile.password.edit') }}">
-                                        <i class="fas fa-user me-2"></i> Profil
+                                        <i class="fas fa-user me-2 text-primary"></i> Profil
                                     </a>
-
                                     <div class="dropdown-divider"></div>
-
-                                    <a class="dropdown-item text-danger" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    <a class="dropdown-item text-danger" href="{{ route('logout') }}" 
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        <i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout
                                     </a>
 
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">

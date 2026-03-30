@@ -258,6 +258,20 @@
                 $('#waktu_selesai').focus();
             }
         });
+        // --- FIX UNTUK LEADING ZERO PADA TANGGAL ---
+        $('form').on('submit', function() {
+            // Target semua input kalender (waktu_mulai, waktu_selesai, dan berulang_sampai)
+            $('.datetime, .date').each(function() {
+                var val = $(this).val();
+                
+                // Cek pakai Regex: Jika teks diawali angka 0 dan diikuti angka 1-9 (contoh: 01, 05, 09)
+                if (val && /^0[1-9]/.test(val)) {
+                    // Hapus 1 karakter pertama (yaitu si '0')
+                    $(this).val(val.substring(1));
+                }
+            });
+        });
+
     });
 </script>
 <script>

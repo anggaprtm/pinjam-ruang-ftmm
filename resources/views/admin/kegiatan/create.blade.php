@@ -325,6 +325,15 @@ $(document).ready(function() {
     }
     $('#nomor_telepon').on('input blur', validatePhoneField);
     $('form').on('submit', function(e) {
+        $('.datetime, .date').each(function() {
+            var val = $(this).val();
+            
+            // Cek pakai Regex: Jika teks diawali angka 0 dan diikuti angka 1-9 (contoh: 01, 05, 09)
+            if (val && /^0[1-9]/.test(val)) {
+                // Hapus 1 karakter pertama (yaitu si '0')
+                $(this).val(val.substring(1));
+            }
+        });
         if (!validatePhoneField()) {
             e.preventDefault();
             $('html, body').animate({ scrollTop: $('#nomor_telepon').offset().top - 120 }, 200);
