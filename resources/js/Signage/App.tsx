@@ -112,6 +112,26 @@ const App: React.FC = () => {
     }
   }, [signageMode]);
 
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch(`/api/v1/device-command/${location}`);
+      const data = await res.json();
+
+      if (!data.command) return;
+
+      if (data.command === 'reload') {
+        window.location.reload();
+      }
+
+      if (data.command === 'restart') {
+        window.location.reload(); // bisa advanced nanti
+      }
+
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // 🔥 SLIDESHOW EFFECT
   useEffect(() => {
   if (signageMode !== 'announcement') return;
