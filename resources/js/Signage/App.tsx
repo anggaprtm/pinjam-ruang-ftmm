@@ -17,11 +17,12 @@ const App: React.FC = () => {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleTimeString());
   const [locationTitle, setLocationTitle] = useState("Gedung Nano • FTMM");
-
   const [isMainDashboard, setIsMainDashboard] = useState(true);
   const [signageMode, setSignageMode] = useState<'dashboard' | 'announcement'>('dashboard');
   const [config, setConfig] = useState<any>(null);
   const [fade, setFade] = useState(true);
+  const params = new URLSearchParams(window.location.search);
+  const lantai = params.get('lantai') || 'default';
   const [progress, setProgress] = useState(0);
 
   // 🔥 SLIDESHOW STATE
@@ -34,7 +35,7 @@ const App: React.FC = () => {
       const params = new URLSearchParams(window.location.search);
       const lantai = params.get('lantai');
       const gedung = params.get('gedung');
-
+      
       if (lantai || gedung) {
         setIsMainDashboard(false);
         setLocationTitle(`${'Gedung ' + gedung || 'Gedung'} • Lantai ${lantai || '-'}`);
@@ -114,23 +115,30 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const res = await fetch(`/api/v1/device-command/${location}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/api/v1/device-command/${lantai}`);
+        const data = await res.json();
 
-      if (!data.command) return;
+        console.log('COMMAND:', data); // debug
 
-      if (data.command === 'reload') {
-        window.location.reload();
-      }
+        if (!data.command) return;
 
-      if (data.command === 'restart') {
-        window.location.reload(); // bisa advanced nanti
+        if (data.command === 'reload') {
+          window.location.reload();
+        }
+
+        if (data.command === 'restart') {
+          window.location.reload();
+        }
+
+      } catch (err) {
+        console.error('Command error:', err);
       }
 
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [lantai]);
 
   // 🔥 SLIDESHOW EFFECT
   useEffect(() => {
