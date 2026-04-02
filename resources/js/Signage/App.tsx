@@ -120,35 +120,20 @@ const App: React.FC = () => {
       try {
         const res = await fetch(`/api/device-command/${location}`);
         const data = await res.json();
-
-        // 🔥 DEBUG WAJIB
-        console.log('LOCATION:', location);
-        console.log('COMMAND RAW:', data);
-        console.log('COMMAND VALUE:', data.command);
-
         if (!data.command) return;
 
-        const cmd = data.command.trim(); // 🔥 penting
-
-        console.log('COMMAND CLEAN:', cmd);
-
-        if (cmd === 'reload') {
-          console.log('EXECUTE RELOAD');
+        if (data.command === 'reload') {
           window.location.reload();
         }
 
-        if (cmd === 'restart') {
-          console.log('EXECUTE RESTART');
+        if (data.command === 'restart') {
           window.location.reload();
-        }
-
-        if (cmd === 'shutdown') {
-          console.log('EXECUTE SHUTDOWN (NOT IMPLEMENTED)');
         }
 
       } catch (err) {
         console.error('Command error:', err);
       }
+
     }, 5000);
 
     return () => clearInterval(interval);
