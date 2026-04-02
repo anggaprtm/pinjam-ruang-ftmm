@@ -118,7 +118,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/v1/device-command/${location}`);
+        const res = await fetch(`/api/device-command/${location}`);
         const data = await res.json();
 
         console.log('COMMAND:', data); // debug
