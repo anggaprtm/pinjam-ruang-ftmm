@@ -121,26 +121,38 @@ const App: React.FC = () => {
         const res = await fetch(`/api/device-command/${location}`);
         const data = await res.json();
 
-        console.log('COMMAND:', data); // debug
+        // 🔥 DEBUG WAJIB
+        console.log('LOCATION:', location);
+        console.log('COMMAND RAW:', data);
+        console.log('COMMAND VALUE:', data.command);
 
         if (!data.command) return;
 
-        if (data.command === 'reload') {
+        const cmd = data.command.trim(); // 🔥 penting
+
+        console.log('COMMAND CLEAN:', cmd);
+
+        if (cmd === 'reload') {
+          console.log('EXECUTE RELOAD');
           window.location.reload();
         }
 
-        if (data.command === 'restart') {
+        if (cmd === 'restart') {
+          console.log('EXECUTE RESTART');
           window.location.reload();
+        }
+
+        if (cmd === 'shutdown') {
+          console.log('EXECUTE SHUTDOWN (NOT IMPLEMENTED)');
         }
 
       } catch (err) {
         console.error('Command error:', err);
       }
-
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [lantai]);
+  }, [location]);
 
   // 🔥 SLIDESHOW EFFECT
   useEffect(() => {
