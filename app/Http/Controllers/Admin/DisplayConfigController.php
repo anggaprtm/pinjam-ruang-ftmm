@@ -18,7 +18,7 @@ class DisplayConfigController extends Controller
     {
         return view('admin.display-config.create');
     }
-
+    
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -26,14 +26,19 @@ class DisplayConfigController extends Controller
             'mode' => 'required',
             'content_type' => 'nullable',
             'content_value' => 'nullable',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|file|max:20480'
         ]);
 
         // HANDLE UPLOAD
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('signage', 'public');
+        $file = $request->file('image');
+        if ($file && $file->isValid()) {
+            $path = $file->store('signage', 'public');
             $data['image_path'] = $path;
-            $data['content_type'] = 'image';
+
+            if (!$request->content_type) {
+                $data['content_type'] = 'image';
+            }
+
             $data['content_value'] = '/storage/' . $path;
         }
 
@@ -59,14 +64,20 @@ class DisplayConfigController extends Controller
             'mode' => 'required',
             'content_type' => 'nullable',
             'content_value' => 'nullable',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|file|max:20480'
         ]);
 
-        // HANDLE UPLOAD
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('signage', 'public');
+        // HANDLE UPLOAD (SAFE)
+        $file = $request->file('image');
+        if ($file) {
+            if (!$file->isValid()) {
+                return back()->withErrors([
+                    'image' => 'Upload gagal: ' . $file->getErrorMessage()
+                ]);
+            }
+
+            $path = $file->store('signage', 'public');
             $data['image_path'] = $path;
-            $data['content_type'] = 'image';
             $data['content_value'] = '/storage/' . $path;
         }
 
@@ -82,7 +93,6 @@ class DisplayConfigController extends Controller
         return back()->with('success', 'Config dihapus');
     }
 
-    // 🔥 TOGGLE
     public function toggle($id)
     {
         $config = DisplayConfig::findOrFail($id);

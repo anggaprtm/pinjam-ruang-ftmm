@@ -21,6 +21,8 @@ const App: React.FC = () => {
   const [isMainDashboard, setIsMainDashboard] = useState(true);
   const [signageMode, setSignageMode] = useState<'dashboard' | 'announcement'>('dashboard');
   const [config, setConfig] = useState<any>(null);
+  const [fade, setFade] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   // 🔥 SLIDESHOW STATE
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -81,8 +83,16 @@ const App: React.FC = () => {
         const data = await res.json();
 
         setSignageMode(data.mode || 'dashboard');
-        setConfig(data);
-        setCurrentIndex(0);
+        setConfig(prev => {
+          // kalau sama → jangan reset
+          if (JSON.stringify(prev) === JSON.stringify(data)) {
+            return prev;
+          }
+
+          // kalau beda → reset
+          setCurrentIndex(0);
+          return data;
+        });
       } catch (err) {
         console.error(err);
         setSignageMode('dashboard');
@@ -90,27 +100,50 @@ const App: React.FC = () => {
     }
 
     fetchConfig();
-    const interval = setInterval(fetchConfig, 10000);
+    const interval = setInterval(fetchConfig, 30000);
     return () => clearInterval(interval);
   }, []);
 
   // 🔥 SLIDESHOW EFFECT
   useEffect(() => {
-    if (signageMode !== 'announcement') return;
+  if (signageMode !== 'announcement') return;
 
-    const contents = config?.contents;
+  const contents = config?.contents;
+  if (!contents || contents.length === 0) return;
 
-    // fallback single content
-    if (!contents || contents.length === 0) return;
+  const current = contents[currentIndex];
 
-    const duration = contents[currentIndex]?.duration || 5;
+  if (current.type !== 'video') {
+    setProgress(0);
+
+    const duration = (current.duration || 5) * 1000;
+    const start = Date.now();
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % contents.length);
-    }, duration * 1000);
+      const elapsed = Date.now() - start;
+      setProgress(Math.min((elapsed / duration) * 100, 100));
+    }, 100);
 
-    return () => clearInterval(interval);
-  }, [config, currentIndex, signageMode]);
+    const timeout = setTimeout(() => {
+      // 🔥 FADE OUT
+      setFade(false);
+
+      setTimeout(() => {
+        setCurrentIndex(prev => (prev + 1) % contents.length);
+
+        // 🔥 FADE IN
+        setFade(true);
+      }, 300);
+
+    }, duration);
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }
+
+}, [currentIndex, config, signageMode]);
 
   // 🔥 ANNOUNCEMENT MODE
   if (signageMode === 'announcement' && config) {
@@ -131,7 +164,7 @@ const App: React.FC = () => {
     }
 
     return (
-      <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center">
+      <div className={`fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}>
 
         {content?.type === 'image' && (
           <img
@@ -142,13 +175,45 @@ const App: React.FC = () => {
           />
         )}
 
+        {content.type === 'video' && (
+          <video
+            key={currentIndex}
+            src={`/storage/${content.image_path}`}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-full object-contain"
+            onTimeUpdate={(e) => {
+              const video = e.currentTarget;
+              if (video.duration) {
+                setProgress((video.currentTime / video.duration) * 100);
+              }
+            }}
+           onEnded={() => {
+              setFade(false);
+
+              setTimeout(() => {
+                setCurrentIndex(prev => (prev + 1) % config.contents.length);
+                setFade(true);
+              }, 300);
+            }}
+          />
+        )}
+
         {content?.type === 'text' && (
           <div className="text-white text-6xl text-center px-20">
             {content.value}
           </div>
         )}
 
+        <div className="absolute bottom-0 left-0 w-full h-2 bg-white/20">
+          <div
+            className="h-full bg-white transition-all duration-100"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
+  
     );
   }
 
