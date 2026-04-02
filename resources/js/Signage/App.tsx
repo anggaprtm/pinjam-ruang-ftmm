@@ -104,6 +104,14 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (signageMode === 'announcement') {
+      document.body.style.cursor = 'none';
+    } else {
+      document.body.style.cursor = 'default';
+    }
+  }, [signageMode]);
+
   // 🔥 SLIDESHOW EFFECT
   useEffect(() => {
   if (signageMode !== 'announcement') return;
