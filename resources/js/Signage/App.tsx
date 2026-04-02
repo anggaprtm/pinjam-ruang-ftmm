@@ -22,7 +22,9 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<any>(null);
   const [fade, setFade] = useState(true);
   const params = new URLSearchParams(window.location.search);
-  const lantai = params.get('lantai') || 'default';
+  const lantai = params.get('lantai') || '0';
+  const gedung = params.get('gedung') || 'Nano';
+  const location = `lantai${lantai}`;
   const [progress, setProgress] = useState(0);
 
   // 🔥 SLIDESHOW STATE
@@ -116,7 +118,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/v1/device-command/${lantai}`);
+        const res = await fetch(`/api/v1/device-command/${location}`);
         const data = await res.json();
 
         console.log('COMMAND:', data); // debug
@@ -259,7 +261,7 @@ const App: React.FC = () => {
 
       <div className="relative z-10 flex flex-col h-full px-6 pt-6 gap-3 max-w-[2400px] mx-auto">
         
-        <Header customTitle={locationTitle} />
+        <Header customTitle={`Gedung ${gedung} • Lantai ${lantai}`} />
 
         <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
           
