@@ -13,9 +13,9 @@ Route::group([
     Route::get('signage/cars', [SignageController::class, 'getCars'])->name('signage.cars');
     Route::get('signage/requests', [SignageController::class, 'getPendingRequests'])->name('signage.requests');
     Route::get('signage/vertical-data', [SignageController::class, 'getVerticalData'])->name('signage.verticalData');
+    Route::get('/device-command/{location}', [DeviceController::class, 'getCommand']);
 });
 
 // ⬇️ PISAHKAN INI
 Route::get('/v1/display-config/{location}', [DisplayConfigController::class, 'show'])
     ->middleware('throttle:api');
-Route::get('/device-command/{location}', [DeviceController::class, 'getCommand']);
