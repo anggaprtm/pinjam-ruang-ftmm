@@ -28,6 +28,9 @@ use App\Http\Controllers\Admin\BotSettingController;
 use App\Http\Controllers\Admin\PeriodeJamKerjaController;
 use App\Http\Controllers\Admin\DosenController;
 use App\Http\Controllers\Admin\TendikController;
+use App\Http\Controllers\Admin\DisplayConfigController;
+use App\Http\Controllers\Admin\DisplayContentController;
+use App\Http\Controllers\Admin\DisplayScheduleController;
 
 
 
@@ -135,6 +138,14 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
 
     Route::resource('dosen', DosenController::class);
     Route::resource('tendik', TendikController::class);
+    Route::patch('display-config/{id}/toggle', [DisplayConfigController::class, 'toggle'])->name('display-config.toggle');
+    Route::resource('display-config', DisplayConfigController::class);
+    Route::post('display-content', [DisplayContentController::class, 'store'])->name('display-content.store');
+    Route::delete('display-content/{id}', [DisplayContentController::class, 'destroy'])->name('display-content.destroy');
+    Route::post('display-content/reorder', [DisplayContentController::class, 'reorder'])->name('display-content.reorder');
+    Route::post('display-schedule', [DisplayScheduleController::class, 'store'])->name('display-schedule.store');
+    Route::delete('display-schedule/{id}', [DisplayScheduleController::class, 'destroy'])->name('display-schedule.destroy');
+
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');

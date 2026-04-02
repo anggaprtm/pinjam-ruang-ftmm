@@ -13,6 +13,16 @@ class DisplayConfig extends Model
         'content_value',
         'start_time',
         'end_time',
+        'image_path',
         'is_active'
     ];
+
+    public function contents()
+    {
+        return $this->hasMany(DisplayContent::class)->orderBy('order');
+    }
+    public function schedules()
+    {
+        return $this->hasMany(DisplaySchedule::class);
+    }
 }

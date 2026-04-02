@@ -11,29 +11,28 @@ class DisplayConfigController extends Controller
 {
     public function show($location)
     {
-        $now = Carbon::now();
-
-        $config = DisplayConfig::where('location', $location)
+        $config = DisplayConfig::with(['contents', 'schedules'])
+            ->where('location', $location)
             ->where('is_active', true)
-            ->where(function ($query) use ($now) {
-                $query->whereNull('start_time')
-                      ->orWhere('start_time', '<=', $now);
-            })
-            ->where(function ($query) use ($now) {
-                $query->whereNull('end_time')
-                      ->orWhere('end_time', '>=', $now);
-            })
-            ->latest()
             ->first();
 
         if (!$config) {
-            return response()->json([
-                'mode' => 'dashboard'
-            ]);
+            return response()->json(['mode' => 'dashboard']);
         }
 
+        $now = Carbon::now()->format('H:i:s');
+
+        // 🔥 CEK SCHEDULE
+        $activeSchedule = $config->schedules
+            ->first(function ($s) use ($now) {
+                return $now >= $s->start_time && $now <= $s->end_time;
+            });
+
+        $mode = $activeSchedule ? $activeSchedule->mode : $config->mode;
+
         return response()->json([
-            'mode' => $config->mode,
+            'mode' => $mode,
+            'contents' => $config->contents,
             'content_type' => $config->content_type,
             'content_value' => $config->content_value,
         ]);
