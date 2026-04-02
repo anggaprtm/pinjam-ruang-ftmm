@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\TendikController;
 use App\Http\Controllers\Admin\DisplayConfigController;
 use App\Http\Controllers\Admin\DisplayContentController;
 use App\Http\Controllers\Admin\DisplayScheduleController;
+use App\Http\Controllers\Admin\DeviceCommandController;
 
 
 
