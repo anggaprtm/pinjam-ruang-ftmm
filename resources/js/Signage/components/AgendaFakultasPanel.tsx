@@ -89,7 +89,7 @@ const AgendaFakultasPanel: React.FC = () => {
             icon={<CalendarDays className="w-6 h-6 text-electric-400" />}
             className="h-full bg-navy-900/80 border-white/10"
         >
-            <div className="flex flex-col h-full gap-4">
+            <div className="flex flex-col h-full gap-4 overflow-hidden">
 
                 {/* ── EMPTY STATE ── */}
                 {agendas.length === 0 && countdowns.length === 0 && (
@@ -220,60 +220,64 @@ const AgendaFakultasPanel: React.FC = () => {
                 )}
 
                 {/* ── LIST AGENDA LAINNYA ── */}
-                {otherAgendas.length > 0 && (
-                    <div className="flex-1 min-h-0">
-                        <div className="text-[10px] text-white/30 uppercase tracking-widest font-bold mb-2 pb-1.5 border-b border-white/5">
+               {otherAgendas.length > 0 && (
+                    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                        <div className="shrink-0 text-[10px] text-white/30 uppercase tracking-widest font-bold mb-2 pb-1.5 border-b border-white/5">
                             Agenda Selanjutnya
                         </div>
-                        <AutoScrollList
-                            data={otherAgendas}
-                            threshold={4}
-                            gap="gap-2"
-                            renderItem={(agenda) => (
-                                <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/8 transition-all group">
-                                    {/* Kotak tanggal */}
-                                    <div
-                                        className="shrink-0 flex flex-col items-center justify-center w-10 h-10 rounded-lg text-center"
-                                        style={{
-                                            background: agenda.warna + '20',
-                                            border:     `1px solid ${agenda.warna}30`,
-                                        }}
-                                    >
-                                        <span className="text-[9px] font-bold uppercase" style={{ color: agenda.warna }}>
-                                            {agenda.date_month}
-                                        </span>
-                                        <span className="text-base font-black text-white leading-none">
-                                            {agenda.date_day}
-                                        </span>
-                                    </div>
+                        
+                        {/* 🔥 WRAPPER BARU: Mengunci tinggi dan menyembunyikan scrollbar bawaan browser 🔥 */}
+                        <div className="flex-1 min-h-0 overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                            <AutoScrollList
+                                data={otherAgendas}
+                                threshold={4}
+                                gap="gap-2"
+                                renderItem={(agenda) => (
+                                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/8 transition-all group">
+                                        {/* Kotak tanggal */}
+                                        <div
+                                            className="shrink-0 flex flex-col items-center justify-center w-10 h-10 rounded-lg text-center"
+                                            style={{
+                                                background: agenda.warna + '20',
+                                                border:     `1px solid ${agenda.warna}30`,
+                                            }}
+                                        >
+                                            <span className="text-[9px] font-bold uppercase" style={{ color: agenda.warna }}>
+                                                {agenda.date_month}
+                                            </span>
+                                            <span className="text-base font-black text-white leading-none">
+                                                {agenda.date_day}
+                                            </span>
+                                        </div>
 
-                                    {/* Detail */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate"
-                                            style={{ color: agenda.warna }}>
-                                            {agenda.kategori}
-                                        </div>
-                                        <div className="text-sm font-semibold text-white truncate leading-tight">
-                                            {agenda.judul}
-                                        </div>
-                                        {!agenda.is_all_day && agenda.waktu_mulai && (
-                                            <div className="text-[11px] text-white/30 font-mono mt-0.5">
-                                                {agenda.waktu_mulai}{agenda.waktu_selesai ? ` - ${agenda.waktu_selesai}` : ''}
+                                        {/* Detail */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate"
+                                                style={{ color: agenda.warna }}>
+                                                {agenda.kategori}
                                             </div>
-                                        )}
-                                    </div>
+                                            <div className="text-sm font-semibold text-white truncate leading-tight">
+                                                {agenda.judul}
+                                            </div>
+                                            {!agenda.is_all_day && agenda.waktu_mulai && (
+                                                <div className="text-[11px] text-white/30 font-mono mt-0.5">
+                                                    {agenda.waktu_mulai}{agenda.waktu_selesai ? ` - ${agenda.waktu_selesai}` : ''}
+                                                </div>
+                                            )}
+                                        </div>
 
-                                    {/* Sisa hari */}
-                                    <div className="shrink-0 text-right">
-                                        <span className="text-[10px] font-mono text-white/30">
-                                            {agenda.sisa_waktu_label}
-                                        </span>
-                                    </div>
+                                        {/* Sisa hari */}
+                                        <div className="shrink-0 text-right">
+                                            <span className="text-[10px] font-mono text-white/30">
+                                                {agenda.sisa_waktu_label}
+                                            </span>
+                                        </div>
 
-                                    <ChevronRight size={14} className="shrink-0 text-white/20 group-hover:text-white/40 transition-colors" />
-                                </div>
-                            )}
-                        />
+                                        <ChevronRight size={14} className="shrink-0 text-white/20 group-hover:text-white/40 transition-colors" />
+                                    </div>
+                                )}
+                            />
+                        </div>
                     </div>
                 )}
 
