@@ -73,7 +73,7 @@ const App: React.FC = () => {
   const gedung          = urlParams.get('gedung');
   const isMainDashboard = !lantai && !gedung;
   const locationTitle   = isMainDashboard
-    ? 'Gedung Nano • FTMM'
+    ? 'Gedung Nano • Fakultas Teknologi Maju dan Multidisiplin'
     : `Gedung ${gedung ?? '-'} • Lantai ${lantai ?? '-'}`;
   const location = `lantai${lantai ?? '0'}`;
 
