@@ -210,6 +210,43 @@
                 </ul>
             </li>
         @endcanany
+        @canany(['agenda_fakultas_access', 'display_config_access', 'device_command_access'])
+            <li class="nav-group {{ request()->is('admin/agenda-fakultas*') || request()->is('admin/display-config*') || request()->is('admin/device-command*') ? 'show' : '' }}">
+                <a class="nav-group-toggle" href="#">
+                    <i class="nav-icon fas fa-display"></i>
+                    Pengaturan Signage
+                </a>
+                <ul class="nav-group-items compact">
+                    @can('agenda_fakultas_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.agenda-fakultas.index') }}"
+                               class="nav-link {{ request()->is('admin/agenda*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-calendar-alt"></i></span>
+                                Agenda Fakultas
+                            </a>
+                        </li>
+                    @endcan
+                    @can('display_config_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.display-config.index') }}"
+                               class="nav-link {{ request()->is('admin/config*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-cog"></i></span>
+                                Konfigurasi Display
+                            </a>
+                        </li>
+                    @endcan
+                    @can('device_command_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.device-command.index') }}"
+                               class="nav-link {{ request()->is('admin/device-command*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-computer"></i></span>
+                                Remote Perangkat
+                            </a>
+                        </li>
+                    @endcan
+                </ul>
+            </li>
+        @endcanany
 
         {{-- Spacer dorong profil & logout ke bawah --}}
         <li class="nav-item nav-spacer"></li>
