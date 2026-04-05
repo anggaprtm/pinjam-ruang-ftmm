@@ -41,12 +41,13 @@
                     <div class="row g-3">
                         @php
                             $panels = [
-                                'lectures' => 'Agenda Perkuliahan',
-                                'events' => 'Agenda Kegiatan',
-                                'meetings' => 'Sidang & Rapat',
-                                'agenda' => 'Agenda Fakultas',
-                                'pending_requests' => 'Permintaan Pending (Utama)',
-                                'cars' => 'Status Mobil (Utama)',
+                                'lectures' => 'Agenda Perkuliahan (Kiri)',
+                                'events' => 'Agenda Kegiatan (Tengah)',
+                                'meetings' => 'Sidang & Rapat (Kanan)',
+                                'agenda' => 'Agenda Fakultas (Tengah)',
+                                'rooms' => 'Ketersediaan Ruang (Tengah)',
+                                'pending_requests' => 'Permintaan Pending (Kiri)',
+                                'cars' => 'Status Mobil (Kanan)',
                             ];
                         @endphp
                         

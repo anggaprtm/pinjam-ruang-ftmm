@@ -156,10 +156,67 @@ class SignageController extends Controller
             ];
         });
 
+        // ==========================================
+        // 3. QUERY KETERSEDIAAN RUANG (LIVE STATUS)
+        // ==========================================
+        $currentTime = $today->format('H:i:s');
+        
+        $roomsQuery = \App\Models\Ruangan::where('is_active', 1);
+        if ($filterLantai) {
+            $roomsQuery->where('lantai', 'LIKE', "%{$filterLantai}%");
+        }
+        if ($filterGedung) {
+            $roomsQuery->where('gedung', 'LIKE', "%{$filterGedung}%");
+        }
+        
+        $roomAvailability = $roomsQuery->orderBy('nama')->get()->map(function($room) use ($today, $currentTime, $activeSemester, $todayName) {
+            $status = 'kosong';
+            $currentEvent = null;
+
+            // 1. Cek apakah sedang dipakai Jadwal Kuliah saat ini
+            if ($activeSemester) {
+                $kuliah = $room->jadwalPerkuliahan()
+                    ->where('semester_id', $activeSemester->id)
+                    ->where('hari', $todayName)
+                    ->where('waktu_mulai', '<=', $currentTime)
+                    ->where('waktu_selesai', '>=', $currentTime)
+                    ->first();
+                if ($kuliah) {
+                    $status = 'dipakai';
+                    $currentEvent = $kuliah->mata_kuliah;
+                }
+            }
+
+            // 2. Cek apakah sedang dipakai Kegiatan/Rapat saat ini
+            if ($status === 'kosong') {
+                $kegiatan = $room->kegiatan()
+                    ->where('status', 'disetujui')
+                    ->where('waktu_mulai', '<=', $today)
+                    ->where('waktu_selesai', '>=', $today)
+                    ->first();
+                if ($kegiatan) {
+                    $status = 'dipakai';
+                    $currentEvent = $kegiatan->nama_kegiatan;
+                }
+            }
+
+            return [
+                'id' => $room->id,
+                'nama' => $room->nama,
+                'kapasitas' => $room->kapasitas,
+                'status' => $status,
+                'current_event' => $currentEvent,
+            ];
+        });
+
+        // ==========================================
+        // RETURN JSON
+        // ==========================================
         return response()->json([
             'jadwal_kuliah_hari_ini' => $jadwalKuliah,
-            'kegiatan_mendatang' => $kegiatan, // Panel Tengah
-            'sidang_rapat' => $sidangRapat,    // Panel Kanan (Data Baru)
+            'kegiatan_mendatang' => $kegiatan, 
+            'sidang_rapat' => $sidangRapat,
+            'room_availability' => $roomAvailability, // <--- Data Baru
         ]);
     }
 

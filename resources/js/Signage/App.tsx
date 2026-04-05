@@ -6,13 +6,14 @@ import MeetingsPanel from './components/MeetingsPanel';
 import CarStatusWidget from './components/CarStatusWidget';
 import PendingRequestsWidget from './components/PendingRequestsWidget';
 import AgendaFakultasPanel from './components/AgendaFakultasPanel';
+import RoomAvailabilityPanel from './components/RoomAvailabilityPanel';
 import { AgendaItem, ApiResponse, Meeting } from './types';
 
 const getSignageApiKey = () =>
   document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '';
 
 // Panel tengah yang tersedia
-type CenterPanel = 'events' | 'agenda';
+type CenterPanel = 'events' | 'agenda' | 'rooms';
 
 const App: React.FC = () => {
   const [lectures, setLectures]         = useState<AgendaItem[]>([]);
@@ -25,11 +26,11 @@ const App: React.FC = () => {
   const [fade, setFade]                 = useState(true);
   const [progress, setProgress]         = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Toggle panel tengah: auto-rotate setiap 30 detik
-  const [centerPanel, setCenterPanel]   = useState<CenterPanel>('events');
+  const [rooms, setRooms] = useState<any[]>([]);
   const [panelFade, setPanelFade]       = useState(true);
-  // ─── HELPER: CEK VISIBILITAS PANEL ────────────────────────────
+  const [centerPanel, setCenterPanel]   = useState<CenterPanel>('events');
+
+  // 1. HELPER: CEK VISIBILITAS PANEL (Harus di atas sebelum dipanggil)
   const isPanelVisible = (panelName: string) => {
     if (!config || !config.panel_visibility) return true;
     const value = config.panel_visibility[panelName];
@@ -37,7 +38,7 @@ const App: React.FC = () => {
     return value !== false && value !== "0" && value !== 0;
   };
 
-  // 1. PINDAHKAN URL PARAMS KE SINI (Dideklarasikan lebih dulu)
+  // 2. URL PARAMS
   const urlParams       = new URLSearchParams(window.location.search);
   const lantai          = urlParams.get('lantai');
   const gedung          = urlParams.get('gedung');
@@ -47,14 +48,15 @@ const App: React.FC = () => {
     : `Gedung ${gedung ?? '-'} • Lantai ${lantai ?? '-'}`;
   const location = `lantai${lantai ?? '0'}`;
 
-  // 2. BARU LAKUKAN KALKULASI GRID 
+  // 3. KALKULASI GRID (Digabung di sini semua, jangan ada yang dobel)
   const showLectures = isPanelVisible('lectures');
   const showPending  = isMainDashboard && isPanelVisible('pending_requests');
   const showLeftCol  = showLectures || showPending;
 
   const showEvents   = isPanelVisible('events');
   const showAgenda   = isPanelVisible('agenda');
-  const showCenterCol = showEvents || showAgenda;
+  const showRooms    = isPanelVisible('rooms'); // <--- Tambahkan di sini
+  const showCenterCol = showEvents || showAgenda || showRooms; // <--- Update di sini
 
   const showMeetings = isPanelVisible('meetings');
   const showCars     = isMainDashboard && isPanelVisible('cars');
@@ -67,30 +69,60 @@ const App: React.FC = () => {
           ? 'col-span-9' 
           : 'col-span-6';
 
-  // ─── FORCE SET PANEL (JIKA ADA YANG DIMATIKAN) ────────────────
-  useEffect(() => {
-    // Jika salah satu mati, paksa state ke panel yang masih hidup
-    if (!showEvents && showAgenda) setCenterPanel('agenda');
-    if (!showAgenda && showEvents) setCenterPanel('events');
-  }, [showEvents, showAgenda]);
+  // ─── LOGIC PANEL TENGAH (ROTASI DINAMIS) ──────────────────────
+  const availableCenterPanels: CenterPanel[] = [];
+  if (showEvents) availableCenterPanels.push('events');
+  if (showAgenda) availableCenterPanels.push('agenda');
+  if (showRooms)  availableCenterPanels.push('rooms');
 
-  // ─── AUTO-ROTATE panel tengah setiap 30 detik ────────────────
   useEffect(() => {
-    if (signageMode !== 'dashboard') return;
-    
-    // HENTIKAN interval jika salah satu (atau kedua) panel dimatikan
-    if (!showEvents || !showAgenda) return;
+    // Force switch ke panel yang tersedia jika panel yang aktif saat ini dimatikan dari admin
+    if (!availableCenterPanels.includes(centerPanel) && availableCenterPanels.length > 0) {
+      setCenterPanel(availableCenterPanels[0]);
+    }
+  }, [availableCenterPanels, centerPanel]);
+
+  useEffect(() => {
+    if (signageMode !== 'dashboard' || availableCenterPanels.length <= 1) return;
 
     const iv = setInterval(() => {
       setPanelFade(false);
       setTimeout(() => {
-        setCenterPanel(p => p === 'events' ? 'agenda' : 'events');
+        setCenterPanel(prev => {
+          const currentIndex = availableCenterPanels.indexOf(prev);
+          const nextIndex = (currentIndex + 1) % availableCenterPanels.length;
+          return availableCenterPanels[nextIndex] || availableCenterPanels[0];
+        });
         setPanelFade(true);
       }, 400);
-    }, 30000);
+    }, 30000); // 30 Detik
     
     return () => clearInterval(iv);
-  }, [signageMode, showEvents, showAgenda]);
+  }, [signageMode, availableCenterPanels]);
+
+  // ─── KEYBOARD SHORTCUTS ───────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (signageMode !== 'dashboard') return;
+      const key = e.key.toLowerCase();
+      
+      let targetPanel: CenterPanel | null = null;
+      if (key === 'r' && showRooms)  targetPanel = 'rooms';
+      if (key === 'e' && showEvents) targetPanel = 'events';
+      if (key === 'a' && showAgenda) targetPanel = 'agenda';
+
+      if (targetPanel && targetPanel !== centerPanel) {
+        setPanelFade(false);
+        setTimeout(() => {
+          setCenterPanel(targetPanel as CenterPanel);
+          setPanelFade(true);
+        }, 400);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [centerPanel, signageMode, showRooms, showEvents, showAgenda]);
 
   // ─── FETCH DATA ───────────────────────────────────────────────
   const fetchData = async () => {
@@ -106,6 +138,7 @@ const App: React.FC = () => {
       const data: ApiResponse = await res.json();
       setLectures(data.jadwal_kuliah_hari_ini);
       setEvents(data.kegiatan_mendatang);
+      setRooms(data.room_availability);
       setMeetingsData(data.sidang_rapat);
       setIsOnline(true);
       setLastUpdate(new Date().toLocaleTimeString('id-ID') + ' WIB');
@@ -262,7 +295,20 @@ const App: React.FC = () => {
                     Agenda Fakultas
                   </button>
                 )}
-                {showEvents && showAgenda && (
+                {/* TAMBAHAN TAB ROOMS */}
+                {showRooms && (
+                  <button
+                    onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('rooms'); setPanelFade(true); }, 400); }}
+                    className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-all ${
+                      centerPanel === 'rooms' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'text-white/20 hover:text-white/40'
+                    }`}
+                  >
+                    Ketersediaan Ruang
+                  </button>
+                )}
+                
+                {/* Indikator Auto */}
+                {availableCenterPanels.length > 1 && (
                   <div className="ml-auto flex items-center gap-1.5 text-[10px] text-white/20 font-mono">
                     <span className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
                     auto
@@ -272,11 +318,10 @@ const App: React.FC = () => {
 
               {/* Panel dengan fade transition */}
               <div className={`flex-1 min-h-0 transition-opacity duration-400 ${panelFade ? 'opacity-100' : 'opacity-0'}`}>
-                {centerPanel === 'events' && showEvents
-                  ? <EventsPanel data={events} />
-                  : centerPanel === 'agenda' && showAgenda 
-                  ? <AgendaFakultasPanel />
-                  : <div className="h-full flex items-center justify-center text-white/20 text-sm font-mono tracking-widest uppercase">Panel Dinonaktifkan</div>
+                {centerPanel === 'events' && showEvents ? <EventsPanel data={events} />
+                : centerPanel === 'agenda' && showAgenda ? <AgendaFakultasPanel />
+                : centerPanel === 'rooms' && showRooms ? <RoomAvailabilityPanel data={rooms} /> // <--- Tambahan render
+                : <div className="h-full flex items-center justify-center text-white/20 text-sm font-mono tracking-widest uppercase">Panel Dinonaktifkan</div>
                 }
               </div>
 
