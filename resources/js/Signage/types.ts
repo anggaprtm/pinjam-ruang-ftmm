@@ -31,6 +31,8 @@ export interface Meeting {
     pic: string;        // Nama Mahasiswa
     pembimbing?: string | null; // "Dr. A, Prof. B"
     penguji?: string | null;    // "Dr. C"
+    date_flag?: 'today' | 'tomorrow' | 'future';   // untuk warna badge
+    date_label?: string;  
 }
 
 export interface ApiResponse {

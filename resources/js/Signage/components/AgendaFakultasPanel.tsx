@@ -89,7 +89,7 @@ const AgendaFakultasPanel: React.FC = () => {
             icon={<CalendarDays className="w-6 h-6 text-electric-400" />}
             className="h-full bg-navy-900/80 border-white/10"
         >
-            <div className="flex flex-col h-full gap-4 overflow-hidden">
+            <div className="flex flex-col h-full gap-4 scrollbar-hide">
 
                 {/* ── EMPTY STATE ── */}
                 {agendas.length === 0 && countdowns.length === 0 && (

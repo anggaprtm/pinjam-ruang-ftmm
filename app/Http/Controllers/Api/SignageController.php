@@ -110,6 +110,7 @@ class SignageController extends Controller
 
         $sidangQuery = Kegiatan::where('status', 'disetujui')
             ->whereDate('waktu_mulai', '>=', $today)
+            ->whereDate('waktu_mulai', '<=', Carbon::today()->addDay())
             ->whereIn('jenis_kegiatan', ['Rapat', 'Seminar Proposal', 'Sidang Skripsi'])
             ->with(['ruangan', 'user']);
 
@@ -128,8 +129,8 @@ class SignageController extends Controller
         $sidangRapat = $sidangQuery->orderBy('waktu_mulai')->get()->map(function ($item) use ($today) {
             $start = Carbon::parse($item->waktu_mulai);
             $end = Carbon::parse($item->waktu_selesai);
-            
-            // Logika Status Sederhana
+
+            // Logika Status
             $status = 'Reserved';
             if ($today->between($start, $end)) {
                 $status = 'Occupied';
@@ -137,22 +138,39 @@ class SignageController extends Controller
                 $status = 'Finished';
             }
 
-            // Gabungkan Dosen jadi Array string biar gampang di frontend
+            // ── Date flag & label (konsisten dengan kiosk blade) ──
+            $isToday    = $start->isSameDay(Carbon::today());
+            $isTomorrow = $start->isSameDay(Carbon::today()->addDay());
+
+            if ($isToday) {
+                $dateFlag  = 'today';
+                $dateLabel = 'HARI INI';
+            } elseif ($isTomorrow) {
+                $dateFlag  = 'tomorrow';
+                $dateLabel = 'BESOK';
+            } else {
+                $dateFlag  = 'future';
+                $dateLabel = $start->translatedFormat('d M'); // "12 Apr"
+            }
+
+            // Gabungkan Dosen
             $pembimbing = array_filter([$item->dosen_pembimbing_1, $item->dosen_pembimbing_2]);
-            $penguji = array_filter([$item->dosen_penguji_1, $item->dosen_penguji_2]);
+            $penguji    = array_filter([$item->dosen_penguji_1, $item->dosen_penguji_2]);
 
             return [
-                'id' => $item->id,
-                'room' => $item->ruangan->nama ?? 'TBA',
-                'title' => $item->nama_kegiatan, // Misal: "Sidang Skripsi: Budi"
-                'time' => $start->format('H:i') . ' - ' . $end->format('H:i'),
-                'status' => $status,
-                'jenis' => $item->jenis_kegiatan, // Penting buat pembeda UI
-                'pic' => $item->nama_pic,         // Nama Mahasiswa / Penanggung Jawab
-                
-                // Data Dosen (Dipisah koma)
+                'id'         => $item->id,
+                'room'       => $item->ruangan->nama ?? 'TBA',
+                'title'      => $item->nama_kegiatan,
+                'time'       => $start->format('H:i') . ' - ' . $end->format('H:i'),
+                'status'     => $status,
+                'jenis'      => $item->jenis_kegiatan,
+                'pic'        => $item->nama_pic,
+                'date_flag'  => $dateFlag,
+                'date_label' => $dateLabel,
+
+                // Data Dosen
                 'pembimbing' => !empty($pembimbing) ? implode(', ', $pembimbing) : null,
-                'penguji' => !empty($penguji) ? implode(', ', $penguji) : null,
+                'penguji'    => !empty($penguji)    ? implode(', ', $penguji)    : null,
             ];
         });
 

@@ -102,7 +102,7 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ data }) => {
                         
                         <AutoScrollList 
                             data={otherEvents}
-                            threshold={5}
+                            threshold={2}
                             gap="gap-3"
                             renderItem={(event) => (
                                 <div className="group flex items-center p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-electric-500/30 transition-all">
