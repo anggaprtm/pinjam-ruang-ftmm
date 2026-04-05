@@ -14,7 +14,12 @@ class DisplayConfig extends Model
         'start_time',
         'end_time',
         'image_path',
-        'is_active'
+        'is_active',
+        'panel_visibility'
+    ];
+
+    protected $casts = [
+        'panel_visibility' => 'array',
     ];
 
     public function contents()

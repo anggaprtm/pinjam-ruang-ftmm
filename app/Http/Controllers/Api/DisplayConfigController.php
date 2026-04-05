@@ -30,11 +30,21 @@ class DisplayConfigController extends Controller
 
         $mode = $activeSchedule ? $activeSchedule->mode : $config->mode;
 
+        $defaultVisibility = [
+            'lectures' => true,
+            'events' => true,
+            'meetings' => true,
+            'agenda' => true,
+            'cars' => true,
+            'pending_requests' => true,
+        ];
+
         return response()->json([
             'mode' => $mode,
             'contents' => $config->contents,
             'content_type' => $config->content_type,
             'content_value' => $config->content_value,
+            'panel_visibility' => array_merge($defaultVisibility, $config->panel_visibility ?? [])
         ]);
     }
 }

@@ -21,13 +21,31 @@ class DisplayConfigController extends Controller
     
     public function store(Request $request)
     {
+        if (isset($data['panel_visibility']) && is_array($data['panel_visibility'])) {
+            foreach ($data['panel_visibility'] as $key => $value) {
+                $data['panel_visibility'][$key] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+        
         $data = $request->validate([
             'location' => 'required',
             'mode' => 'required',
             'content_type' => 'nullable',
             'content_value' => 'nullable',
-            'image' => 'nullable|file|max:20480'
+            'image' => 'nullable|file|max:20480',
+            'panel_visibility' => 'nullable|array'
         ]);
+
+        if (!isset($data['panel_visibility'])) {
+            $data['panel_visibility'] = [
+                'lectures' => true,
+                'events' => true,
+                'meetings' => true,
+                'agenda' => true,
+                'cars' => true,
+                'pending_requests' => true,
+            ];
+        }
 
         // HANDLE UPLOAD
         $file = $request->file('image');
@@ -59,12 +77,19 @@ class DisplayConfigController extends Controller
 
     public function update(Request $request, DisplayConfig $displayConfig)
     {
+        if (isset($data['panel_visibility']) && is_array($data['panel_visibility'])) {
+            foreach ($data['panel_visibility'] as $key => $value) {
+                $data['panel_visibility'][$key] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            }
+        }
+
         $data = $request->validate([
             'location' => 'required',
             'mode' => 'required',
             'content_type' => 'nullable',
             'content_value' => 'nullable',
-            'image' => 'nullable|file|max:20480'
+            'image' => 'nullable|file|max:20480',
+            'panel_visibility' => 'nullable|array'
         ]);
 
         // HANDLE UPLOAD (SAFE)

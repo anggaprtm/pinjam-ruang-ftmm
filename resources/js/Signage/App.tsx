@@ -29,8 +29,15 @@ const App: React.FC = () => {
   // Toggle panel tengah: auto-rotate setiap 30 detik
   const [centerPanel, setCenterPanel]   = useState<CenterPanel>('events');
   const [panelFade, setPanelFade]       = useState(true);
+  // ─── HELPER: CEK VISIBILITAS PANEL ────────────────────────────
+  const isPanelVisible = (panelName: string) => {
+    if (!config || !config.panel_visibility) return true;
+    const value = config.panel_visibility[panelName];
+    if (value === undefined) return true;
+    return value !== false && value !== "0" && value !== 0;
+  };
 
-  // URL params
+  // 1. PINDAHKAN URL PARAMS KE SINI (Dideklarasikan lebih dulu)
   const urlParams       = new URLSearchParams(window.location.search);
   const lantai          = urlParams.get('lantai');
   const gedung          = urlParams.get('gedung');
@@ -40,9 +47,40 @@ const App: React.FC = () => {
     : `Gedung ${gedung ?? '-'} • Lantai ${lantai ?? '-'}`;
   const location = `lantai${lantai ?? '0'}`;
 
+  // 2. BARU LAKUKAN KALKULASI GRID 
+  const showLectures = isPanelVisible('lectures');
+  const showPending  = isMainDashboard && isPanelVisible('pending_requests');
+  const showLeftCol  = showLectures || showPending;
+
+  const showEvents   = isPanelVisible('events');
+  const showAgenda   = isPanelVisible('agenda');
+  const showCenterCol = showEvents || showAgenda;
+
+  const showMeetings = isPanelVisible('meetings');
+  const showCars     = isMainDashboard && isPanelVisible('cars');
+  const showRightCol = showMeetings || showCars;
+
+  // Tentukan lebar kolom tengah secara otomatis agar responsif menutupi layar
+  const centerColClass = (!showLeftCol && !showRightCol) 
+      ? 'col-span-12' 
+      : (!showLeftCol || !showRightCol) 
+          ? 'col-span-9' 
+          : 'col-span-6';
+
+  // ─── FORCE SET PANEL (JIKA ADA YANG DIMATIKAN) ────────────────
+  useEffect(() => {
+    // Jika salah satu mati, paksa state ke panel yang masih hidup
+    if (!showEvents && showAgenda) setCenterPanel('agenda');
+    if (!showAgenda && showEvents) setCenterPanel('events');
+  }, [showEvents, showAgenda]);
+
   // ─── AUTO-ROTATE panel tengah setiap 30 detik ────────────────
   useEffect(() => {
     if (signageMode !== 'dashboard') return;
+    
+    // HENTIKAN interval jika salah satu (atau kedua) panel dimatikan
+    if (!showEvents || !showAgenda) return;
+
     const iv = setInterval(() => {
       setPanelFade(false);
       setTimeout(() => {
@@ -50,8 +88,9 @@ const App: React.FC = () => {
         setPanelFade(true);
       }, 400);
     }, 30000);
+    
     return () => clearInterval(iv);
-  }, [signageMode]);
+  }, [signageMode, showEvents, showAgenda]);
 
   // ─── FETCH DATA ───────────────────────────────────────────────
   const fetchData = async () => {
@@ -181,70 +220,84 @@ const App: React.FC = () => {
         <div className="grid grid-cols-12 gap-4 flex-1 min-h-0">
 
           {/* ── KOLOM KIRI ── */}
-          <div className="col-span-3 flex flex-col gap-3 min-h-0">
-            <div className="flex-1 min-h-0">
-              <LecturesPanel data={lectures} />
+          {showLeftCol && (
+            <div className="col-span-3 flex flex-col gap-3 min-h-0">
+              {showLectures && (
+                <div className="flex-1 min-h-0">
+                  <LecturesPanel data={lectures} />
+                </div>
+              )}
+              {showPending && (
+                // Trik Tailwind [&>div]:h-full memastikan anak di dalamnya ikut melar
+                <div className={showLectures ? "shrink-0" : "flex-1 min-h-0 [&>div]:h-full"}>
+                  <PendingRequestsWidget />
+                </div>
+              )}
             </div>
-            {isMainDashboard && (
-              <div className="shrink-0">
-                <PendingRequestsWidget />
+          )}
+
+          {/* ── KOLOM TENGAH ── */}
+          {showCenterCol && (
+            <div className={`${centerColClass} min-h-0 flex flex-col transition-all duration-500`}>
+              
+              {/* Tab indicator */}
+              <div className="shrink-0 flex items-center gap-2 mb-2">
+                {showEvents && (
+                  <button
+                    onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('events'); setPanelFade(true); }, 400); }}
+                    className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-all ${
+                      centerPanel === 'events' ? 'bg-electric-500/20 text-electric-400 border border-electric-500/40' : 'text-white/20 hover:text-white/40'
+                    }`}
+                  >
+                    Agenda Kegiatan
+                  </button>
+                )}
+                {showAgenda && (
+                  <button
+                    onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('agenda'); setPanelFade(true); }, 400); }}
+                    className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-all ${
+                      centerPanel === 'agenda' ? 'bg-electric-500/20 text-electric-400 border border-electric-500/40' : 'text-white/20 hover:text-white/40'
+                    }`}
+                  >
+                    Agenda Fakultas
+                  </button>
+                )}
+                {showEvents && showAgenda && (
+                  <div className="ml-auto flex items-center gap-1.5 text-[10px] text-white/20 font-mono">
+                    <span className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
+                    auto
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* ── KOLOM TENGAH: toggle Events ↔ Agenda Fakultas ── */}
-          <div className="col-span-6 min-h-0 flex flex-col">
-
-            {/* Tab indicator */}
-            <div className="shrink-0 flex items-center gap-2 mb-2">
-              <button
-                onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('events'); setPanelFade(true); }, 400); }}
-                className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-all ${
-                  centerPanel === 'events'
-                    ? 'bg-electric-500/20 text-electric-400 border border-electric-500/40'
-                    : 'text-white/20 hover:text-white/40'
-                }`}
-              >
-                Agenda Kegiatan
-              </button>
-              <button
-                onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('agenda'); setPanelFade(true); }, 400); }}
-                className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-all ${
-                  centerPanel === 'agenda'
-                    ? 'bg-electric-500/20 text-electric-400 border border-electric-500/40'
-                    : 'text-white/20 hover:text-white/40'
-                }`}
-              >
-                Agenda Fakultas
-              </button>
-
-              {/* Auto-rotate indicator */}
-              <div className="ml-auto flex items-center gap-1.5 text-[10px] text-white/20 font-mono">
-                <span className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
-                auto
+              {/* Panel dengan fade transition */}
+              <div className={`flex-1 min-h-0 transition-opacity duration-400 ${panelFade ? 'opacity-100' : 'opacity-0'}`}>
+                {centerPanel === 'events' && showEvents
+                  ? <EventsPanel data={events} />
+                  : centerPanel === 'agenda' && showAgenda 
+                  ? <AgendaFakultasPanel />
+                  : <div className="h-full flex items-center justify-center text-white/20 text-sm font-mono tracking-widest uppercase">Panel Dinonaktifkan</div>
+                }
               </div>
-            </div>
 
-            {/* Panel dengan fade transition */}
-            <div className={`flex-1 min-h-0 transition-opacity duration-400 ${panelFade ? 'opacity-100' : 'opacity-0'}`}>
-              {centerPanel === 'events'
-                ? <EventsPanel data={events} />
-                : <AgendaFakultasPanel />
-              }
             </div>
-          </div>
+          )}
 
           {/* ── KOLOM KANAN ── */}
-          <div className="col-span-3 flex flex-col gap-3 min-h-0">
-            <div className="flex-1 min-h-0">
-              <MeetingsPanel data={meetingsData} />
+          {showRightCol && (
+            <div className="col-span-3 flex flex-col gap-3 min-h-0">
+              {showMeetings && (
+                <div className="flex-1 min-h-0">
+                  <MeetingsPanel data={meetingsData} />
+                </div>
+              )}
+              {showCars && (
+                <div className={showMeetings ? "shrink-0" : "flex-1 min-h-0 [&>div]:h-full"}>
+                  <CarStatusWidget />
+                </div>
+              )}
             </div>
-            {isMainDashboard && (
-              <div className="shrink-0">
-                <CarStatusWidget />
-              </div>
-            )}
-          </div>
+          )}
 
         </div>
 

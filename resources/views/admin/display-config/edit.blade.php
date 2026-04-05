@@ -19,9 +19,10 @@
                 @method('PUT')
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Lokasi</label>
+                    <label class="form-label fw-bold">Lokasi / Device TV</label>
                     <input type="text" name="location" class="form-control"
                         value="{{ old('location', $displayConfig->location) }}" required>
+                    <small class="text-muted">Gunakan <b>default</b> untuk dashboard utama (Sarpras).</small>
                 </div>
 
                 <div class="mb-3">
@@ -30,6 +31,40 @@
                         <option value="dashboard" {{ $displayConfig->mode == 'dashboard' ? 'selected' : '' }}>Dashboard</option>
                         <option value="announcement" {{ $displayConfig->mode == 'announcement' ? 'selected' : '' }}>Announcement</option>
                     </select>
+                </div>
+
+                {{-- 🔥 PANEL VISIBILITY CONFIG (NEW) --}}
+                <div class="mb-4 p-3 border rounded bg-light" id="panelVisibilitySection">
+                    <label class="form-label fw-bold text-primary mb-3">
+                        <i class="fas fa-tv me-2"></i>Pengaturan Visibilitas Panel
+                    </label>
+                    <div class="row g-3">
+                        @php
+                            // Ambil data JSON dari database (sudah di-cast jadi array di Model)
+                            $vis = is_array($displayConfig->panel_visibility) ? $displayConfig->panel_visibility : [];
+                            
+                            $panels = [
+                                'lectures' => 'Agenda Perkuliahan',
+                                'events' => 'Agenda Kegiatan',
+                                'meetings' => 'Sidang & Rapat',
+                                'agenda' => 'Agenda Fakultas',
+                                'pending_requests' => 'Permintaan Pending (Utama)',
+                                'cars' => 'Status Mobil (Utama)',
+                            ];
+                        @endphp
+                        
+                        @foreach($panels as $key => $label)
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input type="hidden" name="panel_visibility[{{ $key }}]" value="0">
+                                    {{-- Cek jika disetting true, ATAU jika belum pernah disetting sama sekali (default true) --}}
+                                    <input class="form-check-input cursor-pointer" type="checkbox" name="panel_visibility[{{ $key }}]" value="1" id="edit_panel_{{ $key }}" 
+                                        {{ (isset($vis[$key]) && $vis[$key]) || !isset($vis[$key]) ? 'checked' : '' }}>
+                                    <label class="form-check-label cursor-pointer" for="edit_panel_{{ $key }}">{{ $label }}</label>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
 
                 <div id="contentSection">
