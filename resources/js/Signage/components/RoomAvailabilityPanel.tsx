@@ -33,22 +33,22 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
         <div className="flex-1 flex flex-col overflow-hidden h-full">
           
           {/* Legend Minimalis */}
-          <div className="flex items-center gap-3 mb-2 shrink-0 px-1 border-b border-white/5 pb-1.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/50">
-              <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500/20 border border-emerald-500/50"></span>
+          <div className="flex items-center gap-3 mb-3 shrink-0 px-1 border-b border-white/5 pb-2">
+            <div className="flex items-center gap-1.5 text-[10px] xl:text-xs font-mono text-white/60">
+              <span className="w-3 h-3 rounded-sm bg-emerald-500/20 border border-emerald-500/50"></span>
               <span>Tersedia</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-white/50">
-              <span className="w-2.5 h-2.5 rounded-sm bg-rose-500/20 border border-rose-500/50 relative overflow-hidden">
+            <div className="flex items-center gap-1.5 text-[10px] xl:text-xs font-mono text-white/60">
+              <span className="w-3 h-3 rounded-sm bg-rose-500/20 border border-rose-500/50 relative overflow-hidden">
                 <span className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgNDBsNDAtNDBIMzBMMCAzMHYxMHptNDAgMEw0MCAzMCAwIDQwaDQwIiBzdHJva2U9InJnYmEoMjQ0LCA2MywgOTQsIDAuMDUpIiBzdHJva2U9IndpZHRoPSIyIiBmaWxsPSJub25lIi8+PC9zdmc+')] opacity-20"></span>
               </span>
               <span>Digunakan</span>
             </div>
           </div>
 
-          {/* 🔥 4K OPTIMIZED GRID 🔥 */}
+          {/* 🔥 GRID LOCKED MAX 6 KOLOM 🔥 */}
           <div className="flex-1 overflow-hidden min-h-0 pr-1 pb-1">
-            <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 xl:gap-3">
               
               {data.map((room) => {
                 const isOccupied = room.status === 'dipakai';
@@ -56,7 +56,7 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
                 return (
                   <div 
                     key={room.id} 
-                    className={`relative p-2 rounded-lg flex flex-col justify-center border transition-all duration-300 min-h-[56px] ${
+                    className={`relative p-2.5 xl:p-3 rounded-lg flex flex-col justify-between border transition-all duration-300 min-h-[64px] xl:min-h-[72px] ${
                       isOccupied 
                         ? 'bg-rose-900/20 border-rose-500/30 overflow-hidden' 
                         : 'bg-emerald-900/10 border-emerald-500/20'
@@ -67,19 +67,19 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
                       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTAgNDBsNDAtNDBIMzBMMCAzMHYxMHptNDAgMEw0MCAzMCAwIDQwaDQwIiBzdHJva2U9InJnYmEoMjQ0LCA2MywgOTQsIDAuMDIpIiBzdHJva2U9IndpZHRoPSIyIiBmaWxsPSJub25lIi8+PC9zdmc+')] opacity-30 pointer-events-none"></div>
                     )}
 
-                    {/* Row 1: Nama Ruang & Kapasitas (ANTI-NABRAK) */}
-                    <div className="flex items-center justify-between z-10 w-full gap-1 mb-1 overflow-hidden">
+                    {/* Row 1: Nama Ruang & Kapasitas */}
+                    <div className="flex items-start justify-between z-10 w-full gap-2 mb-1.5">
                       
-                      {/* Kombinasi flex-1, min-w-0, dan truncate memastikan teks tidak menabrak elemen dikanannya */}
-                      <span className={`font-bold text-[11px] xl:text-xs tracking-tight truncate flex-1 min-w-0 ${isOccupied ? 'text-rose-100' : 'text-emerald-100'}`} title={room.nama}>
+                      {/* Teks diperbesar ke text-sm agar terbaca di TV, truncate tetap ada sebagai pengaman untuk nama ruang yang super panjang */}
+                      <span className={`font-bold text-xs xl:text-sm tracking-tight truncate flex-1 min-w-0 ${isOccupied ? 'text-rose-100' : 'text-emerald-100'}`} title={room.nama}>
                         {room.nama}
                       </span>
                       
-                      {/* Ukuran icon users dikecilkan sedikit (size 9) agar hemat space */}
-                      <div className={`px-1 py-0.5 rounded flex items-center gap-1 text-[9px] shrink-0 ${
+                      {/* Badge Kapasitas */}
+                      <div className={`px-1.5 py-0.5 rounded flex items-center gap-1.5 text-[9px] xl:text-[10px] shrink-0 ${
                         isOccupied ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'
                       }`}>
-                         <Users size={9} className="opacity-70" />
+                         <Users size={11} className="opacity-70" />
                          <span className='font-mono font-medium'>{room.kapasitas}</span>
                       </div>
                     </div>
@@ -87,20 +87,22 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
                     {/* Separator Minimalis */}
                     <div className={`border-t z-10 w-full ${isOccupied ? 'border-rose-500/20' : 'border-emerald-500/20'}`}></div>
 
-                    {/* Row 2: Status Block (ANTI-NABRAK) */}
-                    <div className="z-10 w-full mt-1 overflow-hidden">
+                    {/* Row 2: Status Block */}
+                    <div className="z-10 w-full mt-1.5 overflow-hidden">
                       {isOccupied ? (
-                        <div className="flex flex-col overflow-hidden">
-                          <span className="text-[8px] uppercase tracking-widest text-rose-400/80 font-bold block truncate">Berlangsung:</span>
-                          {/* truncate block w-full memastikan teks acara panjang akan dipotong dengan rapi */}
-                          <span className="text-[10px] xl:text-[11px] text-white/90 font-medium truncate block w-full" title={room.current_event || 'Kegiatan'}>
+                        <div className="flex flex-col">
+                          <span className="text-[8px] xl:text-[9px] uppercase tracking-widest text-rose-400/80 font-bold block mb-0.5 truncate">
+                            Berlangsung:
+                          </span>
+                          {/* Nama acara diamankan dengan truncate block agar tidak merusak layout ke bawah */}
+                          <span className="text-[10px] xl:text-[12px] text-white/90 font-medium truncate block w-full" title={room.current_event || 'Kegiatan'}>
                             {room.current_event || 'Kegiatan'}
                           </span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 text-emerald-400/80 pt-0.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-                          <span className="text-[10px] font-bold tracking-wide">TERSEDIA</span>
+                        <div className="flex items-center gap-1.5 text-emerald-400/80 pt-0.5 xl:pt-1">
+                          <span className="w-1.5 h-1.5 xl:w-2 xl:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                          <span className="text-[10px] xl:text-[11px] font-bold tracking-wide">TERSEDIA</span>
                         </div>
                       )}
                     </div>
