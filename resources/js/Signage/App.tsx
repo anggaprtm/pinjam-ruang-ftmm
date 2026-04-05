@@ -16,35 +16,35 @@ const App: React.FC = () => {
   const [meetingsData, setMeetingsData] = useState<Meeting[]>([]);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleTimeString());
-  const [locationTitle, setLocationTitle] = useState("Gedung Nano • FTMM");
-  const [isMainDashboard, setIsMainDashboard] = useState(true);
   const [signageMode, setSignageMode] = useState<'dashboard' | 'announcement'>('dashboard');
   const [config, setConfig] = useState<any>(null);
   const [fade, setFade] = useState(true);
-  const params = new URLSearchParams(window.location.search);
-  const lantai = params.get('lantai');
-  const gedung = params.get('gedung');
-  const location = `lantai${lantai}`;
   const [progress, setProgress] = useState(0);
-
-  // 🔥 SLIDESHOW STATE
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // ✅ FIX 1: Baca URL params SEKALI di luar, tidak perlu state async
+  const urlParams = new URLSearchParams(window.location.search);
+  const lantai = urlParams.get('lantai');   // null kalau tidak ada param
+  const gedung  = urlParams.get('gedung');  // null kalau tidak ada param
+
+  // ✅ FIX 2: isMainDashboard dihitung langsung dari URL, bukan dari fetchData
+  // Dashboard utama = tidak ada param lantai maupun gedung
+  const isMainDashboard = !lantai && !gedung;
+
+  // ✅ FIX 3: locationTitle dihitung langsung, tidak perlu state
+  const locationTitle = isMainDashboard
+    ? "Gedung Nano • FTMM"
+    : `Gedung ${gedung ?? '-'} • Lantai ${lantai ?? '-'}`;
+
+  const location = `lantai${lantai ?? '0'}`;
 
   const fetchData = async () => {
     if (signageMode !== 'dashboard') return;
 
-     try {
-      if (lantai || gedung) {
-        setIsMainDashboard(false);
-        setLocationTitle(`Gedung ${gedung || 'Gedung'} • Lantai ${lantai || '-'}`);
-      } else {
-        setIsMainDashboard(true);
-        setLocationTitle("Gedung Nano • FTMM");
-      }
-
+    try {
       const apiUrl = new URL('/api/v1/signage', window.location.origin);
       if (lantai) apiUrl.searchParams.append('lantai', lantai);
-      if (gedung) apiUrl.searchParams.append('gedung', gedung);
+      if (gedung)  apiUrl.searchParams.append('gedung', gedung);
 
       const apiKey = getSignageApiKey();
       if (apiKey) apiUrl.searchParams.set('signage_key', apiKey);
@@ -64,31 +64,24 @@ const App: React.FC = () => {
     }
   };
 
-  // FETCH DATA
+  // FETCH DATA setiap 60 detik
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, [signageMode]);
 
-  // FETCH CONFIG
+  // FETCH CONFIG (mode: dashboard / announcement) setiap 30 detik
   useEffect(() => {
     async function fetchConfig() {
       try {
-        const params = new URLSearchParams(window.location.search);
-        const lantai = params.get('lantai') || 'default';
-
-        const res = await fetch(`/api/v1/display-config/${lantai}`);
+        const configLantai = lantai ?? 'default';
+        const res  = await fetch(`/api/v1/display-config/${configLantai}`);
         const data = await res.json();
 
         setSignageMode(data.mode || 'dashboard');
         setConfig(prev => {
-          // kalau sama → jangan reset
-          if (JSON.stringify(prev) === JSON.stringify(data)) {
-            return prev;
-          }
-
-          // kalau beda → reset
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
           setCurrentIndex(0);
           return data;
         });
@@ -103,126 +96,89 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Sembunyikan cursor di announcement mode
   useEffect(() => {
-    if (signageMode === 'announcement') {
-      document.body.style.cursor = 'none';
-    } else {
-      document.body.style.cursor = 'default';
-    }
+    document.body.style.cursor = signageMode === 'announcement' ? 'none' : 'default';
   }, [signageMode]);
 
+  // Device command polling setiap 5 detik
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/device-command/${location}`);
+        const res  = await fetch(`/api/device-command/${location}`);
         const data = await res.json();
         if (!data.command) return;
-
-        if (data.command === 'reload') {
+        if (data.command === 'reload' || data.command === 'restart') {
           window.location.reload();
         }
-
-        if (data.command === 'restart') {
-          window.location.reload();
-        }
-
       } catch (err) {
         console.error('Command error:', err);
       }
-
     }, 5000);
-
     return () => clearInterval(interval);
   }, [location]);
 
-  // 🔥 SLIDESHOW EFFECT
+  // SLIDESHOW timer (untuk non-video)
   useEffect(() => {
-  if (signageMode !== 'announcement') return;
+    if (signageMode !== 'announcement') return;
 
-  const contents = config?.contents;
-  if (!contents || contents.length === 0) return;
+    const contents = config?.contents;
+    if (!contents || contents.length === 0) return;
 
-  const current = contents[currentIndex];
+    const current = contents[currentIndex];
+    if (current.type === 'video') return; // video pakai onEnded
 
-  if (current.type !== 'video') {
     setProgress(0);
-
     const duration = (current.duration || 5) * 1000;
-    const start = Date.now();
+    const start    = Date.now();
 
     const interval = setInterval(() => {
-      const elapsed = Date.now() - start;
-      setProgress(Math.min((elapsed / duration) * 100, 100));
+      setProgress(Math.min(((Date.now() - start) / duration) * 100, 100));
     }, 100);
 
     const timeout = setTimeout(() => {
-      // 🔥 FADE OUT
       setFade(false);
-
       setTimeout(() => {
         setCurrentIndex(prev => (prev + 1) % contents.length);
-
-        // 🔥 FADE IN
         setFade(true);
       }, 300);
-
     }, duration);
 
     return () => {
       clearTimeout(timeout);
       clearInterval(interval);
     };
-  }
+  }, [currentIndex, config, signageMode]);
 
-}, [currentIndex, config, signageMode]);
-
-  // 🔥 ANNOUNCEMENT MODE
+  // ──────────────────────────────────────────
+  // ANNOUNCEMENT MODE
+  // ──────────────────────────────────────────
   if (signageMode === 'announcement' && config) {
     const contents = config.contents;
-
-    let content = null;
-
-    // MULTI CONTENT
-    if (contents && contents.length > 0) {
-      content = contents[currentIndex];
-    } 
-    // BACKWARD COMPATIBLE
-    else {
-      content = {
-        type: config.content_type,
-        value: config.content_value
-      };
-    }
+    const content  = (contents && contents.length > 0)
+      ? contents[currentIndex]
+      : { type: config.content_type, value: config.content_value };
 
     return (
       <div className={`fixed inset-0 z-[9999] bg-black flex items-center justify-center transition-opacity duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}>
-
         {content?.type === 'image' && (
           <img
-            src={content.image_path
-              ? `/storage/${content.image_path}`
-              : content.value}
+            src={content.image_path ? `/storage/${content.image_path}` : content.value}
             className="w-full h-full object-contain"
           />
         )}
-
-        {content.type === 'video' && (
+        {content?.type === 'video' && (
           <video
             key={currentIndex}
             src={`/storage/${content.image_path}`}
-            autoPlay
-            muted
-            playsInline
+            autoPlay muted playsInline
             className="w-full h-full object-contain"
             onTimeUpdate={(e) => {
-              const video = e.currentTarget;
-              if (video.duration) {
-                setProgress((video.currentTime / video.duration) * 100);
-              }
+              const v = e.currentTarget;
+              if (v.duration) setProgress((v.currentTime / v.duration) * 100);
             }}
-           onEnded={() => {
+            onEnded={() => {
               setFade(false);
-
               setTimeout(() => {
                 setCurrentIndex(prev => (prev + 1) % config.contents.length);
                 setFade(true);
@@ -230,55 +186,53 @@ const App: React.FC = () => {
             }}
           />
         )}
-
         {content?.type === 'text' && (
-          <div className="text-white text-6xl text-center px-20">
-            {content.value}
-          </div>
+          <div className="text-white text-6xl text-center px-20">{content.value}</div>
         )}
-
         <div className="absolute bottom-0 left-0 w-full h-2 bg-white/20">
-          <div
-            className="h-full bg-white transition-all duration-100"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-white transition-all duration-100" style={{ width: `${progress}%` }} />
         </div>
       </div>
-  
     );
   }
 
+  // ──────────────────────────────────────────
   // DASHBOARD MODE
+  // ──────────────────────────────────────────
   return (
     <div className="relative h-screen w-full bg-navy-900 text-slate-900 overflow-hidden">
+      <div className="relative z-10 flex flex-col h-full px-6 pt-6 gap-3 max-w-[2400px] mx-auto">
 
-      <div className="relative z-10 flex flex-col h-full px-6 pt-6 gap-3 max-w-[2400px] mx-auto overflow-hidden">
-        
-        <Header customTitle={`Gedung ${gedung} • Lantai ${lantai}`} />
+        {/* ✅ FIX 4: Pakai locationTitle, bukan string template langsung */}
+        <Header customTitle={locationTitle} />
 
-        <div className="grid grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
-          
-          <div className="col-span-3 flex flex-col gap-4">
+        <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
+
+          {/* KOLOM KIRI */}
+          <div className="col-span-3 flex flex-col gap-4 min-h-0">
             <LecturesPanel data={lectures} />
-
             {isMainDashboard && <PendingRequestsWidget />}
           </div>
 
-          <div className="col-span-6">
+          {/* KOLOM TENGAH */}
+          <div className="col-span-6 min-h-0">
             <EventsPanel data={events} />
           </div>
 
-          <div className="col-span-3 flex flex-col gap-4">
+          {/* KOLOM KANAN */}
+          <div className="col-span-3 flex flex-col gap-4 min-h-0">
             <MeetingsPanel data={meetingsData} />
-
             {isMainDashboard && <CarStatusWidget />}
           </div>
 
         </div>
 
-        <div className="h-8 text-xs flex items-center justify-between px-4 text-white/50">
-          <span>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
-          <span>{lastUpdate}</span>
+        {/* ✅ FIX 5: Footer pakai shrink-0 biar tidak ditimpa grid */}
+        <div className="shrink-0 h-8 text-xs flex items-center justify-between px-4 text-white/50 border-t border-white/5">
+          <span className={isOnline ? 'text-emerald-400' : 'text-red-400'}>
+            {isOnline ? '● ONLINE' : '● OFFLINE'}
+          </span>
+          <span>Last update: {lastUpdate}</span>
         </div>
 
       </div>
