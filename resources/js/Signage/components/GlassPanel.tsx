@@ -5,6 +5,7 @@ interface GlassPanelProps {
   className?: string;
   title?: string;
   icon?: React.ReactNode;
+  right?: React.ReactNode;
 }
 
 const GlassPanel: React.FC<GlassPanelProps> = ({ children, className = '', title, icon }) => {
@@ -17,6 +18,7 @@ const GlassPanel: React.FC<GlassPanelProps> = ({ children, className = '', title
         <div className="relative z-10 flex items-center gap-3 p-6 pb-2 border-b border-white/5">
           {icon && <div className="text-electric-400">{icon}</div>}
           <h2 className="text-xl font-semibold tracking-wide text-white/90 uppercase">{title}</h2>
+          {right && <div>{right}</div>}
         </div>
       )}
       

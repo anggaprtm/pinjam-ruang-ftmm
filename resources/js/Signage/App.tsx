@@ -22,8 +22,8 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<any>(null);
   const [fade, setFade] = useState(true);
   const params = new URLSearchParams(window.location.search);
-  const lantai = params.get('lantai') || '0';
-  const gedung = params.get('gedung') || 'Nano';
+  const lantai = params.get('lantai');
+  const gedung = params.get('gedung');
   const location = `lantai${lantai}`;
   const [progress, setProgress] = useState(0);
 
@@ -33,14 +33,10 @@ const App: React.FC = () => {
   const fetchData = async () => {
     if (signageMode !== 'dashboard') return;
 
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const lantai = params.get('lantai');
-      const gedung = params.get('gedung');
-      
+     try {
       if (lantai || gedung) {
         setIsMainDashboard(false);
-        setLocationTitle(`${'Gedung ' + gedung || 'Gedung'} • Lantai ${lantai || '-'}`);
+        setLocationTitle(`Gedung ${gedung || 'Gedung'} • Lantai ${lantai || '-'}`);
       } else {
         setIsMainDashboard(true);
         setLocationTitle("Gedung Nano • FTMM");
@@ -256,11 +252,11 @@ const App: React.FC = () => {
   return (
     <div className="relative h-screen w-full bg-navy-900 text-slate-900 overflow-hidden">
 
-      <div className="relative z-10 flex flex-col h-full px-6 pt-6 gap-3 max-w-[2400px] mx-auto">
+      <div className="relative z-10 flex flex-col h-full px-6 pt-6 gap-3 max-w-[2400px] mx-auto overflow-hidden">
         
         <Header customTitle={`Gedung ${gedung} • Lantai ${lantai}`} />
 
-        <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
+        <div className="grid grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
           
           <div className="col-span-3 flex flex-col gap-4">
             <LecturesPanel data={lectures} />
