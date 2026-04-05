@@ -35,7 +35,7 @@ const MeetingsPanel: React.FC<MeetingsPanelProps> = ({ data }) => {
             ? 'bg-red-900/20'
             : dateFlag === 'today'
               ? 'bg-white/5'
-              : 'bg-white/3';
+              : 'bg-amber-900/20';
 
           // ── Date badge ──
           const dateBadgeCls = dateFlag === 'today'
