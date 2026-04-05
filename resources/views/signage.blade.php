@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FTMM Digital Signage</title>
     <meta name="signage-api-key" content="{{ config('services.signage.key') }}">
+    <style>
+        html {
+            font-size: clamp(14px, 0.833vw, 24px);
+        }
+    </style>
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/Signage/index.tsx'])
 </head>
