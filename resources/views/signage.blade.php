@@ -7,7 +7,7 @@
     <meta name="signage-api-key" content="{{ config('services.signage.key') }}">
     <style>
         html {
-            font-size: clamp(14px, 0.533vw, 24px);
+            font-size: clamp(14px, 0.833vw, 24px);
         }
     </style>
     @viteReactRefresh
