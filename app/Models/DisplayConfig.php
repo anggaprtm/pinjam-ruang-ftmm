@@ -15,7 +15,8 @@ class DisplayConfig extends Model
         'end_time',
         'image_path',
         'is_active',
-        'panel_visibility'
+        'panel_visibility',
+        'running_text'
     ];
 
     protected $casts = [

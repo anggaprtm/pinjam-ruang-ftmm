@@ -301,6 +301,25 @@ const App: React.FC = () => {
 
         </div>
 
+        {/* ── RUNNING TEXT (NEWS TICKER) ── */}
+        {config?.running_text && (
+          <div className="shrink-0 bg-navy-800/60 border border-white/5 rounded-lg flex items-center overflow-hidden h-9 mb-1 shadow-md">
+            <div className="shrink-0 bg-rose-600 text-white text-[11px] font-bold px-4 h-full flex items-center justify-center uppercase tracking-widest z-10 shadow-lg relative">
+              INFORMASI
+              {/* Segitiga aksen kecil di sebelah kanan label */}
+              <div className="absolute top-0 -right-2 w-0 h-0 border-t-[18px] border-t-transparent border-b-[18px] border-b-transparent border-l-[8px] border-l-rose-600"></div>
+            </div>
+            
+            {/* Ticker menggunakan dangerouslySetInnerHTML untuk menghindari TS error pada tag marquee */}
+            <div
+              className="flex-1 flex items-center h-full px-4 overflow-hidden"
+              dangerouslySetInnerHTML={{
+                __html: `<marquee scrollamount="6" class="text-[13px] font-semibold tracking-wider text-white/90 pt-1.5">${config.running_text}</marquee>`
+              }}
+            />
+          </div>
+        )}
+
         {/* FOOTER */}
         <div className="shrink-0 h-7 flex items-center justify-between px-3 text-[11px] border-t border-white/5">
           <span className={`flex items-center gap-1.5 font-mono font-bold tracking-widest ${isOnline ? 'text-emerald-400' : 'text-red-400'}`}>

@@ -33,6 +33,14 @@
                     </select>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Running Text (News Ticker)</label>
+                    <input type="text" name="running_text" class="form-control" 
+                           placeholder="Contoh: Info: Jadwal ujian UTS dimajukan..." 
+                           value="{{ old('running_text', $displayConfig->running_text ?? '') }}">
+                    <small class="text-muted">Kosongkan jika tidak ingin menampilkan teks berjalan di TV ini.</small>
+                </div>
+
                 {{-- 🔥 PANEL VISIBILITY CONFIG (NEW) --}}
                 <div class="mb-4 p-3 border rounded bg-light" id="panelVisibilitySection">
                     <label class="form-label fw-bold text-primary mb-3">

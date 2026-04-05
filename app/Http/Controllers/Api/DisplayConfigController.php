@@ -44,7 +44,8 @@ class DisplayConfigController extends Controller
             'contents' => $config->contents,
             'content_type' => $config->content_type,
             'content_value' => $config->content_value,
-            'panel_visibility' => array_merge($defaultVisibility, $config->panel_visibility ?? [])
+            'panel_visibility' => array_merge($defaultVisibility, $config->panel_visibility ?? []),
+            'running_text' => $config->running_text,
         ]);
     }
 }

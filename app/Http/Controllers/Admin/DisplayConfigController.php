@@ -26,14 +26,15 @@ class DisplayConfigController extends Controller
                 $data['panel_visibility'][$key] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
             }
         }
-        
+
         $data = $request->validate([
             'location' => 'required',
             'mode' => 'required',
             'content_type' => 'nullable',
             'content_value' => 'nullable',
             'image' => 'nullable|file|max:20480',
-            'panel_visibility' => 'nullable|array'
+            'panel_visibility' => 'nullable|array',
+            'running_text' => 'nullable|string'
         ]);
 
         if (!isset($data['panel_visibility'])) {
@@ -89,7 +90,8 @@ class DisplayConfigController extends Controller
             'content_type' => 'nullable',
             'content_value' => 'nullable',
             'image' => 'nullable|file|max:20480',
-            'panel_visibility' => 'nullable|array'
+            'panel_visibility' => 'nullable|array',
+            'running_text' => 'nullable|string'
         ]);
 
         // HANDLE UPLOAD (SAFE)
