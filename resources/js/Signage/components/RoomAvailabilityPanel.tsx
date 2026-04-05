@@ -61,7 +61,7 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
             Min-height card pakai rem (ikut font scaling).
             Nama ruang pakai line-clamp-2 bukan truncate → wrap ke bawah, tidak dipotong.
           */}
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 pb-1">
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {data.map((room) => {
                 const isOccupied = room.status === 'dipakai';
