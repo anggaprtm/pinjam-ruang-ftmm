@@ -38,7 +38,7 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data }) => {
         >
             <AutoScrollList
                 data={data}
-                threshold={1}
+                threshold={6}
                 speedPerItem={4}
                 gap="gap-1.5"
                 renderItem={(lecture, index) => {
@@ -62,12 +62,6 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data }) => {
                             <div className="flex-1 px-3 py-2.5 min-w-0">
                                 {/* Baris 1: Kode + Nama matkul */}
                                 <div className="flex items-center gap-2 mb-1.5 min-w-0">
-                                    <span className={`shrink-0 text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider font-mono ${
-                                        isNow ? 'bg-electric-500 text-black' : 'bg-white/10 text-white/40'
-                                    }`}>
-                                        {(lecture as any).course_code || `LEC-${String(index + 1).padStart(2,'0')}`}
-                                    </span>
-
                                     <h3 className={`flex-1 font-bold text-sm leading-tight truncate ${
                                         isNow ? 'text-white' : 'text-gray-300'
                                     }`}>
@@ -81,15 +75,17 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data }) => {
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                                             </span>
-                                            <span className="text-[9px] font-extrabold text-emerald-400 uppercase tracking-widest">
-                                                Berlangsung
-                                            </span>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Baris 2: Ruang + Jam */}
                                 <div className="flex items-center gap-3 text-[11px]">
+                                    <span className={`shrink-0 text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider font-mono ${
+                                        isNow ? 'bg-electric-500 text-black' : 'bg-white/10 text-white/40'
+                                    }`}>
+                                        {(lecture as any).course_code || `LEC-${String(index + 1).padStart(2,'0')}`}
+                                    </span>
                                     <div className={`flex items-center gap-1 ${isNow ? 'text-electric-400/80' : 'text-gray-500'}`}>
                                         <MapPin size={10} className="shrink-0" />
                                         <span className="truncate">{lecture.room}</span>
