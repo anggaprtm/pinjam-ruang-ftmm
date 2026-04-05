@@ -13,6 +13,7 @@ Route::group([
     Route::get('signage/cars', [SignageController::class, 'getCars'])->name('signage.cars');
     Route::get('signage/requests', [SignageController::class, 'getPendingRequests'])->name('signage.requests');
     Route::get('signage/vertical-data', [SignageController::class, 'getVerticalData'])->name('signage.verticalData');
+    Route::get('signage/agenda-fakultas', [SignageController::class, 'getAgendaFakultas'])->name('signage.agendaFakultas');
 });
 
 // ⬇️ PISAHKAN INI

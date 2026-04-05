@@ -289,4 +289,7 @@ class SignageController extends Controller
 
         return response()->json($data);
     }
+    public function getAgendaFakultas() {
+        return (new \App\Http\Controllers\Admin\AgendaFakultasController)->apiIndex();
+    }
 }

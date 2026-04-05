@@ -5,10 +5,14 @@ import EventsPanel from './components/EventsPanel';
 import MeetingsPanel from './components/MeetingsPanel';
 import CarStatusWidget from './components/CarStatusWidget';
 import PendingRequestsWidget from './components/PendingRequestsWidget';
+import AgendaFakultasPanel from './components/AgendaFakultasPanel';
 import { AgendaItem, ApiResponse, Meeting } from './types';
 
 const getSignageApiKey = () =>
   document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '';
+
+// Panel tengah yang tersedia
+type CenterPanel = 'events' | 'agenda';
 
 const App: React.FC = () => {
   const [lectures, setLectures]         = useState<AgendaItem[]>([]);
@@ -22,7 +26,11 @@ const App: React.FC = () => {
   const [progress, setProgress]         = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // URL params — dibaca sekali saat mount, tidak perlu state
+  // Toggle panel tengah: auto-rotate setiap 30 detik
+  const [centerPanel, setCenterPanel]   = useState<CenterPanel>('events');
+  const [panelFade, setPanelFade]       = useState(true);
+
+  // URL params
   const urlParams       = new URLSearchParams(window.location.search);
   const lantai          = urlParams.get('lantai');
   const gedung          = urlParams.get('gedung');
@@ -32,7 +40,20 @@ const App: React.FC = () => {
     : `Gedung ${gedung ?? '-'} • Lantai ${lantai ?? '-'}`;
   const location = `lantai${lantai ?? '0'}`;
 
-  // ─── FETCH DATA (jadwal, events, sidang) ──────────────────────
+  // ─── AUTO-ROTATE panel tengah setiap 30 detik ────────────────
+  useEffect(() => {
+    if (signageMode !== 'dashboard') return;
+    const iv = setInterval(() => {
+      setPanelFade(false);
+      setTimeout(() => {
+        setCenterPanel(p => p === 'events' ? 'agenda' : 'events');
+        setPanelFade(true);
+      }, 400);
+    }, 30000);
+    return () => clearInterval(iv);
+  }, [signageMode]);
+
+  // ─── FETCH DATA ───────────────────────────────────────────────
   const fetchData = async () => {
     if (signageMode !== 'dashboard') return;
     try {
@@ -60,7 +81,7 @@ const App: React.FC = () => {
     return () => clearInterval(iv);
   }, [signageMode]);
 
-  // ─── FETCH CONFIG (mode: dashboard / announcement) ────────────
+  // ─── FETCH CONFIG ─────────────────────────────────────────────
   useEffect(() => {
     const fetchConfig = async () => {
       try {
@@ -86,7 +107,7 @@ const App: React.FC = () => {
     document.body.style.cursor = signageMode === 'announcement' ? 'none' : 'default';
   }, [signageMode]);
 
-  // ─── DEVICE COMMAND POLLING ───────────────────────────────────
+  // ─── DEVICE COMMAND ───────────────────────────────────────────
   useEffect(() => {
     const iv = setInterval(async () => {
       try {
@@ -98,7 +119,7 @@ const App: React.FC = () => {
     return () => clearInterval(iv);
   }, [location]);
 
-  // ─── SLIDESHOW TIMER (non-video) ──────────────────────────────
+  // ─── SLIDESHOW TIMER ──────────────────────────────────────────
   useEffect(() => {
     if (signageMode !== 'announcement') return;
     const contents = config?.contents;
@@ -147,26 +168,20 @@ const App: React.FC = () => {
   return (
     <div className="relative h-screen w-full bg-navy-900 text-white overflow-hidden">
 
-      {/* Subtle ambient background */}
+      {/* Ambient background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(45,212,191,0.04)_0%,_transparent_60%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(59,130,246,0.04)_0%,_transparent_60%)] pointer-events-none" />
 
       <div className="relative z-10 flex flex-col h-full px-5 pt-4 gap-3 max-w-[3200px] mx-auto">
 
-        {/* HEADER — shrink-0 supaya tidak ikut flex stretch */}
         <div className="shrink-0">
           <Header customTitle={locationTitle} />
         </div>
 
-        {/* MAIN GRID — flex-1 + min-h-0 agar tidak overflow */}
         <div className="grid grid-cols-12 gap-4 flex-1 min-h-0">
 
-          {/* ── KOLOM KIRI: Kuliah + Pending Requests ── */}
+          {/* ── KOLOM KIRI ── */}
           <div className="col-span-3 flex flex-col gap-3 min-h-0">
-            {/*
-              LecturesPanel: flex-1 + min-h-0 → ambil semua sisa ruang kolom kiri.
-              Kalau PendingRequests tidak ada (kosong/hidden), dia ambil full height.
-            */}
             <div className="flex-1 min-h-0">
               <LecturesPanel data={lectures} />
             </div>
@@ -177,19 +192,50 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* ── KOLOM TENGAH: Events ── */}
-          <div className="col-span-6 min-h-0">
-            <EventsPanel data={events} />
+          {/* ── KOLOM TENGAH: toggle Events ↔ Agenda Fakultas ── */}
+          <div className="col-span-6 min-h-0 flex flex-col">
+
+            {/* Tab indicator */}
+            <div className="shrink-0 flex items-center gap-2 mb-2">
+              <button
+                onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('events'); setPanelFade(true); }, 400); }}
+                className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-all ${
+                  centerPanel === 'events'
+                    ? 'bg-electric-500/20 text-electric-400 border border-electric-500/40'
+                    : 'text-white/20 hover:text-white/40'
+                }`}
+              >
+                Agenda Kegiatan
+              </button>
+              <button
+                onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('agenda'); setPanelFade(true); }, 400); }}
+                className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-all ${
+                  centerPanel === 'agenda'
+                    ? 'bg-electric-500/20 text-electric-400 border border-electric-500/40'
+                    : 'text-white/20 hover:text-white/40'
+                }`}
+              >
+                Agenda Fakultas
+              </button>
+
+              {/* Auto-rotate indicator */}
+              <div className="ml-auto flex items-center gap-1.5 text-[10px] text-white/20 font-mono">
+                <span className="w-1 h-1 rounded-full bg-white/20 animate-pulse" />
+                auto
+              </div>
+            </div>
+
+            {/* Panel dengan fade transition */}
+            <div className={`flex-1 min-h-0 transition-opacity duration-400 ${panelFade ? 'opacity-100' : 'opacity-0'}`}>
+              {centerPanel === 'events'
+                ? <EventsPanel data={events} />
+                : <AgendaFakultasPanel />
+              }
+            </div>
           </div>
 
-          {/* ── KOLOM KANAN: Meetings + Car Widget ── */}
+          {/* ── KOLOM KANAN ── */}
           <div className="col-span-3 flex flex-col gap-3 min-h-0">
-            {/*
-              MeetingsPanel: flex-1 + min-h-0 → ambil semua sisa ruang kolom kanan.
-              CarStatusWidget: shrink-0 → tinggi otomatis sesuai konten, TIDAK scroll.
-              Saat Standby: compact (1 baris per mobil).
-              Saat On Duty: expanded (tampil tujuan & keperluan).
-            */}
             <div className="flex-1 min-h-0">
               <MeetingsPanel data={meetingsData} />
             </div>

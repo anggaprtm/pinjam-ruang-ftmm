@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\DisplayConfigController;
 use App\Http\Controllers\Admin\DisplayContentController;
 use App\Http\Controllers\Admin\DisplayScheduleController;
 use App\Http\Controllers\Admin\DeviceCommandController;
+use App\Http\Controllers\Admin\AgendaFakultasController;
 
 
 
@@ -148,8 +149,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::delete('display-schedule/{id}', [DisplayScheduleController::class, 'destroy'])->name('display-schedule.destroy');
     Route::get('device-command', [DeviceCommandController::class, 'index'])->name('device-command.index');
     Route::post('device-command', [DeviceCommandController::class, 'store'])->name('device-command.store');
-    
-
+    Route::resource('agenda-fakultas', AgendaFakultasController::class)->parameters(['agenda-fakultas' => 'agendaFakultas']);
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
