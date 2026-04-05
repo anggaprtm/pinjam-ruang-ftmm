@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Car, MapPin, User, Clock, Activity } from 'lucide-react';
-import GlassPanel from './GlassPanel';
+import { Car, MapPin, User, Clock, Activity, Wrench } from 'lucide-react';
 
-const getSignageApiKey = () => document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '';
+const getSignageApiKey = () =>
+  document.querySelector('meta[name="signage-api-key"]')?.getAttribute('content') || '';
 
 interface CarData {
   id: number;
@@ -34,14 +34,12 @@ const CarStatusWidget: React.FC = () => {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`Signage API error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
       const data = await response.json();
       setCars(data);
-      setLoading(false);
     } catch (error) {
       console.error('Gagal memuat data mobil', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -52,168 +50,132 @@ const CarStatusWidget: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) {
-    return (
-      <GlassPanel
-        title="STATUS MOBIL DINAS"
-        icon={<Car className="w-6 h-6 text-emerald-400" />}
-        className="h-full bg-navy-900/80 border-white/10"
-      >
-        <div className="text-white/40 animate-pulse">Loading status...</div>
-      </GlassPanel>
-    );
-  }
-
-  if (cars.length === 0) return null;
+  if (loading || cars.length === 0) return null;
 
   return (
-    <GlassPanel
-      title="STATUS MOBIL DINAS"
-      icon={<Car className="w-6 h-6 text-emerald-400" />}
-      className="h-full bg-navy-900/80 border-white/10"
-      right={<Activity size={18} className="text-emerald-500 animate-pulse" />}
-    >
-      {/* wrapper: NO SCROLLBAR */}
-      <div className="flex flex-col gap-3 overflow-hidden flex-1 min-h-0">
-        {cars.map((car) => (
-          <div
-            key={car.id}
-            className={`
-              relative w-full rounded-xl border transition-all duration-500 overflow-hidden group
-              ${car.status === 'dipakai'
-                ? 'bg-navy-900/80 border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.20)]'
-                : 'bg-navy-900/40 border-emerald-500/30 hover:border-emerald-500/50'
-              }
-            `}
-          >
-            {/* Status Indicator Line */}
-            <div
-              className={`absolute left-0 top-0 bottom-0 w-1 ${
-                car.status === 'dipakai'
-                  ? 'bg-red-500 animate-pulse'
-                  : 'bg-emerald-500'
-              }`}
-            />
+    <div className="shrink-0 rounded-2xl border border-white/10 bg-navy-900/60 backdrop-blur-xl overflow-hidden">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <Car className="w-4 h-4 text-emerald-400" />
+          <span className="text-xs font-bold tracking-widest text-white/70 uppercase">
+            Mobil Dinas
+          </span>
+        </div>
+        <Activity size={14} className="text-emerald-500 animate-pulse" />
+      </div>
 
-            <div className="p-4 pl-5">
-              {/* HEADER */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                  <h4
-                    className={`font-extrabold text-base leading-tight tracking-wide ${
-                      car.status === 'dipakai'
-                        ? 'text-red-50'
-                        : 'text-emerald-50'
-                    }`}
-                  >
+      {/* Cars List */}
+      <div className="flex flex-col divide-y divide-white/5">
+        {cars.map((car) => {
+          const isOnDuty     = car.status === 'dipakai';
+          const isMaintenance = car.status === 'maintenance';
+
+          return (
+            <div key={car.id} className={`
+              relative px-4 transition-all duration-500
+              ${isOnDuty ? 'py-3' : 'py-2.5'}
+            `}>
+              {/* Status accent bar */}
+              <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${
+                isOnDuty      ? 'bg-red-500'     :
+                isMaintenance ? 'bg-amber-500'   :
+                                'bg-emerald-500'
+              }`} />
+
+              {/* ── STANDBY / MAINTENANCE: compact 1 baris ── */}
+              {!isOnDuty && (
+                <div className="flex items-center gap-3">
+                  {/* Plat */}
+                  <span className="
+                    shrink-0 font-mono font-extrabold tracking-[0.18em]
+                    text-xs px-2 py-0.5 rounded
+                    bg-white text-black
+                    shadow-sm border border-black/10
+                  ">
+                    {car.plat}
+                  </span>
+
+                  {/* Nama */}
+                  <span className="flex-1 text-sm font-semibold text-white/80 truncate">
                     {car.nama}
-                  </h4>
+                  </span>
 
-                  {/* Plat + Driver sejajar */}
-                  <div className="mt-2 flex items-center gap-3 min-w-0">
-                    {/* PLAT BADGE */}
-                    <span
-                      className="
-                        inline-flex items-center shrink-0
-                        rounded-md px-2.5 py-1
-                        bg-white text-black
-                        font-extrabold tracking-[0.22em]
-                        text-xs sm:text-sm
-                        shadow-[0_6px_18px_rgba(0,0,0,0.35)]
-                        border border-black/20
-                      "
-                      style={{
-                        fontFamily:
-                          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                      }}
-                    >
+                  {/* Badge */}
+                  {isMaintenance ? (
+                    <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <Wrench size={9} />
+                      Service
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+                      Stand By
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* ── ON DUTY: expanded ── */}
+              {isOnDuty && (
+                <div className="flex flex-col gap-2">
+                  {/* Baris atas: Plat + Nama + Badge */}
+                  <div className="flex items-center gap-2">
+                    <span className="
+                      shrink-0 font-mono font-extrabold tracking-[0.18em]
+                      text-xs px-2 py-0.5 rounded
+                      bg-white text-black
+                      shadow-sm border border-black/10
+                    ">
                       {car.plat}
                     </span>
-
-                    {/* DRIVER (sebelah plat) */}
-                    {car.status === 'dipakai' && car.detail_trip?.driver ? (
-                      <div className="flex items-center gap-2 min-w-0">
-                        <User
-                          size={14}
-                          className="text-electric-400 shrink-0"
-                        />
-                        <span className="text-slate-200 font-semibold truncate text-sm">
-                          {car.detail_trip.driver}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* STATUS BADGE */}
-                {car.status === 'dipakai' ? (
-                  <span className="shrink-0 text-[11px] font-extrabold px-3 py-1 rounded-full bg-red-500/20 text-red-200 border border-red-500/25 shadow-[0_0_18px_rgba(239,68,68,0.15)]">
-                    ON DUTY
-                  </span>
-                ) : (
-                  <span className="shrink-0 text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-500/25 shadow-[0_0_18px_rgba(16,185,129,0.12)]">
-                    STAND BY
-                  </span>
-                )}
-              </div>
-
-              {/* CONTENT */}
-              {car.status === 'dipakai' && car.detail_trip ? (
-                <div className="grid grid-cols-1 gap-2 pt-3 border-t border-white/10">
-                  {/* TUJUAN */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin size={14} className="text-red-400 shrink-0" />
-                    <span className="text-red-100 font-extrabold truncate tracking-wide line-clamp-1">
-                      {car.detail_trip.tujuan}
+                    <span className="flex-1 text-sm font-bold text-red-100 truncate">
+                      {car.nama}
+                    </span>
+                    <span className="shrink-0 flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30 animate-pulse">
+                      On Duty
                     </span>
                   </div>
 
-                  {/* KEPERLUAN */}
-                  <div className="flex items-start gap-2 text-sm leading-snug">
-                    <span className="mt-[2px] inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/5 border border-white/10 text-white/70 text-[11px] shrink-0">
-                      i
-                    </span>
-
-                    <div className="min-w-0">
-                      <div className="text-[11px] text-white/40 font-semibold uppercase tracking-widest">
-                        Keperluan
-                      </div>
-
-                      <div className="text-slate-100 font-semibold line-clamp-2">
-                        {car.detail_trip.keperluan?.trim()
-                          ? car.detail_trip.keperluan
-                          : '-'}
-                      </div>
+                  {/* Driver */}
+                  {car.detail_trip?.driver && (
+                    <div className="flex items-center gap-1.5 text-xs text-white/70">
+                      <User size={11} className="text-white/40 shrink-0" />
+                      <span className="truncate">{car.detail_trip.driver}</span>
                     </div>
-                  </div>
+                  )}
 
-                  {/* JAM BERANGKAT */}
-                  <div className="mt-1 flex items-center justify-between gap-3 rounded-xl px-3 py-2 bg-navy-950/40 border border-white/10">
-                    <div className="flex items-center gap-2 text-white/70">
-                      <Clock size={14} className="shrink-0" />
-                      <span className="text-[12px] font-semibold tracking-wide">
-                        Berangkat
+                  {/* Tujuan */}
+                  {car.detail_trip?.tujuan && (
+                    <div className="flex items-start gap-1.5 text-xs">
+                      <MapPin size={11} className="text-red-400 shrink-0 mt-0.5" />
+                      <span className="text-red-200 font-semibold line-clamp-1 leading-snug">
+                        {car.detail_trip.tujuan}
                       </span>
                     </div>
+                  )}
 
-                    <div className="text-base font-extrabold text-white tracking-[0.15em] font-mono">
-                      {car.detail_trip.mulai}
+                  {/* Keperluan */}
+                  {car.detail_trip?.keperluan?.trim() && (
+                    <div className="text-[11px] text-white/50 line-clamp-1 pl-4 italic">
+                      "{car.detail_trip.keperluan}"
                     </div>
-                  </div>
-                </div>
-              ) : (
-                // READY STATE (lebih ringkas biar panel gak tinggi)
-                <div className="pt-3 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-sm text-white/45">
-                    Tidak ada pemakaian aktif
-                  </span>
+                  )}
+
+                  {/* Jam berangkat */}
+                  {car.detail_trip?.mulai && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-white/40 font-mono">
+                      <Clock size={10} className="shrink-0" />
+                      Berangkat {car.detail_trip.mulai}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </GlassPanel>
+    </div>
   );
 };
 
