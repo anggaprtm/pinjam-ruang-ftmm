@@ -8,7 +8,7 @@ interface GlassPanelProps {
   right?: React.ReactNode;
 }
 
-const GlassPanel: React.FC<GlassPanelProps> = ({ children, className = '', title, icon }) => {
+const GlassPanel: React.FC<GlassPanelProps> = ({ children, className = '', title, icon, right }) => {
   return (
     <div className={`relative overflow-hidden rounded-3xl border border-white/10 bg-navy-900/40 backdrop-blur-xl shadow-2xl flex flex-col ${className}`}>
       {/* Glossy overlay gradient */}
