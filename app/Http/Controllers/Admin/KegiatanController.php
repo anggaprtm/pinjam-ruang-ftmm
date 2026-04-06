@@ -247,6 +247,13 @@ class KegiatanController extends Controller
 
     public function store(StoreKegiatanRequest $request, EventService $eventService)
     {
+        $data = $request->all();
+        $data['waktu_mulai'] = \Carbon\Carbon::parse($data['waktu_mulai'])->format('Y-m-d H:i:s');
+        $data['waktu_selesai'] = \Carbon\Carbon::parse($data['waktu_selesai'])->format('Y-m-d H:i:s');
+        
+        if (!empty($data['berulang_sampai'])) {
+            $data['berulang_sampai'] = \Carbon\Carbon::parse($data['berulang_sampai'])->format('Y-m-d');
+        }
         // Pengecekan bentrok tetap sama
         $kegiatanBentrok = $eventService->isRoomTaken($request->all());
     
@@ -352,6 +359,19 @@ class KegiatanController extends Controller
         // Jika file surat_izin akan diganti, simpan path di payload dulu (tetap cek bentrok dulu)
         if ($request->hasFile('surat_izin')) {
             $payload['__new_surat_izin'] = true; // penanda sementara
+        }
+
+        // 1. Ambil semua request dan paksa format tanggalnya
+        $data = $request->all();
+        $data['waktu_mulai'] = \Carbon\Carbon::parse($data['waktu_mulai'])->format('Y-m-d H:i:s');
+        $data['waktu_selesai'] = \Carbon\Carbon::parse($data['waktu_selesai'])->format('Y-m-d H:i:s');
+
+        // 2. Gabungkan payload dengan data yang sudah diformat
+        $payload = array_merge($kegiatan->toArray(), $data);
+        $payload['ignore_id'] = $kegiatan->id;
+
+        if ($request->hasFile('surat_izin')) {
+            $payload['__new_surat_izin'] = true;
         }
 
         $bentrok = $eventService->isRoomTaken($payload);

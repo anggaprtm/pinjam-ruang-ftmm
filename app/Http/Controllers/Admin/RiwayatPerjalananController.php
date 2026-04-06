@@ -300,9 +300,8 @@ class RiwayatPerjalananController extends Controller
     {
         $data = $request->validated();
         if (auth()->user()->isAdmin() && !empty($request->user_id)) { $data['user_id'] = $request->user_id; } else { $data['user_id'] = auth()->id(); }
-        $format = config('panel.date_format') . ' ' . config('panel.time_format');
-        $waktuMulai = Carbon::createFromFormat($format, $data['waktu_mulai']);
-        $waktuSelesai = !empty($data['waktu_selesai']) ? Carbon::createFromFormat($format, $data['waktu_selesai']) : (clone $waktuMulai)->addHours(2);
+        $waktuMulai = Carbon::parse($data['waktu_mulai']);
+        $waktuSelesai = !empty($data['waktu_selesai']) ? Carbon::parse($data['waktu_selesai']) : (clone $waktuMulai)->addHours(2);
 
         if ($this->checkBentrok($data['mobil_id'], $waktuMulai, $waktuSelesai)) {
             return back()->withInput()->withErrors(['mobil_id' => 'Mobil ini sudah dibooking/dipakai pada jam tersebut.']);
@@ -333,9 +332,8 @@ class RiwayatPerjalananController extends Controller
     {
         $data = $request->validated();
         if (auth()->user()->isAdmin() && !empty($request->user_id)) { $data['user_id'] = $request->user_id; }
-        $format = config('panel.date_format') . ' ' . config('panel.time_format');
-        $waktuMulai = Carbon::createFromFormat($format, $data['waktu_mulai']);
-        $waktuSelesai = !empty($data['waktu_selesai']) ? Carbon::createFromFormat($format, $data['waktu_selesai']) : (clone $waktuMulai)->addHours(2);
+        $waktuMulai = Carbon::parse($data['waktu_mulai']);
+        $waktuSelesai = !empty($data['waktu_selesai']) ? Carbon::parse($data['waktu_selesai']) : (clone $waktuMulai)->addHours(2);
         
         if ($this->checkBentrok($data['mobil_id'], $waktuMulai, $waktuSelesai, $riwayatPerjalanan->id)) {
              return back()->withInput()->withErrors(['mobil_id' => 'Mobil ini sudah dibooking/dipakai pada jam tersebut.']);

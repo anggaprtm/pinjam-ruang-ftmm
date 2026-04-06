@@ -39,11 +39,11 @@ class UpdateKegiatanRequest extends FormRequest
             'dosen_penguji_2'    => ['nullable', 'string', 'max:255'],
             'waktu_mulai' => [
                 'required',
-                'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
+                'date',
             ],
             'waktu_selesai' => [
                 'required',
-                'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
+                'date',
             ],
             'user_id' => [
                 'required',

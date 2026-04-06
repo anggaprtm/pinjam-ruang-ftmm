@@ -91,7 +91,12 @@
                         <label class="form-label required" for="waktu_mulai">{{ trans('cruds.kegiatan.fields.waktu_mulai') }}</label>
                         <div class="input-group">
                             <span class="input-group-text" id="waktu_mulai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Mulai)" aria-label="Buka picker waktu mulai"><i class="fas fa-calendar-alt"></i></span>
-                            <input class="form-control datetime {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" type="text" name="waktu_mulai" id="waktu_mulai" value="{{ old('waktu_mulai', $kegiatan->waktu_mulai) }}" required>
+                            <input class="form-control datetime {{ $errors->has('waktu_mulai') ? 'is-invalid' : '' }}" 
+                                type="text" 
+                                name="waktu_mulai" 
+                                id="waktu_mulai" 
+                                value="{{ old('waktu_mulai', $kegiatan->getRawOriginal('waktu_mulai') ? \Carbon\Carbon::parse($kegiatan->getRawOriginal('waktu_mulai'))->format('d M Y H:i') : '') }}" 
+                                required>
                         </div>
                         @if($errors->has('waktu_mulai'))
                             <div class="invalid-feedback">{{ $errors->first('waktu_mulai') }}</div>
@@ -102,7 +107,12 @@
                         <label class="form-label required" for="waktu_selesai">{{ trans('cruds.kegiatan.fields.waktu_selesai') }}</label>
                         <div class="input-group">
                             <span class="input-group-text" id="waktu_selesai_toggle" role="button" data-bs-toggle="tooltip" title="Buka picker (Waktu Selesai)" aria-label="Buka picker waktu selesai"><i class="fas fa-calendar-alt"></i></span>
-                            <input class="form-control datetime {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" type="text" name="waktu_selesai" id="waktu_selesai" value="{{ old('waktu_selesai', $kegiatan->waktu_selesai) }}" required>
+                            <input class="form-control datetime {{ $errors->has('waktu_selesai') ? 'is-invalid' : '' }}" 
+                                type="text" 
+                                name="waktu_selesai" 
+                                id="waktu_selesai" 
+                                value="{{ old('waktu_selesai', $kegiatan->getRawOriginal('waktu_selesai') ? \Carbon\Carbon::parse($kegiatan->getRawOriginal('waktu_selesai'))->format('d M Y H:i') : '') }}" 
+                                required>
                         </div>
                         @if($errors->has('waktu_selesai'))
                             <div class="invalid-feedback">{{ $errors->first('waktu_selesai') }}</div>
@@ -239,44 +249,51 @@
 @section('scripts')
 @parent
 <script>
-    $(document).ready(function() {
-        // Toggle datetimepicker when calendar icon clicked (edit form)
-        $('#waktu_mulai_toggle').on('click', function(e) {
-            e.preventDefault();
-            try {
-                $('#waktu_mulai').data('DateTimePicker').show();
-            } catch (err) {
-                $('#waktu_mulai').focus();
-            }
-        });
-
-        $('#waktu_selesai_toggle').on('click', function(e) {
-            e.preventDefault();
-            try {
-                $('#waktu_selesai').data('DateTimePicker').show();
-            } catch (err) {
-                $('#waktu_selesai').focus();
-            }
-        });
-        // --- FIX UNTUK LEADING ZERO PADA TANGGAL ---
-        $('form').on('submit', function() {
-            $('.datetime, .date').each(function() {
-                var val = $(this).val();
-                var name = $(this).attr('name');
-                
-                if (val && /^0[1-9]/.test(val) && name) {
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: name,
-                        value: val.substring(1)
-                    }).appendTo('form');
-                    
-                    $(this).removeAttr('name');
-                }
-            });
-        });
-
+$(document).ready(function() {
+    // === 1. PERBAIKAN TOGGLE ICON KALENDER ===
+    $('#waktu_mulai_toggle').on('click', function(e) {
+        e.preventDefault();
+        const el = document.getElementById('waktu_mulai');
+        if (el) {
+            // Cek _tdp dulu, kalau null cari pakai getInstance bawaan TD
+            const inst = el._tdp || tempusDominus.TempusDominus.getInstance(el);
+            if (inst) inst.show(); 
+        }
     });
+
+    $('#waktu_selesai_toggle').on('click', function(e) {
+        e.preventDefault();
+        const el = document.getElementById('waktu_selesai');
+        if (el) {
+            const inst = el._tdp || tempusDominus.TempusDominus.getInstance(el);
+            if (inst) inst.show();
+        }
+    });
+
+    // === 2. FITUR LINKED PICKER (change.td) ===
+    const elMulai = document.getElementById('waktu_mulai');
+    const elSelesai = document.getElementById('waktu_selesai');
+
+    if (elMulai && elSelesai) {
+        elMulai.addEventListener('change.td', (e) => {
+            const selectedDate = e.detail.date;
+            
+            if (selectedDate) {
+                let instSelesai = elSelesai._tdp || tempusDominus.TempusDominus.getInstance(elSelesai);
+                
+                if (instSelesai) {
+                    instSelesai.updateOptions({
+                        restrictions: { minDate: selectedDate }
+                    });
+
+                    if (!elSelesai.value) {
+                        instSelesai.dates.setValue(selectedDate);
+                    }
+                }
+            }
+        });
+    }
+});
 </script>
 <script>
     $(document).ready(function() {

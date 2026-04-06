@@ -17,17 +17,19 @@ class StoreRiwayatPerjalananRequest extends FormRequest
     {
         return [
             'mobil_id'      => ['required', 'exists:mobils,id'],
-            'user_id'       => ['nullable', 'exists:users,id'], // Tambahan untuk Admin
+            'user_id'       => ['nullable', 'exists:users,id'], 
             'tujuan'        => ['required', 'string', 'max:255'],
             'keperluan'     => ['nullable', 'string', 'max:255'],
+            
+            // UBAH BAGIAN INI
             'waktu_mulai'   => [
                 'required',
-                'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
+                'date', // Cukup gunakan 'date' agar lebih fleksibel
             ],
             'waktu_selesai' => [
                 'nullable',
-                'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
-                'after:waktu_mulai',
+                'date',
+                'after:waktu_mulai', // Validasi ini tetap bisa jalan
             ],
         ];
     }

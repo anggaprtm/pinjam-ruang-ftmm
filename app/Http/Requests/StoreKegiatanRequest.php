@@ -21,6 +21,11 @@ class StoreKegiatanRequest extends FormRequest
                 'string',
                 'required',
             ],
+            'ruangan_id' => [
+                'required',
+                'integer',
+                'exists:ruangans,id', 
+            ],
             'jenis_kegiatan' => [
                 'required', 
                 'in:Kegiatan Ormawa,Seminar Proposal,Sidang Skripsi,Rapat,Lomba,PHL,Kuliah Tamu,Lainnya' // Sesuaikan opsi mu
@@ -48,11 +53,11 @@ class StoreKegiatanRequest extends FormRequest
             ],
             'waktu_mulai' => [
                 'required',
-                'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
+                'date',
             ],
             'waktu_selesai' => [
                 'required',
-                'date_format:' . config('panel.date_format') . ' ' . config('panel.time_format'),
+                'date',
             ],
             'user_id' => [
                 'nullable',
@@ -64,15 +69,15 @@ class StoreKegiatanRequest extends FormRequest
             ],
 
             'berulang_sampai' => [
-                'nullable', // Membolehkan field ini kosong
-                'date_format:' . config('panel.date_format'), // Pastikan formatnya benar
-        ],
+                'nullable',
+                'date', 
+            ],
 
-        'tipe_berulang' => [
-            'required_with:berulang_sampai', // Wajib diisi jika 'berulang_sampai' ada isinya
-            'string',
-            'in:harian,mingguan', // Pastikan nilainya hanya salah satu dari dua ini
-        ],
+            'tipe_berulang' => [
+                'required_with:berulang_sampai', // Wajib diisi jika 'berulang_sampai' ada isinya
+                'string',
+                'in:harian,mingguan', // Pastikan nilainya hanya salah satu dari dua ini
+            ],
         ];
     }
 
@@ -85,6 +90,7 @@ class StoreKegiatanRequest extends FormRequest
     {
         return [
             'nomor_telepon.required' => 'Field nomor telepon wajib diisi.',
+            'ruangan_id.required' => 'Ruangan harus dipilih terlebih dahulu.',
             'nomor_telepon.regex' => 'Nomor telepon harus berupa angka dan dimulai dengan angka 0.',
             'nomor_telepon.min' => 'Nomor telepon terlalu pendek. Minimal :min angka.',
             'nomor_telepon.max' => 'Nomor telepon terlalu panjang. Maksimal :max angka.',

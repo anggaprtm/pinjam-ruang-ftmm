@@ -84,4 +84,41 @@
         </form>
     </div>
 </div>
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const elMulai = document.getElementById('waktu_mulai');
+    const elSelesai = document.getElementById('waktu_selesai');
+
+    if (elMulai && elSelesai) {
+        // Event listener bawaan Tempus Dominus saat tanggal berubah
+        elMulai.addEventListener('change.td', (e) => {
+            let startDate = e.detail.date; // Object waktu yang baru dipilih
+            
+            if (startDate) {
+                // Ambil instance picker waktu_selesai
+                let pickerSelesai = tempusDominus.TempusDominus.getInstance(elSelesai);
+                
+                if (pickerSelesai) {
+                    // 1. Kunci tanggal & jam sebelum waktu_mulai agar tidak bisa dipilih
+                    pickerSelesai.updateOptions({
+                        restrictions: {
+                            minDate: startDate
+                        }
+                    });
+
+                    // 2. Otomatis set nilai waktu_selesai sama dengan waktu_mulai JIKA masih kosong
+                    if (!elSelesai.value) {
+                        // Tambahkan estimasi misal +2 jam secara otomatis (opsional)
+                        // startDate.setHours(startDate.getHours() + 2); 
+                        pickerSelesai.dates.setValue(startDate);
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 @endsection
+@endsection
+

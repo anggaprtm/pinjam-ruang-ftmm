@@ -30,12 +30,12 @@ class EventService
         $waktuUntukDicek = [];
 
         // 2. Parsing Input Tanggal
-        try {
-            $waktuMulai = Carbon::createFromFormat($datetime_format, $requestData['waktu_mulai']);
-            $waktuSelesai = Carbon::createFromFormat($datetime_format, $requestData['waktu_selesai']);
+       try {
+            $waktuMulai = Carbon::parse($requestData['waktu_mulai']);
+            $waktuSelesai = Carbon::parse($requestData['waktu_selesai']);
 
             $recurringUntil = !empty($requestData['berulang_sampai'])
-                ? Carbon::createFromFormat($date_format, $requestData['berulang_sampai'])->endOfDay()
+                ? Carbon::parse($requestData['berulang_sampai'])->endOfDay()
                 : $waktuSelesai->copy()->endOfDay();
         } catch (\Exception $e) {
             throw new \InvalidArgumentException('Format tanggal/waktu tidak valid.');
@@ -143,11 +143,11 @@ class EventService
         $eventsToCreate = [];
 
         try {
-            $waktuMulai = Carbon::createFromFormat($datetime_format, $requestData['waktu_mulai']);
-            $waktuSelesai = Carbon::createFromFormat($datetime_format, $requestData['waktu_selesai']);
+            $waktuMulai = Carbon::parse($requestData['waktu_mulai']);
+            $waktuSelesai = Carbon::parse($requestData['waktu_selesai']);
 
             $recurringUntil = !empty($requestData['berulang_sampai'])
-                ? Carbon::createFromFormat($date_format, $requestData['berulang_sampai'])->endOfDay()
+                ? Carbon::parse($requestData['berulang_sampai'])->endOfDay()
                 : $waktuSelesai->copy()->endOfDay();
 
         } catch (\Exception $e) {

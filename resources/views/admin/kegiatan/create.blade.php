@@ -324,26 +324,32 @@ $(document).ready(function() {
         $clientError.addClass('d-none').text(''); $input.removeClass('is-invalid'); return true;
     }
     $('#nomor_telepon').on('input blur', validatePhoneField);
-    $('form').on('submit', function(e) {
-        // HACK: Cegat nilai sebelum dikirim, pakai input hidden
-        $('.datetime, .date').each(function() {
-            var val = $(this).val();
-            var name = $(this).attr('name');
-            
-            // Cek pakai Regex: Jika teks diawali angka 0 dan diikuti angka 1-9
-            if (val && /^0[1-9]/.test(val) && name) {
-                // Bikin elemen input hidden baru dengan nama yang sama, nilai tanpa '0'
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: name,
-                    value: val.substring(1)
-                }).appendTo('form');
-                
-                // Cabut atribut 'name' dari input asli supaya gak ikut dikirim ke backend
-                $(this).removeAttr('name');
+
+    // GANTI DENGAN KODE INI:
+    const elMulai = document.getElementById('waktu_mulai');
+    const elSelesai = document.getElementById('waktu_selesai');
+
+    if (elMulai && elSelesai) {
+        elMulai.addEventListener('change.td', (e) => {
+            const selectedDate = e.detail.date;
+            if (selectedDate) {
+                // Ambil instance Tempus Dominus dari elemen (asumsi diinisialisasi di main.js)
+                const instanceSelesai = tempusDominus.TempusDominus.getInstance(elSelesai);
+                if (instanceSelesai) {
+                    // Kunci batas minimal waktu selesai agar tidak bisa sebelum waktu mulai
+                    instanceSelesai.updateOptions({
+                        restrictions: { minDate: selectedDate }
+                    });
+                    // Jika waktu selesai masih kosong, otomatis isi sama dengan waktu mulai
+                    if (!elSelesai.value) {
+                        instanceSelesai.dates.setValue(selectedDate);
+                    }
+                }
             }
         });
+    }
 
+    $('form').on('submit', function(e) {
         // Validasi nomor telepon
         if (!validatePhoneField()) {
             e.preventDefault();
