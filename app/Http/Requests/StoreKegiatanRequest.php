@@ -24,7 +24,7 @@ class StoreKegiatanRequest extends FormRequest
             'ruangan_id' => [
                 'required',
                 'integer',
-                'exists:ruangans,id', 
+                'exists:ruangan,id', 
             ],
             'jenis_kegiatan' => [
                 'required', 
