@@ -1,28 +1,212 @@
 @extends('layouts.admin')
+
+@section('styles')
+<style>
+/* ============================================================
+   INDEX BLADE — LOGBOOK DRIVER (MODERN & RESPONSIVE)
+   ============================================================ */
+
+/* ----- CARDS & UTILITIES ----- */
+.icon-circle-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    flex-shrink: 0;
+}
+.icon-circle-sm.green {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+.vehicle-name {
+    font-weight: 700;
+    font-size: .88rem;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.plate-badge {
+    display: inline-block;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #475569;
+    padding: .05rem .35rem;
+    font-family: monospace;
+}
+.user-initial {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    font-size: .8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ----- KM SUMMARY CARD ----- */
+.km-summary-card {
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+    color: #fff;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(37,99,235,.25);
+}
+.km-summary-card .km-title { font-size: .72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: .8; margin-bottom: .5rem; }
+.km-summary-card .km-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.km-summary-card .km-stat { text-align: center; background: rgba(255,255,255,.12); border-radius: 10px; padding: .6rem .5rem; }
+.km-summary-card .km-stat .val { font-size: 1.3rem; font-weight: 800; line-height: 1.1; }
+.km-summary-card .km-stat .lbl { font-size: .65rem; opacity: .75; margin-top: .15rem; }
+
+/* ----- ONGOING SECTION (MOBILE CARDS) ----- */
+.ongoing-header {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%) !important;
+    border-bottom: none !important;
+}
+.ongoing-header h5, .ongoing-header i { color: #fff !important; margin: 0; }
+.trip-list { display: flex; flex-direction: column; gap: 0; }
+.trip-item {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+.trip-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+.trip-vehicle { display: flex; align-items: center; gap: .5rem; flex: 1; min-width: 0; }
+.trip-item-meta { display: flex; flex-wrap: wrap; gap: .35rem .75rem; font-size: .78rem; color: #6b7280; }
+.trip-item-meta span { display: flex; align-items: center; gap: .3rem; }
+.trip-destination { font-weight: 600; font-size: .85rem; color: #111827; }
+
+/* ----- BADGE & TABLE STYLING ----- */
+.badge-status-onduty  { background: #f0fdf4; color: #15803d; }
+.km-badge {
+    display: inline-flex; align-items: center; gap: .25rem;
+    background: #fefce8; border: 1px solid #fde68a; border-radius: 6px;
+    font-size: .72rem; font-weight: 700; color: #92400e; padding: .15rem .45rem;
+}
+.modern-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.modern-table thead tr th {
+    background: #f8fafc; font-size: .75rem; font-weight: 700;
+    letter-spacing: .5px; text-transform: uppercase; color: #64748b;
+    padding: .75rem 1rem; border-bottom: 2px solid #e2e8f0;
+}
+.dt-top-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem;
+    padding: 1rem; border-bottom: 1px solid #f3f4f6;
+}
+
+/* Responsive Table Toggle */
+.table-desktop { display: none; }
+@media (min-width: 768px) {
+    .table-desktop { display: block; }
+    .trip-list     { display: none; }
+}
+</style>
+@endsection
+
 @section('content')
 
-<div class="d-flex align-items-center mb-4">
-    <h3 class="font-weight-bold mb-0">Logbook Driver & Kendaraan</h3>
-
-    <div class="ms-auto">
-        @can('riwayat_perjalanan_create')
-            <a class="btn btn-success" href="{{ route('admin.riwayat-perjalanan.create') }}">
-                <i class="fas fa-plus-circle me-2"></i> Input Jalan / Booking
-            </a>
-        @endcan
-    </div>
+{{-- Header --}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="font-weight-bold">Logbook Driver & Kendaraan</h3>
+    @can('riwayat_perjalanan_create')
+        <a class="btn btn-success" href="{{ route('admin.riwayat-perjalanan.create') }}">
+            <i class="fas fa-plus-circle me-2"></i> 
+            <span class="d-none d-sm-inline">Input Jalan / Booking</span>
+            <span class="d-inline d-sm-none">Input</span>
+        </a>
+    @endcan
 </div>
 
-{{-- ========== TABLE ONGOING / ON DUTY ========== --}}
+{{-- KM Hari Ini --}}
+@if(isset($kmHariIni))
+<div class="km-summary-card">
+    <div class="km-title"><i class="fas fa-tachometer-alt me-1"></i> Kilometer Hari Ini</div>
+    <div class="km-grid">
+        <div class="km-stat">
+            <div class="val">{{ number_format($kmHariIni->km_awal ?? 0) }}</div>
+            <div class="lbl">KM Awal</div>
+        </div>
+        <div class="km-stat">
+            <div class="val">{{ $kmHariIni->km_akhir ? number_format($kmHariIni->km_akhir) : '—' }}</div>
+            <div class="lbl">KM Akhir</div>
+        </div>
+        <div class="km-stat">
+            <div class="val">
+                @if($kmHariIni->km_akhir && $kmHariIni->km_awal)
+                    +{{ number_format($kmHariIni->km_akhir - $kmHariIni->km_awal) }}
+                @elseif($kmKemarinAwal && $kmHariIni->km_awal)
+                    +{{ number_format($kmHariIni->km_awal - $kmKemarinAwal) }}
+                @else
+                    —
+                @endif
+            </div>
+            <div class="lbl">Jarak Tempuh</div>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Section Ongoing --}}
 @if(isset($ongoing) && $ongoing->count() > 0)
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold">
-                <i class="fas fa-road me-2"></i> Sedang Berlangsung
-            </h5>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header ongoing-header p-3">
+        <h5 class="m-0"><i class="fas fa-road me-2"></i> Sedang Berlangsung</h5>
+    </div>
+    <div class="card-body p-0">
+        {{-- MOBILE LIST --}}
+        <div class="trip-list">
+            @foreach($ongoing as $row)
+            @php
+                $driverName = $row->driver->name ?? '-';
+                $waktu = $row->waktu_mulai ? \Carbon\Carbon::parse($row->getRawOriginal('waktu_mulai'))->format('d M Y H:i') : '-';
+            @endphp
+            <div class="trip-item">
+                <div class="trip-item-top">
+                    <div class="trip-vehicle">
+                        <span class="icon-circle-sm green"><i class="fas fa-car"></i></span>
+                        <div>
+                            <div class="vehicle-name">{{ $row->mobil->nama_mobil ?? '-' }}</div>
+                            <span class="plate-badge">{{ $row->mobil->plat_nomor ?? '' }}</span>
+                        </div>
+                    </div>
+                    <span class="badge-status badge-status-onduty">🚗 On Duty</span>
+                </div>
+                <div class="trip-destination mt-1">{{ $row->tujuan ?? '-' }}</div>
+                <div class="trip-item-meta mt-1">
+                    <span><i class="fas fa-user"></i> {{ $driverName }}</span>
+                    <span><i class="fas fa-clock"></i> {{ $waktu }}</span>
+                </div>
+                <div class="mt-2">
+                    <form action="{{ route('admin.riwayat-perjalanan.selesaikan', $row->id) }}" method="POST" class="d-inline js-selesaikan-tugas">
+                        @csrf @method('PATCH')
+                        <button type="submit" class="btn btn-sm btn-success w-100 mb-1">
+                            <i class="fas fa-check me-1"></i> Selesaikan Tugas
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endforeach
         </div>
 
-        <div class="card-body">
+        {{-- DESKTOP TABLE --}}
+        <div class="table-desktop">
             <div class="table-responsive">
                 <table class="modern-table mb-0">
                     <thead>
@@ -36,110 +220,53 @@
                     </thead>
                     <tbody>
                         @foreach($ongoing as $row)
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="me-2">
-                                            <span class="icon-circle icon-circle-sm">
-                                                <i class="fas fa-car"></i>
-                                            </span>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-bold text-dark">{{ $row->mobil->nama_mobil ?? '-' }}</span>
-                                            @if(!empty($row->mobil->plat_nomor))
-                                                <span class="plate-badge">{{ $row->mobil->plat_nomor }}</span>
-                                            @endif
-
-                                        </div>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="icon-circle-sm green me-2"><i class="fas fa-car"></i></span>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ $row->mobil->nama_mobil ?? '-' }}</div>
+                                        <span class="plate-badge">{{ $row->mobil->plat_nomor ?? '' }}</span>
                                     </div>
-                                </td>
-
-
-                                <td>
-                                    @php
-                                        $driverName = $row->driver->name ?? '-';
-                                        $initial = strtoupper(substr(trim($driverName), 0, 1));
-                                    @endphp
-
-                                    <div class="d-flex align-items-center">
-                                        <div class="me-2">
-                                            <span class="user-initial">{{ $initial }}</span>
-                                        </div>
-                                        <div class="fw-semibold text-dark">{{ $driverName }}</div>
-                                    </div>
-                                </td>
-
-
-                                <td>
-                                    <div class="d-flex align-items-start">
-                                        <div>
-                                            <div class="text-dark fw-bold">{{ $row->tujuan ?? '-' }}</div>
-                                            <small class="text-muted">{{ $row->keperluan ?? '' }}</small>
-                                        </div>
-                                    </div>
-                                </td>
-
-
-                                <td>
-                                    @php
-                                        $waktu = $row->waktu_mulai
-                                            ? \Carbon\Carbon::parse($row->getRawOriginal('waktu_mulai'))->format('d M Y H:i')
-                                            : '-';
-                                    @endphp
-
-                                    <span class="fw-semibold text-dark">{{ $waktu }}</span>
-                                </td>
-
-
-                                <td class="text-center">
-                                    {{-- ✅ SweetAlert handled --}}
-                                    <form action="{{ route('admin.riwayat-perjalanan.selesaikan', $row->id) }}"
-                                          method="POST"
-                                          class="d-inline js-selesaikan-tugas">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-sm btn-success">
-                                            <i class="fas fa-check me-1"></i> Selesai
-                                        </button>
-                                    </form>
-
-                                    @can('riwayat_perjalanan_edit')
-                                        <a href="{{ route('admin.riwayat-perjalanan.edit', $row->id) }}"
-                                           class="btn btn-sm btn-info ms-1">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @endcan
-                                </td>
-                            </tr>
+                                </div>
+                            </td>
+                            <td>{{ $row->driver->name ?? '-' }}</td>
+                            <td>{{ $row->tujuan ?? '-' }}</td>
+                            <td>{{ $row->waktu_mulai ?? '-' }}</td>
+                            <td class="text-center">
+                                <form action="{{ route('admin.riwayat-perjalanan.selesaikan', $row->id) }}" method="POST" class="d-inline js-selesaikan-tugas">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="btn btn-sm btn-success">Selesai</button>
+                                </form>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
 @endif
 
-
-{{-- ========== DATATABLE: JADWAL + RIWAYAT ========== --}}
+{{-- Datatable Riwayat --}}
 <div class="card border-0 shadow-sm">
-    <div class="card-header bg-white py-3">
-        <h5 class="mb-0 fw-bold">
-            <i class="fas fa-list-alt me-2"></i> Jadwal Mendatang & Riwayat
-        </h5>
+    <div class="card-header bg-white border-bottom p-3">
+        <h5 class="m-0"><i class="fas fa-list-alt me-2"></i> Jadwal Mendatang & Riwayat</h5>
     </div>
-
-    <div class="card-body">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="modern-table ajaxTable datatable datatable-Riwayat w-100">
+            <table class="modern-table datatable datatable-Riwayat w-100">
                 <thead>
                     <tr>
                         <th width="10"></th>
-                        <th><i class="fas fa-info-circle me-2"></i> STATUS</th>
-                        <th><i class="fas fa-calendar-alt me-2"></i> JADWAL</th>
-                        <th><i class="fas fa-car me-2"></i> KENDARAAN</th>
-                        <th><i class="fas fa-user me-2"></i> DRIVER</th>
-                        <th><i class="fas fa-map-marker-alt me-2"></i> TUJUAN</th>
-                        <th class="text-center" style="width: 170px;"><i class="fas fa-cogs me-2"></i> AKSI</th>
+                        <th>STATUS</th>
+                        <th>JADWAL</th>
+                        <th>KENDARAAN</th>
+                        <th class="d-none d-md-table-cell">DRIVER</th>
+                        <th>TUJUAN</th>
+                        <th class="d-none d-md-table-cell">KM</th>
+                        <th class="text-center" style="width:140px;">AKSI</th>
                     </tr>
                 </thead>
             </table>
@@ -149,73 +276,28 @@
 
 @endsection
 
-
 @section('scripts')
 @parent
-
 <script>
 $(function () {
-
-    // pastikan global token ada
-    if (typeof window._token === 'undefined') {
-        window._token = '{{ csrf_token() }}'
-    }
-
-    // ======================
-    // DATATABLE + MASS DELETE
-    // ======================
-    // dtButtons didefinisikan manual — tidak pakai $.extend defaults karena
-    // delete button custom (server-side style: dt.rows().data()) tidak kompatibel dengan getStandardDtButtons
-    let dtButtons = [
-        { extend: 'selectAll',  text: '<i class="fas fa-check-double me-1"></i> Pilih Semua', className: 'btn-primary btn-sm' },
-        { extend: 'selectNone', text: '<i class="fas fa-times me-1"></i> Batal Pilih',        className: 'btn-primary btn-sm' },
-        { extend: 'copy',   text: '<i class="fas fa-copy me-1"></i> Salin',   className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-        { extend: 'csv',    text: '<i class="fas fa-file-export me-1"></i> CSV',   className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-        { extend: 'excel',  text: '<i class="fas fa-file-excel me-1"></i> Excel',  className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-        { extend: 'pdf',    text: '<i class="fas fa-file-pdf me-1"></i> PDF',      className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-        { extend: 'print',  text: '<i class="fas fa-print me-1"></i> Cetak',       className: 'btn-secondary btn-sm', enabled: false, exportOptions: { columns: ':visible', modifier: { selected: true } } },
-        { extend: 'colvis', text: '<i class="fas fa-columns me-1"></i> Kolom',     className: 'btn-secondary btn-sm' },
-    ];
+    let dtButtons = getStandardDtButtons();
 
     @can('riwayat_perjalanan_delete')
     dtButtons.push({
-        text: '<i class="fas fa-trash-alt me-1"></i> Hapus Terpilih',
-        className: 'btn-danger btn-sm',
-        enabled: false,
+        text: '{{ trans('global.datatables.delete') }}',
+        url: "{{ route('admin.riwayat-perjalanan.massDestroy') }}",
+        className: 'btn-danger',
         action: function (e, dt, node, config) {
-            let ids = $.map(dt.rows({ selected: true }).data(), function (entry) {
-                return entry.id;
-            });
-
-            if (ids.length === 0) {
-                Swal.fire({ icon: 'warning', title: 'Tidak ada data dipilih', text: 'Silahkan pilih data terlebih dahulu.' });
-                return;
-            }
-
+            let ids = $.map(dt.rows({ selected: true }).data(), function (entry) { return entry.id; });
+            if (ids.length === 0) { Swal.fire('Peringatan', 'Tidak ada data dipilih', 'warning'); return; }
             Swal.fire({
-                title: 'Yakin hapus data terpilih?',
-                text: `Total: ${ids.length} data`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, hapus',
-                cancelButtonText: 'Batal',
-                confirmButtonColor: '#d33',
+                title: 'Yakin hapus terpilih?', icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#d33', confirmButtonText: 'Ya, hapus!'
             }).then((result) => {
-                if (!result.isConfirmed) return;
-
-                $.ajax({
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    method: 'DELETE',
-                    url: "{{ route('admin.riwayat-perjalanan.massDestroy') }}",
-                    data: { ids: ids }
-                })
-                .done(function () {
-                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data terpilih berhasil dihapus.', timer: 1200, showConfirmButton: false });
-                    $('.datatable-Riwayat').DataTable().ajax.reload(null, false);
-                })
-                .fail(function () {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan saat menghapus' });
-                });
+                if (result.isConfirmed) {
+                    $.ajax({ headers: {'x-csrf-token': _token}, method: 'POST', url: config.url, data: { ids: ids, _method: 'DELETE' }})
+                    .done(function () { $('.datatable-Riwayat').DataTable().ajax.reload(); });
+                }
             });
         }
     });
@@ -223,131 +305,47 @@ $(function () {
 
     let table = $('.datatable-Riwayat').DataTable({
         buttons: dtButtons,
-        language: {                                                    // ← TAMBAH INI
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-            infoFiltered: "(disaring dari _MAX_ total data)",
-            lengthMenu: "Tampilkan _MENU_ data",
-            search: "Cari:",
-            paginate: {
-                next: "Berikutnya",
-                previous: "Sebelumnya"
-            },
-            zeroRecords: "Tidak ada data ditemukan",
-            emptyTable: "Tidak ada data tersedia",
-            processing: "Memuat..."
-        },   
         processing: true,
         serverSide: true,
-        retrieve: true,
-        aaSorting: [],
         ajax: "{{ route('admin.riwayat-perjalanan.index') }}",
+        
+        // 🔥 SOLUSI MOBILE: Injeksi data-label secara dinamis 🔥
+        createdRow: function (row, data, dataIndex) {
+            $(row).find('td:eq(1)').attr('data-label', 'Status');
+            $(row).find('td:eq(2)').attr('data-label', 'Jadwal');
+            $(row).find('td:eq(3)').attr('data-label', 'Kendaraan');
+            $(row).find('td:eq(4)').attr('data-label', 'Driver');
+            $(row).find('td:eq(5)').attr('data-label', 'Tujuan');
+            $(row).find('td:eq(6)').attr('data-label', 'KM');
+            $(row).find('td:eq(7)').attr('data-label', 'Aksi');
+        },
+
         columns: [
             { data: 'placeholder', name: 'placeholder' },
             { data: 'status', name: 'status' },
             { data: 'waktu_mulai', name: 'waktu_mulai' },
             { data: 'kendaraan', name: 'mobil.nama_mobil' },
-            { data: 'driver_display', name: 'driver.name' },
+            { data: 'driver_display', name: 'driver.name', className: 'd-none d-md-table-cell' },
             { data: 'tujuan', name: 'tujuan' },
+            { data: 'km_info', name: 'km_awal', className: 'd-none d-md-table-cell' },
             { data: 'actions', name: 'actions', orderable: false, searchable: false }
         ],
-        orderCellsTop: true,
         order: [[ 2, 'desc' ]],
-        pageLength: 10,
-        columnDefs: [{
-            orderable: false,
-            className: 'select-checkbox',
-            targets: 0
-        }],
-        select: {
-            style: 'multi',
-            selector: 'td:first-child'
-        },
+        pageLength: 50,
+        select: { style: 'multi+shift', selector: 'td:first-child' },
         dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
              "<'row'<'col-sm-12'tr>>" +
              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
     });
 
-    table.on('select deselect', function () {
-        let selectedRows = table.rows({ selected: true }).count();
-        table.button(2).enable(selectedRows > 0); // Salin
-        table.button(3).enable(selectedRows > 0); // CSV
-        table.button(4).enable(selectedRows > 0); // Excel
-        table.button(5).enable(selectedRows > 0); // PDF
-        table.button(6).enable(selectedRows > 0); // Cetak
-        @can('riwayat_perjalanan_delete')
-        table.button(8).enable(selectedRows > 0); // Hapus Terpilih
-        @endcan
-    });
-
-    $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-        $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
-    });
-
-    // ======================
-    // SWEETALERT: DELETE / MULAI
-    // ======================
-
-    // Delete per row (datatable)
-    $(document).on('submit', '.js-delete-riwayat', function(e) {
-        e.preventDefault();
-        let form = this;
-
-        Swal.fire({
-            title: 'Yakin hapus data ini?',
-            text: 'Data yang dihapus tidak bisa dikembalikan.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, hapus',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#d33',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
-    });
-
-    // Mulai perjalanan (datatable)
-    $(document).on('submit', '.js-mulai-perjalanan', function(e) {
-        e.preventDefault();
-        let form = this;
-
-        Swal.fire({
-            title: 'Mulai perjalanan sekarang?',
-            text: 'Status akan berubah menjadi On Duty.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, mulai',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#16a34a',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
-    });
-
-    // Selesaikan tugas (ongoing table)
+    // SweetAlert Handlers
     $(document).on('submit', '.js-selesaikan-tugas', function(e) {
         e.preventDefault();
-        let form = this;
-
         Swal.fire({
-            title: 'Selesaikan tugas ini?',
-            text: 'Status akan berubah menjadi Selesai.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, selesai',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#16a34a',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
+            title: 'Selesaikan tugas?', icon: 'question', showCancelButton: true,
+            confirmButtonText: 'Ya, selesai', confirmButtonColor: '#16a34a'
+        }).then((r) => { if (r.isConfirmed) this.submit(); });
     });
-
 });
 </script>
 @endsection

@@ -30,6 +30,13 @@ class RiwayatPerjalanan extends Model
         'waktu_mulai',
         'waktu_selesai',
         'status',
+        'km_awal',   // ← BARU
+        'km_akhir',  // ← BARU
+    ];
+
+    protected $casts = [
+        'km_awal'  => 'integer',
+        'km_akhir' => 'integer',
     ];
 
     protected function serializeDate(DateTimeInterface $date)
@@ -49,37 +56,49 @@ class RiwayatPerjalanan extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // --- MUTATORS & ACCESSORS (COPY DARI KEGIATAN.PHP) ---
+    // --- WAKTU ACCESSORS & MUTATORS ---
 
-    // 1. Waktu Mulai
-    // Get: Tampilkan sesuai config panel (biar sama kayak Kegiatan)
     public function getWaktuMulaiAttribute($value)
     {
-        return $value 
-            ? Carbon::createFromFormat('Y-m-d H:i:s', $value)->format(config('panel.date_format') . ' ' . config('panel.time_format')) 
+        return $value
+            ? Carbon::createFromFormat('Y-m-d H:i:s', $value)
+                ->format(config('panel.date_format') . ' ' . config('panel.time_format'))
             : null;
     }
 
-    // Set: Simpan ke DB format standar Y-m-d H:i:s
     public function setWaktuMulaiAttribute($value)
     {
-        $this->attributes['waktu_mulai'] = $value 
-            ? Carbon::parse(trim($value))->format('Y-m-d H:i:s') 
+        $this->attributes['waktu_mulai'] = $value
+            ? Carbon::parse(trim($value))->format('Y-m-d H:i:s')
             : null;
     }
 
-    // 2. Waktu Selesai
     public function getWaktuSelesaiAttribute($value)
     {
-        return $value 
-            ? Carbon::createFromFormat('Y-m-d H:i:s', $value)->format(config('panel.date_format') . ' ' . config('panel.time_format')) 
+        return $value
+            ? Carbon::createFromFormat('Y-m-d H:i:s', $value)
+                ->format(config('panel.date_format') . ' ' . config('panel.time_format'))
             : null;
     }
 
     public function setWaktuSelesaiAttribute($value)
     {
-        $this->attributes['waktu_selesai'] = $value 
-            ? Carbon::parse(trim($value))->format('Y-m-d H:i:s') 
+        $this->attributes['waktu_selesai'] = $value
+            ? Carbon::parse(trim($value))->format('Y-m-d H:i:s')
             : null;
+    }
+
+    // --- KM HELPERS ---
+
+    /**
+     * Selisih KM (jarak tempuh trip ini).
+     * Null jika salah satu tidak diisi.
+     */
+    public function getJarakTempuhAttribute(): ?int
+    {
+        if ($this->km_awal && $this->km_akhir) {
+            return $this->km_akhir - $this->km_awal;
+        }
+        return null;
     }
 }
