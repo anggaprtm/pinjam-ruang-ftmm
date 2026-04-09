@@ -27,11 +27,21 @@ class AsetFakultasController extends Controller
         $filterKondisi = $request->get('kondisi');
         $filterSearch  = $request->get('search');
 
-        $query = AsetFakultas::with('ruangan')->orderBy('nama_barang');
+        $sort  = $request->get('sort', 'nama_barang'); // default sort
+        $order = $request->get('order', 'asc'); // default order
+
+        // Validasi kolom agar aman dari error/SQL injection
+        $allowedSorts = ['kode_barang', 'nama_barang', 'tahun_aset', 'kondisi', 'merk'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'nama_barang'; 
+        }
+
+        $query = AsetFakultas::with('ruangan')->orderBy($sort, $order);
 
         if ($filterRuangan) {
             $query->where('ruangan_id', $filterRuangan);
         }
+
         if ($filterKondisi) {
             $query->where('kondisi', $filterKondisi);
         }

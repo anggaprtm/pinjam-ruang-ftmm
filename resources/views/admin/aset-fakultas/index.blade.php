@@ -1,20 +1,53 @@
 @extends('layouts.admin')
 @section('content')
 
+{{-- Tambahan CSS khusus halaman ini --}}
+<style>
+    /* Menyembunyikan teks pagination bahasa Inggris bawaan Laravel */
+    .pagination-wrapper p.small.text-muted { display: none !important; }
+    
+    /* Styling untuk header tabel yang bisa di-sort */
+    .sortable-header { color: #333; text-decoration: none; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+    .sortable-header:hover { color: #0d6efd; text-decoration: none; }
+    .sortable-icon { font-size: 0.8rem; opacity: 0.4; }
+    .sortable-header.active .sortable-icon { opacity: 1; color: #0d6efd; }
+    
+    /* Styling tabel agar lebih modern mirip ruangan */
+    .table-modern th { background-color: #f8f9fa; font-weight: 600; padding: 12px 15px; border-bottom: 2px solid #dee2e6; }
+    .table-modern td { padding: 12px 15px; vertical-align: middle; }
+</style>
+
+{{-- Helper Fungsi Sort (Biar kode HTML gak berantakan) --}}
+@php
+    function sortUrl($field) {
+        $order = (request('sort') === $field && request('order') === 'asc') ? 'desc' : 'asc';
+        return request()->fullUrlWithQuery(['sort' => $field, 'order' => $order]);
+    }
+    function sortClass($field) {
+        return request('sort') === $field ? 'active' : '';
+    }
+    function sortIcon($field) {
+        if (request('sort') === $field) {
+            return request('order') === 'desc' ? 'fa-sort-down' : 'fa-sort-up';
+        }
+        return 'fa-sort';
+    }
+@endphp
+
 {{-- Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h3 class="font-weight-bold text-nowrap">Aset Fakultas</h3>
+    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-boxes me-2"></i>Aset Fakultas</h3>
     <div class="d-flex gap-2 flex-wrap">
         @can('aset_fakultas_create')
-            <a class="btn btn-secondary" href="{{ route('admin.aset-fakultas.import.form') }}">
+            <a class="btn btn-secondary shadow-sm" href="{{ route('admin.aset-fakultas.import.form') }}">
                 <i class="fas fa-file-import me-1"></i> Import Excel
             </a>
-            <a class="btn btn-success" href="{{ route('admin.aset-fakultas.create') }}">
+            <a class="btn btn-success shadow-sm" href="{{ route('admin.aset-fakultas.create') }}">
                 <i class="fas fa-plus-circle me-1"></i> Tambah Aset
             </a>
         @endcan
         @can('aset_fakultas_access')
-            <button class="btn btn-danger" id="btnOpenExport">
+            <button class="btn btn-danger shadow-sm" id="btnOpenExport">
                 <i class="fas fa-file-pdf me-1"></i> Export DIR (PDF/ZIP)
             </button>
         @endcan
@@ -62,12 +95,14 @@
     <div class="card-body py-3">
         <form method="GET" action="{{ route('admin.aset-fakultas.index') }}" class="row g-2 align-items-end">
             <div class="col-12 col-md-4">
-                <label class="form-label small mb-1">Cari Nama / Kode / Merk</label>
-                <input type="text" name="search" class="form-control form-control-sm"
-                       placeholder="Ketik untuk cari..." value="{{ $filterSearch }}">
+                <label class="form-label small mb-1 fw-semibold">Cari Nama / Kode / Merk</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Ketik untuk cari..." value="{{ $filterSearch }}">
+                </div>
             </div>
             <div class="col-6 col-md-3">
-                <label class="form-label small mb-1">Ruangan</label>
+                <label class="form-label small mb-1 fw-semibold">Ruangan</label>
                 <select name="ruangan_id" class="form-select form-select-sm">
                     <option value="">-- Semua Ruangan --</option>
                     @foreach($ruanganList as $r)
@@ -76,7 +111,7 @@
                 </select>
             </div>
             <div class="col-6 col-md-2">
-                <label class="form-label small mb-1">Kondisi</label>
+                <label class="form-label small mb-1 fw-semibold">Kondisi</label>
                 <select name="kondisi" class="form-select form-select-sm">
                     <option value="">-- Semua --</option>
                     @foreach($kondisiOptions as $k => $v)
@@ -85,48 +120,79 @@
                 </select>
             </div>
             <div class="col-12 col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-sm btn-primary w-100">
+                <button type="submit" class="btn btn-sm btn-primary w-100 shadow-sm">
                     <i class="fas fa-filter me-1"></i> Filter
                 </button>
-                <a href="{{ route('admin.aset-fakultas.index') }}" class="btn btn-sm btn-outline-secondary w-100">
-                    <i class="fas fa-times"></i> Reset
+                <a href="{{ route('admin.aset-fakultas.index') }}" class="btn btn-sm btn-outline-secondary w-100 shadow-sm">
+                    <i class="fas fa-sync-alt me-1"></i> Reset
                 </a>
             </div>
         </form>
     </div>
 </div>
 
-{{-- Tabel --}}
+{{-- Tabel Modern --}}
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table table-hover table-modern mb-0">
+                <thead>
                     <tr>
-                        <th class="ps-3" width="10"><input type="checkbox" id="checkAll"></th>
-                        <th>Kode Barang</th>
-                        <th>Nama Barang</th>
-                        <th class="text-center">Tahun</th>
-                        <th class="text-center">Kondisi</th>
-                        <th>Merk</th>
-                        <th>Lokasi / Ruangan</th>
-                        <th class="text-center" style="width:120px;">Aksi</th>
+                        <th class="ps-3" width="40"><input type="checkbox" id="checkAll" class="form-check-input"></th>
+                        
+                        <th width="15%">
+                            <a href="{{ sortUrl('kode_barang') }}" class="sortable-header {{ sortClass('kode_barang') }}">
+                                <span><i class="fas fa-barcode me-1 text-muted"></i> Kode Barang</span>
+                                <i class="fas {{ sortIcon('kode_barang') }} sortable-icon"></i>
+                            </a>
+                        </th>
+                        
+                        <th width="25%">
+                            <a href="{{ sortUrl('nama_barang') }}" class="sortable-header {{ sortClass('nama_barang') }}">
+                                <span><i class="fas fa-box-open me-1 text-muted"></i> Nama Barang</span>
+                                <i class="fas {{ sortIcon('nama_barang') }} sortable-icon"></i>
+                            </a>
+                        </th>
+                        
+                        <th width="10%" class="text-center">
+                            <a href="{{ sortUrl('tahun_aset') }}" class="sortable-header justify-content-center {{ sortClass('tahun_aset') }}">
+                                <span><i class="fas fa-calendar-alt me-1 text-muted"></i> Tahun</span>
+                                <i class="fas {{ sortIcon('tahun_aset') }} sortable-icon ms-2"></i>
+                            </a>
+                        </th>
+                        
+                        <th width="10%" class="text-center">
+                            <a href="{{ sortUrl('kondisi') }}" class="sortable-header justify-content-center {{ sortClass('kondisi') }}">
+                                <span><i class="fas fa-heartbeat me-1 text-muted"></i> Kondisi</span>
+                                <i class="fas {{ sortIcon('kondisi') }} sortable-icon ms-2"></i>
+                            </a>
+                        </th>
+                        
+                        <th width="15%">
+                            <a href="{{ sortUrl('merk') }}" class="sortable-header {{ sortClass('merk') }}">
+                                <span><i class="fas fa-tag me-1 text-muted"></i> Merk</span>
+                                <i class="fas {{ sortIcon('merk') }} sortable-icon"></i>
+                            </a>
+                        </th>
+                        
+                        <th width="15%"><i class="fas fa-map-marker-alt me-1 text-muted"></i> Lokasi / Ruang</th>
+                        <th width="10%" class="text-center"><i class="fas fa-cogs me-1 text-muted"></i> Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($asets as $item)
                         <tr>
                             <td class="ps-3">
-                                <input type="checkbox" class="row-check" value="{{ $item->id }}">
+                                <input type="checkbox" class="form-check-input row-check" value="{{ $item->id }}">
                             </td>
-                            <td><code class="small">{{ $item->kode_barang }}</code></td>
+                            <td><code class="fs-6 bg-light border rounded px-2 py-1 text-dark">{{ $item->kode_barang }}</code></td>
                             <td>
-                                <div class="fw-semibold">{{ $item->nama_barang }}</div>
+                                <div class="fw-bold text-dark">{{ $item->nama_barang }}</div>
                                 @if($item->deskripsi)
-                                    <div class="text-muted small">{{ Str::limit($item->deskripsi, 60) }}</div>
+                                    <div class="text-muted small" style="font-size: 0.8rem;">{{ Str::limit($item->deskripsi, 50) }}</div>
                                 @endif
                             </td>
-                            <td class="text-center">{{ $item->tahun_aset ?? '-' }}</td>
+                            <td class="text-center fw-semibold">{{ $item->tahun_aset ?? '-' }}</td>
                             <td class="text-center">
                                 @php
                                     $badge = match($item->kondisi) {
@@ -136,45 +202,48 @@
                                         default        => 'secondary',
                                     };
                                 @endphp
-                                <span class="badge bg-{{ $badge }}">{{ $item->kondisi }}</span>
+                                <span class="badge bg-{{ $badge }} px-2 py-1 shadow-sm">{{ $item->kondisi }}</span>
                             </td>
-                            <td>{{ $item->merk ?? '-' }}</td>
+                            <td class="fst-italic">{{ $item->merk ?? '-' }}</td>
                             <td>
                                 @if($item->ruangan)
-                                    <span class="badge bg-info text-dark">
+                                    <span class="badge bg-info text-white shadow-sm">
                                         <i class="fas fa-door-open me-1"></i>{{ $item->ruangan->nama }}
                                     </span>
                                 @else
-                                    <span class="text-muted small">{{ Str::limit($item->lokasi_text, 40) ?? '-' }}</span>
+                                    <span class="text-muted small"><i class="fas fa-map-pin me-1 opacity-50"></i> {{ Str::limit($item->lokasi_text, 30) ?? 'Belum ditentukan' }}</span>
                                 @endif
                             </td>
                             <td class="text-center">
-                                @can('aset_fakultas_show')
-                                    <a class="btn btn-xs btn-info" href="{{ route('admin.aset-fakultas.show', $item->id) }}" title="Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                @endcan
-                                @can('aset_fakultas_edit')
-                                    <a class="btn btn-xs btn-success" href="{{ route('admin.aset-fakultas.edit', $item->id) }}" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                @endcan
-                                @can('aset_fakultas_delete')
-                                    <form action="{{ route('admin.aset-fakultas.destroy', $item->id) }}" method="POST"
-                                          onsubmit="return confirm('Hapus aset ini?');" style="display:inline-block;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-xs btn-danger" title="Hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                @endcan
+                                <div class="btn-group shadow-sm">
+                                    @can('aset_fakultas_show')
+                                        <a class="btn btn-sm btn-info" href="{{ route('admin.aset-fakultas.show', $item->id) }}" title="Detail">
+                                            <i class="fas fa-eye text-white"></i>
+                                        </a>
+                                    @endcan
+                                    @can('aset_fakultas_edit')
+                                        <a class="btn btn-sm btn-success" href="{{ route('admin.aset-fakultas.edit', $item->id) }}" title="Edit">
+                                            <i class="fas fa-edit text-white"></i>
+                                        </a>
+                                    @endcan
+                                    @can('aset_fakultas_delete')
+                                        <form action="{{ route('admin.aset-fakultas.destroy', $item->id) }}" method="POST"
+                                              onsubmit="return confirm('Hapus aset ini secara permanen?');" style="display:inline-block; margin:0;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger border-start-0" title="Hapus" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                <i class="fas fa-trash text-white"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
-                                <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
-                                Tidak ada data aset ditemukan.
+                            <td colspan="8" class="text-center text-muted py-5">
+                                <i class="fas fa-box-open fa-3x mb-3 d-block opacity-50"></i>
+                                <h5>Belum ada data aset</h5>
+                                <p class="small mb-0">Data yang dicari tidak ditemukan atau belum ada data yang ditambahkan.</p>
                             </td>
                         </tr>
                     @endforelse
@@ -183,11 +252,11 @@
         </div>
 
         @if($asets->hasPages())
-            <div class="px-3 py-2 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <small class="text-muted">
-                    Menampilkan {{ $asets->firstItem() }}–{{ $asets->lastItem() }} dari {{ $asets->total() }} aset
-                </small>
-                <div class="pagination-wrapper mt-3">
+            <div class="px-4 py-3 border-top bg-light d-flex justify-content-between align-items-center flex-wrap gap-2 rounded-bottom">
+                <div class="text-muted small fw-semibold">
+                    <i class="fas fa-list-ol me-1"></i> Menampilkan <span class="text-dark">{{ $asets->firstItem() }}</span> – <span class="text-dark">{{ $asets->lastItem() }}</span> dari total <span class="text-dark">{{ number_format($asets->total()) }}</span> aset
+                </div>
+                <div class="pagination-wrapper m-0">
                     {{ $asets->links('pagination::bootstrap-5') }}
                 </div>
             </div>
@@ -195,43 +264,39 @@
     </div>
 </div>
 
-{{-- ═══════════════════════════════════════════════════════════
-     MODAL: Pilih Ruangan untuk Export DIR
-     ═══════════════════════════════════════════════════════════ --}}
+{{-- MODAL EXPORT DIR (Biarkan sama persis seperti aslinya) --}}
 <div class="modal fade" id="modalExportDir" tabindex="-1" aria-labelledby="modalExportDirLabel">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="modalExportDirLabel">
-                    <i class="fas fa-file-pdf me-2 text-danger"></i>Export Daftar Inventaris Ruang (DIR)
+                    <i class="fas fa-file-pdf me-2"></i>Export Daftar Inventaris Ruang (DIR)
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body bg-light">
                 <p class="text-muted small mb-3">
                     Pilih satu atau beberapa ruangan. Jika hanya satu ruangan dipilih, hasilnya langsung <strong>.pdf</strong>.
-                    Jika lebih dari satu, semua dikemas dalam <strong>.zip</strong> (satu PDF per ruangan, masing-masing berisi tanda tangan).
+                    Jika lebih dari satu, semua dikemas dalam <strong>.zip</strong> (satu PDF per ruangan).
                 </p>
 
-                {{-- Tombol Pilih/Hapus Semua --}}
                 <div class="d-flex gap-2 mb-3">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnSelectAll">
+                    <button type="button" class="btn btn-sm btn-outline-secondary bg-white shadow-sm" id="btnSelectAll">
                         <i class="fas fa-check-double me-1"></i>Pilih Semua
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnClearAll">
+                    <button type="button" class="btn btn-sm btn-outline-secondary bg-white shadow-sm" id="btnClearAll">
                         <i class="fas fa-times me-1"></i>Hapus Pilihan
                     </button>
-                    <span class="ms-auto badge bg-secondary align-self-center" id="selectedCount">0 dipilih</span>
+                    <span class="ms-auto badge bg-secondary align-self-center shadow-sm" id="selectedCount">0 dipilih</span>
                 </div>
 
-                {{-- Daftar Ruangan --}}
                 <div class="row g-2" id="ruanganCheckList">
                     @foreach($ruanganList as $r)
                         @php $jmlAset = $asetPerRuangan[$r->id] ?? 0; @endphp
                         <div class="col-12 col-md-6">
-                            <label class="d-flex align-items-center border rounded px-3 py-2 gap-2 cursor-pointer {{ $jmlAset === 0 ? 'opacity-50' : '' }}"
+                            <label class="d-flex align-items-center border bg-white rounded shadow-sm px-3 py-2 gap-2 {{ $jmlAset === 0 ? 'opacity-50' : '' }}"
                                    for="ruangan_exp_{{ $r->id }}"
-                                   style="cursor:pointer; transition: background .15s;">
+                                   style="cursor:pointer; transition: all .15s;">
                                 <input class="form-check-input ruangan-check flex-shrink-0 mt-0"
                                        type="checkbox"
                                        name="ruangan_ids[]"
@@ -248,8 +313,8 @@
                 </div>
             </div>
             <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-danger" id="btnExportDir" disabled>
+                <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger shadow-sm" id="btnExportDir" disabled>
                     <i class="fas fa-download me-1"></i>
                     <span id="btnExportLabel">Export PDF</span>
                 </button>
@@ -258,7 +323,6 @@
     </div>
 </div>
 
-{{-- Form tersembunyi untuk submit export --}}
 <form id="formExportDir" action="{{ route('admin.aset-fakultas.export-zip') }}" method="POST" style="display:none;">
     @csrf
     <div id="hiddenRuanganInputs"></div>
@@ -271,7 +335,6 @@
 @parent
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
     // ── Buka modal export ──
     document.getElementById('btnOpenExport')?.addEventListener('click', function () {
         new bootstrap.Modal(document.getElementById('modalExportDir')).show();
@@ -306,11 +369,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const checked = document.querySelectorAll('.ruangan-check:checked');
         if (checked.length === 0) return;
 
-        // Format tanggal hari ini untuk default value
         const today = new Date().toISOString().split('T')[0];
 
         Swal.fire({
-            title: '<i class="fas fa-calendar-alt me-2"></i>Tanggal Tanda Tangan',
+            title: '<i class="fas fa-calendar-alt me-2 text-primary"></i>Tanggal Tanda Tangan',
             html: `
                 <p class="text-muted mb-3" style="font-size:13px;">
                     Tentukan tanggal yang akan tercetak di bagian tanda tangan pada PDF.
@@ -321,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-file-pdf me-1"></i> Generate PDF',
+            confirmButtonText: '<i class="fas fa-file-pdf me-1"></i> Generate',
             cancelButtonText: 'Batal',
             preConfirm: () => {
                 const val = document.getElementById('swal-tanggal').value;
@@ -334,7 +396,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then(result => {
             if (!result.isConfirmed) return;
 
-            // Isi hidden inputs
             document.getElementById('hiddenTanggalTtd').value = result.value;
             const container = document.getElementById('hiddenRuanganInputs');
             container.innerHTML = '';
@@ -346,17 +407,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 container.appendChild(inp);
             });
 
-            // Tutup modal & submit form
             bootstrap.Modal.getInstance(document.getElementById('modalExportDir')).hide();
 
-            // Sedikit delay agar modal selesai menutup
             setTimeout(() => {
                 document.getElementById('formExportDir').submit();
             }, 300);
         });
     });
 
-    // ── Checkbox "Pilih Semua" di tabel ──
+    // ── Checkbox "Pilih Semua" di tabel utama ──
     document.getElementById('checkAll')?.addEventListener('change', function () {
         document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
     });
