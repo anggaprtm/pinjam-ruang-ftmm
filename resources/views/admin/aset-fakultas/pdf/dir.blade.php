@@ -50,7 +50,7 @@
         .ttd-table { width: 100%; border: none; font-size: 10pt; table-layout: fixed; }
         /* TTD Kiri ambil 60% area agar TTD Kanan terdorong ke pojok */
         .ttd-kiri { width: 60%; text-align: left; vertical-align: top; }
-        .ttd-kanan { width: 40%; text-align: left; vertical-align: top; }
+        .ttd-kanan { width: 40%; text-align: right; vertical-align: top; }
         .jabatan { margin-bottom: 65px; }
         .nama-ttd { font-weight: normal; margin-bottom: 2px; } /* Garis bawah dihapus sesuai gambar */
     </style>
