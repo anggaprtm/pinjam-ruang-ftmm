@@ -23,7 +23,8 @@
         /* --- INFO RUANGAN --- */
         .info-ruangan { width: 100%; margin-bottom: 10px; border-collapse: collapse; font-size: 10pt; font-weight: bold; }
         .info-ruangan td { padding: 2px 0; vertical-align: top; }
-        .label-info { width: 180px; }
+        /* PERBAIKAN 1: Lebar label ditambah agar UPB tidak ke-enter */
+        .label-info { width: 250px; white-space: nowrap; } 
         .colon-info { width: 15px; text-align: center; }
         
         /* --- TABEL ASET --- */
@@ -44,13 +45,14 @@
         /* --- CATATAN & TANDA TANGAN --- */
         .catatan { font-size: 9pt; font-style: italic; margin-bottom: 25px; line-height: 1.4; }
         
-        .ttd-container { width: 100%; margin-top: 15px; page-break-inside: avoid; }
-        .ttd-table { width: 100%; border: none; font-size: 10pt; }
-        .ttd-cell { width: 50%; vertical-align: top; }
-        .ttd-kiri { text-align: center; }
-        .ttd-kanan { text-align: center; }
+        /* PERBAIKAN 2: Layout TTD disesuaikan dengan referensi gambar */
+        .ttd-container { width: 100%; margin-top: 25px; page-break-inside: avoid; }
+        .ttd-table { width: 100%; border: none; font-size: 10pt; table-layout: fixed; }
+        /* TTD Kiri ambil 60% area agar TTD Kanan terdorong ke pojok */
+        .ttd-kiri { width: 60%; text-align: left; vertical-align: top; }
+        .ttd-kanan { width: 40%; text-align: left; vertical-align: top; }
         .jabatan { margin-bottom: 65px; }
-        .nama-ttd { font-weight: bold; text-decoration: underline; margin-bottom: 2px; }
+        .nama-ttd { font-weight: normal; margin-bottom: 2px; } /* Garis bawah dihapus sesuai gambar */
     </style>
 </head>
 <body>
@@ -60,7 +62,7 @@
         <div class="kop-text">
             <h1>UNIVERSITAS AIRLANGGA</h1>
             <h2>FAKULTAS TEKNOLOGI MAJU DAN MULTIDISIPLIN</h2>
-            <p>Gedung Kuliah Bersama Kampus C Mulyorejo Surabaya 60115 Telp. 0881036000830</p>
+            <p>Gedung Nano Kampus C Mulyorejo Surabaya 60115 Telp. (031) 59182123, 0881036000830</p>
             <p>Laman: https://ftmm.unair.ac.id, e-mail: info@ftmm.unair.ac.id</p>
         </div>
     </div>
@@ -130,20 +132,19 @@
     </div>
 
     <div class="ttd-container">
-        <div style="margin-bottom: 10px;">
-            Surabaya, {{ \Carbon\Carbon::parse($tanggalTtd)->translatedFormat('d F Y') }}
-        </div>
         <table class="ttd-table">
             <tr>
-                <td class="ttd-cell ttd-kiri">
+                <td class="ttd-kiri">
+                    <div style="margin-bottom: 2px;">Surabaya, {{ \Carbon\Carbon::parse($tanggalTtd)->translatedFormat('d F Y') }}</div>
                     <div class="jabatan">Penanggung Jawab UAKPB</div>
                     <div class="nama-ttd">Boedi Rahardjo, S.Sos.</div>
-                    <div>NIP. 196907301990031002</div>
+                    <div>NIP.19690730199003102</div>
                 </td>
-                <td class="ttd-cell ttd-kanan">
+                <td class="ttd-kanan">
+                    <div style="margin-bottom: 2px;">&nbsp;</div>
                     <div class="jabatan">Penanggung Jawab Ruangan</div>
-                    <div class="nama-ttd">{{ $ruangan->penanggung_jawab ?? '____________________' }}</div>
-                    <div>NIK. {{ $ruangan->nik_pj ?? '____________________' }}</div>
+                    <div class="nama-ttd">Yunus Rizki Setiawan, S.EI.</div>
+                    <div>NIK. 199803172023015101</div>
                 </td>
             </tr>
         </table>
