@@ -136,6 +136,24 @@ class AsetFakultasController extends Controller
         return response(null, Response::HTTP_NO_CONTENT);
     }
 
+    public function massMove(Request $request)
+    {
+        abort_if(Gate::denies('aset_fakultas_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $request->validate([
+            'aset_ids'   => ['required', 'array'],
+            'aset_ids.*' => ['exists:aset_fakultas,id'],
+            'ruangan_id' => ['required', 'exists:ruangan,id'],
+        ]);
+
+        // Update semua aset yang dicentang menjadi ruangan_id yang baru
+        AsetFakultas::whereIn('id', $request->aset_ids)->update([
+            'ruangan_id' => $request->ruangan_id
+        ]);
+
+        return back()->with('success', count($request->aset_ids) . ' barang berhasil dipindahkan ke ruangan baru!');
+    }
+
     // ──────────────────────────────────────
     // IMPORT
     // ──────────────────────────────────────

@@ -47,6 +47,10 @@
             </a>
         @endcan
         @can('aset_fakultas_access')
+            <button class="btn btn-warning shadow-sm" id="btnOpenMove">
+                <i class="fas fa-people-carry me-1"></i> Pindah Ruang
+            </button>
+            
             <button class="btn btn-danger shadow-sm" id="btnOpenExport">
                 <i class="fas fa-file-pdf me-1"></i> Export DIR (PDF/ZIP)
             </button>
@@ -323,6 +327,45 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalMoveAset" tabindex="-1" aria-labelledby="modalMoveAsetLabel">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <form action="{{ route('admin.aset-fakultas.mass-move') }}" method="POST">
+                @csrf
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-dark" id="modalMoveAsetLabel">
+                        <i class="fas fa-people-carry me-2"></i>Pindah Ruangan Massal
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="alert alert-info small mb-3">
+                        <i class="fas fa-info-circle me-1"></i> Anda akan memindahkan <strong id="moveCountDisplay" class="fs-6">0</strong> barang yang dicentang.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold required">Pilih Ruangan Tujuan</label>
+                        <select name="ruangan_id" class="form-select" required>
+                            <option value="">-- Pilih Ruangan Baru --</option>
+                            @foreach($ruanganList as $r)
+                                <option value="{{ $r->id }}">{{ $r->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    {{-- Input hidden untuk menampung ID aset yang dicentang --}}
+                    <div id="hiddenMoveInputs"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning shadow-sm fw-bold">
+                        <i class="fas fa-exchange-alt me-1"></i> Pindahkan Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <form id="formExportDir" action="{{ route('admin.aset-fakultas.export-zip') }}" method="POST" style="display:none;">
     @csrf
     <div id="hiddenRuanganInputs"></div>
@@ -338,6 +381,40 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Buka modal export ──
     document.getElementById('btnOpenExport')?.addEventListener('click', function () {
         new bootstrap.Modal(document.getElementById('modalExportDir')).show();
+    });
+
+    // ── Buka modal Pindah Ruangan ──
+    document.getElementById('btnOpenMove')?.addEventListener('click', function () {
+        // Ambil semua checkbox aset yang sedang dicentang
+        const checked = document.querySelectorAll('.row-check:checked');
+        
+        // Kalau tidak ada yang dicentang, kasih peringatan
+        if (checked.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Barang Dulu',
+                text: 'Silakan centang minimal satu barang yang ingin dipindahkan!',
+                confirmButtonColor: '#ffc107'
+            });
+            return;
+        }
+
+        // Tampilkan jumlah barang di dalam modal
+        document.getElementById('moveCountDisplay').textContent = checked.length;
+
+        // Masukkan ID aset yang dicentang ke dalam form tersembunyi di modal
+        const container = document.getElementById('hiddenMoveInputs');
+        container.innerHTML = ''; // Kosongkan dulu
+        checked.forEach(cb => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'aset_ids[]';
+            inp.value = cb.value;
+            container.appendChild(inp);
+        });
+
+        // Buka modalnya
+        new bootstrap.Modal(document.getElementById('modalMoveAset')).show();
     });
 
     // ── Check all / clear all ──

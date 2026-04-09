@@ -156,6 +156,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::post('aset-fakultas/import', [AsetFakultasController::class, 'import'])->name('aset-fakultas.import');
     Route::get('aset-fakultas/export-pdf', [AsetFakultasController::class, 'exportPdf'])->name('aset-fakultas.export-pdf');
     Route::post('aset-fakultas/export-zip', [AsetFakultasController::class, 'exportZip'])->name('aset-fakultas.export-zip');
+    Route::post('aset-fakultas/mass-move', [AsetFakultasController::class, 'massMove'])->name('aset-fakultas.mass-move');
     Route::resource('aset-fakultas', AsetFakultasController::class)->parameters(['aset-fakultas' => 'asetFakultas']);
 
     // API Holidays
