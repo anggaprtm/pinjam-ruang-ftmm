@@ -129,6 +129,15 @@
                             </a>
                         </li>
                     @endcan
+                    @can('aset_fakultas_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.aset-fakultas.index') }}"
+                               class="nav-link {{ request()->is('admin/barangs*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-boxes"></i></span>
+                                Aset Fakultas
+                            </a>
+                        </li>
+                    @endcan
                     @can('barang_access')
                         <li class="nav-item">
                             <a href="{{ route('admin.barangs.index') }}"

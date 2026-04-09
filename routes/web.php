@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\DisplayContentController;
 use App\Http\Controllers\Admin\DisplayScheduleController;
 use App\Http\Controllers\Admin\DeviceCommandController;
 use App\Http\Controllers\Admin\AgendaFakultasController;
+use App\Http\Controllers\Admin\AsetFakultasController;
 
 
 
@@ -150,6 +151,12 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('device-command', [DeviceCommandController::class, 'index'])->name('device-command.index');
     Route::post('device-command', [DeviceCommandController::class, 'store'])->name('device-command.store');
     Route::resource('agenda-fakultas', AgendaFakultasController::class)->parameters(['agenda-fakultas' => 'agendaFakultas']);
+    Route::delete('aset-fakultas/destroy', [AsetFakultasController::class, 'massDestroy'])->name('aset-fakultas.massDestroy');
+    Route::get('aset-fakultas/import', [AsetFakultasController::class, 'importForm'])->name('aset-fakultas.import.form');
+    Route::post('aset-fakultas/import', [AsetFakultasController::class, 'import'])->name('aset-fakultas.import');
+    Route::get('aset-fakultas/export-pdf', [AsetFakultasController::class, 'exportPdf'])->name('aset-fakultas.export-pdf');
+    Route::post('aset-fakultas/export-zip', [AsetFakultasController::class, 'exportZip'])->name('aset-fakultas.export-zip');
+    Route::resource('aset-fakultas', AsetFakultasController::class)->parameters(['aset-fakultas' => 'asetFakultas']);
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');

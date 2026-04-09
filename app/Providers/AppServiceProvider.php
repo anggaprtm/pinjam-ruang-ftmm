@@ -10,6 +10,7 @@ use Illuminate\Mail\Events\MessageSent;
 use App\Listeners\LogSentEmail;
 use App\Models\Kegiatan;
 use App\Models\PermintaanKegiatan;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -51,5 +52,6 @@ class AppServiceProvider extends ServiceProvider
             MessageSent::class,
             LogSentEmail::class,
         );
+        Paginator::useBootstrapFive();
     }
 }
