@@ -162,9 +162,9 @@
 
         {{-- ═══════ FOOTER ═══════ --}}
         <footer class="footer px-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center py-2">
+            <div class="d-flex justify-content-between align-items-center py-2 w-100">
                 <span class="text-muted small">Dibuat dengan ❤️ dan kopi FamilyMart.</span>
-                <span class="text-muted small">&copy; {{ date('Y') }} <strong>FTMM Universitas Airlangga</strong></span>
+                <span class="text-muted small ms-auto">&copy; {{ date('Y') }} <strong>USI FTMM</strong></span>
             </div>
         </footer>
 
