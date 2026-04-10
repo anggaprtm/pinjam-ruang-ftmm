@@ -107,7 +107,7 @@
             </div>
             <div class="col-6 col-md-3">
                 <label class="form-label small mb-1 fw-semibold">Ruangan</label>
-                <select name="ruangan_id" class="form-select form-select-sm">
+                <select name="ruangan_id" class="form-select form-select-sm select2">
                     <option value="">-- Semua Ruangan --</option>
                     @foreach($ruanganList as $r)
                         <option value="{{ $r->id }}" {{ $filterRuangan == $r->id ? 'selected' : '' }}>{{ $r->nama }}</option>
@@ -377,6 +377,14 @@
 @section('scripts')
 @parent
 <script>
+$(document).ready(function() {
+    $('.select2').select2({
+        width: '100%',
+        placeholder: "-- Semua Ruangan --",
+        allowClear: true // Memberikan tombol 'x' kecil untuk mereset pilihan
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     // ── Buka modal export ──
     document.getElementById('btnOpenExport')?.addEventListener('click', function () {
