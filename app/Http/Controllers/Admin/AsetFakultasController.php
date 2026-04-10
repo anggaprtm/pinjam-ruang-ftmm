@@ -26,6 +26,7 @@ class AsetFakultasController extends Controller
         $filterRuangan = $request->get('ruangan_id');
         $filterKondisi = $request->get('kondisi');
         $filterSearch  = $request->get('search');
+        $filterTahun   = $request->get('tahun_aset');
 
         $sort  = $request->get('sort', 'nama_barang'); // default sort
         $order = $request->get('order', 'asc'); // default order
@@ -41,9 +42,11 @@ class AsetFakultasController extends Controller
         if ($filterRuangan) {
             $query->where('ruangan_id', $filterRuangan);
         }
-
         if ($filterKondisi) {
             $query->where('kondisi', $filterKondisi);
+        }
+        if ($filterTahun) { // <-- TAMBAHAN BARU
+            $query->where('tahun_aset', $filterTahun);
         }
         if ($filterSearch) {
             $query->where(function ($q) use ($filterSearch) {
@@ -55,6 +58,12 @@ class AsetFakultasController extends Controller
 
         $asets          = $query->paginate(50)->withQueryString();
         $kondisiOptions = AsetFakultas::KONDISI_OPTIONS;
+
+        $tahunOptions = AsetFakultas::whereNotNull('tahun_aset')
+                        ->select('tahun_aset')
+                        ->distinct()
+                        ->orderBy('tahun_aset', 'desc')
+                        ->pluck('tahun_aset');
 
         $stats = [
             'total'        => AsetFakultas::count(),
@@ -71,7 +80,8 @@ class AsetFakultasController extends Controller
 
         return view('admin.aset-fakultas.index', compact(
             'asets', 'ruanganList', 'kondisiOptions', 'stats',
-            'filterRuangan', 'filterKondisi', 'filterSearch', 'asetPerRuangan'
+            'filterRuangan', 'filterKondisi', 'filterSearch', 'asetPerRuangan',
+            'filterTahun', 'tahunOptions' 
         ));
     }
 

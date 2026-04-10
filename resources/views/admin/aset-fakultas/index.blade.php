@@ -98,13 +98,14 @@
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-3">
         <form method="GET" action="{{ route('admin.aset-fakultas.index') }}" class="row g-2 align-items-end">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <label class="form-label small mb-1 fw-semibold">Cari Nama / Kode / Merk</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Ketik untuk cari..." value="{{ $filterSearch }}">
+                    <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Ketik..." value="{{ $filterSearch }}">
                 </div>
             </div>
+            
             <div class="col-6 col-md-3">
                 <label class="form-label small mb-1 fw-semibold">Ruangan</label>
                 <select name="ruangan_id" class="form-select form-select-sm select2">
@@ -114,16 +115,28 @@
                     @endforeach
                 </select>
             </div>
+
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1 fw-semibold">Tahun</label>
+                <select name="tahun_aset" class="form-select form-select-sm">
+                    <option value="">-- Semua Tahun --</option>
+                    @foreach($tahunOptions as $tahun)
+                        <option value="{{ $tahun }}" {{ $filterTahun == $tahun ? 'selected' : '' }}>{{ $tahun }}</option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="col-6 col-md-2">
                 <label class="form-label small mb-1 fw-semibold">Kondisi</label>
                 <select name="kondisi" class="form-select form-select-sm">
-                    <option value="">-- Semua --</option>
+                    <option value="">-- Semua Kondisi --</option>
                     @foreach($kondisiOptions as $k => $v)
                         <option value="{{ $k }}" {{ $filterKondisi == $k ? 'selected' : '' }}>{{ $v }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-12 col-md-3 d-flex gap-2">
+            
+            <div class="col-6 col-md-2 d-flex gap-2">
                 <button type="submit" class="btn btn-sm btn-primary w-100 shadow-sm">
                     <i class="fas fa-filter me-1"></i> Filter
                 </button>
