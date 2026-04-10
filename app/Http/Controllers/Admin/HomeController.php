@@ -97,13 +97,19 @@ class HomeController extends Controller
             $user = $item->user->name ?? 'User';
             $namaKegiatan = $item->nama_kegiatan ?? 'Tanpa Nama';
 
-            // Jika statusnya sudah disetujui (biasanya karena diinput langsung oleh Admin)
-            if ($item->status === 'disetujui') {
+            // 1. Jika ini adalah hasil Sinkronisasi Otomatis Google Calendar
+            if ($user === '[Admin] Sinkron Google Calendar') {
+                $text  = "<b>Sistem</b> melakukan sinkronisasi Google Calendar penggunaan <b>{$ruang}</b> dengan kegiatan: <i>{$namaKegiatan}</i>.";
+                $icon  = 'fas fa-sync-alt'; // Pakai ikon sync (putar)
+                $color = 'bg-dark text-white'; // Pakai warna gelap agar beda dari user biasa
+            } 
+            // 2. Jika statusnya sudah disetujui (diinput manual oleh Admin)
+            elseif ($item->status === 'disetujui') {
                 $text  = "<b>Admin</b> menjadwalkan pemakaian <b>{$ruang}</b> untuk <b>{$user}</b> dengan kegiatan: <i>{$namaKegiatan}</i>.";
                 $icon  = 'fas fa-calendar-check';
                 $color = 'bg-success'; // Warna hijau
             } 
-            // Jika statusnya belum disetujui (User yang mengajukan)
+            // 3. Jika statusnya belum disetujui (User/Mahasiswa yang mengajukan)
             else {
                 $text  = "<b>{$user}</b> mengajukan pemakaian <b>{$ruang}</b> untuk kegiatan: <i>{$namaKegiatan}</i>.";
                 $icon  = 'fas fa-calendar-plus';
