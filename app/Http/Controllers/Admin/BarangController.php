@@ -173,7 +173,18 @@ class BarangController extends Controller
     {
         abort_if(Gate::denies('barang_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.barangs.create');
+        // Mengambil data aset (hanya yang Baik), digabung dengan Merk, dan dihitung jumlahnya
+        $asetTersedia = \App\Models\AsetFakultas::where('kondisi', 'Baik')
+            ->get()
+            ->groupBy(function($item) {
+                $merk = $item->merk ? " - {$item->merk}" : "";
+                return $item->nama_barang . $merk;
+            })
+            ->map(function($group) {
+                return $group->count();
+            });
+
+        return view('admin.barangs.create', compact('asetTersedia'));
     }
 
     public function store(StoreBarangRequest $request)
@@ -200,7 +211,18 @@ class BarangController extends Controller
     {
         abort_if(Gate::denies('barang_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.barangs.edit', compact('barang'));
+        // Mengambil data aset yang sama untuk dropdown edit
+        $asetTersedia = \App\Models\AsetFakultas::where('kondisi', 'Baik')
+            ->get()
+            ->groupBy(function($item) {
+                $merk = $item->merk ? " - {$item->merk}" : "";
+                return $item->nama_barang . $merk;
+            })
+            ->map(function($group) {
+                return $group->count();
+            });
+
+        return view('admin.barangs.edit', compact('barang', 'asetTersedia'));
     }
 
     public function update(UpdateBarangRequest $request, Barang $barang)

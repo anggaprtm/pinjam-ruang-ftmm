@@ -113,7 +113,7 @@
         </li>
 
         {{-- 4. FASILITAS & LAYANAN --}}
-        @canany(['ruangan_access', 'barang_access', 'mobil_access', 'riwayat_perjalanan_access', 'permintaan_kegiatan_access'])
+        @canany(['ruangan_access', 'barang_access', 'aset_fakultas_access', 'mobil_access', 'riwayat_perjalanan_access', 'permintaan_kegiatan_access'])
             <li class="nav-group {{ request()->is('admin/ruangan*') || request()->is('admin/barangs*') || request()->is('admin/mobils*') || request()->is('admin/riwayat-perjalanan*') || request()->is('admin/permintaan-kegiatan*') ? 'show' : '' }}">
                 <a class="nav-group-toggle" href="#">
                     <i class="nav-icon fas fa-building"></i>
@@ -132,7 +132,7 @@
                     @can('aset_fakultas_access')
                         <li class="nav-item">
                             <a href="{{ route('admin.aset-fakultas.index') }}"
-                               class="nav-link {{ request()->is('admin/barangs*') ? 'active' : '' }}">
+                               class="nav-link {{ request()->is('admin/aset-fakultas*') ? 'active' : '' }}">
                                 <span class="nav-icon"><i class="fas fa-boxes"></i></span>
                                 Aset Fakultas
                             </a>

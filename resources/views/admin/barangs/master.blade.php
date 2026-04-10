@@ -146,7 +146,46 @@ $(function () {
     });
 
     // Layout dihandle otomatis oleh dom config
+    // ========== EVENT: TOMBOL HAPUS (DELETE) ==========
+    $(document).on('click', '.js-delete-btn', function (e) {
+        e.preventDefault();
+        let deleteUrl = $(this).data('url');
 
+        Swal.fire({
+            title: 'Hapus Master Barang?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash me-1"></i> Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Buat form dinamis untuk mengirim request DELETE ke Laravel
+                let form = $('<form>', {
+                    'method': 'POST',
+                    'action': deleteUrl
+                });
+
+                let token = $('<input>', {
+                    'type': 'hidden',
+                    'name': '_token',
+                    'value': '{{ csrf_token() }}'
+                });
+
+                let method = $('<input>', {
+                    'type': 'hidden',
+                    'name': '_method',
+                    'value': 'DELETE'
+                });
+
+                form.append(token, method);
+                $('body').append(form);
+                form.submit();
+            }
+        });
+    });
 });
 </script>
 @endsection
