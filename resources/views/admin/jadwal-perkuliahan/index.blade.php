@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold mb-0">Daftar Jadwal Perkuliahan</h3>
+    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-calendar-alt me-2"></i> Jadwal Perkuliahan</h3>
 
     @can('kuliah_create')
         <div class="d-flex gap-2">

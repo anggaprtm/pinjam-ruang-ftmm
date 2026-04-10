@@ -4,7 +4,7 @@
 {{-- === FORM PENCARIAN === --}}
 <div class="card shadow-sm"> 
     <div class="card-header"> 
-        <h4 class="mb-0">Cari Ruangan Tersedia</h4> 
+        <h5 class="font-weight-bold text-nowrap"><i class="fas fa-search me-2"></i> Cari Ruangan Tersedia</h5>
     </div> <div class="card-body"> 
         <form action="{{ route('admin.cariRuang') }}" method="GET"> 
             <div class="row g-3 align-items-end"> 

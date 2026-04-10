@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold">{{ trans('cruds.permission.title') }}</h3>
+    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-unlock-alt me-2"></i> Daftar Izin</h3>
     @can('permission_create')
         <a class="btn btn-success" href="{{ route('admin.permissions.create') }}">
             <i class="fas fa-plus-circle me-2"></i> {{ trans('global.add') }} {{ trans('cruds.permission.title_singular') }}

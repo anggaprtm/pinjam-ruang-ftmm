@@ -55,6 +55,7 @@
     .rank-1 { background: #f6c23e; color: #fff; } 
     .rank-2 { background: #e6e6e6; color: #5a5c69; } 
     .rank-3 { background: #d78e48; color: #fff; } 
+    .bg-primary { background: #741847 !important}
     
     /* Sembunyikan scrollbar di switcher mobile tapi tetap bisa di-scroll */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -68,7 +69,7 @@
     {{-- HEADER & FILTER --}}
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
         <div>
-            <h3 class="h3 mb-1 text-gray-800 fw-bold text-nowrap">Dashboard Presensi</h3>
+            <h3 class="font-weight-bold text-nowrap"><i class="fas fa-fingerprint me-2"></i> Dashboard Presensi</h3>
             @if($lastSync)
                 <div class="badge bg-light text-dark border p-2">
                     <i class="fas fa-history text-primary"></i> Last Update: {{ \Carbon\Carbon::parse($lastSync)->format('H:i') }} WIB

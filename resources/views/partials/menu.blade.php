@@ -5,7 +5,7 @@
     <div class="sidebar-brand">
         <span class="sidebar-brand-full fw-bold">LAYANAN-FTMM</span>
         <span class="sidebar-brand-narrow">
-            <i class="fas fa-toolbox"></i>
+            <i class="fas fa-bolt"></i>
         </span>
     </div>
 

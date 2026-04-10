@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold">Rekap Peminjaman Barang</h3>
+    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-box me-2"></i> Rekap Peminjaman Barang</h3>
     @can('barang_create')
         <a class="btn btn-success" href="{{ route('admin.barangs.master') }}">
             Master Barang <i class="fas fa-arrow-right me-2"></i>
@@ -13,10 +13,10 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div class="btn-group" role="group" aria-label="Toggle Mode">
-        <button type="button" class="btn btn-outline-info" id="btnModeBarang" data-mode="barang">
+        <button type="button" class="btn btn-outline-dark" id="btnModeBarang" data-mode="barang">
             <i class="fas fa-box"></i> Per Barang
         </button>
-        <button type="button" class="btn btn-outline-info" id="btnModeKegiatan" data-mode="kegiatan">
+        <button type="button" class="btn btn-outline-dark" id="btnModeKegiatan" data-mode="kegiatan">
             <i class="fas fa-calendar"></i> Per Kegiatan
         </button>
     </div>

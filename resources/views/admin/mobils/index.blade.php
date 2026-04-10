@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold mb-0">Daftar Kendaraan Dinas</h3>
+    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-car me-2"></i> Daftar Kendaraan Dinas</h3>
     <div class="ms-auto">
         @can('mobil_create')
             <a class="btn btn-success shadow-sm" href="{{ route('admin.mobils.create') }}">

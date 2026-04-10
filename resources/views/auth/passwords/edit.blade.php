@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('content')
 
-<h3 class="font-weight-bold mb-4">Pengaturan Akun</h3>
+<h3 class="font-weight-bold text-nowrap"><i class="fas fa-key me-2"></i> Pengaturan Akun</h3>
 
 <div class="row">
     <div class="col-lg-12">

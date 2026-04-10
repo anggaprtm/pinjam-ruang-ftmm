@@ -1,10 +1,84 @@
 @extends('layouts.admin')
 
+@section('styles')
+@parent
+<style>
+    /* CSS Khusus Timeline */
+    .timeline {
+        border-left: 2px solid #e9ecef;
+        padding-left: 1.5rem;
+        position: relative;
+        list-style: none;
+        margin-bottom: 0;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-icon {
+        position: absolute;
+        left: -2.15rem; /* Menyesuaikan agar tepat di atas garis border */
+        top: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.85rem;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #e9ecef;
+    }
+    .timeline-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+    }
+    .timeline-content {
+        font-size: 0.9rem;
+        color: #333;
+    }
+    
+    /* CSS Quick Actions */
+    .quick-action-btn {
+        transition: all 0.2s ease;
+        border: none;
+    }
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+    }
+    /* --- CUSTOM WARNA TAB APPROVAL --- */
+    /* Warna background tab saat Aktif (diklik) */
+    .nav-pills .nav-link.active, 
+    .nav-pills .show > .nav-link {
+        background-color: #741847 !important; /* Ganti warna ini sesuai selera (contoh: Maroon FTMM) */
+        color: #ffffff !important;
+    }
+
+    /* Warna teks tab saat Tidak Aktif */
+    .nav-pills .nav-link {
+        color: #6c757d; 
+        transition: all 0.2s ease;
+    }
+
+    /* Efek hover saat tab Tidak Aktif disorot mouse */
+    .nav-pills .nav-link:hover:not(.active) {
+        background-color: #f8f9fa;
+        color: #741847; /* Ganti warna teks saat di-hover */
+    }
+
+</style>
+@endsection
+
 @section('content')
 <div class="content dashboard-home">
 
     {{-- WELCOME BANNER --}}
-    <div class="welcome-banner mb-4">
+    <div class="welcome-banner mb-3">
         <h4 class="fw-bold text-white mb-1">
             Selamat Datang, {{ Auth::user()->name }}!
         </h4>
@@ -18,89 +92,127 @@
         <div id="current-time" class="mt-2 text-white fw-semibold"></div>
     </div>
 
-
     @can('home_access')
 
-        {{-- STATISTIK --}}
-        <div class="row mb-4">
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card">
-                    <div class="icon-container icon-ruangan">
-                        <i class="fas fa-door-open"></i>
-                    </div>
+        {{-- QUICK ACTIONS (PINTASAN CEPAT) --}}
+        <div class="mb-4">
+            <div class="text-muted small fw-bold text-uppercase mb-2 d-flex align-items-center">
+                <i class="fas fa-bolt text-warning me-2"></i> Pintasan Cepat
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('admin.permintaan-kegiatan.create') }}" class="btn btn-warning quick-action-btn shadow-sm rounded-pill px-3 fw-bold">
+                    <i class="fas fa-concierge-bell me-1"></i> Buat Permintaan
+                </a>
+                <a href="{{ route('admin.kegiatan.create') }}" class="btn quick-action-btn shadow-sm rounded-pill px-3 fw-bold" style="background-color: #20c997; color: white;">
+                    <i class="fas fa-door-open me-1"></i> Jadwalkan Ruang
+                </a>
+                <a href="{{ route('admin.aset-fakultas.create') }}" class="btn btn-primary quick-action-btn shadow-sm rounded-pill px-3 fw-bold">
+                    <i class="fas fa-box-open me-1"></i> Tambah Aset
+                </a>
+                <a href="{{ route('admin.riwayat-perjalanan.create') }}" class="btn btn-danger quick-action-btn shadow-sm rounded-pill px-3 fw-bold">
+                    <i class="fas fa-car me-1"></i> Jadwalkan Mobil Dinas
+                </a>
+                <a href="{{ route('admin.display-config.index') }}" class="btn quick-action-btn shadow-sm rounded-pill px-3 fw-bold" style="background-color: #20a2c9; color: white;">
+                    <i class="fas fa-cog me-1"></i> Konfigurasi Display
+                </a>
+            </div>
+        </div>
+
+        {{-- STATISTIK COMMAND CENTER (8 KOTAK) --}}
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container bg-info text-white"><i class="fas fa-door-open"></i></div>
                     <div class="info">
-                        <div class="stat-number">{{ $ruanganCount ?? 0 }}</div>
-                        <div class="stat-label">Total Ruangan</div>
+                        <div class="stat-number text-info">{{ $kegiatanMenungguCount ?? 0 }}</div>
+                        <div class="stat-label">Menunggu Verifikasi Ruang</div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card">
-                    <div class="icon-container icon-menunggu">
-                        <i class="fas fa-clock"></i>
-                    </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container bg-success text-white"><i class="fas fa-check-circle"></i></div>
                     <div class="info">
-                        <div class="stat-number">{{ $kegiatanMenungguCount ?? 0 }}</div>
-                        <div class="stat-label">Menunggu Verifikasi</div>
+                        <div class="stat-number text-success">{{ $kegiatanDisetujuiCount ?? 0 }}</div>
+                        <div class="stat-label">Kegiatan Disetujui</div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card">
-                    <div class="icon-container icon-disetujui">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container bg-warning text-dark"><i class="fas fa-concierge-bell"></i></div>
                     <div class="info">
-                        <div class="stat-number">{{ $kegiatanDisetujuiCount ?? 0 }}</div>
-                        <div class="stat-label">Disetujui</div>
+                        <div class="stat-number text-warning">{{ $pendingPermintaan->count() ?? 0 }}</div>
+                        <div class="stat-label">Permintaan Layanan Baru</div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="stat-card">
-                    <div class="icon-container icon-total">
-                        <i class="fas fa-list-alt"></i>
-                    </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container bg-secondary text-white"><i class="fas fa-dolly"></i></div>
                     <div class="info">
-                        <div class="stat-number">{{ $kegiatanTotalCount ?? 0 }}</div>
-                        <div class="stat-label">Total Kegiatan</div>
+                        <div class="stat-number text-secondary">{{ $barangDipinjam ?? 0 }}</div>
+                        <div class="stat-label">Barang Sedang Dipinjam</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container bg-primary text-white"><i class="fas fa-boxes"></i></div>
+                    <div class="info">
+                        <div class="stat-number text-primary">{{ number_format($totalAset ?? 0) }}</div>
+                        <div class="stat-label">Total Aset Fakultas</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container bg-danger text-white"><i class="fas fa-tools"></i></div>
+                    <div class="info">
+                        <div class="stat-number text-danger">{{ number_format($asetRusak ?? 0) }}</div>
+                        <div class="stat-label">Aset Kondisi Rusak</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container text-white" style="background-color: #20c997;"><i class="fas fa-user-check"></i></div>
+                    <div class="info">
+                        <div class="stat-number" style="color: #20c997;">{{ $hadirHariIni ?? 0 }}</div>
+                        <div class="stat-label">Pegawai Hadir Hari Ini</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card shadow-sm h-100">
+                    <div class="icon-container text-white" style="background-color: #fd7e14;"><i class="fas fa-user-clock"></i></div>
+                    <div class="info">
+                        <div class="stat-number" style="color: #fd7e14;">{{ $terlambatHariIni ?? 0 }}</div>
+                        <div class="stat-label">Pegawai Terlambat</div>
                     </div>
                 </div>
             </div>
         </div>
 
+        {{-- PANEL INFORMASI (3 KOLOM BAWAH) --}}
+        <div class="row g-3 mb-4">
 
-        {{-- PANEL INFORMASI --}}
-        <div class="row mb-4">
-
-            {{-- STATUS DRIVER --}}
-            <div class="col-lg-4 mb-3">
+            {{-- 1. STATUS DRIVER --}}
+            <div class="col-lg-4">
                 <div class="card h-100 border-0 shadow-sm d-flex flex-column">
-                    <div class="card-header bg-white py-3 border-0 d-flex align-items-center">
+                    <div class="card-header bg-white border-0 d-flex align-items-center" style="min-height: 65px;">
                         <h6 class="mb-0 fw-bold d-flex align-items-center">
-                            <i class="fas fa-car-side text-primary me-2"></i>
-                            Status Driver
+                            <i class="fas fa-car-side text-primary me-2"></i> Status Driver
                         </h6>
-
-                        <div class="ms-auto d-flex align-items-center gap-2 flex-shrink-0">
-
-                            {{-- Badge Status Mobil --}}
+                        <div class="ms-auto flex-shrink-0">
                             @if(($isMobilOnDuty ?? false) === true)
-                                <span class="badge rounded-pill bg-danger px-3 py-2">
-                                    ON DUTY
-                                </span>
+                                <span class="badge rounded-pill bg-danger px-3 py-2">ON DUTY</span>
                             @else
-                                <span class="badge rounded-pill bg-success px-3 py-2">
-                                    Standby
-                                </span>
+                                <span class="badge rounded-pill bg-success px-3 py-2">Standby</span>
                             @endif
                         </div>
                     </div>
 
-                    {{-- kalau standby tapi ada jadwal terdekat --}}
                     @if(!($isMobilOnDuty ?? false) && !empty($nextTrip))
                         <div class="px-3 pt-3">
                             <div class="alert alert-warning py-2 mb-0 small d-flex align-items-start gap-2">
@@ -111,263 +223,191 @@
                                         {{ \Carbon\Carbon::parse($nextTrip->getRawOriginal('waktu_mulai'))->format('d M Y, H:i') }}
                                         - {{ \Carbon\Carbon::parse($nextTrip->getRawOriginal('waktu_selesai'))->format('H:i') }}
                                     </div>
-                                    <div class="fw-semibold text-dark">
-                                        {{ $nextTrip->tujuan ?? '-' }}
-                                    </div>
+                                    <div class="fw-semibold text-dark">{{ $nextTrip->tujuan ?? '-' }}</div>
                                 </div>
                             </div>
                         </div>
                     @endif
 
                     <div class="list-group list-group-flush flex-grow-1">
-                        {{-- jika sedang ON DUTY tampilkan ongoing trip --}}
                         @if(($isMobilOnDuty ?? false) && !empty($ongoingTrip))
-                            <div class="list-group-item border-0 border-top py-3">
-                                {{-- Nama mobil + plat --}}
+                            <div class="list-group-item border-0 py-3">
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <div class="fw-bold text-primary" style="font-size: 1.05rem;">
-                                        {{ $ongoingTrip->mobil->nama_mobil ?? '-' }}
-                                    </div>
-
+                                    <div class="fw-bold text-primary" style="font-size: 1.05rem;">{{ $ongoingTrip->mobil->nama_mobil ?? '-' }}</div>
                                     @if(!empty($ongoingTrip->mobil->plat_nomor))
-                                        <span class="plate-badge">
-                                            {{ $ongoingTrip->mobil->plat_nomor }}
-                                        </span>
+                                        <span class="badge bg-dark">{{ $ongoingTrip->mobil->plat_nomor }}</span>
                                     @endif
                                 </div>
-
-                                {{-- Detail --}}
                                 <div class="text-muted" style="font-size: .92rem;">
-                                    <div class="mb-1">
-                                        <i class="fas fa-user me-2"></i>
-                                        <span class="fw-semibold text-dark">Driver:</span>
-                                        {{ $ongoingTrip->driver->name ?? '-' }}
-                                    </div>
-
-                                    <div class="mb-1">
-                                        <i class="fas fa-map-marker-alt me-2"></i>
-                                        <span class="fw-semibold text-dark">Tujuan:</span>
-                                        {{ $ongoingTrip->tujuan ?? '-' }}
-                                    </div>
-
-                                    <div>
-                                        <i class="fas fa-clipboard-list me-2"></i>
-                                        <span class="fw-semibold text-dark">Keperluan:</span>
-                                        {{ $ongoingTrip->keperluan ?? '-' }}
-                                    </div>
+                                    <div class="mb-1"><i class="fas fa-user me-2"></i> <span class="fw-semibold text-dark">Driver:</span> {{ $ongoingTrip->driver->name ?? '-' }}</div>
+                                    <div class="mb-1"><i class="fas fa-map-marker-alt me-2"></i> <span class="fw-semibold text-dark">Tujuan:</span> {{ $ongoingTrip->tujuan ?? '-' }}</div>
+                                    <div><i class="fas fa-clipboard-list me-2"></i> <span class="fw-semibold text-dark">Keperluan:</span> {{ $ongoingTrip->keperluan ?? '-' }}</div>
                                 </div>
                             </div>
                         @else
-                            {{-- Standby view (mobil tidak dipakai) --}}
                             <div class="list-group-item border-0 border-top py-3">
                                 <div class="d-flex align-items-center gap-2 mb-2">
-                                    <div class="fw-bold text-dark" style="font-size: 1.05rem;">
-                                        {{ $mobilFakultas->nama_mobil ?? 'Mobil Fakultas' }}
-                                    </div>
-
+                                    <div class="fw-bold text-dark" style="font-size: 1.05rem;">{{ $mobilFakultas->nama_mobil ?? 'Mobil Fakultas' }}</div>
                                     @if(!empty($mobilFakultas->plat_nomor))
-                                        <span class="plate-badge">
-                                            {{ $mobilFakultas->plat_nomor }}
-                                        </span>
+                                        <span class="badge bg-dark">{{ $mobilFakultas->plat_nomor }}</span>
                                     @endif
                                 </div>
-
                                 <div class="text-muted" style="font-size: .92rem;">
-                                    <div class="mb-1">
-                                        <i class="fas fa-user me-2"></i>
-                                        <span class="fw-semibold text-dark">Driver:</span>
-                                        -
-                                    </div>
-
-                                    <div class="mb-1"><!-- BLADENYA AAAAAAAAA -->
-
-                                        <i class="fas fa-map-marker-alt me-2"></i>
-                                        <span class="fw-semibold text-dark">Tujuan:</span>
-                                        -
-                                    </div>
-
-                                    <div>
-                                        <i class="fas fa-clipboard-list me-2"></i>
-                                        <span class="fw-semibold text-dark">Keperluan:</span>
-                                        -
-                                    </div>
+                                    <div class="mb-1"><i class="fas fa-user me-2"></i> <span class="fw-semibold text-dark">Driver:</span> -</div>
+                                    <div class="mb-1"><i class="fas fa-map-marker-alt me-2"></i> <span class="fw-semibold text-dark">Tujuan:</span> -</div>
+                                    <div><i class="fas fa-clipboard-list me-2"></i> <span class="fw-semibold text-dark">Keperluan:</span> -</div>
                                 </div>
                             </div>
                         @endif
                     </div>
 
                     <div class="card-footer bg-white border-0 text-center py-3 mt-auto">
-                        <a href="{{ route('admin.riwayat-perjalanan.index') }}"
-                        class="btn btn-sm btn-outline-secondary w-100 fw-semibold">
-                            Lihat Logbook
-                        </a>
+                        <a href="{{ route('admin.riwayat-perjalanan.index') }}" class="btn btn-sm btn-outline-secondary w-100 fw-semibold">Lihat Logbook</a>
                     </div>
                 </div>
             </div>
 
-
-
-            {{-- PERMINTAAN LAYANAN --}}
-            <div class="col-lg-4 mb-3">
+            {{-- 2. APPROVAL & PERMINTAAN (TABS) --}}
+            <div class="col-lg-4">
                 <div class="card h-100 border-0 shadow-sm d-flex flex-column">
-                    <div class="card-header bg-white py-3 border-0 d-flex align-items-center">
-                        <h6 class="mb-0 fw-bold d-flex align-items-center">
-                            <i class="fas fa-concierge-bell text-primary me-2"></i>
-                            Permintaan Layanan
-                        </h6>
-
-                        <div class="ms-auto flex-shrink-0">
-                            @if(($pendingPermintaan->count() ?? 0) > 0)
-                                <span class="badge rounded-pill bg-danger">
-                                    {{ $pendingPermintaan->count() }}
-                                </span>
-                            @endif
-                        </div>
+                    <div class="card-header bg-white border-0 d-flex align-items-center px-3" style="min-height: 65px;">
+                        {{-- Tabs Navigation --}}
+                        <ul class="nav nav-pills nav-fill gap-1 w-100 mb-0" id="approvalTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active py-2 small fw-bold" id="ruang-tab" data-bs-toggle="tab" data-bs-target="#ruang" type="button" role="tab">
+                                    <i class="fas fa-door-open me-1"></i> Pinjam Ruang
+                                    @if(($pendingApproval->count() ?? 0) > 0)
+                                        <span class="badge bg-danger ms-1">{{ $pendingApproval->count() }}</span>
+                                    @endif
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link py-2 small fw-bold" id="layanan-tab" data-bs-toggle="tab" data-bs-target="#layanan" type="button" role="tab">
+                                    <i class="fas fa-concierge-bell me-1"></i> Layanan
+                                    @if(($pendingPermintaan->count() ?? 0) > 0)
+                                        <span class="badge bg-danger ms-1">{{ $pendingPermintaan->count() }}</span>
+                                    @endif
+                                </button>
+                            </li>
+                        </ul>
                     </div>
 
-                    <div class="list-group list-group-flush flex-grow-1 dashboard-scroll">
-                        @forelse($pendingPermintaan as $req)
-                            <a href="{{ route('admin.permintaan-kegiatan.show', $req->id) }}"
-                               class="list-group-item list-group-item-action border-light border-bottom py-3">
-
-                                <div class="d-flex align-items-start gap-3">
-                                    {{-- KIRI --}}
-                                    <div class="flex-grow-1">
-                                        <div class="fw-bold text-primary mb-1 text-truncate">
-                                            {{ $req->nama_kegiatan ?? '-' }}
+                    <div class="card-body p-0 d-flex flex-column flex-grow-1">
+                        <div class="tab-content flex-grow-1 h-100" id="approvalTabsContent">
+                            
+                            {{-- Tab 1: Peminjaman Ruang --}}
+                            <div class="tab-pane fade show active h-100" id="ruang" role="tabpanel">
+                                <div class="d-flex flex-column h-100">
+                                    
+                                    @if($pendingApproval->isEmpty())
+                                        {{-- Area Kosong Tab 1 --}}
+                                        <div class="d-flex flex-column justify-content-center align-items-center text-muted flex-grow-1">
+                                            <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                                            <p class="small mb-0">Semua pengajuan telah diproses.</p>
                                         </div>
-
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @if($req->request_ruang)
-                                                <span class="badge bg-info">
-                                                    Ruang
-                                                </span>
-                                            @endif
-
-                                            @if($req->request_konsumsi)
-                                                <span class="badge bg-warning">
-                                                    Konsumsi
-                                                </span>
-                                            @endif
+                                    @else
+                                        {{-- Area Scroll Tab 1 --}}
+                                        <div class="list-group list-group-flush dashboard-scroll flex-grow-1" style="max-height: 310px; overflow-y: auto;">
+                                            @foreach($pendingApproval as $keg)
+                                                <a href="{{ route('admin.kegiatan.index') }}" class="list-group-item list-group-item-action border-light py-3">
+                                                    <div class="fw-bold text-dark mb-1 d-flex justify-content-between align-items-center gap-2">
+                                                        <div class="text-truncate">{{ $keg->nama_kegiatan ?? '-' }}</div>
+                                                        <span class="badge bg-warning text-dark flex-shrink-0">Pending</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                                        <div class="small text-muted"><i class="far fa-clock me-1"></i> {{ \Carbon\Carbon::parse($keg->waktu_mulai)->format('d M, H:i') }}</div>
+                                                        <span class="badge bg-info text-white">{{ $keg->ruangan->nama ?? 'TBA' }}</span>
+                                                    </div>
+                                                </a>
+                                            @endforeach
                                         </div>
-                                    </div>
-
-                                    {{-- KANAN --}}
-                                    <div class="text-end flex-shrink-0">
-                                        <div class="small text-muted mb-1">
-                                            {{ optional($req->created_at)->diffForHumans() }}
-                                        </div>
-
-                                        <div class="small text-muted">
-                                            <i class="fas fa-user me-1"></i>{{ $req->user->name ?? '-' }}
-                                        </div>
+                                    @endif
+                                    
+                                    {{-- Footer Tab 1 --}}
+                                    <div class="card-footer bg-white border-top text-center py-3 mt-auto">
+                                        <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-sm btn-outline-secondary w-100 fw-semibold">
+                                            Verifikasi Kegiatan
+                                        </a>
                                     </div>
                                 </div>
-
-                            </a>
-                        @empty
-                            <div class="d-flex flex-column justify-content-center align-items-center text-center text-muted flex-grow-1 py-4" style="min-height: 180px;">
-                                <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                                <p class="small mb-0">Tidak ada permintaan baru.</p>
                             </div>
-                        @endforelse
-                    </div>
 
-                    <div class="card-footer bg-white border-0 text-center py-3">
-                        <a href="{{ route('admin.permintaan-kegiatan.index') }}"
-                           class="btn btn-sm btn-outline-secondary w-100 fw-semibold">
-                            Kelola Permintaan
-                        </a>
+                            {{-- Tab 2: Permintaan Layanan --}}
+                            <div class="tab-pane fade h-100" id="layanan" role="tabpanel">
+                                <div class="d-flex flex-column h-100">
+                                    
+                                    @if($pendingPermintaan->isEmpty())
+                                        {{-- Area Kosong Tab 2 --}}
+                                        <div class="d-flex flex-column justify-content-center align-items-center text-muted flex-grow-1">
+                                            <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                                            <p class="small mb-0">Tidak ada permintaan baru.</p>
+                                        </div>
+                                    @else
+                                        {{-- Area Scroll Tab 2 --}}
+                                        <div class="list-group list-group-flush dashboard-scroll flex-grow-1" style="max-height: 310px; overflow-y: auto;">
+                                            @foreach($pendingPermintaan as $req)
+                                                <a href="{{ route('admin.permintaan-kegiatan.show', $req->id) }}" class="list-group-item list-group-item-action border-light py-3">
+                                                    <div class="d-flex align-items-start gap-3">
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-bold text-primary mb-1 text-truncate">{{ $req->nama_kegiatan ?? '-' }}</div>
+                                                            <div class="d-flex flex-wrap gap-2">
+                                                                @if($req->request_ruang) <span class="badge bg-info">Ruang</span> @endif
+                                                                @if($req->request_konsumsi) <span class="badge bg-warning">Konsumsi</span> @endif
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end flex-shrink-0">
+                                                            <div class="small text-muted mb-1">{{ optional($req->created_at)->diffForHumans() }}</div>
+                                                            <div class="small text-muted"><i class="fas fa-user me-1"></i>{{ $req->user->name ?? '-' }}</div>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    
+                                    {{-- Footer Tab 2 --}}
+                                    <div class="card-footer bg-white border-top text-center py-3 mt-auto">
+                                        <a href="{{ route('admin.permintaan-kegiatan.index') }}" class="btn btn-sm btn-outline-secondary w-100 fw-semibold">
+                                            Kelola Permintaan
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>
 
-
-            {{-- BUTUH PERSETUJUAN --}}
-            <div class="col-lg-4 mb-3">
+            {{-- 3. LIVE ACTIVITY TIMELINE --}}
+            <div class="col-lg-4">
                 <div class="card h-100 border-0 shadow-sm d-flex flex-column">
-                    <div class="card-header bg-white py-3 border-0 d-flex align-items-center">
+                    <div class="card-header bg-white border-0 d-flex align-items-center" style="min-height: 65px;">
                         <h6 class="mb-0 fw-bold d-flex align-items-center">
-                            <i class="fas fa-file-signature text-primary me-2"></i>
-                            Butuh Persetujuan
+                            <i class="fas fa-history text-primary me-2"></i> Jejak Aktivitas Terkini
                         </h6>
-
-                        <div class="ms-auto flex-shrink-0">
-                            @if(($pendingApproval->count() ?? 0) > 0)
-                                <span class="badge rounded-pill bg-danger">
-                                    {{ $pendingApproval->count() }}
-                                </span>
-                            @endif
-                        </div>
                     </div>
-
-                    <div class="list-group list-group-flush flex-grow-1 dashboard-scroll">
-                        @forelse($pendingApproval as $keg)
-                            <a href="{{ route('admin.kegiatan.index') }}"
-                               class="list-group-item list-group-item-action border-light border-bottom py-3">
-
-                                <div class="fw-bold text-dark mb-1 d-flex justify-content-between align-items-center gap-2">
-                                    <!-- Nama Kegiatan (KIRI) -->
-                                    <div class="text-truncate">
-                                        {{ $keg->nama_kegiatan ?? '-' }}
+                    <div class="card-body dashboard-scroll" style="max-height: 350px; overflow-y: auto;">
+                        <ul class="timeline m-0">
+                            @forelse($activities as $act)
+                                <li class="timeline-item">
+                                    <div class="timeline-icon {{ $act['color'] }}">
+                                        <i class="{{ $act['icon'] }}"></i>
                                     </div>
-
-                                    <!-- Status (KANAN) -->
-                                    <span class="badge bg-warning text-dark flex-shrink-0">
-                                        @php
-                                            $statusMap = [
-                                                'belum_disetujui'             => 'Belum Verifikasi',
-                                                'verifikasi_kemahasiswaan'    => 'Verif. Kemahasiswaan',
-                                                'verifikasi_kasubag_akademik' => 'Verif. Akademik',
-                                                'verifikasi_kasubag_sarpras'  => 'Verif. Sarpras',
-                                                'disetujui'                   => 'Disetujui',
-                                                'ditolak'                     => 'Ditolak',
-
-                                                'revisi_operator'             => 'Revisi (Operator)',
-                                                'revisi_kemahasiswaan'        => 'Revisi (Kemahasiswaan)',
-                                                'revisi_kasubag_akademik'     => 'Revisi (Akademik)',
-                                                'revisi_kasubag_sarpras'      => 'Revisi (Sarpras)',
-                                            ];
-
-                                            $statusText = $statusMap[$keg->status]
-                                                ?? ucwords(str_replace('_', ' ', $keg->status));
-                                        @endphp
-                                        {{ $statusText }}
-                                    </span>
-                                </div>
-                                 
-                                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                                    <div class="small text-muted">
-                                        <i class="far fa-clock me-1"></i>
-                                        {{ \Carbon\Carbon::parse($keg->waktu_mulai)->format('d M, H:i') }}
-                                    </div>
-                                    <span class="badge bg-info text-white">
-                                        {{ $keg->ruangan->nama ?? 'TBA' }}
-                                    </span>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="d-flex flex-column justify-content-center align-items-center text-center text-muted flex-grow-1 py-4" style="min-height: 180px;">
-                                <i class="fas fa-thumbs-up fa-2x mb-2 text-primary"></i>
-                                <p class="small mb-0">Semua pengajuan telah diproses.</p>
-                            </div>
-                        @endforelse
-
-                    </div>
-
-                    <div class="card-footer bg-white border-0 text-center py-3">
-                        <a href="{{ route('admin.kegiatan.index') }}"
-                           class="btn btn-sm btn-outline-secondary w-100 fw-semibold">
-                            Verifikasi Kegiatan
-                        </a>
+                                    <div class="timeline-date">{{ \Carbon\Carbon::parse($act['time'])->diffForHumans() }}</div>
+                                    <div class="timeline-content">{!! $act['text'] !!}</div>
+                                </li>
+                            @empty
+                                <p class="text-muted small text-center py-4">Belum ada aktivitas tercatat.</p>
+                            @endforelse
+                        </ul>
                     </div>
                 </div>
             </div>
 
         </div>
 
-
-        {{-- JADWAL --}}
+        {{-- JADWAL PEMAKAIAN RUANG --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0 fw-bold text-primary">
@@ -378,11 +418,9 @@
                     <button class="btn btn-sm btn-outline-success" id="copyHariIniBtn" @if($kegiatanHariIni->isEmpty()) disabled @endif>
                         <i class="fas fa-copy me-2"></i> Salin Hari Ini
                     </button>
-
                     <button class="btn btn-sm btn-outline-info" id="copyBesokBtn" @if($kegiatanBesok->isEmpty()) disabled @endif>
                         <i class="fas fa-file-alt me-2"></i> Salin Besok
                     </button>
-
                     <a href="{{ route('admin.statistics.index') }}" class="btn btn-sm btn-outline-warning">
                         <i class="fas fa-chart-bar me-2"></i> Lihat Statistik Lengkap
                     </a>
@@ -410,7 +448,6 @@
                     <div class="tab-pane fade show active" id="hari-ini" role="tabpanel">
                         @include('partials.kegiatanTable', ['kegiatans' => $kegiatanHariIni])
                     </div>
-
                     <div class="tab-pane fade" id="besok" role="tabpanel">
                         @include('partials.kegiatanTable', ['kegiatans' => $kegiatanBesok])
                     </div>
@@ -419,8 +456,6 @@
         </div>
 
     @endcan
-
-
 
     {{-- USER BIASA --}}
     @cannot('home_access')
@@ -449,18 +484,14 @@
 
 </div>
 
-
 {{-- SCRIPT: COPY CLIPBOARD --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
     function buttonFeedback(button) {
         const originalText = button.innerHTML;
         const originalClass = button.className;
-
         button.innerHTML = '<i class="fas fa-check me-2"></i> Disalin!';
         button.className = 'btn btn-sm btn-success';
-
         setTimeout(() => {
             button.innerHTML = originalText;
             button.className = originalClass;
@@ -471,43 +502,26 @@ document.addEventListener('DOMContentLoaded', function () {
         const textArea = document.createElement("textarea");
         textArea.value = text;
         textArea.style.position = "fixed";
-        textArea.style.top = 0;
-        textArea.style.left = 0;
-        textArea.style.width = "2em";
-        textArea.style.height = "2em";
-        textArea.style.padding = 0;
-        textArea.style.border = "none";
-        textArea.style.outline = "none";
-        textArea.style.boxShadow = "none";
+        textArea.style.top = 0; textArea.style.left = 0;
+        textArea.style.width = "2em"; textArea.style.height = "2em";
+        textArea.style.padding = 0; textArea.style.border = "none";
+        textArea.style.outline = "none"; textArea.style.boxShadow = "none";
         textArea.style.background = "transparent";
         document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        try {
-            document.execCommand('copy');
-            buttonFeedback(button);
-        } catch (err) {
-            alert('Gagal menyalin.');
-        }
-
+        textArea.focus(); textArea.select();
+        try { document.execCommand('copy'); buttonFeedback(button); } catch (err) { alert('Gagal menyalin.'); }
         document.body.removeChild(textArea);
     }
 
     function copyHandler(buttonId, textareaId) {
         const button = document.getElementById(buttonId);
         const textarea = document.getElementById(textareaId);
-
         if (!button || !textarea) return;
-
         button.addEventListener('click', function() {
             const text = textarea.value || '';
             if (!text.trim()) return;
-
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text)
-                    .then(() => buttonFeedback(button))
-                    .catch(() => fallbackCopyTextToClipboard(text, button));
+                navigator.clipboard.writeText(text).then(() => buttonFeedback(button)).catch(() => fallbackCopyTextToClipboard(text, button));
             } else {
                 fallbackCopyTextToClipboard(text, button);
             }
@@ -518,5 +532,4 @@ document.addEventListener('DOMContentLoaded', function () {
     copyHandler('copyBesokBtn', 'jadwalBesokClipboard');
 });
 </script>
-
 @endsection

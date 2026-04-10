@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LayananSarpras FTMM</title>
+    <title>LayananTerpadu FTMM</title>
 
     {{-- CSS Libraries (Sama seperti Admin) --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -141,7 +141,7 @@
     <nav class="navbar navbar-expand-lg navbar-landing fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
-                <i class="fas fa-building me-2"></i> LayananSarpras
+                <i class="fas fa-bolt me-2"></i> LayananFTMM
             </a>
             <div class="ms-auto">
                 @auth

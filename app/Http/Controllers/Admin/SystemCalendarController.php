@@ -26,7 +26,7 @@ class SystemCalendarController extends Controller
             'route'      => 'admin.kegiatan.edit',
         ],
     ];
-
+    
     public function index(Request $request)
     {
         abort_if(Gate::denies('calendar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
@@ -124,7 +124,7 @@ class SystemCalendarController extends Controller
                     'end' => $endDate,
                     'color' => $color,
                     'extendedProps' => [
-                        'ruangan_nama' => $model->ruangan->nama,
+                        'ruangan_nama' => $model->ruangan?->nama ?? '-',
                         'user_name' => $model->user->name,
                         'deskripsi' => $model->deskripsi,
                         'nama_pic' => $model->nama_pic,

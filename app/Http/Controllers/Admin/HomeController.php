@@ -9,7 +9,10 @@ use App\Models\Ruangan;
 use App\Models\PermintaanKegiatan;
 use App\Models\RiwayatPerjalanan;
 use App\Models\Mobil;
+use App\Models\AsetFakultas;
+use App\Models\AbsensiLog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -20,13 +23,11 @@ class HomeController extends Controller
 
     public function index()
     {
-        // ==========================================
-        // 0. SETTING WAKTU
-        // ==========================================
         $now = Carbon::now('Asia/Jakarta');
+        $hariIniDate = Carbon::today()->format('Y-m-d');
 
         // ==========================================
-        // 1. DATA STATISTIK UTAMA
+        // 1. STATISTIK SARPRAS & KEGIATAN
         // ==========================================
         $ruanganCount = Ruangan::count();
         $kegiatanMenungguCount = Kegiatan::whereNotIn('status', ['disetujui', 'ditolak'])->count();
@@ -34,22 +35,29 @@ class HomeController extends Controller
         $kegiatanTotalCount = Kegiatan::count();
 
         // ==========================================
-        // 2. DATA WIDGET MONITORING
+        // 2. STATISTIK ASET & PEMINJAMAN BARANG
+        // ==========================================
+        $totalAset = AsetFakultas::count();
+        $asetRusak = AsetFakultas::whereIn('kondisi', ['Rusak Ringan', 'Rusak Berat'])->count();
+        $barangDipinjam = DB::table('barang_kegiatan')->where('status', 'dipinjam')->sum('jumlah') ?? 0;
+
+        // ==========================================
+        // 3. STATISTIK ABSENSI HARI INI
+        // ==========================================
+        $hadirHariIni = AbsensiLog::where('tanggal', $hariIniDate)->whereIn('status', ['hadir', 'terlambat'])->count();
+        $terlambatHariIni = AbsensiLog::where('tanggal', $hariIniDate)->where('status', 'terlambat')->count();
+
+        // ==========================================
+        // 4. DATA WIDGET MONITORING (PANEL BAWAH)
         // ==========================================
 
-        // ------------------------------------------
-        // A. STATUS DRIVER / MOBIL FAKULTAS (1 mobil)
-        // ------------------------------------------
-        // Ambil 1 mobil fakultas pertama (yang tidak maintenance)
+        // A. STATUS DRIVER / MOBIL FAKULTAS
         $mobilFakultas = Mobil::where('status', '!=', 'maintenance')->first();
-
         $ongoingTrip = null;
         $isMobilOnDuty = false;
         $nextTrip = null;
 
         if ($mobilFakultas) {
-
-            // Trip yang sedang berlangsung untuk mobil ini
             $ongoingTrip = RiwayatPerjalanan::with(['mobil', 'driver'])
                 ->where('mobil_id', $mobilFakultas->id)
                 ->where('status', 'berlangsung')
@@ -58,7 +66,6 @@ class HomeController extends Controller
 
             $isMobilOnDuty = $ongoingTrip ? true : false;
 
-            // Jadwal terdekat (untuk tampilan "ada booking ke depan")
             $nextTrip = RiwayatPerjalanan::with(['mobil', 'driver'])
                 ->where('mobil_id', $mobilFakultas->id)
                 ->whereIn('status', ['terjadwal', 'booking'])
@@ -67,88 +74,95 @@ class HomeController extends Controller
                 ->first();
         }
 
-        // Data lama (kalau masih ingin list perjalanan ongoing banyak)
-        // tapi untuk kasus kamu mobil cuma 1, ini optional
         $ongoingTrips = RiwayatPerjalanan::with(['mobil', 'driver'])
             ->where('status', 'berlangsung')
             ->orderBy('waktu_mulai', 'desc')
             ->get();
 
-        // Untuk badge kecil (legacy)
-        // Karena mobil cuma 1, kita bikin mobilReady bernilai 1 kalau standby, 0 kalau on duty
         $mobilReady = $isMobilOnDuty ? 0 : 1;
 
-        // ------------------------------------------
-        // B. PERMINTAAN LAYANAN (Pending)
-        // ------------------------------------------
-        $pendingPermintaan = PermintaanKegiatan::with(['user'])
-            ->where('status_permintaan', 'pending')
-            ->latest()
-            ->take(10)
-            ->get();
-
-        // ------------------------------------------
-        // C. APPROVAL RUANG (belum disetujui)
-        // ------------------------------------------
-        $pendingApproval = Kegiatan::with(['ruangan', 'user'])
-            ->whereNotIn('status', ['disetujui', 'ditolak'])
-            ->orderBy('created_at', 'asc')
-            ->take(10)
-            ->get();
+        // B. PERMINTAAN LAYANAN & APPROVAL
+        $pendingPermintaan = PermintaanKegiatan::with(['user'])->where('status_permintaan', 'pending')->latest()->take(10)->get();
+        $pendingApproval = Kegiatan::with(['ruangan', 'user'])->whereNotIn('status', ['disetujui', 'ditolak'])->orderBy('created_at', 'asc')->take(10)->get();
 
         // ==========================================
-        // 3. JADWAL HARI INI & BESOK
+        // 5. JEJAK AKTIVITAS (TIMELINE)
         // ==========================================
-        $kegiatanHariIni = Kegiatan::with(['ruangan', 'user'])
-            ->whereDate('waktu_mulai', Carbon::today())
-            ->orderBy('waktu_mulai')
-            ->get();
+        $timeline = collect();
 
-        $kegiatanBesok = Kegiatan::with(['ruangan', 'user'])
-            ->whereDate('waktu_mulai', Carbon::tomorrow())
-            ->orderBy('waktu_mulai')
-            ->get();
+        // Ambil Kegiatan Terbaru
+        $recentKegiatans = Kegiatan::with(['user', 'ruangan'])->latest()->take(5)->get();
+        foreach($recentKegiatans as $item) {
+            $ruang = $item->ruangan->nama ?? 'Ruangan';
+            $user = $item->user->name ?? 'User';
+            $timeline->push([
+                'time'  => $item->created_at,
+                'icon'  => 'fas fa-calendar-check',
+                'color' => 'bg-success',
+                'text'  => "<b>{$user}</b> mengajukan pemakaian <b>{$ruang}</b>.",
+            ]);
+        }
 
+        // Ambil Permintaan Layanan Terbaru
+        $recentPermintaan = PermintaanKegiatan::with('user')->latest()->take(5)->get();
+        foreach($recentPermintaan as $item) {
+            $user = $item->user->name ?? 'User';
+            $timeline->push([
+                'time'  => $item->created_at,
+                'icon'  => 'fas fa-concierge-bell',
+                'color' => 'bg-warning text-dark',
+                'text'  => "<b>{$user}</b> meminta layanan: {$item->nama_kegiatan}.",
+            ]);
+        }
+
+        // Ambil Aset Terbaru
+        $recentAset = AsetFakultas::latest()->take(5)->get();
+        foreach($recentAset as $item) {
+            $timeline->push([
+                'time'  => $item->created_at,
+                'icon'  => 'fas fa-box-open',
+                'color' => 'bg-primary',
+                'text'  => "Aset baru ditambahkan: <b>{$item->nama_barang}</b>.",
+            ]);
+        }
+
+        // Ambil Perjalanan Mobil Terbaru
+        $recentTrip = RiwayatPerjalanan::with('driver')->latest('created_at')->take(5)->get();
+        foreach($recentTrip as $item) {
+            $driver = $item->driver->name ?? 'Driver';
+            $timeline->push([
+                'time'  => $item->created_at,
+                'icon'  => 'fas fa-car',
+                'color' => 'bg-info text-white',
+                'text'  => "<b>{$driver}</b> dijadwalkan ke <b>{$item->tujuan}</b>.",
+            ]);
+        }
+
+        // Urutkan semua aktivitas dari yang paling baru, ambil 10 teratas
+        $activities = $timeline->sortByDesc('time')->take(10);
+
+        // ==========================================
+        // 6. JADWAL HARI INI & BESOK
+        // ==========================================
+        $kegiatanHariIni = Kegiatan::with(['ruangan', 'user'])->whereDate('waktu_mulai', Carbon::today())->orderBy('waktu_mulai')->get();
+        $kegiatanBesok = Kegiatan::with(['ruangan', 'user'])->whereDate('waktu_mulai', Carbon::tomorrow())->orderBy('waktu_mulai')->get();
         $jadwalHariIniText = $this->generateJadwalText($kegiatanHariIni, 'Hari Ini');
         $jadwalBesokText = $this->generateJadwalText($kegiatanBesok, 'Besok');
 
         return view('home', compact(
-            'ruanganCount',
-            'kegiatanMenungguCount',
-            'kegiatanDisetujuiCount',
-            'kegiatanTotalCount',
-
-            // Driver card
-            'mobilFakultas',
-            'ongoingTrip',
-            'isMobilOnDuty',
-            'nextTrip',
-
-            // legacy
-            'ongoingTrips',
-            'mobilReady',
-
-            // widgets
-            'pendingPermintaan',
-            'pendingApproval',
-
-            // jadwal
-            'kegiatanHariIni',
-            'kegiatanBesok',
-            'jadwalHariIniText',
-            'jadwalBesokText'
+            'ruanganCount', 'kegiatanMenungguCount', 'kegiatanDisetujuiCount', 'kegiatanTotalCount',
+            'totalAset', 'asetRusak', 'barangDipinjam', 'hadirHariIni', 'terlambatHariIni',
+            'mobilFakultas', 'ongoingTrip', 'isMobilOnDuty', 'nextTrip', 'ongoingTrips', 'mobilReady',
+            'pendingPermintaan', 'pendingApproval', 'activities',
+            'kegiatanHariIni', 'kegiatanBesok', 'jadwalHariIniText', 'jadwalBesokText'
         ));
     }
 
     private function generateJadwalText($kegiatans, $title)
     {
         if ($kegiatans->isEmpty()) return "";
-
         $text = "*JADWAL PEMAKAIAN RUANG FTMM - " . strtoupper($title) . "*\n\n";
-
-        $grouped = $kegiatans->groupBy(function ($item) {
-            return $item->ruangan->nama ?? 'Lainnya';
-        });
+        $grouped = $kegiatans->groupBy(function ($item) { return $item->ruangan->nama ?? 'Lainnya'; });
 
         foreach ($grouped as $ruang => $items) {
             $text .= "*$ruang*\n";
@@ -159,7 +173,6 @@ class HomeController extends Controller
             }
             $text .= "\n";
         }
-
         return $text;
     }
 }

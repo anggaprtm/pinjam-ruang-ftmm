@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>LayananSarpras FTMM</title>
+    <title>LayananTerpadu FTMM</title>
 
     {{-- ═══════════════════════════════════════════════════════
          CSS — urutan sangat penting, jangan diubah

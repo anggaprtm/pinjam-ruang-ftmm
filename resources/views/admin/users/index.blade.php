@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold">{{ trans('cruds.user.title') }}</h3>
+    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-user me-2"></i> Daftar Pengguna</h3>
     @can('user_create')
         <a class="btn btn-success" href="{{ route('admin.users.create') }}">
             <i class="fas fa-plus-circle me-2"></i> {{ trans('global.add') }} {{ trans('cruds.user.title_singular') }}

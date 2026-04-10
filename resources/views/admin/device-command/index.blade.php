@@ -4,7 +4,7 @@
 <div class="content">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Remote Control Mini PC</h3>
+        <h3 class="font-weight-bold text-nowrap"><i class="fas fa-computer me-2"></i> Remote Control Mini PC Display</h3>
     </div>
 
     @if(session('success'))

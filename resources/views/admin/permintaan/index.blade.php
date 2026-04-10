@@ -3,7 +3,7 @@
 
 {{-- HEADER --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold mb-0">Daftar Permintaan Layanan</h3>
+    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-concierge-bell me-2"></i> Daftar Permintaan Layanan</h3>
     <div class="ms-auto">
         <a class="btn btn-success shadow-sm" href="{{ route('admin.permintaan-kegiatan.create') }}">
             <i class="fas fa-plus-circle me-2"></i> Ajukan Baru
