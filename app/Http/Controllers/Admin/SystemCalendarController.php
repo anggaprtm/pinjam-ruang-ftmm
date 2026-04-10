@@ -86,7 +86,7 @@ class SystemCalendarController extends Controller
                             'end' => $endDateTime,
                             'color' => '#17a2b8',
                             'extendedProps' => [
-                                'ruangan_nama' => $model->ruangan->nama,
+                                'ruangan_nama' => $model->ruangan?->nama ?? '-',
                                 'user_name' => $model->program_studi ?? '',
                                 'deskripsi' => '',
                                 'type' => 'perkuliahan'

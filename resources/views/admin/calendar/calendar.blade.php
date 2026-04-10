@@ -111,9 +111,17 @@ document.addEventListener('DOMContentLoaded', function() {
             right: isMobile ? '' : 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
         },
         initialView: isMobile ? 'listMonth' : 'dayGridMonth',
-        height: isMobile ? 'auto' : 650,
+        
+        // --- 1. Ganti height menjadi auto agar gap scrollbar kanan hilang ---
+        contentHeight: 'auto', 
+        height: 'auto',
+
         locale: 'id',
-        // PERUBAHAN 1: Menerjemahkan tombol
+        
+        // --- 2. Tambahkan ini agar nama hari tampil penuh (Senin, Selasa, dll) ---
+        dayHeaderFormat: { weekday: 'long' },
+
+        // Menerjemahkan tombol
         buttonText: {
             today: 'Hari Ini',
             month: 'Bulan',
@@ -214,6 +222,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     calendar.render();
+    setTimeout(function() {
+        calendar.updateSize();
+    }, 250);
 
     // Global handler: open Bootstrap modal to confirm opening WhatsApp links
     document.addEventListener('click', function(e) {
@@ -289,26 +300,204 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <style>
-.detail-item {
+.modal-footer .dynamic-buttons {
+    margin-right: auto;
+}
+/* ==========================================================================
+   LAYOUT UTAMA (KALENDER & SIDEBAR)
+   ========================================================================== */
+.calendar-container {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+.calendar-main {
+    flex: 1; 
+    min-width: 0; /* Mencegah overflow flexbox */
+}
+.calendar-sidebar {
+    width: 350px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 80px; /* Menempel saat di-scroll */
+}
+@media (max-width: 991.98px) {
+    .calendar-container { flex-direction: column; }
+    .calendar-sidebar { width: 100%; position: static; }
+}
+
+/* ==========================================================================
+   FULLCALENDAR V6 CUSTOM THEME (TEMA MODERN FTMM)
+   ========================================================================== */
+:root {
+    --fc-border-color: #eaecf0;
+    --fc-today-bg-color: rgba(32, 201, 151, 0.05); /* Highlight hari ini (soft tosca) */
+    
+    /* Warna Dasar Tombol Standar */
+    --fc-button-bg-color: #ffffff;
+    --fc-button-border-color: #dee2e6;
+    --fc-button-text-color: #495057;
+    
+    /* Efek Hover Tombol */
+    --fc-button-hover-bg-color: #f8f9fa;
+    --fc-button-hover-border-color: #dee2e6;
+}
+
+/* 1. Area Header (Judul Bulan & Tombol) */
+.fc-toolbar-title {
+    font-weight: 800 !important;
+    font-size: 1.4rem !important;
+    color: #2b2b2b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.fc-button {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    font-weight: 600 !important;
+    text-transform: capitalize;
+    border-radius: 6px !important;
+    padding: 0.4rem 0.9rem !important;
+    transition: all 0.2s ease;
+}
+.fc-button-primary:not(:disabled):active,
+.fc-button-primary:not(:disabled).fc-button-active {
+    background-color: #741847 !important; /* Warna Maroon/Ungu Aktif */
+    color: #fff !important;
+    border-color: #741847 !important;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125) !important;
+}
+
+/* 2. Area Grid & Nama Hari */
+.fc-theme-standard th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+.fc-col-header-cell-cushion {
+    color: #495057;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 12px 0 !important;
+    text-decoration: none !important;
+}
+.fc-daygrid-day-number {
+    font-weight: 600;
+    color: #6c757d;
+    padding: 8px !important;
+    text-decoration: none !important;
+}
+.fc-day-today .fc-daygrid-day-number {
+    color: #20c997; /* Tanggal hari ini diberi warna tosca/hijau */
+    font-weight: 800;
+}
+
+/* 3. Area Event (Acara) */
+.fc-event {
+    border-radius: 4px !important;
+    border: none !important;
+    padding: 3px 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s;
+}
+.fc-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    filter: brightness(1.1);
+    z-index: 5;
+}
+.fc-h-event .fc-event-title {
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   STYLING LAINNYA (LEGEND & DETAIL ITEM)
+   ========================================================================== */
+.calendar-legend {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #495057;
+    font-weight: 600;
+}
+.legend-item {
     display: flex;
     align-items: center;
+    gap: 6px;
+}
+.legend-color-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    display: inline-block;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
 }
 .detail-item .icon {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-right: 15px;
     width: 25px;
     text-align: center;
+    color: #741847; /* Icon maroon */
+    margin-top: 2px;
 }
 .detail-item .label {
     font-weight: bold;
     color: #6c757d;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
 }
 .detail-item .value {
-    color: #333;
+    color: #212529;
+    font-weight: 500;
 }
-.modal-footer .dynamic-buttons {
-    margin-right: auto;
+.detail-title {
+    color: #2b2b2b;
+    font-weight: 800;
+    line-height: 1.4;
+}
+.event-details-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    height: 200px;
+}
+.event-details-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+/* ==========================================================================
+   PERBAIKAN WARNA TEKS EVENT (MENGHILANGKAN BIRU BOOTSTRAP)
+   ========================================================================== */
+.fc-event, 
+.fc-daygrid-event, 
+.fc-timegrid-event,
+.fc-list-event-title a {
+    color: #2b2b2b !important; /* Warna abu-abu gelap/hitam elegan */
+    text-decoration: none !important; /* Hilangkan garis bawah link jika ada */
+}
+
+/* Memastikan hover event tetap memiliki warna teks yang benar */
+.fc-event:hover, 
+.fc-daygrid-event:hover {
+    color: #000000 !important;
+}
+
+/* Memastikan dot warna event tetap sejajar dan proporsional */
+.fc-daygrid-event-dot {
+    margin-right: 6px;
+    border-width: 4px !important; 
 }
 </style>
 @endsection
