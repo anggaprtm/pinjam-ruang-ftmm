@@ -90,16 +90,31 @@ class HomeController extends Controller
         // ==========================================
         $timeline = collect();
 
-        // Ambil Kegiatan Terbaru
+       // Ambil Kegiatan Terbaru
         $recentKegiatans = Kegiatan::with(['user', 'ruangan'])->latest()->take(5)->get();
         foreach($recentKegiatans as $item) {
             $ruang = $item->ruangan->nama ?? 'Ruangan';
             $user = $item->user->name ?? 'User';
+            $namaKegiatan = $item->nama_kegiatan ?? 'Tanpa Nama';
+
+            // Jika statusnya sudah disetujui (biasanya karena diinput langsung oleh Admin)
+            if ($item->status === 'disetujui') {
+                $text  = "<b>Admin</b> menjadwalkan pemakaian <b>{$ruang}</b> untuk <b>{$user}</b> dengan kegiatan: <i>{$namaKegiatan}</i>.";
+                $icon  = 'fas fa-calendar-check';
+                $color = 'bg-success'; // Warna hijau
+            } 
+            // Jika statusnya belum disetujui (User yang mengajukan)
+            else {
+                $text  = "<b>{$user}</b> mengajukan pemakaian <b>{$ruang}</b> untuk kegiatan: <i>{$namaKegiatan}</i>.";
+                $icon  = 'fas fa-calendar-plus';
+                $color = 'bg-primary'; // Warna biru
+            }
+
             $timeline->push([
                 'time'  => $item->created_at,
-                'icon'  => 'fas fa-calendar-check',
-                'color' => 'bg-success',
-                'text'  => "<b>{$user}</b> mengajukan pemakaian <b>{$ruang}</b>.",
+                'icon'  => $icon,
+                'color' => $color,
+                'text'  => $text,
             ]);
         }
 
