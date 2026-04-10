@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
 .detail-item {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 1px;
 }
 .detail-item .icon {
     font-size: 1.1rem;
@@ -451,7 +451,6 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: bold;
     color: #6c757d;
     font-size: 0.85rem;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 2px;
 }
