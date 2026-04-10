@@ -83,7 +83,8 @@ class RuanganController extends Controller
 
         Ruangan::create($data);
 
-        return redirect()->route('admin.ruangan.index');
+        return redirect()->route('admin.ruangan.index')
+            ->with('success', 'Data ruangan berhasil ditambahkan!');
     }
 
     public function edit(Ruangan $ruangan)
@@ -192,7 +193,7 @@ class RuanganController extends Controller
 
         $ruangan->delete();
 
-        return back();
+        return back()->with('success', 'Data ruangan berhasil dihapus!');
     }
 
     public function massDestroy(MassDestroyRuanganRequest $request)

@@ -71,8 +71,8 @@ class PermintaanKegiatanController extends Controller
             });
 
             $table->editColumn('tanggal_kegiatan', function ($row) {
-                $tgl = Carbon::parse($row->tanggal_kegiatan)->translatedFormat('d M Y');
-                $jam = Carbon::parse($row->waktu_mulai)->format('H:i') . ' - ' . Carbon::parse($row->waktu_selesai)->format('H:i');
+                $tgl = \Carbon\Carbon::parse($row->tanggal_kegiatan)->translatedFormat('d M Y');
+                $jam = \Carbon\Carbon::parse($row->waktu_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($row->waktu_selesai)->format('H:i');
                 return '<div class="fw-bold text-dark">'.$tgl.'</div><div class="small text-muted"><i class="far fa-clock me-1"></i>'.$jam.'</div>';
             });
 
@@ -115,27 +115,35 @@ class PermintaanKegiatanController extends Controller
                 return '<span class="badge-pill-modern '.$cls.'">'.$label.'</span>';
             });
 
+            // ================== PERBAIKAN DI SINI ==================
             $table->editColumn('actions', function ($row) {
-                $btn = '<a class="btn btn-xs btn-info" href="' . route('admin.permintaan-kegiatan.show', $row->id) . '" title="Detail"><i class="fas fa-eye"></i></a> ';
+                // 1. Buka div btn-group
+                $btn = '<div class="btn-group shadow-sm">';
+                
+                // 2. Ubah btn-xs jadi btn-sm, dan tambah text-white di ikon
+                $btn .= '<a class="btn btn-sm btn-info" href="' . route('admin.permintaan-kegiatan.show', $row->id) . '" title="Detail"><i class="fas fa-eye text-white"></i></a>';
                 
                 if ($row->status_permintaan == 'pending' && (auth()->user()->id == $row->user_id || auth()->user()->isAdmin())) {
-                    $btn .= '<a class="btn btn-xs btn-success" href="' . route('admin.permintaan-kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i></a> ';
+                    $btn .= '<a class="btn btn-sm btn-success" href="' . route('admin.permintaan-kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit text-white"></i></a>';
                     
-                    $btn .= '<form action="'.route('admin.permintaan-kegiatan.destroy', $row->id).'" method="POST" onsubmit="return confirm(\'Batalkan permintaan ini?\');" style="display: inline-block;">
-                                <input type="hidden" name="_method" value="DELETE">
-                                <input type="hidden" name="_token" value="'.csrf_token().'">
-                                <button type="submit" class="btn btn-xs btn-danger" title="Batalkan"><i class="fas fa-trash-alt"></i></button>
-                            </form>';
+                    // 3. Ganti <form> menjadi <button> biasa dengan class js-delete-btn
+                    $btn .= '<button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="' . route('admin.permintaan-kegiatan.destroy', $row->id) . '" title="Batalkan"><i class="fas fa-trash-alt text-white"></i></button>';
                 }
+                
+                // 4. Tutup div btn-group
+                $btn .= '</div>';
+                
                 return $btn;
             });
+            // =======================================================
 
             $table->rawColumns(['actions', 'placeholder', 'nama_kegiatan', 'tanggal_kegiatan', 'status_ruang', 'status_konsumsi', 'status_permintaan']);
 
             return $table->make(true);
         }
 
-        return view('admin.permintaan.index');
+        // Pastikan nama view ini sudah sesuai dengan struktur foldermu ya
+        return view('admin.permintaan.index'); 
     }
 
     public function create()

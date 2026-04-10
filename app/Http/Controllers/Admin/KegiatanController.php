@@ -74,24 +74,21 @@ class KegiatanController extends Controller
 
 
             $table->editColumn('actions', function ($row) {
-                $buttons = '';
                 $user = auth()->user();
+                
+                // Buka div btn-group
+                $buttons = '<div class="btn-group shadow-sm">';
 
-                // 1. Tombol DETAIL (Semua bisa lihat jika punya izin)
                 if ($user->can('kegiatan_show')) {
-                    $buttons .= '<a class="btn btn-xs btn-info" href="' . route('admin.kegiatan.show', $row->id) . '" title="Detail"><i class="fas fa-eye"></i></a> ';
+                    $buttons .= '<a class="btn btn-sm btn-info" href="' . route('admin.kegiatan.show', $row->id) . '" title="Detail"><i class="fas fa-eye text-white"></i></a>';
                 }
 
-                // 2. Logic Tombol EDIT & HAPUS
-                // Default: Izinkan tampil (untuk Admin/Verifikator)
                 $allowEditDelete = true;
 
-                // FILTER KHUSUS ROLE USER (PEMINJAM)
                 if ($user->hasRole('User')) {
-                    // Daftar status "Aman" untuk diedit user
                     $editableStatuses = [
-                        'belum_disetujui',          // Masih draft awal
-                        'revisi_operator',          // Sedang direvisi
+                        'belum_disetujui',          
+                        'revisi_operator',          
                         'revisi_kemahasiswaan',
                         'revisi_kasubag_akademik',
                         'revisi_kasubag_sarpras'
@@ -103,19 +100,18 @@ class KegiatanController extends Controller
                     }
                 }
 
-                // Render tombol jika lolos filter
                 if ($allowEditDelete) {
-                    // Cek permission Edit
                     if ($user->can('kegiatan_edit')) {
-                        $buttons .= '<a class="btn btn-xs btn-success" href="' . route('admin.kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i></a> ';
+                        $buttons .= '<a class="btn btn-sm btn-success" href="' . route('admin.kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit text-white"></i></a>';
                     }
-
-                    // Cek permission Hapus
-                    // (Biasanya kalau gak boleh edit, hapus juga gak boleh saat sedang diverifikasi)
                     if ($user->can('kegiatan_delete')) {
-                        $buttons .= '<button type="button" class="btn btn-xs btn-danger js-delete-btn" data-url="' . route('admin.kegiatan.destroy', $row->id) . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                        // Tetap gunakan js-delete-btn agar terhubung dengan SweetAlert
+                        $buttons .= '<button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="' . route('admin.kegiatan.destroy', $row->id) . '" title="Hapus"><i class="fas fa-trash text-white"></i></button>';
                     }
                 }
+
+                // Tutup div btn-group
+                $buttons .= '</div>';
 
                 return $buttons;
             });

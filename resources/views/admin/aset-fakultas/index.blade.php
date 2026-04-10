@@ -59,36 +59,51 @@
 </div>
 
 {{-- Stat Cards --}}
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-3 fw-bold text-primary">{{ number_format($stats['total']) }}</div>
-                <div class="small text-muted">Total Aset</div>
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="icon-container icon-total">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="info">
+                <div class="stat-number">{{ number_format($stats['total']) }}</div>
+                <div class="stat-label">Total Aset</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-3 fw-bold text-success">{{ number_format($stats['baik']) }}</div>
-                <div class="small text-muted">Kondisi Baik</div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="icon-container icon-disetujui">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="info">
+                <div class="stat-number">{{ number_format($stats['baik']) }}</div>
+                <div class="stat-label">Kondisi Baik</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-3 fw-bold text-warning">{{ number_format($stats['rusak_ringan']) }}</div>
-                <div class="small text-muted">Rusak Ringan</div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="icon-container icon-menunggu">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="info">
+                <div class="stat-number">{{ number_format($stats['rusak_ringan']) }}</div>
+                <div class="stat-label">Rusak Ringan</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm text-center h-100">
-            <div class="card-body py-3">
-                <div class="fs-3 fw-bold text-danger">{{ number_format($stats['rusak_berat']) }}</div>
-                <div class="small text-muted">Rusak Berat</div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card">
+            <div class="icon-container icon-ditolak" style="background-color: #f8d7da; color: #dc3545;">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="info">
+                <div class="stat-number">{{ number_format($stats['rusak_berat']) }}</div>
+                <div class="stat-label">Rusak Berat</div>
             </div>
         </div>
     </div>

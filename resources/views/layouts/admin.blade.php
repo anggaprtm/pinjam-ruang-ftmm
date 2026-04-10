@@ -133,28 +133,6 @@
         <div class="body flex-grow-1">
             <main class="container-fluid px-4 py-3">
 
-                @if(session('success'))
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
                 @yield('content')
 
             </main>
@@ -309,29 +287,66 @@
     }
     </script>
 
-    @if(session('success'))
     <script>
-    Swal.fire({
-        title: 'Berhasil!',
-        text: '{{ session('success') }}',
-        icon: 'success',
-        confirmButtonColor: '#741847',
-        confirmButtonText: 'OK'
-    });
-    </script>
-    @endif
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // 1. Notifikasi Sukses (Auto-close)
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{!! session('success') !!}',
+                showConfirmButton: false,
+                timer: 2500 // Hilang otomatis dalam 2.5 detik
+            });
+        @endif
 
-    @if($errors->any())
-    <script>
-    Swal.fire({
-        title: 'Gagal!',
-        text: '{{ $errors->first() }}',
-        icon: 'error',
-        confirmButtonColor: '#d33',
-        confirmButtonText: 'Coba Lagi'
+        // 2. Notifikasi Error / Gagal (Custom Pesan)
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '{!! session('error') !!}',
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Tutup'
+            });
+        @endif
+
+        // 3. Notifikasi Validasi Form Error
+        @if($errors->any())
+            Swal.fire({
+                title: 'Gagal!',
+                text: '{!! $errors->first() !!}',
+                icon: 'error',
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Coba Lagi'
+            });
+        @endif
+
+        // 4. Notifikasi Warning (Peringatan)
+        @if(session('warning'))
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian!',
+                text: '{!! session('warning') !!}',
+                confirmButtonColor: '#ffc107',
+                confirmButtonText: 'Tutup'
+            });
+        @endif
+
+        // 5. Notifikasi Info
+        @if(session('info'))
+            Swal.fire({
+                icon: 'info',
+                title: 'Informasi',
+                text: '{!! session('info') !!}',
+                confirmButtonColor: '#0dcaf0',
+                confirmButtonText: 'Tutup'
+            });
+        @endif
+        
     });
     </script>
-    @endif
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {

@@ -52,23 +52,28 @@
                                 </form>
                             </td>
                             <td data-label="Aksi" class="text-center actions-cell">
-                                @can('ruangan_show')
-                                    <a class="btn btn-xs btn-info" href="{{ route('admin.ruangan.show', $item->id) }}" title="Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                @endcan
-                                @can('ruangan_edit')
-                                    <a class="btn btn-xs btn-success" href="{{ route('admin.ruangan.edit', $item->id) }}" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                @endcan
-                                @can('ruangan_delete')
-                                    <form action="{{ route('admin.ruangan.destroy', $item->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
-                                        <input type="hidden" name="_method" value="DELETE">
-                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-xs btn-danger" title="Hapus"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                @endcan
+                                <div class="btn-group shadow-sm">
+                                    @can('ruangan_show')
+                                        <a class="btn btn-sm btn-info" href="{{ route('admin.ruangan.show', $item->id) }}" title="Detail">
+                                            <i class="fas fa-eye text-white"></i>
+                                        </a>
+                                    @endcan
+                                    @can('ruangan_edit')
+                                        <a class="btn btn-sm btn-success" href="{{ route('admin.ruangan.edit', $item->id) }}" title="Edit">
+                                            <i class="fas fa-edit text-white"></i>
+                                        </a>
+                                    @endcan
+                                    @can('ruangan_delete')
+                                        <form action="{{ route('admin.ruangan.destroy', $item->id) }}" method="POST" 
+                                            class="form-delete" style="display: inline-block; margin:0;">
+                                            @csrf 
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger border-start-0" title="Hapus" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                <i class="fas fa-trash text-white"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -187,5 +192,29 @@
           if (typeof deleteIndex !== 'undefined') table.button(deleteIndex).enable(selectedRows > 0);
       });
     });
+</script>
+<script>
+$(document).ready(function() {
+    // Tangkap event submit pada form dengan class 'form-delete'
+    $('.form-delete').on('submit', function(e) {
+        e.preventDefault(); // Hentikan form agar tidak langsung submit
+        let form = this;
+
+        Swal.fire({
+            title: 'Hapus ruangan ini?',
+            text: "Data ruangan yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash me-1"></i> Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit(); // Lanjutkan submit form jika user klik 'Ya'
+            }
+        });
+    });
+});
 </script>
 @endsection
