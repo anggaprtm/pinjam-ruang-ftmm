@@ -146,7 +146,7 @@
                         <span class="badge {{ $colorClass }} fw-normal" style="font-size:.72rem;"
                             title="{{ match($assign->status_validasi) {
                                 'valid'       => 'Valid',
-                                'tidak_valid' => 'Tidak Valid (< 4 jam)',
+                                'tidak_valid' => 'Tidak Valid (≤ 4 Jam)',
                                 'tidak_fr'    => 'Tidak Face Recognition',
                                 'menunggu'    => 'Menunggu',
                                 default       => '-'
