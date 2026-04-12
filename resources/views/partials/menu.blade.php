@@ -3,9 +3,9 @@
 <div id="sidebar" class="sidebar sidebar-fixed border-end">
 
     <div class="sidebar-brand">
-        <span class="sidebar-brand-full fw-bold">LAYANAN-FTMM</span>
+        <span class="sidebar-brand-full fw-bold">FTMM-NEXUS</span>
         <span class="sidebar-brand-narrow">
-            <i class="fas fa-bolt"></i>
+            <img src="{{ asset('images/brand.png') }}" alt="Logo" style="height: 30px; width: auto;">
         </span>
     </div>
 

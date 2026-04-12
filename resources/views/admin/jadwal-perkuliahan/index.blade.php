@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-calendar-alt me-2"></i> Jadwal Perkuliahan</h3>
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-calendar-alt me-2"></i> Jadwal Perkuliahan</h3>
 
     @can('kuliah_create')
         <div class="d-flex gap-2">
@@ -241,23 +241,28 @@
                                 </div>
                             </td>
                             <td class="text-center actions-cell">
-                                @can('kuliah_show')
-                                    <a class="btn btn-xs btn-info" href="{{ route('admin.jadwal-perkuliahan.show', $jadwal->id) }}" title="Detail">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                @endcan
-                                @can('kuliah_edit')
-                                    <a class="btn btn-xs btn-success" href="{{ route('admin.jadwal-perkuliahan.edit', $jadwal->id) }}" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                @endcan
-                                @can('kuliah_delete')
-                                    <form action="{{ route('admin.jadwal-perkuliahan.destroy', $jadwal->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
-                                        <input type="hidden" name="_method" value="DELETE">
-                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-xs btn-danger" title="Hapus"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                @endcan
+                                <div class="btn-group shadow-sm">
+                                    @can('kuliah_show')
+                                        <a class="btn btn-sm btn-info" href="{{ route('admin.jadwal-perkuliahan.show', $jadwal->id) }}" title="Detail">
+                                            <i class="fas fa-eye text-white"></i>
+                                        </a>
+                                    @endcan
+                                    @can('kuliah_edit')
+                                        <a class="btn btn-sm btn-success" href="{{ route('admin.jadwal-perkuliahan.edit', $jadwal->id) }}" title="Edit">
+                                            <i class="fas fa-edit text-white"></i>
+                                        </a>
+                                    @endcan
+                                    @can('kuliah_delete')
+                                        <form action="{{ route('admin.jadwal-perkuliahan.destroy', $jadwal->id) }}" method="POST" 
+                                            class="form-delete" style="display: inline-block; margin:0;">
+                                            @csrf 
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger border-start-0" title="Hapus" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                <i class="fas fa-trash text-white"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -417,5 +422,29 @@
         }
       });
     });
+</script>
+<script>
+$(document).ready(function() {
+    // Tangkap event submit pada form dengan class 'form-delete'
+    $('.form-delete').on('submit', function(e) {
+        e.preventDefault(); // Hentikan form agar tidak langsung submit
+        let form = this;
+
+        Swal.fire({
+            title: 'Hapus jadwal perkuliahan ini?',
+            text: "Jadwal perkuliahan yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash me-1"></i> Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit(); // Lanjutkan submit form jika user klik 'Ya'
+            }
+        });
+    });
+});
 </script>
 @endsection

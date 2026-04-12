@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-box me-2"></i> Master Barang</h3>
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-box me-2"></i> Master Barang</h3>
 
     <div class="d-flex gap-2">
         @can('barang_create')

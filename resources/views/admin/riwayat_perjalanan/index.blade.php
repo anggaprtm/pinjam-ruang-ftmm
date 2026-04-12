@@ -124,7 +124,7 @@
 
 {{-- Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-road me-2"></i> Logbook Driver & Kendaraan</h3>
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-road me-2"></i> Logbook Driver & Kendaraan</h3>
     @can('riwayat_perjalanan_create')
         <a class="btn btn-success" href="{{ route('admin.riwayat-perjalanan.create') }}">
             <i class="fas fa-plus-circle me-2"></i> 

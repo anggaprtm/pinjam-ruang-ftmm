@@ -155,7 +155,7 @@ table.dataTable thead .sorting_desc {
 
 /* Brand area */
 .sidebar-brand {
-    background-color: #741847 !important;
+    background: linear-gradient(to right, #4c092a, #741847) !important;
     color: #ffffff !important;
     min-height: 56px;
     font-weight: 700;

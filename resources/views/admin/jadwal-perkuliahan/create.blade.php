@@ -3,7 +3,7 @@
 
 <div class="card form-card">
     <div class="card-header">
-        <h4 class="mb-0">{{ trans('global.create') }} Jadwal Perkuliahan</h4>
+        <h4 class="mb-0 fw-bold">{{ trans('global.create') }} Jadwal Perkuliahan</h4>
     </div>
 
     <div class="card-body">

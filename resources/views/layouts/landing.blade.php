@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LayananTerpadu FTMM</title>
+    <title>FTMM-Nexus (LayananTerpadu-FTMM)</title>
 
-    {{-- CSS Libraries (Sama seperti Admin) --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preload" as="image" href="{{ asset('images/logo.png') }}">
+    <link rel="preload" as="image" href="{{ asset('images/logo-ftmm-nexus.png') }}">
     <link href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -141,7 +142,7 @@
     <nav class="navbar navbar-expand-lg navbar-landing fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
-                <i class="fas fa-bolt me-2"></i> LayananFTMM
+                <img src="{{ asset('images/logo.png') }}" alt="LayananFTMM" height="40">
             </a>
             <div class="ms-auto">
                 @auth

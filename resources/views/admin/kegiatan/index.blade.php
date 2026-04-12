@@ -3,7 +3,7 @@
 
 {{-- Bagian Header & Filter --}}
 <div class="d-flex align-items-center mb-4">
-    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-calendar me-2"></i> Daftar Kegiatan</h3>
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-calendar me-2"></i> Daftar Kegiatan</h3>
 
     @can('kegiatan_create')
         <div class="ms-auto d-flex gap-2">

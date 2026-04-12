@@ -20,7 +20,7 @@
 					<div class="p-4 m-3">
 						<!-- Logo -->
 
-						<h5 class="text-dark font-weight-normal pt-5 mt-5">Lupa Password<span class="font-weight-bold"</span> LayananTerpadu-FTMM</h5>
+						<h5 class="text-dark font-weight-normal pt-5 mt-5">Lupa Password<span class="font-weight-bold"</span> FTMM-Nexus (LayananTerpadu-FTMM)</h5>
 
 						@if (session('status'))
 							<div class="alert alert-success" role="alert">

@@ -252,10 +252,19 @@ class KegiatanController extends Controller
         }
         // Pengecekan bentrok tetap sama
         $kegiatanBentrok = $eventService->isRoomTaken($request->all());
-    
+
         if ($kegiatanBentrok) {
+            // Ambil kapasitas ruangan yang diminta
+            $ruanganDiminta = \App\Models\Ruangan::find($request->ruangan_id);
+            $minKapasitas = $ruanganDiminta->kapasitas ?? 0;
+
+            // Cari saran ruangan kosong
+            $saranRuangan = $eventService->getSuggestedRooms($data, $minKapasitas);
+
             return redirect()->back()
                 ->withInput($request->input())
+                ->with('bentrok_kegiatan', $kegiatanBentrok->nama_kegiatan)
+                ->with('saran_ruangan', $saranRuangan)
                 ->withErrors('Ruangan ini tidak tersedia, karena bentrok dengan kegiatan: ' . $kegiatanBentrok->nama_kegiatan);
         }
     
@@ -372,7 +381,14 @@ class KegiatanController extends Controller
 
         $bentrok = $eventService->isRoomTaken($payload);
         if ($bentrok) {
+            $ruanganDiminta = \App\Models\Ruangan::find($request->ruangan_id);
+            $minKapasitas = $ruanganDiminta->kapasitas ?? 0;
+
+            $saranRuangan = $eventService->getSuggestedRooms($payload, $minKapasitas);
+
             return back()->withInput($request->all())
+                ->with('bentrok_kegiatan', $bentrok->nama_kegiatan)
+                ->with('saran_ruangan', $saranRuangan)
                 ->withErrors('Bentrok dengan kegiatan: ' . $bentrok->nama_kegiatan);
         }
 

@@ -2,7 +2,7 @@
 @section('content')
 
 <div class="d-flex align-items-center justify-content-between mb-4">
-    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-calendar-check me-2"></i> Kalender Kegiatan</h3>
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-calendar-check me-2"></i> Kalender Kegiatan</h3>
 </div>
 
 <div class="calendar-container">

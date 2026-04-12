@@ -3,7 +3,7 @@
 @section('content')
 <div class="content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="font-weight-bold text-nowrap"><i class="fas fa-cog me-2"></i> Konfigurasi Display</h3>
+        <h3 class="fw-bold text-nowrap"><i class="fas fa-cog me-2"></i> Konfigurasi Display</h3>
         <a href="{{ route('admin.display-config.create') }}" class="btn btn-success shadow-sm">
             <i class="fas fa-plus me-2"></i>Tambah Config
         </a>

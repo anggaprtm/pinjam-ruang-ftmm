@@ -122,7 +122,7 @@ class EventService
         if ($kuliahBentrok) {
             // Return sebagai objek Kegiatan agar format error di frontend konsisten
             return new Kegiatan([
-                'nama_kegiatan' => 'Perkuliahan: ' . $kuliahBentrok->mata_kuliah . ' (' . ($kuliahBentrok->semester->nama ?? '') . ')'
+                'nama_kegiatan' => '[KULIAH] ' . $kuliahBentrok->mata_kuliah . ' (' . ($kuliahBentrok->semester->nama ?? '') . ')'
             ]);
         }
 
@@ -274,5 +274,56 @@ class EventService
                       ->whereTime('waktu_selesai', '>', $jamMulai);
             })
             ->first();
+    }
+
+    /**
+     * Mencari ruangan alternatif yang kosong pada rentang waktu tertentu,
+     * dengan kapasitas minimal sama dengan ruangan yang diminta.
+     *
+     * @param array $requestData
+     * @param int $minKapasitas
+     * @return \Illuminate\Support\Collection
+     */
+    public function getSuggestedRooms(array $requestData, int $minKapasitas = 0): \Illuminate\Support\Collection
+    {
+        $waktuMulai  = \Carbon\Carbon::parse($requestData['waktu_mulai']);
+        $waktuSelesai = \Carbon\Carbon::parse($requestData['waktu_selesai']);
+        $ruanganDiminta = $requestData['ruangan_id'];
+
+        // Ambil semua ruangan dengan kapasitas >= yang diminta, kecuali ruangan yg diminta
+        $kandidat = \App\Models\Ruangan::where('id', '!=', $ruanganDiminta)
+            ->where('kapasitas', '>=', $minKapasitas)
+            ->where(function ($query) {
+                $query->where('nama', 'like', 'GC-7%')
+                    ->orWhere('nama', 'like', 'GC-6%');
+            })
+            ->get();
+
+        $ruanganKosong = $kandidat->filter(function ($ruangan) use ($requestData, $waktuMulai, $waktuSelesai) {
+            // Cek bentrok kegiatan
+            $bentrokKegiatan = Kegiatan::where('ruangan_id', $ruangan->id)
+                ->whereIn('status', ['disetujui', 'verifikasi_akademik', 'verifikasi_sarpras'])
+                ->where('waktu_mulai', '<', $waktuSelesai)
+                ->where('waktu_selesai', '>', $waktuMulai)
+                ->exists();
+
+            if ($bentrokKegiatan) return false;
+
+            // Cek bentrok jadwal perkuliahan
+            $namaHari = $waktuMulai->locale('id')->isoFormat('dddd');
+            $bentrokKuliah = \App\Models\JadwalPerkuliahan::where('ruangan_id', $ruangan->id)
+                ->where('hari', $namaHari)
+                ->where('waktu_mulai', '<', $waktuSelesai->format('H:i:s'))
+                ->where('waktu_selesai', '>', $waktuMulai->format('H:i:s'))
+                ->whereHas('semester', function ($q) use ($waktuMulai) {
+                    $q->whereDate('tanggal_mulai', '<=', $waktuMulai->toDateString())
+                    ->whereDate('tanggal_selesai', '>=', $waktuMulai->toDateString());
+                })
+                ->exists();
+
+            return !$bentrokKuliah;
+        });
+
+        return $ruanganKosong->values();
     }
 }

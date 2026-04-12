@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>LayananTerpadu FTMM</title>
+    <title>FTMM-Nexus (LayananTerpadu-FTMM)</title>
 
     {{-- ═══════════════════════════════════════════════════════
          CSS — urutan sangat penting, jangan diubah
@@ -314,13 +314,50 @@
 
         // 3. Notifikasi Validasi Form Error
         @if($errors->any())
-            Swal.fire({
-                title: 'Gagal!',
-                text: '{!! $errors->first() !!}',
-                icon: 'error',
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Coba Lagi'
-            });
+            @if(session('saran_ruangan') && session('saran_ruangan')->isNotEmpty())
+                {{-- Khusus error bentrok: tampilkan dengan saran ruangan --}}
+                Swal.fire({
+                    title: 'Ruangan Tidak Tersedia!',
+                    icon: 'warning',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Pilih Ruangan Lain',
+                    html: `
+                        <p>Bentrok dengan kegiatan: <strong>{{ session('bentrok_kegiatan') }}</strong></p>
+                        <hr>
+                        <p class="mb-2 text-start"><strong>🏫 Ruangan alternatif yang tersedia:</strong></p>
+                        <ul class="text-start ps-3">
+                            @foreach(session('saran_ruangan') as $saran)
+                                <li>
+                                    <strong>{{ $saran->nama }}</strong>
+                                    @if($saran->kapasitas) &mdash; Kapasitas: {{ $saran->kapasitas }} org @endif
+                                    @if($saran->lokasi) &mdash; {{ $saran->lokasi }} @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    `
+                });
+            @elseif(session('bentrok_kegiatan'))
+                {{-- Bentrok tapi tidak ada ruangan alternatif --}}
+                Swal.fire({
+                    title: 'Ruangan Tidak Tersedia!',
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Coba Lagi',
+                    html: `
+                        <p>Bentrok dengan kegiatan: <strong>{{ session('bentrok_kegiatan') }}</strong></p>
+                        <p class="text-muted">Tidak ada ruangan alternatif yang tersedia pada waktu tersebut. Silahkan ganti waktu kegiatan!</p>
+                    `
+                });
+            @else
+                {{-- Error validasi biasa (bukan bentrok) --}}
+                Swal.fire({
+                    title: 'Gagal!',
+                    text: '{!! $errors->first() !!}',
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Coba Lagi'
+                });
+            @endif
         @endif
 
         // 4. Notifikasi Warning (Peringatan)

@@ -3,7 +3,7 @@
 
 <div class="card form-card">
     <div class="card-header">
-        <h4 class="mb-0">{{ trans('global.create') }} {{ trans('cruds.kegiatan.title_singular') }}</h4>
+        <h4 class="mb-0 fw-bold">{{ trans('global.create') }} {{ trans('cruds.kegiatan.title_singular') }}</h4>
     </div>
 
     <div class="card-body">

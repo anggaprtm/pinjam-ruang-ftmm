@@ -8,9 +8,18 @@
     <div class="hero-content container">
         
         {{-- JUDUL UTAMA --}}
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold mb-3">Layanan-FTMM</h1>
-            <p class="lead mb-0" style="opacity: 0.9;">Portal Layanan Terpadu Fakultas Teknologi Maju dan Multidisiplin</p>
+        <div class="text-center mt-4 mb-5">
+            <img src="{{ asset('images/logo-ftmm-nexus.png') }}" 
+                alt="FTMM-NEXUS" 
+                style="height: 30px; width: auto;">
+            
+            <small class="text-light d-block" style="opacity: 0.8;">
+                Network for Excellence in Unified Services
+            </small>
+
+            <p class="lead mb-0 mt-2" style="opacity: 0.9;">
+                Portal Layanan Terpadu Fakultas Teknologi Maju dan Multidisiplin
+            </p>
         </div>
 
         <div class="row g-3 justify-content-center hero-shortcuts px-2">

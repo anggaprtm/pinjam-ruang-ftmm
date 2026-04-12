@@ -3,7 +3,7 @@
 
 {{-- Bagian Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-briefcase me-2"></i> Daftar Peranan</h3>
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-briefcase me-2"></i> Daftar Peranan</h3>
     @can('role_create')
         <a class="btn btn-success" href="{{ route('admin.roles.create') }}">
             <i class="fas fa-plus-circle me-2"></i> {{ trans('global.add') }} {{ trans('cruds.role.title_singular') }}

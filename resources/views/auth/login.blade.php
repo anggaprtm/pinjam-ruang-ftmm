@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
-    <title>Login — {{ config('app.name') }}</title>
+    <title>Login — FTMM-Nexus (LayananTerpadu-FTMM)</title>
 
     <!-- Asset statis Bootstrap/FontAwesome/CSS kamu -->
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
@@ -20,7 +20,7 @@
             <div class="col-lg-4 col-md-6 col-12 order-lg-1 min-vh-100 order-2 bg-white">
                 <div class="p-4 m-3">
                     <h5 class="text-dark font-weight-normal pt-5 mt-5">
-                        Aplikasi <span class="font-weight-bold">LayananTerpadu-FTMM</span>
+                        Aplikasi <span class="font-weight-bold">FTMM-Nexus</span>
                     </h5>
 
                     {{-- Session status (mis. setelah reset password) --}}

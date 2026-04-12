@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'LayananTerpadu-FTMM'),
+    'name' => env('APP_NAME', 'FTMM-Nexus'),
 
     /*
     |--------------------------------------------------------------------------

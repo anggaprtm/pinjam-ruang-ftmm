@@ -2,7 +2,7 @@
 @section('content')
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="font-weight-bold"><i class="fas fa-users-cog me-2"></i> Manajemen Data Tendik</h3>
+    <h3 class="fw-bold"><i class="fas fa-users-cog me-2"></i> Manajemen Data Tendik</h3>
     <a class="btn btn-success" href="{{ route('admin.tendik.create') }}">
         <i class="fas fa-plus-circle me-2"></i> Tambah Tendik Baru
     </a>

@@ -154,7 +154,7 @@ class JadwalPerkuliahanController extends Controller
     {
         abort_if(Gate::denies('kuliah_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         $jadwalPerkuliahan->delete();
-        return back();
+        return back()->with('success', 'Jadwal perkuliahan berhasil dihapus!');
     }
 
     public function massDestroy(MassDestroyJadwalPerkuliahanRequest $request)

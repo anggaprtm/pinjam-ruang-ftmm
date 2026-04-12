@@ -36,7 +36,7 @@
 
 {{-- Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h3 class="font-weight-bold text-nowrap"><i class="fas fa-boxes me-2"></i>Aset Fakultas</h3>
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-boxes me-2"></i>Aset Fakultas</h3>
     <div class="d-flex gap-2 flex-wrap">
         @can('aset_fakultas_create')
             <a class="btn btn-secondary shadow-sm" href="{{ route('admin.aset-fakultas.import.form') }}">
