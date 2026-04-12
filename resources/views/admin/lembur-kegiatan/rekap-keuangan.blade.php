@@ -99,7 +99,7 @@
                 <tbody>
                     @forelse($rows as $i => $row)
                         <tr>
-                            <td class="ps-4 fw-bold text-muted">{{ $i + 1 }}</td>
+                            <td class="ps-4 fw-bold text-muted">{{ $loop->iteration }}</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="avatar-circle">{{ strtoupper(substr($row->nama, 0, 1)) }}</div>
