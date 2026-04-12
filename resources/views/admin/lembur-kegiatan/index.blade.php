@@ -110,7 +110,7 @@
                         </span>
                         @if($totalMenunggu > 0)
                         <span class="stat-pill pill-menunggu">
-                            <i class="fas fa-hourglass-half"></i> {{ $totalMenunggu }} Menunggu
+                            <i class="fas fa-times-circle"></i> {{ $totalMenunggu }} Tidak FaceRecog
                         </span>
                         @endif
                         @if($totalTidak > 0)
@@ -146,7 +146,7 @@
                 @endif
 
                 <div class="mt-2 text-end">
-                    <small class="text-muted">Dibuat oleh {{ $item->dibuatOleh->name ?? '-' }} · {{ $item->created_at->diffForHumans() }}</small>
+                    <small class="text-muted">Dibuat {{ $item->created_at->diffForHumans() }}</small>
                 </div>
             </div>
         </div>

@@ -62,7 +62,8 @@
                         </div>
                         <div class="col-md-4">
                             <div class="text-muted small fw-semibold">DIBUAT OLEH</div>
-                            <div class="mt-1 fw-semibold">{{ $lemburKegiatan->dibuatOleh->name ?? '-' }}</div>
+                            <!-- <div class="mt-1 fw-semibold">{{ $lemburKegiatan->dibuatOleh->name ?? '-' }}</div> -->
+                             Admin
                         </div>
                         <div class="col-md-4">
                             <div class="text-muted small fw-semibold">SURAT TUGAS</div>
@@ -93,11 +94,11 @@
                         </div>
                         <div class="text-center px-3 py-2 rounded-3" style="background:#fef9c3;">
                             <div class="fw-bold text-warning fs-5">{{ $totalMenunggu }}</div>
-                            <div class="text-muted small">Menunggu</div>
+                            <div class="text-muted small">Tidak Face Recognition</div>
                         </div>
                         <div class="text-center px-3 py-2 rounded-3" style="background:#fee2e2;">
                             <div class="fw-bold text-danger fs-5">{{ $totalTidak }}</div>
-                            <div class="text-muted small">Tidak Valid</div>
+                            <div class="text-muted small">Tidak Valid (≤ 4 Jam)</div>
                         </div>
                         <div class="text-center px-3 py-2 rounded-3" style="background:#f1f5f9;">
                             <div class="fw-bold text-secondary fs-5">{{ $total }}</div>
@@ -168,8 +169,8 @@
                                             };
                                             $lbl = match($assign->status_validasi) {
                                                 'valid'       => '<i class="fas fa-check-circle"></i> Valid',
-                                                'tidak_valid' => '<i class="fas fa-times-circle"></i> Tidak Valid',
-                                                default       => '<i class="fas fa-hourglass-half"></i> Menunggu',
+                                                'tidak_valid' => '<i class="fas fa-times-circle"></i> Tidak Face Recognition',
+                                                default       => '<i class="fas fa-hourglass-half"></i> ≤ 4 Jam',
                                             };
                                         @endphp
                                         <span class="status-badge {{ $cls }}">{!! $lbl !!}</span>
