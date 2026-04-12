@@ -85,6 +85,7 @@
                     @php
                         $totalValid    = $assignments->where('status_validasi', 'valid')->count();
                         $totalMenunggu = $assignments->where('status_validasi', 'menunggu')->count();
+                        $totalTidakFr  = $assignments->where('status_validasi', 'tidak_fr')->count();
                         $totalTidak    = $assignments->where('status_validasi', 'tidak_valid')->count();
                         $total         = $assignments->count();
                     @endphp
@@ -93,9 +94,13 @@
                             <div class="fw-bold text-success fs-5">{{ $totalValid }}</div>
                             <div class="text-muted small">Valid</div>
                         </div>
+                        <div class="text-center px-3 py-2 rounded-3" style="background:#fef3c7;">
+                            <div class="fw-bold text-danger fs-5">{{ $totalTidakFr }}</div>
+                            <div class="text-muted small">Tidak Face Recognition</div>
+                        </div>
                         <div class="text-center px-3 py-2 rounded-3" style="background:#fef9c3;">
                             <div class="fw-bold text-warning fs-5">{{ $totalMenunggu }}</div>
-                            <div class="text-muted small">Tidak Face Recognition</div>
+                            <div class="text-muted small">Menunggu</div>
                         </div>
                         <div class="text-center px-3 py-2 rounded-3" style="background:#fee2e2;">
                             <div class="fw-bold text-danger fs-5">{{ $totalTidak }}</div>
