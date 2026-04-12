@@ -94,6 +94,12 @@
                 <i class="fas fa-clock me-2"></i> Atur Jadwal
             </a>
 
+            <a href="{{ route('admin.lembur-kegiatan.index') }}" 
+            class="btn btn-outline-warning fw-bold shadow-sm d-flex align-items-center flex-grow-1 flex-md-grow-0 justify-content-center" 
+            style="border-radius: 10px;">
+                <i class="fas fa-business-time me-2"></i> Kegiatan Lembur
+            </a>
+
             {{-- FORM FILTER TANGGAL --}}
             <form action="{{ route('admin.absensi.index') }}" method="GET" class="w-100 flex-md-grow-0 mt-2 mt-md-0" style="max-width: 300px;">
                 <div class="input-group shadow-sm w-100" style="border-radius: 10px; overflow: hidden;">
@@ -485,8 +491,13 @@
                     <span><i class="fas fa-business-time me-2"></i>Rekap Lembur</span>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-white text-success border">{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('M Y') }}</span>
-                        <a href="{{ route('admin.absensi.rekap-lembur', ['bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m')]) }}" class="btn btn-sm btn-success py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
-                            Semua <i class="fas fa-arrow-right ms-1"></i>
+                        <a href="{{ route('admin.absensi.rekap-lembur', ['bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m')]) }}" 
+                        class="btn btn-sm btn-success py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
+                            Rekap <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                        <a href="{{ route('admin.lembur-kegiatan.index', ['bulan' => \Carbon\Carbon::parse($tanggal)->format('Y-m')]) }}" 
+                        class="btn btn-sm btn-outline-success py-0 px-2 shadow-sm" style="font-size: 0.75rem; border-radius: 6px;">
+                            <i class="fas fa-tasks"></i> Kegiatan
                         </a>
                     </div>
                 </div>

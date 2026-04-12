@@ -43,6 +43,15 @@
                             </a>
                         </li>
                     @endcan
+                    @can('presensi_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.lembur-kegiatan.index') }}"
+                            class="nav-link {{ request()->is('admin/lembur-kegiatan*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-business-time"></i></span>
+                                Kegiatan Lembur
+                            </a>
+                        </li>
+                    @endcan
                     @can('tendik_access')
                         <li class="nav-item">
                             <a href="{{ route('admin.tendik.index') }}"

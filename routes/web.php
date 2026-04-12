@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\DisplayScheduleController;
 use App\Http\Controllers\Admin\DeviceCommandController;
 use App\Http\Controllers\Admin\AgendaFakultasController;
 use App\Http\Controllers\Admin\AsetFakultasController;
+use App\Http\Controllers\Admin\LemburKegiatanController;
 
 
 
@@ -158,6 +159,14 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::post('aset-fakultas/export-zip', [AsetFakultasController::class, 'exportZip'])->name('aset-fakultas.export-zip');
     Route::post('aset-fakultas/mass-move', [AsetFakultasController::class, 'massMove'])->name('aset-fakultas.mass-move');
     Route::resource('aset-fakultas', AsetFakultasController::class)->parameters(['aset-fakultas' => 'asetFakultas']);
+    Route::resource('lembur-kegiatan', LemburKegiatanController::class)
+        ->names('lembur-kegiatan');
+    Route::prefix('lembur-kegiatan/{lemburKegiatan}')->name('admin.lembur-kegiatan.')->group(function () {
+        Route::post('assign',         [LemburKegiatanController::class, 'assignPegawai'])->name('assign');
+        Route::post('remove-pegawai', [LemburKegiatanController::class, 'removePegawai'])->name('remove-pegawai');
+    });
+    Route::get('lembur-kegiatan-rekap-keuangan', [LemburKegiatanController::class, 'rekapKeuangan'])
+        ->name('lembur-kegiatan.rekap-keuangan');
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
