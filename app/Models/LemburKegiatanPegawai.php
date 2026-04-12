@@ -5,57 +5,50 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class LemburKegiatan extends Model
+class LemburKegiatanPegawai extends Model
 {
     use HasFactory;
 
-    protected $table = 'lembur_kegiatan';
+    protected $table = 'lembur_kegiatan_pegawai';
 
     protected $fillable = [
-        'tanggal',
-        'nama_kegiatan',
-        'deskripsi',
-        'file_surat_tugas',
-        'dibuat_oleh',
-    ];
-
-    protected $casts = [
-        'tanggal' => 'date',
+        'lembur_kegiatan_id',
+        'user_id',
+        'peran',
+        'status_validasi',
     ];
 
     // ─── Relasi ───────────────────────────────────────────────
 
-    /** Admin yang membuat kegiatan ini */
-    public function dibuatOleh()
+    public function kegiatan()
     {
-        return $this->belongsTo(User::class, 'dibuat_oleh');
+        return $this->belongsTo(LemburKegiatan::class, 'lembur_kegiatan_id');
     }
 
-    /** Pivot: semua entry assignment pegawai */
-    public function pegawaiAssignments()
+    public function user()
     {
-        return $this->hasMany(LemburKegiatanPegawai::class, 'lembur_kegiatan_id');
+        return $this->belongsTo(User::class);
     }
 
-    /** Shortcut: langsung ke User via pivot */
-    public function pegawais()
-    {
-        return $this->belongsToMany(User::class, 'lembur_kegiatan_pegawai', 'lembur_kegiatan_id', 'user_id')
-                    ->withPivot(['peran', 'status_validasi'])
-                    ->withTimestamps();
-    }
+    // ─── Accessor: ambil data presensi yang berkaitan ─────────
 
-    // ─── Accessors ────────────────────────────────────────────
-
-    /** Jumlah pegawai yang validasinya 'valid' */
-    public function getTotalValidAttribute(): int
+    /**
+     * Ambil AbsensiLog pegawai ini di tanggal kegiatannya.
+     * Berguna untuk ditampilkan di view detail tanpa query tambahan
+     * (jika sudah eager load dengan load(['absensiLog'])).
+     */
+    public function absensiLog()
     {
-        return $this->pegawaiAssignments()->where('status_validasi', 'valid')->count();
-    }
-
-    /** Jumlah total pegawai yang diassign */
-    public function getTotalAssignAttribute(): int
-    {
-        return $this->pegawaiAssignments()->count();
+        return $this->hasOneThrough(
+            AbsensiLog::class,
+            User::class,
+            'id',           // FK di users
+            'user_id',      // FK di absensi_logs
+            'user_id',      // Local key di pivot (user_id)
+            'id'            // Local key di users
+        );
+        // Catatan: hasOneThrough di sini tidak bisa filter by tanggal secara langsung.
+        // Gunakan query manual di controller untuk filter by tanggal.
+        // Ini hanya disediakan sebagai shortcut relasi dasar.
     }
 }
