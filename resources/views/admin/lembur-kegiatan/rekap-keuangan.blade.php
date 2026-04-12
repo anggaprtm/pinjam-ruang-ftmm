@@ -88,10 +88,10 @@
                     <tr>
                         <th class="ps-4" style="width:4%;">No</th>
                         <th style="width:22%;">Pegawai</th>
-                        <th style="width:22%;">Kegiatan</th>
+                        <th style="width:16%;">Kegiatan</th>
                         <th style="width:10%;">Tanggal</th>
-                        <th style="width:10%;">Peran</th>
-                        <th style="width:12%;">Presensi</th>
+                        <th style="width:21%;">Peran</th>
+                        <th style="width:7%;">Presensi</th>
                         <th style="width:10%;">Durasi</th>
                         <th style="width:10%;">Surat Tugas</th>
                     </tr>
