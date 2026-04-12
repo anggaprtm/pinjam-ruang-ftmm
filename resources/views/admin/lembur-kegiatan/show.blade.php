@@ -6,6 +6,7 @@
     .status-badge { display:inline-flex; align-items:center; gap:5px; border-radius:20px; padding:4px 12px; font-size:.78rem; font-weight:700; }
     .status-valid      { background:#d1fae5; color:#065f46; }
     .status-menunggu   { background:#fef9c3; color:#713f12; }
+    .status-tidak-fr { background:#fef3c7; color:#92400e; }
     .status-tidak      { background:#fee2e2; color:#991b1b; }
     .table thead th { background:#f8fafc; color:#475569; font-weight:700; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; border-bottom:2px solid #e2e8f0; padding:.85rem 1.25rem; }
     .table tbody td { padding:.85rem 1.25rem; vertical-align:middle; border-bottom:1px solid #f1f5f9; }
@@ -118,12 +119,12 @@
                         <thead>
                             <tr>
                                 <th class="ps-4" style="width:5%;">#</th>
-                                <th style="width:28%;">Nama</th>
+                                <th style="width:29%;">Nama</th>
                                 <th style="width:12%;">Peran</th>
-                                <th style="width:18%;">Presensi</th>
-                                <th style="width:15%;">Durasi</th>
-                                <th style="width:12%;">Status</th>
-                                <th style="width:10%;">Aksi</th>
+                                <th style="width:12%;">Presensi</th>
+                                <th style="width:10%;">Durasi</th>
+                                <th style="width:23%;">Status</th>
+                                <th style="width:9%;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="pegawaiTbody">
@@ -165,12 +166,14 @@
                                             $cls = match($assign->status_validasi) {
                                                 'valid'       => 'status-valid',
                                                 'tidak_valid' => 'status-tidak',
+                                                'tidak_fr'    => 'status-tidak-fr',
                                                 default       => 'status-menunggu',
                                             };
                                             $lbl = match($assign->status_validasi) {
                                                 'valid'       => '<i class="fas fa-check-circle"></i> Valid',
-                                                'tidak_valid' => '<i class="fas fa-times-circle"></i> Tidak Face Recognition',
-                                                default       => '<i class="fas fa-hourglass-half"></i> ≤ 4 Jam',
+                                                'tidak_valid' => '<i class="fas fa-clock"></i> Tidak Valid (≤ 4 Jam)',
+                                                'tidak_fr'    => '<i class="fas fa-user-slash"></i> Tidak Face Recognition',
+                                                default       => '<i class="fas fa-hourglass-half"></i> Menunggu',
                                             };
                                         @endphp
                                         <span class="status-badge {{ $cls }}">{!! $lbl !!}</span>

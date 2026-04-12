@@ -189,19 +189,25 @@ class SyncAttendance extends Command
                         // DAN pegawai ini terdaftar di suatu kegiatan lembur.
                         // ──────────────────────────────────────────────
                         if ($isLibur && isset($assignmentHariIni[$user->id])) {
-                            $statusValidasi = 'tidak_valid'; // Default: data ada tapi tidak memenuhi syarat
+                        $sudahLewat = !$targetDate->isToday();
 
-                            if ($statusKehadiran === 'hadir') {
-                                $statusValidasi = 'valid';
-                            } elseif (!$scanMasuk) {
-                                // Belum ada presensi sama sekali → masih 'menunggu'
-                                $statusValidasi = 'menunggu';
-                            }
-
-                            LemburKegiatanPegawai::where('lembur_kegiatan_id', $assignmentHariIni[$user->id]['lembur_kegiatan_id'])
-                                ->where('user_id', $user->id)
-                                ->update(['status_validasi' => $statusValidasi]);
+                        if ($statusKehadiran === 'hadir') {
+                            $statusValidasi = 'valid';
+                        } elseif (!$scanMasuk) {
+                            // Tidak ada scan sama sekali
+                            $statusValidasi = $sudahLewat ? 'tidak_fr' : 'menunggu';
+                        } elseif (!$scanKeluar) {
+                            // Ada scan masuk, belum ada scan pulang
+                            $statusValidasi = $sudahLewat ? 'tidak_valid' : 'menunggu';
+                        } else {
+                            // Ada keduanya tapi durasi < 4 jam (statusKehadiran bukan 'hadir')
+                            $statusValidasi = 'tidak_valid';
                         }
+
+                        LemburKegiatanPegawai::where('lembur_kegiatan_id', $assignmentHariIni[$user->id]['lembur_kegiatan_id'])
+                            ->where('user_id', $user->id)
+                            ->update(['status_validasi' => $statusValidasi]);
+                    }
                     }
                 }
             } catch (\Exception $e) {

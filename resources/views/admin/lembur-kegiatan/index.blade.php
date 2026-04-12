@@ -59,9 +59,10 @@
     @forelse($kegiatan as $item)
         @php
             $totalAssign = $item->pegawaiAssignments->count();
-            $totalValid  = $item->pegawaiAssignments->where('status_validasi', 'valid')->count();
+            $totalValid   = $item->pegawaiAssignments->where('status_validasi', 'valid')->count();
             $totalMenunggu = $item->pegawaiAssignments->where('status_validasi', 'menunggu')->count();
-            $totalTidak  = $item->pegawaiAssignments->where('status_validasi', 'tidak_valid')->count();
+            $totalTidakFr = $item->pegawaiAssignments->where('status_validasi', 'tidak_fr')->count();
+            $totalTidak   = $item->pegawaiAssignments->where('status_validasi', 'tidak_valid')->count();
             $hariTanggal = \Carbon\Carbon::parse($item->tanggal);
         @endphp
         <div class="lk-card">
@@ -104,19 +105,24 @@
                             </a>
                         @endif
                     </div>
-                    <div class="d-flex gap-2 flex-shrink-0 ms-3">
+                    <div class="d-flex gap-2 flex-shrink-0 ms-3 flex-wrap">
                         <span class="stat-pill pill-valid">
                             <i class="fas fa-check-circle"></i> {{ $totalValid }} Valid
                         </span>
                         @if($totalMenunggu > 0)
-                        <span class="stat-pill pill-menunggu">
-                            <i class="fas fa-times-circle"></i> {{ $totalMenunggu }} Tidak FaceRecog
-                        </span>
+                            <span class="stat-pill pill-menunggu">
+                                <i class="fas fa-hourglass-half"></i> {{ $totalMenunggu }} Menunggu
+                            </span>
+                        @endif
+                        @if($totalTidakFr > 0)
+                            <span class="stat-pill" style="background:#fef3c7; color:#92400e;">
+                                <i class="fas fa-user-slash"></i> {{ $totalTidakFr }} Tidak Face Recog
+                            </span>
                         @endif
                         @if($totalTidak > 0)
-                        <span class="stat-pill pill-tidak">
-                            <i class="fas fa-times-circle"></i> {{ $totalTidak }} Tidak Valid
-                        </span>
+                            <span class="stat-pill pill-tidak">
+                                <i class="fas fa-clock"></i> {{ $totalTidak }} Tidak Valid
+                            </span>
                         @endif
                         <span class="stat-pill" style="background:#f1f5f9; color:#475569;">
                             <i class="fas fa-users"></i> {{ $totalAssign }} Pegawai
@@ -132,15 +138,26 @@
                             $colorClass = match($assign->status_validasi) {
                                 'valid'       => 'bg-success text-white',
                                 'tidak_valid' => 'bg-danger text-white',
-                                default       => 'bg-warning text-dark',
+                                'tidak_fr'    => 'bg-warning text-dark',
+                                'menunggu'    => 'bg-secondary text-white',
+                                default       => 'bg-light text-dark border',
                             };
                         @endphp
-                        <span class="badge {{ $colorClass }} fw-normal" style="font-size:.72rem;">
+                        <span class="badge {{ $colorClass }} fw-normal" style="font-size:.72rem;"
+                            title="{{ match($assign->status_validasi) {
+                                'valid'       => 'Valid',
+                                'tidak_valid' => 'Tidak Valid (< 4 jam)',
+                                'tidak_fr'    => 'Tidak Face Recognition',
+                                'menunggu'    => 'Menunggu',
+                                default       => '-'
+                            } }}">
                             {{ $assign->user->name ?? 'Unknown' }}
                         </span>
                     @endforeach
                     @if($totalAssign > 6)
-                        <span class="badge bg-secondary fw-normal" style="font-size:.72rem;">+{{ $totalAssign - 6 }} lainnya</span>
+                        <span class="badge bg-secondary fw-normal" style="font-size:.72rem;">
+                            +{{ $totalAssign - 6 }} lainnya
+                        </span>
                     @endif
                 </div>
                 @endif

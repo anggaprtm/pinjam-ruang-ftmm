@@ -378,13 +378,20 @@ class LemburKegiatanController extends Controller
      */
     private function hitungStatusValidasi(int $userId, string $tanggal): string
     {
+        $sudahLewat = Carbon::parse($tanggal)->isPast() && !Carbon::parse($tanggal)->isToday();
         $log = AbsensiLog::where('user_id', $userId)->whereDate('tanggal', $tanggal)->first();
 
-        if (!$log || !$log->jam_masuk || !$log->jam_keluar ||
-            $log->jam_masuk === '-' || $log->jam_keluar === '-') {
-            return 'menunggu';
+        // Tidak ada log / tidak ada scan masuk sama sekali
+        if (!$log || !$log->jam_masuk || $log->jam_masuk === '-') {
+            return $sudahLewat ? 'tidak_fr' : 'menunggu';
         }
 
+        // Ada scan masuk tapi tidak ada scan pulang
+        if (!$log->jam_keluar || $log->jam_keluar === '-') {
+            return $sudahLewat ? 'tidak_valid' : 'menunggu';
+        }
+
+        // Ada keduanya → hitung durasi
         try {
             $masuk  = Carbon::createFromFormat('H:i', $log->jam_masuk);
             $keluar = Carbon::createFromFormat('H:i', $log->jam_keluar);
@@ -393,6 +400,7 @@ class LemburKegiatanController extends Controller
             }
         } catch (\Exception $e) { /* silent */ }
 
+        // Ada scan keduanya tapi durasi < 4 jam
         return 'tidak_valid';
     }
 
