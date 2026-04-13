@@ -123,8 +123,9 @@
             
             <div class="col-6 col-md-3">
                 <label class="form-label small mb-1 fw-semibold">Ruangan</label>
-                <select name="ruangan_id" class="form-select form-select-sm select2">
-                    <option value="">-- Semua Ruangan --</option>
+                {{-- Tambahkan my-select2 dan data-placeholder --}}
+                <select name="ruangan_id" class="form-select form-select-sm my-select2" data-placeholder="-- Semua Ruangan --">
+                    <option value=""></option> {{-- Harus kosong agar placeholder dan allowClear jalan --}}
                     @foreach($ruanganList as $r)
                         <option value="{{ $r->id }}" {{ $filterRuangan == $r->id ? 'selected' : '' }}>{{ $r->nama }}</option>
                     @endforeach
@@ -133,8 +134,8 @@
 
             <div class="col-6 col-md-2">
                 <label class="form-label small mb-1 fw-semibold">Tahun</label>
-                <select name="tahun_aset" class="form-select form-select-sm">
-                    <option value="">-- Semua Tahun --</option>
+                <select name="tahun_aset" class="form-select form-select-sm my-select2" data-placeholder="-- Semua Tahun --">
+                    <option value=""></option>
                     @foreach($tahunOptions as $tahun)
                         <option value="{{ $tahun }}" {{ $filterTahun == $tahun ? 'selected' : '' }}>{{ $tahun }}</option>
                     @endforeach
@@ -143,8 +144,8 @@
 
             <div class="col-6 col-md-2">
                 <label class="form-label small mb-1 fw-semibold">Kondisi</label>
-                <select name="kondisi" class="form-select form-select-sm">
-                    <option value="">-- Semua Kondisi --</option>
+                <select name="kondisi" class="form-select form-select-sm my-select2" data-placeholder="-- Semua Kondisi --">
+                    <option value=""></option>
                     @foreach($kondisiOptions as $k => $v)
                         <option value="{{ $k }}" {{ $filterKondisi == $k ? 'selected' : '' }}>{{ $v }}</option>
                     @endforeach
@@ -531,6 +532,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Checkbox "Pilih Semua" di tabel utama ──
     document.getElementById('checkAll')?.addEventListener('change', function () {
         document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+    });
+});
+
+$(document).ready(function() {
+    // Inisialisasi Select2 dengan tema Bootstrap 5
+    $('.my-select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        allowClear: true, // Memungkinkan user menghapus pilihan (reset filter dropdown)
+        minimumResultsForSearch: 10 // Menyembunyikan kotak pencarian jika opsinya kurang dari 10
     });
 });
 </script>
