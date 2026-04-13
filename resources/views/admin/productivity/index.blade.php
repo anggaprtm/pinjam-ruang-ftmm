@@ -111,69 +111,51 @@
                     </button>
                 </div>
                 <div class="card-body p-4 bg-light bg-opacity-50" id="task-container">
-                    
-                    @if(Auth::user()->task_view_mode == 'kanban')
-                        {{-- ================= MODE KANBAN ================= --}}
-                        <div class="row g-3">
-                            {{-- Kolom: To Do (Pending) --}}
-                            <div class="col-md-4">
-                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-circle text-warning me-1"></i> To Do <span class="badge bg-secondary ms-1 rounded-pill">{{ $kanbanTasks['pending']->count() }}</span></h6>
-                                <div class="kanban-column" data-status="pending" style="min-height: 200px; background: #f1f5f9; padding: 10px; border-radius: 12px;">
-                                    @foreach($kanbanTasks['pending'] as $task)
-                                        @include('admin.productivity.partials.kanban_card', ['task' => $task])
-                                    @endforeach
-                                </div>
-                            </div>
+                    @forelse($tasks as $task)
+                        <div class="task-item {{ $task->status == 'completed' ? 'completed' : '' }}" id="task-{{ $task->id }}">
+                            <input class="form-check-input custom-checkbox task-checkbox" type="checkbox" 
+                                   data-id="{{ $task->id }}" {{ $task->status == 'completed' ? 'checked' : '' }}>
                             
-                            {{-- Kolom: In Progress --}}
-                            <div class="col-md-4">
-                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-spinner text-primary me-1"></i> In Progress <span class="badge bg-secondary ms-1 rounded-pill">{{ $kanbanTasks['in_progress']->count() }}</span></h6>
-                                <div class="kanban-column" data-status="in_progress" style="min-height: 200px; background: #eff6ff; padding: 10px; border-radius: 12px;">
-                                    @foreach($kanbanTasks['in_progress'] as $task)
-                                        @include('admin.productivity.partials.kanban_card', ['task' => $task])
-                                    @endforeach
-                                </div>
-                            </div>
-                            
-                            {{-- Kolom: Completed --}}
-                            <div class="col-md-4">
-                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-check-circle text-success me-1"></i> Done <span class="badge bg-secondary ms-1 rounded-pill">{{ $kanbanTasks['completed']->count() }}</span></h6>
-                                <div class="kanban-column" data-status="completed" style="min-height: 200px; background: #f0fdf4; padding: 10px; border-radius: 12px;">
-                                    @foreach($kanbanTasks['completed'] as $task)
-                                        @include('admin.productivity.partials.kanban_card', ['task' => $task])
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                    @else
-                        {{-- ================= MODE LIST REGULER ================= --}}
-                        {{-- (Ini adalah kode foreach tugas bawaanmu sebelumnya) --}}
-                        @forelse($tasks as $task)
-                            <div class="task-item {{ $task->status == 'completed' ? 'completed' : '' }}" id="task-{{ $task->id }}">
-                                <input class="form-check-input custom-checkbox task-checkbox" type="checkbox" data-id="{{ $task->id }}" {{ $task->status == 'completed' ? 'checked' : '' }}>
-                                <div class="flex-grow-1">
-                                    <div class="task-title fw-bold text-dark" style="font-size: 1.05rem;">{{ $task->title }}</div>
-                                    <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
-                                        {{-- (Biarkan badge deadline, priority, dll sama persis seperti aslinya) --}}
-                                        @if($task->tag)<span class="task-tag"><i class="fas fa-tag text-primary"></i> {{ $task->tag }}</span>@endif
-                                        @if($task->deadline_at) <span class="task-tag"><i class="far fa-clock"></i> {{ \Carbon\Carbon::parse($task->deadline_at)->format('d M, H:i') }}</span> @endif
-                                        <span class="task-tag">
-                                            @if($task->priority == 'high') <i class="fas fa-arrow-up text-danger"></i> High
-                                            @elseif($task->priority == 'medium') <i class="fas fa-minus text-warning"></i> Med
-                                            @else <i class="fas fa-arrow-down text-info"></i> Low @endif
+                            <div class="flex-grow-1">
+                                <div class="task-title fw-bold text-dark" style="font-size: 1.05rem;">{{ $task->title }}</div>
+                                <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
+                                    @if($task->tag)
+                                        <span class="task-tag"><i class="fas fa-tag text-primary"></i> {{ $task->tag }}</span>
+                                    @endif
+                                    @if($task->recurrence != 'none')
+                                        <span class="task-tag bg-success bg-opacity-10 text-success border-success">
+                                            <i class="fas fa-sync-alt"></i> 
+                                            {{ $task->recurrence == 'daily' ? 'Harian' : ($task->recurrence == 'weekly' ? 'Mingguan' : 'Bulanan') }}
                                         </span>
-                                    </div>
+                                    @endif
+                                    @if($task->deadline_at)
+                                        @php 
+                                            $deadline = \Carbon\Carbon::parse($task->deadline_at);
+                                            $isOverdue = $deadline->isPast() && $task->status != 'completed';
+                                        @endphp
+                                        <span class="task-tag {{ $isOverdue ? 'bg-danger text-white border-danger' : '' }}">
+                                            <i class="far fa-clock"></i> 
+                                            {{ $deadline->isToday() ? 'Hari ini, ' . $deadline->format('H:i') : $deadline->format('d M, H:i') }}
+                                        </span>
+                                    @endif
+                                    <span class="task-tag">
+                                        @if($task->priority == 'high') <i class="fas fa-arrow-up text-danger"></i> High
+                                        @elseif($task->priority == 'medium') <i class="fas fa-minus text-warning"></i> Med
+                                        @else <i class="fas fa-arrow-down text-info"></i> Low @endif
+                                    </span>
                                 </div>
-                                <button class="btn btn-sm text-danger btn-delete-task border-0 bg-transparent opacity-50 hover-opacity-100" data-id="{{ $task->id }}"><i class="fas fa-trash"></i></button>
                             </div>
-                        @empty
-                            <div class="text-center py-5 text-muted" id="empty-task-msg">
-                                <i class="fas fa-clipboard-check fa-3x mb-3 opacity-25"></i><p>Semua tugas selesai!</p>
-                            </div>
-                        @endforelse
-                    @endif
-
+                            
+                            <button class="btn btn-sm text-danger btn-delete-task border-0 bg-transparent opacity-50 hover-opacity-100" data-id="{{ $task->id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    @empty
+                        <div class="text-center py-5 text-muted" id="empty-task-msg">
+                            <i class="fas fa-clipboard-check fa-3x mb-3 opacity-25"></i>
+                            <p>Semua tugas selesai. Waktunya bersantai!</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -195,9 +177,24 @@
                                     <div class="habit-btn habit-toggle" data-id="{{ $habit->id }}">
                                         <i class="{{ $habit->icon ?? 'fas fa-check' }}"></i>
                                     </div>
-                                    <span class="fw-bold text-dark">{{ $habit->name }}</span>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold text-dark" style="line-height: 1.2;">{{ $habit->name }}</span>
+                                        
+                                        {{-- 🔥 Menampilkan Badge Streak Gamifikasi 🔥 --}}
+                                        @if($habit->streak > 0)
+                                            <small class="text-warning fw-bold mt-1" style="font-size: 0.75rem;">
+                                                <i class="fas fa-fire"></i> {{ $habit->streak }} Hari Beruntun!
+                                            </small>
+                                        @else
+                                            <small class="text-muted mt-1" style="font-size: 0.7rem;">
+                                                Belum ada streak
+                                            </small>
+                                        @endif
+                                    </div>
                                 </div>
-                                <button class="btn btn-sm text-danger btn-delete-habit border-0 bg-transparent" data-id="{{ $habit->id }}"><i class="fas fa-times"></i></button>
+                                <button class="btn btn-sm text-danger btn-delete-habit border-0 bg-transparent" data-id="{{ $habit->id }}">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -274,6 +271,15 @@
                             <option value="low">Low</option>
                             <option value="medium" selected>Medium</option>
                             <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center border-start ps-3">
+                        <i class="fas fa-sync-alt text-success opacity-75"></i>
+                        <select name="recurrence" class="form-select form-select-sm border-0 shadow-none bg-transparent fw-bold text-success">
+                            <option value="none" selected>Sekali</option>
+                            <option value="daily">Harian</option>
+                            <option value="weekly">Mingguan</option>
+                            <option value="monthly">Bulanan</option>
                         </select>
                     </div>
                 </div>
@@ -370,19 +376,6 @@
                         <label class="form-check-label ms-2 pt-1 fw-semibold" for="setDeadline">Peringatan Deadline (H-1 Jam)</label>
                         <div class="form-text mt-0 ms-2">Menerima pesan darurat saat sebuah tugas mendekati tenggat waktu.</div>
                     </div>
-                    <hr class="text-muted opacity-25">
-                    <h6 class="fw-bold mb-3"><i class="fas fa-desktop text-primary me-2"></i>Tampilan Daftar Tugas</h6>
-                    
-                    <div class="d-flex gap-3 mb-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="task_view_mode" id="modeList" value="list" {{ Auth::user()->task_view_mode == 'list' ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="modeList"><i class="fas fa-list me-1 text-secondary"></i> Mode List (Standar)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="task_view_mode" id="modeKanban" value="kanban" {{ Auth::user()->task_view_mode == 'kanban' ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="modeKanban"><i class="fas fa-columns me-1 text-secondary"></i> Mode Kanban (Drag & Drop)</label>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer border-0 bg-light"><button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">Simpan Pengaturan</button></div>
             </form>
@@ -411,7 +404,6 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
 // ==========================================
 // 1. FUNGSI GLOBAL (Bisa dipanggil dari HTML)
@@ -522,8 +514,15 @@ $(document).ready(function() {
         $.ajax({
             url: `/admin/productivity/tasks/${taskId}/status`, type: 'PATCH', data: { status: status },
             success: function() { 
-                const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 });
-                Toast.fire({ icon: 'success', title: status === 'completed' ? 'Tugas Selesai! 🎉' : 'Tugas Diaktifkan Kembali' });
+                const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 });
+                if (status === 'completed') {
+                    // Beri hint jika halamannya otomatis ke-reload karena melahirkan task baru
+                    Toast.fire({ icon: 'success', title: 'Tugas Selesai! 🎉' }).then(() => {
+                        location.reload(); // Reload untuk memunculkan task anak (siklus selanjutnya)
+                    });
+                } else {
+                    Toast.fire({ icon: 'info', title: 'Tugas Diaktifkan Kembali' });
+                }
             }
         });
     });
@@ -564,44 +563,6 @@ $(document).ready(function() {
         let id = $(this).data('id'); 
         $.ajax({ url: `/admin/productivity/habits/${id}`, type: 'DELETE', success: function() { $('#habit-' + id).slideUp(); }}); 
     });
-    // --- LOGIKA DRAG & DROP KANBAN ---
-    if ($('.kanban-column').length > 0) {
-        $('.kanban-column').each(function() {
-            new Sortable(this, {
-                group: 'kanban', // Memungkinkan card ditarik antar kolom
-                animation: 150,
-                ghostClass: 'bg-light', // Efek visual saat ditarik
-                onEnd: function (evt) {
-                    let taskEl = evt.item; 
-                    let taskId = $(taskEl).data('id');
-                    let newStatus = $(evt.to).data('status'); // Ambil status dari kolom tujuan
-                    let oldStatus = $(evt.from).data('status');
-                    
-                    // Jika pindah kolom, lakukan update AJAX
-                    if(newStatus !== oldStatus) {
-                        $.ajax({
-                            url: `/admin/productivity/tasks/${taskId}/status`, 
-                            type: 'PATCH', 
-                            data: { status: newStatus },
-                            success: function() { 
-                                const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 });
-                                Toast.fire({ icon: 'success', title: 'Status Diperbarui!' });
-                                
-                                // Jika dikembalikan ke pending/inprogress, hilangkan efek coret
-                                if(newStatus === 'completed') {
-                                    $(taskEl).addClass('opacity-50');
-                                    $(taskEl).find('h6').addClass('text-decoration-line-through');
-                                } else {
-                                    $(taskEl).removeClass('opacity-50');
-                                    $(taskEl).find('h6').removeClass('text-decoration-line-through');
-                                }
-                            }
-                        });
-                    }
-                },
-            });
-        });
-    }
 
 
     // ==========================================
