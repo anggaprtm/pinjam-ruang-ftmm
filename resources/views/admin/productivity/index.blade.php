@@ -189,7 +189,9 @@
                 {{-- Quick Toolbar (Tanggal & Tag) --}}
                 <div class="quick-toolbar">
                     <div class="d-flex gap-2 align-items-center border-end pe-3">
-                        <button type="button" class="date-quick-btn active" onclick="setQuickDate('today', this)">Hari Ini</button>
+                        {{-- Tambahan Tombol "Tanpa Deadline" --}}
+                        <button type="button" class="date-quick-btn active" onclick="setQuickDate('none', this)">Tanpa Deadline</button>
+                        <button type="button" class="date-quick-btn" onclick="setQuickDate('today', this)">Hari Ini</button>
                         <button type="button" class="date-quick-btn" onclick="setQuickDate('tomorrow', this)">Besok</button>
                         <input type="datetime-local" name="deadline_at" id="taskDeadlineInput" class="form-control form-control-sm border-0 shadow-none bg-transparent fw-bold text-primary" style="width: auto;">
                     </div>
@@ -206,9 +208,9 @@
 
                     <div class="d-flex gap-2 align-items-center border-start ps-3">
                         <select name="priority" class="form-select form-select-sm border-0 shadow-none bg-transparent fw-bold text-danger">
-                            <option value="low">Low Pri</option>
-                            <option value="medium" selected>Med Pri</option>
-                            <option value="high">High Pri</option>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
                         </select>
                     </div>
                 </div>
@@ -289,30 +291,45 @@
 @section('scripts')
 <script>
 // --- LOGIKA QUICK DATE TASK ---
+// --- LOGIKA QUICK DATE TASK ---
 function openTaskModal() {
     $('#taskModal').modal('show');
     setTimeout(() => $('#taskTitleInput').focus(), 300);
-    setQuickDate('today', $('.date-quick-btn')[0]); // Default hari ini jam 16:00
+    // Ubah default saat modal dibuka menjadi Tanpa Deadline
+    setQuickDate('none', $('.date-quick-btn')[0]); 
 }
 
 function setQuickDate(type, btnElement) {
     $('.date-quick-btn').removeClass('active');
-    $(btnElement).addClass('active');
+    if(btnElement) $(btnElement).addClass('active');
+
+    // Reset input ke kosong jika pilih Tanpa Deadline
+    if (type === 'none') {
+        $('#taskDeadlineInput').val('');
+        return;
+    }
 
     let date = new Date();
     if (type === 'tomorrow') {
         date.setDate(date.getDate() + 1);
     }
     
-    // Default jam 16:00 (Bisa disesuaikan)
-    date.setHours(16, 0, 0, 0); 
+    // Ubah jam default menjadi akhir hari (23:59) alih-alih 16:00
+    date.setHours(23, 59, 0, 0); 
     
-    // Format ke YYYY-MM-DDTHH:mm untuk input datetime-local
     let offset = date.getTimezoneOffset() * 60000;
     let localISOTime = (new Date(date - offset)).toISOString().slice(0, 16);
     
     $('#taskDeadlineInput').val(localISOTime);
 }
+
+// Tambahan: Hilangkan highlight tombol kalau user ngetik tanggal manual di kalender
+$('#taskDeadlineInput').on('change', function() {
+    $('.date-quick-btn').removeClass('active');
+    if($(this).val() === '') {
+        $('.date-quick-btn:contains("Tanpa Deadline")').addClass('active');
+    }
+});
 
 $(document).ready(function() {
     // Setup CSRF
