@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SuratUndangan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -109,6 +110,7 @@ class SuratUndanganController extends Controller
             'penandatangans' => $this->penandatangans,
             'tujuanPresets'  => $this->tujuanPresets,
             'tempatPresets'  => $this->tempatPresets,
+            'pegawais'       => $this->getPegawais(), // <-- Tambahkan ini
         ]);
     }
 
@@ -161,11 +163,11 @@ class SuratUndanganController extends Controller
         $suratUndangan->tujuan_list   = json_decode($suratUndangan->tujuan_surat, true) ?? [];
         $suratUndangan->lampiran_list = json_decode($suratUndangan->lampiran_table, true) ?? [];
 
-        return view('admin.surat-undangan.edit', [
-            'surat'          => $suratUndangan,
+        return view('admin.surat-undangan.create', [
             'penandatangans' => $this->penandatangans,
             'tujuanPresets'  => $this->tujuanPresets,
             'tempatPresets'  => $this->tempatPresets,
+            'pegawais'       => $this->getPegawais(), // <-- Tambahkan ini
         ]);
     }
 
@@ -275,22 +277,24 @@ class SuratUndanganController extends Controller
         if ($data['use_lampiran']) {
             $data['tujuan_surat_list'] = ['Daftar Terlampir'];
 
-            $rawContent    = $request->input('lampiran_content', '');
-            $rawLines      = explode("\n", $rawContent);
+            // Tarik input array checklist/manual
+            $names    = $request->input('lampiran_nama', []);
+            $nips     = $request->input('lampiran_nip', []); // <-- Tambahan NIP
+            $jabatans = $request->input('lampiran_jabatan', []);
             $parsedLampiran = [];
 
-            foreach ($rawLines as $line) {
-                if (trim($line) !== '') {
-                    $parts            = explode('-', $line, 2);
+            foreach ($names as $i => $nama) {
+                if (!empty(trim($nama))) {
                     $parsedLampiran[] = [
-                        'nama'    => trim($parts[0]),
-                        'jabatan' => isset($parts[1]) ? trim($parts[1]) : '-',
+                        'nama'    => trim($nama),
+                        'nip'     => trim($nips[$i] ?? '-'), // <-- Tambahan NIP
+                        'jabatan' => trim($jabatans[$i] ?? '-'),
                     ];
                 }
             }
 
             $data['lampiran_table']   = $parsedLampiran;
-            $data['lampiran_content'] = $rawContent;
+            $data['lampiran_content'] = null; // Sudah tidak pakai textarea
         } else {
             $data['tujuan_surat_list'] = $request->has('tujuan_surat') && is_array($request->tujuan_surat)
                 ? $request->tujuan_surat
@@ -311,5 +315,14 @@ class SuratUndanganController extends Controller
             : null;
 
         return $data;
+    }
+
+    private function getPegawais()
+    {
+        return User::with(['tendikDetail', 'dosenDetail'])
+            ->whereHas('roles', fn($q) => $q->whereIn('title', ['Pegawai', 'Dosen']))
+            ->whereNotNull('nip')
+            ->orderBy('name')
+            ->get();
     }
 }

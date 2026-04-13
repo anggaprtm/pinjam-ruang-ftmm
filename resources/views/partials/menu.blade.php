@@ -265,6 +265,34 @@
                 </ul>
             </li>
         @endcanany
+        @canany(['surat_undangan_access', 'surat_tugas_access'])
+            <li class="nav-group {{ request()->is('admin/surat-undangan*') || request()->is('admin/surat-tugas*') ? 'show' : '' }}">
+                <a class="nav-group-toggle" href="#">
+                    <i class="nav-icon fas fa-file-signature"></i>
+                    Generator Surat
+                </a>
+                <ul class="nav-group-items compact">
+                    @can('surat_undangan_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.surat-undangan.index') }}"
+                               class="nav-link {{ request()->is('admin/surat-undangan*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-file-invoice"></i></span>
+                                Generator Surat Undangan
+                            </a>
+                        </li>
+                    @endcan
+                    @can('surat_tugas_access')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.surat-tugas.index') }}"
+                               class="nav-link {{ request()->is('admin/surat-tugas*') ? 'active' : '' }}">
+                                <span class="nav-icon"><i class="fas fa-file-lines"></i></span>
+                                Generator Surat Tugas
+                            </a>
+                        </li>
+                    @endcan
+                </ul>
+            </li>
+        @endcanany
 
         {{-- Spacer dorong profil & logout ke bawah --}}
         <li class="nav-item nav-spacer"></li>

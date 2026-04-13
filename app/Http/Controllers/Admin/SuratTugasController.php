@@ -272,7 +272,7 @@ class SuratTugasController extends Controller
 
     private function getPegawais()
     {
-        return User::with('tendikDetail')
+        return User::with(['tendikDetail', 'dosenDetail'])
             ->whereHas('roles', fn($q) => $q->whereIn('title', ['Pegawai', 'Dosen']))
             ->whereNotNull('nip')
             ->orderBy('name')

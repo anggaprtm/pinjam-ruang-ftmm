@@ -26,6 +26,7 @@ class DosenDetail extends Model
         'pangkat_golongan',
         'tgl_mulai_dosen',
         'jabatan_fungsional',
+        'jabatan_struktural',
     ];
 
     // Relasi balik ke User

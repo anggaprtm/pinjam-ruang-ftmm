@@ -253,9 +253,10 @@
             <table class="table-lampiran">
                 <thead>
                     <tr>
-                        <th width="10%">No</th>
-                        <th width="50%">Nama</th>
-                        <th width="40%">Jabatan / Unit</th>
+                        <th width="5%">No</th>
+                        <th width="40%">Nama</th>
+                        <th width="30%">NIP</th>
+                        <th width="25%">Jabatan / Unit</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -263,6 +264,7 @@
                     <tr>
                         <td style="text-align: center;">{{ $index + 1 }}</td>
                         <td>{{ $row['nama'] }}</td>
+                        <td>{{ $row['nip'] }}</td>
                         <td>{{ $row['jabatan'] }}</td>
                     </tr>
                     @endforeach

@@ -184,8 +184,16 @@
                     <div class="pegawai-checklist mb-3" id="pegawaiList">
                         @forelse($pegawais as $pegawai)
                             @php
-                                $isChecked    = in_array($pegawai->nip, $existingNips);
-                                $savedJabatan = $isChecked ? ($existingPegawais[$pegawai->nip]['jabatan'] ?? '') : ($pegawai->tendikDetail->nama_jabatan ?? '');
+                                $isChecked = in_array($pegawai->nip, $existingNips);
+                                
+                                $jabatanOtomatis = '';
+                                if ($pegawai->tendikDetail) {
+                                    $jabatanOtomatis = $pegawai->tendikDetail->nama_jabatan ?? '';
+                                } elseif ($pegawai->dosenDetail) {
+                                    $jabatanOtomatis = $pegawai->dosenDetail->jabatan_struktural ?? '';
+                                }
+                                
+                                $savedJabatan = $isChecked ? ($existingPegawais[$pegawai->nip]['jabatan'] ?? '') : $jabatanOtomatis;
                             @endphp
                             <div class="pegawai-item" data-name="{{ strtolower($pegawai->name) }}">
                                 <input type="checkbox" class="pegawai-check" id="chk_{{ $pegawai->id }}"
@@ -407,5 +415,46 @@ function updatePreview() {
         }
     });
 }
+// ── Script Preview Tanggal Otomatis ──
+document.addEventListener('DOMContentLoaded', function() {
+    function formatTanggalIndo(dateString) {
+        if (!dateString) return '';
+        // Hindari bug timezone (seperti -1 hari) dengan parsing manual
+        var parts = dateString.split('-');
+        var date = new Date(parts[0], parts[1] - 1, parts[2]); 
+        
+        return new Intl.DateTimeFormat('id-ID', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        }).format(date);
+    }
+
+    // Targetkan 3 input tanggal
+    var dateInputs = ['tanggal_surat', 'tanggal_tugas_raw', 'tanggal_tugas_akhir_raw'];
+    
+    dateInputs.forEach(function(name) {
+        var input = document.querySelector('input[name="' + name + '"]');
+        if (!input) return;
+
+        // Buat elemen text di bawah input
+        var helperText = document.createElement('small');
+        helperText.className = 'text-primary d-block mt-1';
+        helperText.style.fontWeight = '500';
+        // Sisipkan setelah input (atau setelah invalid-feedback jika ada)
+        input.parentNode.insertBefore(helperText, input.nextSibling);
+
+        function updateHelper() {
+            if (input.value) {
+                helperText.innerHTML = '<i class="fas fa-calendar-check me-1"></i> Tertulis: ' + formatTanggalIndo(input.value);
+            } else {
+                helperText.innerHTML = '';
+            }
+        }
+
+        // Jalankan saat diubah dan saat halaman pertama dimuat
+        input.addEventListener('change', updateHelper);
+        input.addEventListener('input', updateHelper);
+        updateHelper(); 
+    });
+});
 </script>
 @endsection
