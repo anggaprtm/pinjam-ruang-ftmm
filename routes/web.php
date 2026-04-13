@@ -39,7 +39,6 @@ use App\Http\Controllers\Admin\SuratUndanganController;
 use App\Http\Controllers\Admin\SuratTugasController;
 
 
-
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::post('book-ruang-landing', [LandingController::class, 'bookRuang'])->middleware(['auth'])->name('landing.bookRuang');
 
@@ -120,6 +119,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         ]);
     Route::patch('riwayat-perjalanan/{riwayat_perjalanan}/selesai', [RiwayatPerjalananController::class, 'selesaikan'])->name('riwayat-perjalanan.selesaikan');
     Route::patch('riwayat-perjalanan/{riwayat_perjalanan}/mulai', [RiwayatPerjalananController::class, 'mulaiJalan'])->name('riwayat-perjalanan.mulai');
+    Route::post('riwayat-perjalanan/bbm', [RiwayatPerjalananController::class, 'storeBbm'])->name('riwayat-perjalanan.storeBbm');
+    Route::delete('riwayat-perjalanan/bbm/{id}', [RiwayatPerjalananController::class, 'destroyBbm'])->name('riwayat-perjalanan.destroyBbm');
 
     // Statistik (hanya untuk admin/home_access)
     Route::get('statistics', [\App\Http\Controllers\Admin\StatisticsController::class, 'index'])

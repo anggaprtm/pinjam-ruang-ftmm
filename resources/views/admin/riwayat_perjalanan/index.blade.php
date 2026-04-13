@@ -124,152 +124,160 @@
 
 {{-- Header --}}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold text-nowrap"><i class="fas fa-road me-2"></i> Logbook Driver & Kendaraan</h3>
-    @can('riwayat_perjalanan_create')
-        <a class="btn btn-success" href="{{ route('admin.riwayat-perjalanan.create') }}">
-            <i class="fas fa-plus-circle me-2"></i> 
-            <span class="d-none d-sm-inline">Input Jalan / Booking</span>
-            <span class="d-inline d-sm-none">Input</span>
-        </a>
-    @endcan
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-road me-2"></i> Logbook Kendaraan</h3>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalBbm">
+            <i class="fas fa-gas-pump me-2"></i> Isi Bensin
+        </button>
+        @can('riwayat_perjalanan_create')
+            <a class="btn btn-success shadow-sm" href="{{ route('admin.riwayat-perjalanan.create') }}">
+                <i class="fas fa-car-side me-2"></i> Input Jalan
+            </a>
+        @endcan
+    </div>
 </div>
 
-{{-- KM Hari Ini --}}
-@if(isset($kmHariIni))
-<div class="km-summary-card">
-    <div class="km-title"><i class="fas fa-tachometer-alt me-1"></i> Kilometer Hari Ini</div>
+{{-- MASTER ODOMETER CARD --}}
+<div class="km-summary-card mb-4">
+    <div class="km-title"><i class="fas fa-tachometer-alt me-1"></i> ODOMETER REAL-TIME KENDARAAN</div>
     <div class="km-grid">
         <div class="km-stat">
-            <div class="val">{{ number_format($kmHariIni->km_awal ?? 0) }}</div>
-            <div class="lbl">KM Awal</div>
+            <div class="val">{{ $kmTerakhir ? number_format($kmTerakhir->km) : '0' }} <small style="font-size:0.6em;">KM</small></div>
+            <div class="lbl">Angka Odometer Saat Ini</div>
         </div>
         <div class="km-stat">
-            <div class="val">{{ $kmHariIni->km_akhir ? number_format($kmHariIni->km_akhir) : '—' }}</div>
-            <div class="lbl">KM Akhir</div>
+            <div class="val" style="font-size: 1rem; line-height: 1.3; margin-top: 5px;">
+                {{ $kmTerakhir ? \Carbon\Carbon::parse($kmTerakhir->waktu)->translatedFormat('d M y, H:i') : '-' }}
+            </div>
+            <div class="lbl">Update Terakhir: <strong class="text-warning">{{ $kmTerakhir->sumber ?? '-' }}</strong></div>
         </div>
         <div class="km-stat">
             <div class="val">
-                @if($kmHariIni->km_akhir && $kmHariIni->km_awal)
-                    +{{ number_format($kmHariIni->km_akhir - $kmHariIni->km_awal) }}
-                @elseif($kmKemarinAwal && $kmHariIni->km_awal)
-                    +{{ number_format($kmHariIni->km_awal - $kmKemarinAwal) }}
+                @if($kmTerakhir && $kmSebelumnya)
+                    <span class="text-warning">+{{ number_format($kmTerakhir->km - $kmSebelumnya->km) }} <small style="font-size:0.6em;">KM</small></span>
                 @else
                     —
                 @endif
             </div>
-            <div class="lbl">Jarak Tempuh</div>
+            <div class="lbl">Selisih dr Data Sebelumnya</div>
         </div>
     </div>
 </div>
-@endif
 
-{{-- Section Ongoing --}}
-@if(isset($ongoing) && $ongoing->count() > 0)
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header ongoing-header p-3">
-        <h5 class="m-0"><i class="fas fa-road me-2"></i> Sedang Berlangsung</h5>
+{{-- TABS NAVIGASI --}}
+<ul class="nav nav-tabs fw-bold mb-3" id="logbookTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active text-dark" data-bs-toggle="tab" data-bs-target="#tab-perjalanan" type="button">
+            <i class="fas fa-route me-1"></i> Riwayat Perjalanan
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link text-dark" data-bs-toggle="tab" data-bs-target="#tab-bbm" type="button">
+            <i class="fas fa-gas-pump me-1"></i> Riwayat Isi Bensin
+        </button>
+    </li>
+</ul>
+
+{{-- TAB KONTEN --}}
+<div class="tab-content">
+    {{-- TAB 1: PERJALANAN (Original punyamu ditaruh di sini) --}}
+    <div class="tab-pane fade show active" id="tab-perjalanan">
+        
+        {{-- Section Ongoing (Sama seperti original) --}}
+        @if(isset($ongoing) && $ongoing->count() > 0)
+        @endif
+
+        {{-- Datatable Riwayat --}}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table datatable datatable-Riwayat w-100">
+                        <thead>
+                            <tr>
+                                <th width="10"></th>
+                                <th>STATUS</th>
+                                <th>JADWAL</th>
+                                <th>KENDARAAN</th>
+                                <th class="d-none d-md-table-cell">DRIVER</th>
+                                <th>TUJUAN</th>
+                                <th class="d-none d-md-table-cell">KM</th>
+                                <th class="text-center" style="width:140px;">AKSI</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body p-0">
-        {{-- MOBILE LIST --}}
-        <div class="trip-list">
-            @foreach($ongoing as $row)
-            @php
-                $driverName = $row->driver->name ?? '-';
-                $waktu = $row->waktu_mulai ? \Carbon\Carbon::parse($row->getRawOriginal('waktu_mulai'))->format('d M Y H:i') : '-';
-            @endphp
-            <div class="trip-item">
-                <div class="trip-item-top">
-                    <div class="trip-vehicle">
-                        <span class="icon-circle-sm green"><i class="fas fa-car"></i></span>
-                        <div>
-                            <div class="vehicle-name">{{ $row->mobil->nama_mobil ?? '-' }}</div>
-                            <span class="plate-badge">{{ $row->mobil->plat_nomor ?? '' }}</span>
-                        </div>
+
+    {{-- TAB 2: RIWAYAT BBM --}}
+    <div class="tab-pane fade" id="tab-bbm">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table w-100">
+                        <thead>
+                            <tr>
+                                <th>TANGGAL & WAKTU</th>
+                                <th>KM ODOMETER</th>
+                                <th>BIAYA PENGISIAN</th>
+                                <th class="text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($riwayatBbm as $bbm)
+                            <tr>
+                                <td>{{ \Carbon\Carbon::parse($bbm->tanggal)->translatedFormat('d F Y, H:i') }}</td>
+                                <td><span class="km-badge"><i class="fas fa-tachometer-alt me-1"></i>{{ number_format($bbm->km_odometer) }}</span></td>
+                                <td>{{ $bbm->biaya ? 'Rp ' . number_format($bbm->biaya, 0, ',', '.') : '-' }}</td>
+                                <td class="text-center">
+                                    <form action="{{ route('admin.riwayat-perjalanan.destroyBbm', $bbm->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus data bensin ini?');">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                            @if($riwayatBbm->isEmpty())
+                            <tr><td colspan="4" class="text-center text-muted py-3">Belum ada riwayat isi bensin</td></tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL INPUT BBM --}}
+<div class="modal fade" id="modalBbm" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-gas-pump me-2"></i> Catat Isi Bensin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('admin.riwayat-perjalanan.storeBbm') }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Waktu Pengisian</label>
+                        <input type="datetime-local" name="tanggal" class="form-control" required value="{{ date('Y-m-d\TH:i') }}">
                     </div>
-                    <span class="badge-status badge-status-onduty">🚗 On Duty</span>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-primary">Angka KM Odometer Saat Ini</label>
+                        <input type="number" name="km_odometer" class="form-control border-primary" placeholder="Contoh: 45200" required>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label fw-bold small">Biaya (Rupiah) <span class="text-muted fw-normal">(Opsional)</span></label>
+                        <input type="number" name="biaya" class="form-control" placeholder="Contoh: 150000">
+                    </div>
                 </div>
-                <div class="trip-destination mt-1">{{ $row->tujuan ?? '-' }}</div>
-                <div class="trip-item-meta mt-1">
-                    <span><i class="fas fa-user"></i> {{ $driverName }}</span>
-                    <span><i class="fas fa-clock"></i> {{ $waktu }}</span>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success fw-bold"><i class="fas fa-save me-1"></i> Simpan Data</button>
                 </div>
-                <div class="mt-2">
-                    <form action="{{ route('admin.riwayat-perjalanan.selesaikan', $row->id) }}" method="POST" class="d-inline js-selesaikan-tugas">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="btn btn-sm btn-success w-100 mb-1">
-                            <i class="fas fa-check me-1"></i> Selesaikan Tugas
-                        </button>
-                    </form>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        {{-- DESKTOP TABLE --}}
-        <div class="table-desktop">
-            <div class="table-responsive">
-                <table class="modern-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>KENDARAAN</th>
-                            <th>DRIVER</th>
-                            <th>TUJUAN</th>
-                            <th>WAKTU BERANGKAT</th>
-                            <th class="text-center">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($ongoing as $row)
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <span class="icon-circle-sm green me-2"><i class="fas fa-car"></i></span>
-                                    <div>
-                                        <div class="fw-bold text-dark">{{ $row->mobil->nama_mobil ?? '-' }}</div>
-                                        <span class="plate-badge">{{ $row->mobil->plat_nomor ?? '' }}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>{{ $row->driver->name ?? '-' }}</td>
-                            <td>{{ $row->tujuan ?? '-' }}</td>
-                            <td>{{ $row->waktu_mulai ?? '-' }}</td>
-                            <td class="text-center">
-                                <form action="{{ route('admin.riwayat-perjalanan.selesaikan', $row->id) }}" method="POST" class="d-inline js-selesaikan-tugas">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="btn btn-sm btn-success">Selesai</button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
-
-{{-- Datatable Riwayat --}}
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white border-bottom p-3">
-        <h5 class="m-0"><i class="fas fa-list-alt me-2"></i> Jadwal Mendatang & Riwayat</h5>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="modern-table datatable datatable-Riwayat w-100">
-                <thead>
-                    <tr>
-                        <th width="10"></th>
-                        <th>STATUS</th>
-                        <th>JADWAL</th>
-                        <th>KENDARAAN</th>
-                        <th class="d-none d-md-table-cell">DRIVER</th>
-                        <th>TUJUAN</th>
-                        <th class="d-none d-md-table-cell">KM</th>
-                        <th class="text-center" style="width:140px;">AKSI</th>
-                    </tr>
-                </thead>
-            </table>
+            </form>
         </div>
     </div>
 </div>

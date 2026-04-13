@@ -20,6 +20,8 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Gate;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\RiwayatBbm;
+use Illuminate\Support\Facades\DB;
 
 class RiwayatPerjalananController extends Controller
 {
@@ -180,17 +182,53 @@ class RiwayatPerjalananController extends Controller
         // ✅ Ambil data KM hari ini untuk summary card
         $today = Carbon::today('Asia/Jakarta');
 
-        $kmHariIni = RiwayatPerjalanan::whereDate('waktu_mulai', $today)
-            ->whereNotNull('km_awal')
-            ->orderBy('waktu_mulai')
-            ->first();
+        // 🔥 LOGIC MASTER ODOMETER 🔥
+        // Ambil KM dari Awal Jalan, Akhir Jalan, dan Isi Bensin, lalu urutkan dari yang terbaru
+        $kmAwal = DB::table('riwayat_perjalanans')
+            ->whereNull('deleted_at')->whereNotNull('km_awal')
+            ->select('waktu_mulai as waktu', 'km_awal as km', DB::raw("'Trip Berangkat' as sumber"));
 
-        $kmKemarinAwal = RiwayatPerjalanan::whereDate('waktu_mulai', $today->copy()->subDay())
-            ->whereNotNull('km_awal')
-            ->orderBy('waktu_mulai')
-            ->value('km_awal');
+        $kmAkhir = DB::table('riwayat_perjalanans')
+            ->whereNull('deleted_at')->whereNotNull('km_akhir')
+            ->select('waktu_selesai as waktu', 'km_akhir as km', DB::raw("'Trip Selesai' as sumber"));
 
-        return view('admin.riwayat_perjalanan.index', compact('ongoing', 'kmHariIni', 'kmKemarinAwal'));
+        $kmBensin = DB::table('riwayat_bbms')
+            ->whereNotNull('km_odometer')
+            ->select('tanggal as waktu', 'km_odometer as km', DB::raw("'Isi BBM' as sumber"));
+
+        // Gabungkan ketiganya, urutkan waktu terbaru, ambil 2 teratas
+        $allKm = $kmAwal->union($kmAkhir)->union($kmBensin)
+            ->orderBy('waktu', 'desc')
+            ->limit(2)
+            ->get();
+
+        $kmTerakhir = $allKm->first(); // Data Paling Baru
+        $kmSebelumnya = $allKm->count() > 1 ? $allKm->last() : null; // Data Tepat Sebelumnya
+        
+        // Data untuk tabel BBM
+        $riwayatBbm = RiwayatBbm::orderBy('tanggal', 'desc')->get();
+
+        return view('admin.riwayat_perjalanan.index', compact('ongoing', 'kmTerakhir', 'kmSebelumnya', 'riwayatBbm'));
+    }
+
+    // SIMPAN DATA BBM
+    public function storeBbm(Request $request)
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'km_odometer' => 'required|integer',
+            'biaya' => 'nullable|integer'
+        ]);
+
+        RiwayatBbm::create($request->all());
+        return back()->with('success', 'Data pengisian bensin dan KM berhasil dicatat.');
+    }
+
+    // HAPUS DATA BBM
+    public function destroyBbm($id)
+    {
+        RiwayatBbm::findOrFail($id)->delete();
+        return back()->with('success', 'Data bensin berhasil dihapus.');
     }
 
 
