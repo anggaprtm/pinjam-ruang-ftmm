@@ -39,6 +39,45 @@
     .sticky-note:hover .delete-btn { opacity: 1; }
     .sticky-note-title { font-weight: bold; margin-bottom: 0.5rem; font-size: 1.05rem; }
     .sticky-note-content { white-space: pre-wrap; font-size: 0.9rem; color: #374151; flex-grow: 1; }
+    /* Pomodoro Widget */
+    #pomodoro-widget {
+        position: fixed; bottom: 30px; right: 30px; width: 280px;
+        border-radius: 16px; overflow: hidden; z-index: 1050;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(150%); opacity: 0;
+    }
+    #pomodoro-widget.show { transform: translateY(0); opacity: 1; }
+    
+    /* CKEditor Tweaks for Sticky Note */
+    .sticky-note-content ul, .sticky-note-content ol { padding-left: 1.2rem; margin-bottom: 0.5rem; }
+    .sticky-note-content p { margin-bottom: 0.5rem; }
+    .sticky-note-content p:last-child { margin-bottom: 0; }
+    /* Pilihan Warna Sticky Note */
+    .color-picker-group { display: flex; gap: 10px; justify-content: center; padding-top: 10px; }
+    .color-circle {
+        width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+        border: 2px solid transparent; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .color-circle:hover { transform: scale(1.1); }
+    .color-radio:checked + .color-circle { border: 2px solid #374151; transform: scale(1.1); box-shadow: 0 0 0 2px #fff inset; }
+
+    /* Custom CKEditor agar transparan menyatu dengan background */
+    .ck.ck-editor__main > .ck-editor__editable {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #111827 !important;
+        min-height: 120px;
+        padding: 0 !important;
+    }
+    .ck.ck-toolbar {
+        background-color: rgba(255, 255, 255, 0.4) !important;
+        border: none !important;
+        border-bottom: 1px dashed rgba(0,0,0,0.1) !important;
+        border-radius: 8px !important;
+        margin-bottom: 10px;
+    }
+    .ck.ck-editor__editable.ck-focused { outline: none !important; border: none !important; }
 </style>
 @endsection
 
@@ -52,10 +91,10 @@
             <p class="mb-0 opacity-75"><i class="fas fa-calendar-alt me-2"></i>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</p>
         </div>
         <div class="text-end d-flex align-items-center gap-2">
-            <span class="badge bg-white text-dark px-3 py-2 rounded-pill fs-6 shadow-sm d-none d-md-inline-block">
+            <button onclick="togglePomodoro()" class="btn btn-light text-dark px-3 py-2 rounded-pill fs-6 shadow-sm d-none d-md-inline-block fw-bold border-0">
                 <i class="fas fa-bolt text-warning me-1"></i> Focus Mode
-            </span>
-            <button class="btn btn-light text-secondary rounded-pill px-3 shadow-sm fw-bold border-0" data-bs-toggle="modal" data-bs-target="#settingsModal">
+            </button>
+            <button class="btn btn-light text-secondary rounded-pill px-3 py-2 shadow-sm fw-bold border-0" data-bs-toggle="modal" data-bs-target="#settingsModal">
                 <i class="fas fa-cog"></i> <span class="d-none d-sm-inline ms-1">Pengaturan</span>
             </button>
         </div>
@@ -72,45 +111,69 @@
                     </button>
                 </div>
                 <div class="card-body p-4 bg-light bg-opacity-50" id="task-container">
-                    @forelse($tasks as $task)
-                        <div class="task-item {{ $task->status == 'completed' ? 'completed' : '' }}" id="task-{{ $task->id }}">
-                            <input class="form-check-input custom-checkbox task-checkbox" type="checkbox" 
-                                   data-id="{{ $task->id }}" {{ $task->status == 'completed' ? 'checked' : '' }}>
-                            
-                            <div class="flex-grow-1">
-                                <div class="task-title fw-bold text-dark" style="font-size: 1.05rem;">{{ $task->title }}</div>
-                                <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
-                                    @if($task->tag)
-                                        <span class="task-tag"><i class="fas fa-tag text-primary"></i> {{ $task->tag }}</span>
-                                    @endif
-                                    @if($task->deadline_at)
-                                        @php 
-                                            $deadline = \Carbon\Carbon::parse($task->deadline_at);
-                                            $isOverdue = $deadline->isPast() && $task->status != 'completed';
-                                        @endphp
-                                        <span class="task-tag {{ $isOverdue ? 'bg-danger text-white border-danger' : '' }}">
-                                            <i class="far fa-clock"></i> 
-                                            {{ $deadline->isToday() ? 'Hari ini, ' . $deadline->format('H:i') : $deadline->format('d M, H:i') }}
-                                        </span>
-                                    @endif
-                                    <span class="task-tag">
-                                        @if($task->priority == 'high') <i class="fas fa-arrow-up text-danger"></i> High
-                                        @elseif($task->priority == 'medium') <i class="fas fa-minus text-warning"></i> Med
-                                        @else <i class="fas fa-arrow-down text-info"></i> Low @endif
-                                    </span>
+                    
+                    @if(Auth::user()->task_view_mode == 'kanban')
+                        {{-- ================= MODE KANBAN ================= --}}
+                        <div class="row g-3">
+                            {{-- Kolom: To Do (Pending) --}}
+                            <div class="col-md-4">
+                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-circle text-warning me-1"></i> To Do <span class="badge bg-secondary ms-1 rounded-pill">{{ $kanbanTasks['pending']->count() }}</span></h6>
+                                <div class="kanban-column" data-status="pending" style="min-height: 200px; background: #f1f5f9; padding: 10px; border-radius: 12px;">
+                                    @foreach($kanbanTasks['pending'] as $task)
+                                        @include('admin.productivity.partials.kanban_card', ['task' => $task])
+                                    @endforeach
                                 </div>
                             </div>
                             
-                            <button class="btn btn-sm text-danger btn-delete-task border-0 bg-transparent opacity-50 hover-opacity-100" data-id="{{ $task->id }}">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            {{-- Kolom: In Progress --}}
+                            <div class="col-md-4">
+                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-spinner text-primary me-1"></i> In Progress <span class="badge bg-secondary ms-1 rounded-pill">{{ $kanbanTasks['in_progress']->count() }}</span></h6>
+                                <div class="kanban-column" data-status="in_progress" style="min-height: 200px; background: #eff6ff; padding: 10px; border-radius: 12px;">
+                                    @foreach($kanbanTasks['in_progress'] as $task)
+                                        @include('admin.productivity.partials.kanban_card', ['task' => $task])
+                                    @endforeach
+                                </div>
+                            </div>
+                            
+                            {{-- Kolom: Completed --}}
+                            <div class="col-md-4">
+                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-check-circle text-success me-1"></i> Done <span class="badge bg-secondary ms-1 rounded-pill">{{ $kanbanTasks['completed']->count() }}</span></h6>
+                                <div class="kanban-column" data-status="completed" style="min-height: 200px; background: #f0fdf4; padding: 10px; border-radius: 12px;">
+                                    @foreach($kanbanTasks['completed'] as $task)
+                                        @include('admin.productivity.partials.kanban_card', ['task' => $task])
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
-                    @empty
-                        <div class="text-center py-5 text-muted" id="empty-task-msg">
-                            <i class="fas fa-clipboard-check fa-3x mb-3 opacity-25"></i>
-                            <p>Semua tugas selesai. Waktunya bersantai!</p>
-                        </div>
-                    @endforelse
+
+                    @else
+                        {{-- ================= MODE LIST REGULER ================= --}}
+                        {{-- (Ini adalah kode foreach tugas bawaanmu sebelumnya) --}}
+                        @forelse($tasks as $task)
+                            <div class="task-item {{ $task->status == 'completed' ? 'completed' : '' }}" id="task-{{ $task->id }}">
+                                <input class="form-check-input custom-checkbox task-checkbox" type="checkbox" data-id="{{ $task->id }}" {{ $task->status == 'completed' ? 'checked' : '' }}>
+                                <div class="flex-grow-1">
+                                    <div class="task-title fw-bold text-dark" style="font-size: 1.05rem;">{{ $task->title }}</div>
+                                    <div class="d-flex flex-wrap gap-2 mt-2 align-items-center">
+                                        {{-- (Biarkan badge deadline, priority, dll sama persis seperti aslinya) --}}
+                                        @if($task->tag)<span class="task-tag"><i class="fas fa-tag text-primary"></i> {{ $task->tag }}</span>@endif
+                                        @if($task->deadline_at) <span class="task-tag"><i class="far fa-clock"></i> {{ \Carbon\Carbon::parse($task->deadline_at)->format('d M, H:i') }}</span> @endif
+                                        <span class="task-tag">
+                                            @if($task->priority == 'high') <i class="fas fa-arrow-up text-danger"></i> High
+                                            @elseif($task->priority == 'medium') <i class="fas fa-minus text-warning"></i> Med
+                                            @else <i class="fas fa-arrow-down text-info"></i> Low @endif
+                                        </span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm text-danger btn-delete-task border-0 bg-transparent opacity-50 hover-opacity-100" data-id="{{ $task->id }}"><i class="fas fa-trash"></i></button>
+                            </div>
+                        @empty
+                            <div class="text-center py-5 text-muted" id="empty-task-msg">
+                                <i class="fas fa-clipboard-check fa-3x mb-3 opacity-25"></i><p>Semua tugas selesai!</p>
+                            </div>
+                        @endforelse
+                    @endif
+
                 </div>
             </div>
         </div>
@@ -161,7 +224,7 @@
                     <div class="sticky-note" id="note-{{ $note->id }}" style="background-color: {{ $note->bg_color }};">
                         <button class="delete-btn btn-delete-note" data-id="{{ $note->id }}"><i class="fas fa-trash-alt"></i></button>
                         @if($note->title)<div class="sticky-note-title">{{ $note->title }}</div>@endif
-                        <div class="sticky-note-content">{{ $note->content }}</div>
+                        <div class="sticky-note-content">{!! $note->content !!}</div>
                         <div class="small text-muted mt-3 pt-2 border-top border-dark border-opacity-10" style="font-size: 0.75rem;">
                             <i class="far fa-clock me-1"></i>{{ $note->created_at->diffForHumans() }}
                         </div>
@@ -226,14 +289,41 @@
 {{-- Modal Note Baru --}}
 <div class="modal fade" id="noteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow" style="border-radius: 16px;">
-            <div class="modal-header bg-warning border-0 pb-2"><h5 class="modal-title text-dark fw-bold"><i class="far fa-sticky-note me-2"></i>Catatan Baru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-content border-0 shadow" style="border-radius: 16px; transition: background-color 0.3s ease;" id="noteModalContainer">
+            
+            <div class="modal-header border-0 pb-2">
+                <h5 class="modal-title text-dark fw-bold"><i class="far fa-sticky-note me-2"></i>Catatan Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
             <form id="formAddNote">
-                <div class="modal-body p-4 pt-3 bg-warning">
-                    <input type="text" name="title" class="form-control border-0 shadow-none bg-transparent text-dark fw-bold fs-5 px-0 mb-2" placeholder="Judul (Opsional)..." style="border-bottom: 1px solid rgba(0,0,0,0.1)!important; border-radius:0;">
-                    <textarea name="content" class="form-control border-0 shadow-none bg-transparent text-dark px-0" rows="5" required placeholder="Tulis ide atau catatanmu di sini..."></textarea>
+                <div class="modal-body p-4 pt-1">
+                    <input type="text" name="title" class="form-control border-0 shadow-none bg-transparent text-dark fw-bold fs-5 px-0 mb-3" placeholder="Judul (Opsional)..." style="border-bottom: 1px solid rgba(0,0,0,0.1)!important; border-radius:0;">
+                    
+                    <textarea name="content" id="noteContent" class="form-control border-0 shadow-none text-dark px-0" rows="4" placeholder="Tulis ide atau catatanmu di sini..."></textarea>
+                    
+                    {{-- Pilihan Warna --}}
+                    <div class="color-picker-group mt-3 pt-3 border-top border-dark border-opacity-10">
+                        <input type="radio" name="bg_color" id="col-yellow" value="#fef08a" class="color-radio" hidden checked>
+                        <label for="col-yellow" class="color-circle" style="background-color: #fef08a;" onclick="changeModalColor('#fef08a')"></label>
+
+                        <input type="radio" name="bg_color" id="col-green" value="#bbf7d0" class="color-radio" hidden>
+                        <label for="col-green" class="color-circle" style="background-color: #bbf7d0;" onclick="changeModalColor('#bbf7d0')"></label>
+
+                        <input type="radio" name="bg_color" id="col-blue" value="#bfdbfe" class="color-radio" hidden>
+                        <label for="col-blue" class="color-circle" style="background-color: #bfdbfe;" onclick="changeModalColor('#bfdbfe')"></label>
+
+                        <input type="radio" name="bg_color" id="col-pink" value="#fbcfe8" class="color-radio" hidden>
+                        <label for="col-pink" class="color-circle" style="background-color: #fbcfe8;" onclick="changeModalColor('#fbcfe8')"></label>
+                        
+                        <input type="radio" name="bg_color" id="col-purple" value="#e9d5ff" class="color-radio" hidden>
+                        <label for="col-purple" class="color-circle" style="background-color: #e9d5ff;" onclick="changeModalColor('#e9d5ff')"></label>
+                    </div>
                 </div>
-                <div class="modal-footer bg-warning border-0"><button type="submit" class="btn btn-dark w-100 fw-bold rounded-pill">Tempel Catatan</button></div>
+                
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-dark w-100 fw-bold rounded-pill">Tempel Catatan</button>
+                </div>
             </form>
         </div>
     </div>
@@ -280,18 +370,53 @@
                         <label class="form-check-label ms-2 pt-1 fw-semibold" for="setDeadline">Peringatan Deadline (H-1 Jam)</label>
                         <div class="form-text mt-0 ms-2">Menerima pesan darurat saat sebuah tugas mendekati tenggat waktu.</div>
                     </div>
+                    <hr class="text-muted opacity-25">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-desktop text-primary me-2"></i>Tampilan Daftar Tugas</h6>
+                    
+                    <div class="d-flex gap-3 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="task_view_mode" id="modeList" value="list" {{ Auth::user()->task_view_mode == 'list' ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="modeList"><i class="fas fa-list me-1 text-secondary"></i> Mode List (Standar)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="task_view_mode" id="modeKanban" value="kanban" {{ Auth::user()->task_view_mode == 'kanban' ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold" for="modeKanban"><i class="fas fa-columns me-1 text-secondary"></i> Mode Kanban (Drag & Drop)</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer border-0 bg-light"><button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">Simpan Pengaturan</button></div>
             </form>
         </div>
     </div>
 </div>
+{{-- Widget Pomodoro Timer --}}
+<div id="pomodoro-widget" class="bg-white">
+    <div class="bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="fas fa-bolt text-warning me-2"></i>Focus Timer</span>
+        <button type="button" class="btn-close btn-close-white" onclick="togglePomodoro()"></button>
+    </div>
+    <div class="p-4 text-center">
+        <h1 id="pomodoro-time" class="display-3 fw-bold text-primary mb-0" style="font-variant-numeric: tabular-nums;">25:00</h1>
+        <div class="text-muted small mb-3" id="pomodoro-label">Waktunya Fokus!</div>
+        <div class="d-flex justify-content-center gap-2">
+            <button id="btn-pomo-start" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm">
+                <i class="fas fa-play me-1"></i> Mulai
+            </button>
+            <button id="btn-pomo-reset" class="btn btn-light rounded-pill px-3 shadow-sm border">
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
-// --- LOGIKA QUICK DATE TASK ---
-// --- LOGIKA QUICK DATE TASK ---
+// ==========================================
+// 1. FUNGSI GLOBAL (Bisa dipanggil dari HTML)
+// ==========================================
+
 function openTaskModal() {
     $('#taskModal').modal('show');
     setTimeout(() => $('#taskTitleInput').focus(), 300);
@@ -323,17 +448,31 @@ function setQuickDate(type, btnElement) {
     $('#taskDeadlineInput').val(localISOTime);
 }
 
-// Tambahan: Hilangkan highlight tombol kalau user ngetik tanggal manual di kalender
-$('#taskDeadlineInput').on('change', function() {
-    $('.date-quick-btn').removeClass('active');
-    if($(this).val() === '') {
-        $('.date-quick-btn:contains("Tanpa Deadline")').addClass('active');
-    }
-});
+// Fungsi untuk mengubah warna Modal mengikuti pilihan user
+window.changeModalColor = function(color) {
+    $('#noteModalContainer').css('background-color', color);
+};
 
+// Fungsi Toggle Pomodoro Widget
+window.togglePomodoro = function() {
+    $('#pomodoro-widget').toggleClass('show');
+};
+
+
+// ==========================================
+// 2. DOCUMENT READY (Dijalankan saat halaman selesai diload)
+// ==========================================
 $(document).ready(function() {
     // Setup CSRF
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+
+    // Hilangkan highlight tombol kalau user ngetik tanggal manual di kalender
+    $('#taskDeadlineInput').on('change', function() {
+        $('.date-quick-btn').removeClass('active');
+        if($(this).val() === '') {
+            $('.date-quick-btn:contains("Tanpa Deadline")').addClass('active');
+        }
+    });
 
     // Inisialisasi Tags Select2 di dalam Modal Task
     $('#taskTagSelect').select2({
@@ -343,7 +482,7 @@ $(document).ready(function() {
         placeholder: "Ketik atau pilih tag..."
     });
 
-    // AJAX Simpan Settings
+    // --- AJAX: Simpan Pengaturan Telegram ---
     $('#formUpdateSettings').submit(function(e) {
         e.preventDefault();
         let btn = $(this).find('button[type="submit"]');
@@ -359,7 +498,7 @@ $(document).ready(function() {
         });
     });
 
-    // 1. AJAX Tambah Task
+    // --- AJAX: Tambah Task ---
     $('#formAddTask').submit(function(e) {
         e.preventDefault();
         $.post("{{ route('admin.productivity.tasks.store') }}", $(this).serialize())
@@ -371,7 +510,7 @@ $(document).ready(function() {
         });
     });
 
-    // 2. AJAX Toggle Status Task
+    // --- AJAX: Toggle Status Task ---
     $('.task-checkbox').change(function() {
         let taskId = $(this).data('id');
         let status = $(this).is(':checked') ? 'completed' : 'pending';
@@ -389,7 +528,7 @@ $(document).ready(function() {
         });
     });
 
-    // 3. AJAX Delete Task
+    // --- AJAX: Delete Task ---
     $('.btn-delete-task').click(function() {
         let taskId = $(this).data('id');
         Swal.fire({ title: 'Hapus Tugas?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Hapus' }).then((result) => {
@@ -399,7 +538,7 @@ $(document).ready(function() {
         });
     });
 
-    // 4. AJAX Toggle Habit
+    // --- AJAX: Toggle Habit ---
     $('.habit-toggle').click(function() {
         let habitId = $(this).data('id');
         let itemDiv = $('#habit-' + habitId);
@@ -413,14 +552,7 @@ $(document).ready(function() {
         });
     });
 
-    // 5. AJAX Tambah & Hapus Note/Habit dengan Error Handling
-    $('#formAddNote').submit(function(e) { 
-        e.preventDefault(); 
-        $.post("{{ route('admin.productivity.notes.store') }}", $(this).serialize())
-        .done(function() { location.reload(); })
-        .fail(function(xhr) { Swal.fire('Gagal Menyimpan Catatan', xhr.responseJSON.message || 'Cek kembali isian Anda.', 'error'); });
-    });
-    
+    // --- AJAX: Habit (Tambah & Hapus) ---
     $('#formAddHabit').submit(function(e) { 
         e.preventDefault(); 
         $.post("{{ route('admin.productivity.habits.store') }}", $(this).serialize())
@@ -428,14 +560,154 @@ $(document).ready(function() {
         .fail(function(xhr) { Swal.fire('Gagal Menyimpan Habit', xhr.responseJSON.message, 'error'); });
     });
     
+    $('.btn-delete-habit').click(function() { 
+        let id = $(this).data('id'); 
+        $.ajax({ url: `/admin/productivity/habits/${id}`, type: 'DELETE', success: function() { $('#habit-' + id).slideUp(); }}); 
+    });
+    // --- LOGIKA DRAG & DROP KANBAN ---
+    if ($('.kanban-column').length > 0) {
+        $('.kanban-column').each(function() {
+            new Sortable(this, {
+                group: 'kanban', // Memungkinkan card ditarik antar kolom
+                animation: 150,
+                ghostClass: 'bg-light', // Efek visual saat ditarik
+                onEnd: function (evt) {
+                    let taskEl = evt.item; 
+                    let taskId = $(taskEl).data('id');
+                    let newStatus = $(evt.to).data('status'); // Ambil status dari kolom tujuan
+                    let oldStatus = $(evt.from).data('status');
+                    
+                    // Jika pindah kolom, lakukan update AJAX
+                    if(newStatus !== oldStatus) {
+                        $.ajax({
+                            url: `/admin/productivity/tasks/${taskId}/status`, 
+                            type: 'PATCH', 
+                            data: { status: newStatus },
+                            success: function() { 
+                                const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 });
+                                Toast.fire({ icon: 'success', title: 'Status Diperbarui!' });
+                                
+                                // Jika dikembalikan ke pending/inprogress, hilangkan efek coret
+                                if(newStatus === 'completed') {
+                                    $(taskEl).addClass('opacity-50');
+                                    $(taskEl).find('h6').addClass('text-decoration-line-through');
+                                } else {
+                                    $(taskEl).removeClass('opacity-50');
+                                    $(taskEl).find('h6').removeClass('text-decoration-line-through');
+                                }
+                            }
+                        });
+                    }
+                },
+            });
+        });
+    }
+
+
+    // ==========================================
+    // 3. LOGIKA NOTES & CKEDITOR
+    // ==========================================
+    let noteEditor;
+    if (document.querySelector('#noteContent')) {
+        ClassicEditor.create(document.querySelector('#noteContent'), {
+            toolbar: [ 'bold', 'italic', 'bulletedList', 'numberedList', 'blockQuote' ]
+        })
+        .then(editor => { noteEditor = editor; })
+        .catch(error => { console.error(error); });
+    }
+
+    // Reset warna modal Notes saat dibuka
+    $('#noteModal').on('show.bs.modal', function () {
+        window.changeModalColor('#fef08a'); // Default kuning
+        $('#col-yellow').prop('checked', true);
+    });
+
+    // AJAX: Simpan Notes (Anti-Double Submit)
+    $('#formAddNote').submit(function(e) { 
+        e.preventDefault(); 
+        
+        let submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...');
+
+        // Pindahkan data dari editor visual kembali ke textarea asli sebelum dikirim
+        if (noteEditor) {
+            $('#noteContent').val(noteEditor.getData());
+        }
+
+        $.post("{{ route('admin.productivity.notes.store') }}", $(this).serialize())
+        .done(function() { 
+            location.reload(); 
+        })
+        .fail(function(xhr) { 
+            submitBtn.prop('disabled', false).html('Tempel Catatan');
+            Swal.fire('Gagal Menyimpan Catatan', xhr.responseJSON.message || 'Cek kembali isian Anda.', 'error'); 
+        });
+    });
+
     $('.btn-delete-note').click(function() { 
         let id = $(this).data('id'); 
         $.ajax({ url: `/admin/productivity/notes/${id}`, type: 'DELETE', success: function() { $('#note-' + id).fadeOut(300, function(){ $(this).remove(); }); }}); 
     });
-    
-    $('.btn-delete-habit').click(function() { 
-        let id = $(this).data('id'); 
-        $.ajax({ url: `/admin/productivity/habits/${id}`, type: 'DELETE', success: function() { $('#habit-' + id).slideUp(); }}); 
+
+
+    // ==========================================
+    // 4. LOGIKA POMODORO TIMER
+    // ==========================================
+    let pomoInterval;
+    let pomoTime = 25 * 60; // Default 25 menit
+    let isPomoRunning = false;
+
+    function updatePomoDisplay() {
+        let m = Math.floor(pomoTime / 60);
+        let s = pomoTime % 60;
+        $('#pomodoro-time').text((m < 10 ? '0'+m : m) + ':' + (s < 10 ? '0'+s : s));
+    }
+
+    $('#btn-pomo-start').click(function() {
+        if(isPomoRunning) {
+            // Pause Timer
+            clearInterval(pomoInterval);
+            isPomoRunning = false;
+            $(this).html('<i class="fas fa-play me-1"></i> Lanjut').removeClass('btn-warning').addClass('btn-success');
+            $('#pomodoro-label').text('Timer Dijeda');
+        } else {
+            // Mulai Timer
+            isPomoRunning = true;
+            $(this).html('<i class="fas fa-pause me-1"></i> Jeda').removeClass('btn-success').addClass('btn-warning');
+            $('#pomodoro-label').text('Fokus Bekerja...');
+            
+            pomoInterval = setInterval(() => {
+                if(pomoTime > 0) {
+                    pomoTime--;
+                    updatePomoDisplay();
+                } else {
+                    // Waktu Habis
+                    clearInterval(pomoInterval);
+                    isPomoRunning = false;
+                    Swal.fire({
+                        title: 'Waktu Fokus Habis! 🎉',
+                        text: 'Kerja bagus! Istirahatkan matamu selama 5 menit.',
+                        icon: 'success',
+                        confirmButtonText: 'Oke, Paham'
+                    });
+                    
+                    // Reset otomatis ke 25 menit
+                    pomoTime = 25 * 60;
+                    updatePomoDisplay();
+                    $('#btn-pomo-start').html('<i class="fas fa-play me-1"></i> Mulai').removeClass('btn-warning').addClass('btn-success');
+                    $('#pomodoro-label').text('Waktunya Fokus!');
+                }
+            }, 1000);
+        }
+    });
+
+    $('#btn-pomo-reset').click(function() {
+        clearInterval(pomoInterval);
+        isPomoRunning = false;
+        pomoTime = 25 * 60; // Reset ke 25 menit
+        updatePomoDisplay();
+        $('#btn-pomo-start').html('<i class="fas fa-play me-1"></i> Mulai').removeClass('btn-warning').addClass('btn-success');
+        $('#pomodoro-label').text('Waktunya Fokus!');
     });
 });
 </script>
