@@ -35,6 +35,8 @@ use App\Http\Controllers\Admin\DeviceCommandController;
 use App\Http\Controllers\Admin\AgendaFakultasController;
 use App\Http\Controllers\Admin\AsetFakultasController;
 use App\Http\Controllers\Admin\LemburKegiatanController;
+use App\Http\Controllers\Admin\SuratUndanganController;
+use App\Http\Controllers\Admin\SuratTugasController;
 
 
 
@@ -167,6 +169,37 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     });
     Route::get('lembur-kegiatan-rekap-keuangan', [LemburKegiatanController::class, 'rekapKeuangan'])
         ->name('lembur-kegiatan.rekap-keuangan');
+    
+    // ──────────────────────────────────────
+    // SURAT UNDANGAN
+    // ──────────────────────────────────────
+    Route::prefix('surat-undangan')->name('surat-undangan.')->group(function () {
+    
+        // Rute kustom SEBELUM resource (agar tidak bentrok)
+        Route::post('preview',           [SuratUndanganController::class, 'preview'])->name('preview');
+        Route::get('{suratUndangan}/download', [SuratUndanganController::class, 'download'])->name('download');
+    
+        // Resource: index, create, store, edit, update, destroy
+        Route::resource('/', SuratUndanganController::class)
+            ->parameters(['' => 'suratUndangan'])
+            ->except(['show']);
+    });
+    
+    // ──────────────────────────────────────
+    // SURAT TUGAS
+    // ──────────────────────────────────────
+    Route::prefix('surat-tugas')->name('surat-tugas.')->group(function () {
+        Route::delete('destroy', [SuratTugasController::class, 'massDestroy'])->name('massDestroy');
+        // ── Custom routes SEBELUM resource ──
+        Route::post('preview',                        [SuratTugasController::class, 'preview'])->name('preview');
+        Route::get('{suratTugas}/download',           [SuratTugasController::class, 'download'])->name('download');
+        Route::post('{suratTugas}/update-nomor',      [SuratTugasController::class, 'updateNomor'])->name('update-nomor');
+    
+        // ── Resource ──
+        Route::resource('/', SuratTugasController::class)
+            ->parameters(['' => 'suratTugas'])
+            ->except(['show']);
+    });
 
     // API Holidays
     Route::get('api/holidays', [CalendarViewController::class, 'getHolidays'])->name('api.holidays');
