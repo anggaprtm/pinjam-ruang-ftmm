@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\AsetFakultasController;
 use App\Http\Controllers\Admin\LemburKegiatanController;
 use App\Http\Controllers\Admin\SuratUndanganController;
 use App\Http\Controllers\Admin\SuratTugasController;
+use App\Http\Controllers\Admin\ProductivityController;
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -200,6 +201,24 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         Route::resource('/', SuratTugasController::class)
             ->parameters(['' => 'suratTugas'])
             ->except(['show']);
+    });
+
+    // ==========================================
+    // PRODUCTIVITY WORKSPACE ROUTES
+    // ==========================================
+    Route::prefix('productivity')->name('productivity.')->group(function () {
+        Route::get('/', [ProductivityController::class, 'index'])->name('index');
+        Route::post('/tasks', [ProductivityController::class, 'storeTask'])->name('tasks.store');
+        Route::patch('/tasks/{id}/status', [ProductivityController::class, 'updateTaskStatus'])->name('tasks.status');
+        Route::delete('/tasks/{id}', [ProductivityController::class, 'destroyTask'])->name('tasks.destroy');
+        
+        Route::post('/notes', [ProductivityController::class, 'storeNote'])->name('notes.store');
+        Route::delete('/notes/{id}', [ProductivityController::class, 'destroyNote'])->name('notes.destroy');
+        
+        Route::post('/habits', [ProductivityController::class, 'storeHabit'])->name('habits.store');
+        Route::post('/habits/{id}/toggle', [ProductivityController::class, 'toggleHabit'])->name('habits.toggle');
+        Route::delete('/habits/{id}', [ProductivityController::class, 'destroyHabit'])->name('habits.destroy');
+        Route::post('/settings', [ProductivityController::class, 'updateSettings'])->name('settings.update');
     });
 
     // API Holidays
