@@ -47,9 +47,10 @@ class ProductivityController extends Controller
         $task = ProductivityTask::create([
             'user_id'     => Auth::id(),
             'title'       => $request->title,
-            'tag'         => $request->tag, // Tangkap input tag
+            'tag'         => $request->tag,
             'priority'    => $request->priority ?? 'medium',
             'deadline_at' => $request->deadline_at,
+            'recurrence'  => $request->recurrence ?? 'none', // <-- Tambahan ini
         ]);
 
         return response()->json(['success' => true, 'task' => $task]);
@@ -72,6 +73,36 @@ class ProductivityController extends Controller
     {
         $task = ProductivityTask::where('user_id', Auth::id())->findOrFail($id);
         $task->update(['status' => $request->status]);
+
+        // 🔥 LOGIC RECURRING TASK 🔥
+        // Jika task dicentang "Selesai" dan statusnya berulang
+        if ($request->status === 'completed' && $task->recurrence !== 'none') {
+            
+            // Tentukan deadline tugas berikutnya
+            $nextDeadline = $task->deadline_at 
+                ? Carbon::parse($task->deadline_at) 
+                : Carbon::today()->setHour(23)->setMinute(59);
+
+            if ($task->recurrence === 'daily') $nextDeadline->addDay();
+            elseif ($task->recurrence === 'weekly') $nextDeadline->addWeek();
+            elseif ($task->recurrence === 'monthly') $nextDeadline->addMonth();
+
+            // Buat duplikat task baru untuk masa depan
+            ProductivityTask::create([
+                'user_id' => $task->user_id,
+                'title' => $task->title,
+                'tag' => $task->tag,
+                'priority' => $task->priority,
+                'recurrence' => $task->recurrence, // Wariskan sifat berulangnya
+                'status' => 'pending',
+                'deadline_at' => $nextDeadline,
+            ]);
+
+            // Matikan sifat berulang di task yang SUDAH SELESAI ini, 
+            // agar tidak beranak terus-menerus jika user iseng nge-klik checkboxnya berkali-kali
+            $task->update(['recurrence' => 'none']);
+        }
+
         return response()->json(['success' => true]);
     }
 

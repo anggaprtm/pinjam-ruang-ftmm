@@ -14,6 +14,7 @@ class ProductivityTask extends Model
         'priority', 
         'status', 
         'deadline_at',
+        'recurrence',
         'remind_morning',
         'remind_h_minus_1',
         'is_reminded_h_1'
