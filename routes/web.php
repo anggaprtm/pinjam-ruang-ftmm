@@ -218,6 +218,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         Route::post('/habits', [ProductivityController::class, 'storeHabit'])->name('habits.store');
         Route::post('/habits/{id}/toggle', [ProductivityController::class, 'toggleHabit'])->name('habits.toggle');
         Route::delete('/habits/{id}', [ProductivityController::class, 'destroyHabit'])->name('habits.destroy');
+        Route::post('/settings', [ProductivityController::class, 'updateSettings'])->name('settings.update');
     });
 
     // API Holidays

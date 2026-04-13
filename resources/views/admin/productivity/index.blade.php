@@ -51,10 +51,13 @@
             <h3 class="mb-1 fw-bold text-white">👋 Halo, {{ Auth::user()->name }}!</h3>
             <p class="mb-0 opacity-75"><i class="fas fa-calendar-alt me-2"></i>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</p>
         </div>
-        <div class="text-end">
-            <span class="badge bg-white text-dark px-3 py-2 rounded-pill fs-6 shadow-sm">
+        <div class="text-end d-flex align-items-center gap-2">
+            <span class="badge bg-white text-dark px-3 py-2 rounded-pill fs-6 shadow-sm d-none d-md-inline-block">
                 <i class="fas fa-bolt text-warning me-1"></i> Focus Mode
             </span>
+            <button class="btn btn-light text-secondary rounded-pill px-3 shadow-sm fw-bold border-0" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="fas fa-cog"></i> <span class="d-none d-sm-inline ms-1">Pengaturan</span>
+            </button>
         </div>
     </div>
 
@@ -249,7 +252,38 @@
         </div>
     </div>
 </div>
+{{-- Modal Pengaturan --}}
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+            <div class="modal-header bg-light border-0"><h5 class="modal-title fw-bold text-dark"><i class="fas fa-cog me-2 text-secondary"></i>Pengaturan Workspace</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form id="formUpdateSettings">
+                <div class="modal-body p-4">
+                    <h6 class="fw-bold mb-3"><i class="fab fa-telegram text-primary me-2"></i>Notifikasi Telegram Bot</h6>
+                    
+                    @if(empty(Auth::user()->telegram_chat_id))
+                        <div class="alert alert-warning small">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Anda belum menautkan ID Telegram. Silakan hubungi Bot dan masukkan ID di menu Edit Profil agar fitur ini berfungsi.
+                        </div>
+                    @endif
 
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="telegram_remind_morning" id="setMorning" style="width: 2.5em; height: 1.3em;" {{ Auth::user()->telegram_remind_morning ? 'checked' : '' }}>
+                        <label class="form-check-label ms-2 pt-1 fw-semibold" for="setMorning">Kirim Rekap Pagi (07:00 WIB)</label>
+                        <div class="form-text mt-0 ms-2">Menerima ringkasan tugas dan habit yang harus dilakukan hari ini.</div>
+                    </div>
+                    
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="telegram_remind_deadline" id="setDeadline" style="width: 2.5em; height: 1.3em;" {{ Auth::user()->telegram_remind_deadline ? 'checked' : '' }}>
+                        <label class="form-check-label ms-2 pt-1 fw-semibold" for="setDeadline">Peringatan Deadline (H-1 Jam)</label>
+                        <div class="form-text mt-0 ms-2">Menerima pesan darurat saat sebuah tugas mendekati tenggat waktu.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light"><button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">Simpan Pengaturan</button></div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -290,6 +324,22 @@ $(document).ready(function() {
         dropdownParent: $('#taskModal'),
         tags: true, // Memungkinkan user ngetik tag custom
         placeholder: "Ketik atau pilih tag..."
+    });
+
+    // AJAX Simpan Settings
+    $('#formUpdateSettings').submit(function(e) {
+        e.preventDefault();
+        let btn = $(this).find('button[type="submit"]');
+        btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...').prop('disabled', true);
+        
+        $.post("{{ route('admin.productivity.settings.update') }}", $(this).serialize())
+        .done(function() {
+            $('#settingsModal').modal('hide');
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Pengaturan disimpan!', showConfirmButton: false, timer: 2000 });
+        })
+        .always(function() {
+            btn.html('Simpan Pengaturan').prop('disabled', false);
+        });
     });
 
     // 1. AJAX Tambah Task

@@ -36,6 +36,8 @@ class User extends Authenticatable
         'email',
         'nip',
         'telegram_chat_id',
+        'telegram_remind_morning',
+        'telegram_remind_deadline', 
         'email_verified_at',
         'password',
         'remember_token',

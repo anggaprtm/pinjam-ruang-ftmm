@@ -49,6 +49,7 @@ class SendProductivityReminder extends Command
         // Cari user yang punya Telegram ID
         $users = User::whereNotNull('telegram_chat_id')
             ->where('telegram_chat_id', '!=', '')
+            ->where('telegram_remind_morning', true) // <-- Tambahan filter
             ->get();
 
         foreach ($users as $user) {
@@ -108,10 +109,16 @@ class SendProductivityReminder extends Command
 
         // Ambil tugas yang mendekati deadline (H-1 Jam)
         $tasks = ProductivityTask::with('user')
+            ->whereHas('user', function($q) {
+                // <-- Tambahan filter untuk mengecek user yang mengizinkan notif deadline
+                $q->whereNotNull('telegram_chat_id')
+                  ->where('telegram_chat_id', '!=', '')
+                  ->where('telegram_remind_deadline', true);
+            })
             ->whereIn('status', ['pending', 'in_progress'])
             ->whereNotNull('deadline_at')
             ->where('remind_h_minus_1', true)
-            ->where('is_reminded_h_1', false) // Pastikan belum pernah direminder
+            ->where('is_reminded_h_1', false)
             ->whereBetween('deadline_at', [$now, $oneHourLater])
             ->get();
 

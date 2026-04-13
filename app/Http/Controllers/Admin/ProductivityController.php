@@ -55,6 +55,19 @@ class ProductivityController extends Controller
         return response()->json(['success' => true, 'task' => $task]);
     }
 
+    public function updateSettings(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Update berdasarkan input checkbox (jika dicentang = true/1, jika tidak = false/0)
+        $user->update([
+            'telegram_remind_morning' => $request->has('telegram_remind_morning'),
+            'telegram_remind_deadline' => $request->has('telegram_remind_deadline'),
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
     public function updateTaskStatus(Request $request, $id)
     {
         $task = ProductivityTask::where('user_id', Auth::id())->findOrFail($id);
