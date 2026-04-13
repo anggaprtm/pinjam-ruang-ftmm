@@ -277,7 +277,7 @@
                             <a href="{{ route('admin.surat-undangan.index') }}"
                                class="nav-link {{ request()->is('admin/surat-undangan*') ? 'active' : '' }}">
                                 <span class="nav-icon"><i class="fas fa-file-invoice"></i></span>
-                                Generator Surat Undangan
+                                Surat Undangan
                             </a>
                         </li>
                     @endcan
@@ -286,7 +286,7 @@
                             <a href="{{ route('admin.surat-tugas.index') }}"
                                class="nav-link {{ request()->is('admin/surat-tugas*') ? 'active' : '' }}">
                                 <span class="nav-icon"><i class="fas fa-file-lines"></i></span>
-                                Generator Surat Tugas
+                                Surat Tugas
                             </a>
                         </li>
                     @endcan
