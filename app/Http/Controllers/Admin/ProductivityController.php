@@ -86,9 +86,8 @@ class ProductivityController extends Controller
     {
         $request->validate(['content' => 'required|string']);
         
-        // Pilihan warna pastel acak untuk sticky notes
-        $colors = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fbcfe8', '#fed7aa', '#e9d5ff'];
-        $bgColor = $colors[array_rand($colors)];
+        // Tangkap warna dari form, default ke kuning pastel jika kosong
+        $bgColor = $request->bg_color ?? '#fef08a';
 
         $note = ProductivityNote::create([
             'user_id' => Auth::id(),
