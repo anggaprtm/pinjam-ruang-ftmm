@@ -22,7 +22,7 @@
                     <label class="form-label required" for="jenis_kegiatan">Jenis Kegiatan</label>
                     <select class="form-control select2 {{ $errors->has('jenis_kegiatan') ? 'is-invalid' : '' }}" name="jenis_kegiatan" id="jenis_kegiatan" required>
                         <option value="">{{ trans('global.pleaseSelect') }}</option>
-                        @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'PHL', 'Kuliah Tamu', 'Lainnya'] as $jenis)
+                        @foreach(['Kegiatan Ormawa','Seminar Proposal', 'Sidang Skripsi', 'Rapat', 'Lomba', 'PHL', 'Kuliah Tamu', 'UTS', 'UAS', 'Lainnya'] as $jenis)
                             <option value="{{ $jenis }}" 
                                 {{ (isset($prefilledData['jenis_kegiatan']) && $prefilledData['jenis_kegiatan'] == $jenis) || old('jenis_kegiatan') == $jenis ? 'selected' : '' }}>
                                 {{ $jenis }}
@@ -58,6 +58,20 @@
                             <label class="form-label" for="dosen_penguji_2">Dosen Penguji 2</label>
                             <input class="form-control" type="text" name="dosen_penguji_2" id="dosen_penguji_2" placeholder="Nama Penguji 2">
                         </div>
+                    </div>
+                </div>
+
+                <div id="form-pengawas-container" style="display: none;" class="p-3 mb-3 bg-light border rounded">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-user-shield me-2"></i>Pengawas Ujian</h6>
+                    <div class="form-group">
+                        <label class="form-label" for="pengawas">Nama Pengawas</label>
+                        <input class="form-control {{ $errors->has('pengawas') ? 'is-invalid' : '' }}" 
+                            type="text" name="pengawas" id="pengawas" 
+                            value="{{ old('pengawas', '') }}"
+                            placeholder="Nama pengawas ujian">
+                        @if($errors->has('pengawas'))
+                            <div class="invalid-feedback">{{ $errors->first('pengawas') }}</div>
+                        @endif
                     </div>
                 </div>
 
@@ -363,32 +377,29 @@ $(document).ready(function() {
 </script>
 <script>
     $(document).ready(function() {
-        // Fungsi untuk cek jenis kegiatan
         function checkJenisKegiatan() {
             var jenis = $('#jenis_kegiatan').val();
-            var container = $('#form-dosen-container');
-            var penguji2 = $('#container-penguji-2');
+            var dosenContainer   = $('#form-dosen-container');
+            var penguji2         = $('#container-penguji-2');
+            var pengawasContainer = $('#form-pengawas-container');
 
-            // Reset dulu visibility
-            container.hide();
+            // Reset semua
+            dosenContainer.hide();
             penguji2.hide();
+            pengawasContainer.hide();
 
             if (jenis === 'Seminar Proposal') {
-                container.slideDown();
-                // Sempro: 2 Pembimbing, 1 Penguji (Penguji 2 hide)
-                penguji2.hide(); 
-            } 
-            else if (jenis === 'Sidang Skripsi') {
-                container.slideDown();
-                // Sidang: 2 Pembimbing, 2 Penguji (Penguji 2 show)
+                dosenContainer.slideDown();
+                // Penguji 2 tetap hide untuk Sempro
+            } else if (jenis === 'Sidang Skripsi') {
+                dosenContainer.slideDown();
                 penguji2.show();
+            } else if (jenis === 'UTS' || jenis === 'UAS') {
+                pengawasContainer.slideDown();
             }
         }
 
-        // Jalankan saat halaman load (siapa tahu ada error validasi dan form balik)
         checkJenisKegiatan();
-
-        // Jalankan saat user ganti pilihan dropdown
         $('#jenis_kegiatan').change(function() {
             checkJenisKegiatan();
         });

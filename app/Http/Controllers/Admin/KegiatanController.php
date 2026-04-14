@@ -517,15 +517,35 @@ class KegiatanController extends Controller
         return response(null, Response::HTTP_NO_CONTENT);
     }
 
-    public function import(Request $request)
+    public function import(Request $request, EventService $eventService)
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:2048',
         ]);
 
         try {
-            Excel::import(new KegiatanImport, $request->file('file'));
-            return redirect()->route('admin.kegiatan.index')->with('success', 'Data Sidang/Seminar berhasil diimport!');
+            $import = new KegiatanImport($eventService);
+            Excel::import($import, $request->file('file'));
+
+            $errors = $import->getRowErrors();
+
+            if (!empty($errors)) {
+                // Bungkus error ke dalam div ber-scroll untuk SweetAlert
+                $errorHtml = '<div style="max-height: 250px; overflow-y: auto; text-align: left; background: #f8f9fa; padding: 10px; border-radius: 5px;">';
+                $errorHtml .= '<ul style="margin-bottom: 0; padding-left: 20px; font-size: 14px; color: #dc3545;">';
+                foreach ($errors as $err) {
+                    $errorHtml .= "<li>{$err}</li>";
+                }
+                $errorHtml .= '</ul></div>';
+
+                // Kita pakai session 'import_warning' khusus untuk mentrigger SweetAlert
+                return redirect()->route('admin.kegiatan.index')
+                    ->with('import_warning', $errorHtml);
+            }
+
+            return redirect()->route('admin.kegiatan.index')
+                ->with('success', 'Semua data berhasil diimport tanpa ada masalah!');
+
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
         }

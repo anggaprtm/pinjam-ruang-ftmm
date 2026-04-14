@@ -37,6 +37,7 @@ export interface Meeting {
 
 export interface ApiResponse {
     jadwal_kuliah_hari_ini: AgendaItem[];
+    jadwal_ujian: AgendaItem[];  
     kegiatan_mendatang: AgendaItem[];
     sidang_rapat: Meeting[]; // Tambahkan ini
 }

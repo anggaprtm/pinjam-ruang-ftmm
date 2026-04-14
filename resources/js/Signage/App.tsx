@@ -40,6 +40,7 @@ const TICKER_STYLE = `
 const App: React.FC = () => {
   const [lectures, setLectures]         = useState<AgendaItem[]>([]);
   const [events, setEvents]             = useState<AgendaItem[]>([]);
+  const [jadwalUjian, setJadwalUjian]   = useState<AgendaItem[]>([]);
   const [meetingsData, setMeetingsData] = useState<Meeting[]>([]);
   const [rooms, setRooms]               = useState<any[]>([]);
   const [isOnline, setIsOnline]         = useState<boolean>(navigator.onLine);
@@ -177,6 +178,7 @@ const App: React.FC = () => {
 
       triggerDataUpdate(() => {
         setLectures(data.jadwal_kuliah_hari_ini);
+        setJadwalUjian(data.jadwal_ujian || []);
         setEvents(data.kegiatan_mendatang);
         setRooms(data.room_availability ?? []);
         setMeetingsData(data.sidang_rapat);
@@ -201,6 +203,7 @@ const App: React.FC = () => {
         const res  = await fetch(apiUrl.toString());
         const data: ApiResponse = await res.json();
         setLectures(data.jadwal_kuliah_hari_ini);
+        setJadwalUjian(data.jadwal_ujian || []);
         setEvents(data.kegiatan_mendatang);
         setRooms(data.room_availability ?? []);
         setMeetingsData(data.sidang_rapat);
@@ -317,7 +320,7 @@ const App: React.FC = () => {
           {/* ── KOLOM KIRI ── */}
           {showLeftCol && (
             <div className="col-span-3 flex flex-col gap-3 min-h-0">
-              {showLectures && <div className="flex-1 min-h-0"><LecturesPanel data={lectures} /></div>}
+              {showLectures && <div className="flex-1 min-h-0"><LecturesPanel data={lectures} ujianData={jadwalUjian} /></div>}
               {showPending  && (
                 <div className={showLectures ? 'shrink-0' : 'flex-1 min-h-0 [&>div]:h-full'}>
                   <PendingRequestsWidget />

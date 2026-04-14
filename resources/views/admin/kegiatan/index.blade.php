@@ -18,7 +18,6 @@
     @endcan
 </div>
 
-
 {{-- Filter Bar dengan Tambahan Filter --}}
 <div class="filter-bar">
     <form action="{{ route('admin.kegiatan.index') }}" method="GET">
@@ -710,4 +709,18 @@ $(document).on('click', '.js-delete-btn', function (e) {
 
 });
 </script>
+@if(session('import_warning'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Beberapa Baris Gagal Diimport',
+            html: `{!! session('import_warning') !!}`, // Render HTML list-nya
+            width: '600px',
+            confirmButtonText: 'Tutup',
+            confirmButtonColor: '#3085d6'
+        });
+    });
+</script>
+@endif
 @endsection

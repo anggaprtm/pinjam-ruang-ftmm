@@ -28,7 +28,7 @@ class StoreKegiatanRequest extends FormRequest
             ],
             'jenis_kegiatan' => [
                 'required', 
-                'in:Kegiatan Ormawa,Seminar Proposal,Sidang Skripsi,Rapat,Lomba,PHL,Kuliah Tamu,Lainnya' // Sesuaikan opsi mu
+                'in:Kegiatan Ormawa,Seminar Proposal,Sidang Skripsi,Rapat,Lomba,PHL,Kuliah Tamu,UTS,UAS,Lainnya' // Sesuaikan opsi mu
             ],
             'poster' => [
                 'nullable', 
@@ -44,6 +44,7 @@ class StoreKegiatanRequest extends FormRequest
             'dosen_pembimbing_2' => ['nullable', 'string', 'max:255'],
             'dosen_penguji_1'    => ['nullable', 'string', 'max:255'],
             'dosen_penguji_2'    => ['nullable', 'string', 'max:255'],
+            'pengawas'           => ['nullable', 'string', 'max:255'],
             'nomor_telepon' => [
                 'required',
                 // Hanya angka dan harus diawali dengan 0, misal: 08123456789

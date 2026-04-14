@@ -33,6 +33,7 @@ class Kegiatan extends Model
         'dosen_pembimbing_2',
         'dosen_penguji_1',
         'dosen_penguji_2',
+        'pengawas',
         'waktu_mulai',
         'waktu_selesai',
         'deskripsi',

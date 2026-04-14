@@ -70,7 +70,7 @@ class SignageController extends Controller
         // ==========================================
         $kegiatanQuery = Kegiatan::where('status', 'disetujui')
             ->whereDate('waktu_mulai', '>=', $today) // Hanya hari ini (atau >= today terserah policy)
-            ->whereNotIn('jenis_kegiatan', ['Rapat', 'Seminar Proposal', 'Sidang Skripsi']) 
+            ->whereNotIn('jenis_kegiatan', ['Rapat', 'Seminar Proposal', 'Sidang Skripsi', 'UTS', 'UAS']) 
             ->with(['ruangan', 'user']);
 
         // --- FILTER LANTAI DIPASANG DISINI JUGA ---
@@ -173,6 +173,36 @@ class SignageController extends Controller
             ];
         });
 
+        $ujianQuery = Kegiatan::where('status', 'disetujui')
+            ->whereDate('waktu_mulai', $today->toDateString())
+            ->whereIn('jenis_kegiatan', ['UTS', 'UAS'])
+            ->with(['ruangan']);
+
+        if ($filterLantai) {
+            $ujianQuery->whereHas('ruangan', function($q) use ($filterLantai) {
+                $q->where('lantai', 'LIKE', "%{$filterLantai}%");
+            });
+        }
+        if ($filterGedung) {
+            $ujianQuery->whereHas('ruangan', function($q) use ($filterGedung) {
+                $q->where('gedung', 'LIKE', "%{$filterGedung}%");
+            });
+        }
+
+        $jadwalUjian = $ujianQuery->orderBy('waktu_mulai')->get()->map(function ($item) {
+            $start = Carbon::parse($item->waktu_mulai);
+            $end   = Carbon::parse($item->waktu_selesai);
+            return [
+                'title'       => $item->nama_kegiatan,
+                'course_code' => $item->jenis_kegiatan, // 'UTS' atau 'UAS'
+                'time'        => $start->format('H:i') . ' - ' . $end->format('H:i'),
+                'room'        => $item->ruangan->nama ?? '-',
+                'pic'         => $item->nama_pic ?? '-',
+                'pengawas'    => $item->pengawas ?? null,
+                'type'        => $item->jenis_kegiatan, // 'UTS' atau 'UAS'
+            ];
+        });
+
         // ==========================================
         // 3. QUERY KETERSEDIAAN RUANG (LIVE STATUS)
         // ==========================================
@@ -231,9 +261,10 @@ class SignageController extends Controller
         // ==========================================
         return response()->json([
             'jadwal_kuliah_hari_ini' => $jadwalKuliah,
-            'kegiatan_mendatang' => $kegiatan, 
-            'sidang_rapat' => $sidangRapat,
-            'room_availability' => $roomAvailability, // <--- Data Baru
+            'jadwal_ujian'           => $jadwalUjian,
+            'kegiatan_mendatang'     => $kegiatan, 
+            'sidang_rapat'           => $sidangRapat,
+            'room_availability'      => $roomAvailability, // <--- Data Baru
         ]);
     }
 

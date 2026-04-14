@@ -3,7 +3,7 @@
 @section('styles')
 <style>
     /* Global Workspace Styles */
-    .workspace-header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); }
+    .workspace-header { background: linear-gradient(135deg, #741847 0%, #a42e6a 100%); color: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); }
     .card-modern { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); height: 100%; }
     .card-modern .card-header { background: transparent; border-bottom: 1px solid #f3f4f6; padding: 1.25rem 1.5rem; font-weight: 700; }
     
@@ -87,14 +87,14 @@
     {{-- Header --}}
     <div class="workspace-header d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="mb-1 fw-bold text-white">👋 Halo, {{ Auth::user()->name }}!</h3>
-            <p class="mb-0 opacity-75"><i class="fas fa-calendar-alt me-2"></i>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</p>
+            <h3 class="mb-1 fw-bold text-white">👋🏻 Halo, {{ Auth::user()->name }}!</h3>
+            <p class="mb-0 opacity-75 ms-5" style="font-size: 1rem;"><i class="fas fa-calendar-alt me-2"></i>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</p>
         </div>
         <div class="text-end d-flex align-items-center gap-2">
             <button onclick="togglePomodoro()" class="btn btn-light text-dark px-3 py-2 rounded-pill fs-6 shadow-sm d-none d-md-inline-block fw-bold border-0">
                 <i class="fas fa-bolt text-warning me-1"></i> Focus Mode
             </button>
-            <button class="btn btn-light text-secondary rounded-pill px-3 py-2 shadow-sm fw-bold border-0" data-bs-toggle="modal" data-bs-target="#settingsModal">
+            <button class="btn btn-light text-dark rounded-pill px-3 py-2 shadow-sm fw-bold border-0" data-bs-toggle="modal" data-bs-target="#settingsModal">
                 <i class="fas fa-cog"></i> <span class="d-none d-sm-inline ms-1">Pengaturan</span>
             </button>
         </div>
