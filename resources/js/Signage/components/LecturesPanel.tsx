@@ -12,6 +12,9 @@ interface LecturesPanelProps {
 const LecturesPanel: React.FC<LecturesPanelProps> = ({ data, ujianData = [] }) => {
     const [, setTick] = useState(0);
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSpesifikLantai = urlParams.has('lantai');
+
     useEffect(() => {
         const timer = setInterval(() => setTick(t => t + 1), 60000);
         return () => clearInterval(timer);
@@ -115,7 +118,7 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data, ujianData = [] }) =
                                 </div>
 
                                 {/* Baris 3: Pengawas — hanya mode ujian */}
-                                {isExamMode && (lecture as any).pengawas && (
+                                {isExamMode && !isSpesifikLantai && (lecture as any).pengawas && (
                                     <div className={`mt-1 text-[10px] flex items-center gap-1 ${
                                         isNow ? 'text-amber-300/70' : 'text-gray-600'
                                     }`}>
