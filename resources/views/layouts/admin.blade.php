@@ -62,7 +62,7 @@
 
         {{-- ═══════ HEADER ═══════ --}}
         <header class="header header-sticky p-0">
-            <div class="container-fluid border-bottom px-4">
+            <div class="container-fluid px-4">
                 <div class="d-flex align-items-center justify-content-between w-100 h-100 py-2">
                     
                     <div class="d-flex align-items-center">
@@ -75,8 +75,10 @@
                         <a class="header-brand d-lg-none" href="#">LayananFTMM</a>
 
                         {{-- Toggler desktop --}}
-                        <button class="header-toggler d-none d-lg-inline-block me-3" type="button" id="sidebarToggleDesktop" aria-label="Toggle sidebar">
-                            <i class="fas fa-bars"></i>
+                        <button class="header-toggler d-none d-lg-inline-flex me-3 align-items-center justify-content-center" 
+                                type="button" id="sidebarToggleDesktop" aria-label="Toggle sidebar"
+                                style="width:32px; height:32px; border-radius:8px; transition: background 0.2s;">
+                            <i class="fas fa-angles-left" id="sidebarToggleIcon" style="transition: transform 0.3s ease; font-size: 0.95rem;"></i>
                         </button>
                     </div>
 
@@ -139,10 +141,47 @@
         </div>
 
         {{-- ═══════ FOOTER ═══════ --}}
-        <footer class="footer px-4">
-            <div class="d-flex justify-content-between align-items-center py-2 w-100">
-                <span class="text-muted small">Dibuat dengan ❤️ dan kopi FamilyMart.</span>
-                <span class="text-muted small ms-auto">&copy; {{ date('Y') }} <strong>USI FTMM</strong></span>
+        <style>
+            /* Animasi detak jantung */
+            .heart-pulse {
+                display: inline-block;
+                animation: pulse 1.5s infinite;
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                10% { transform: scale(1.2); }
+                20% { transform: scale(1); }
+                30% { transform: scale(1.2); }
+                40% { transform: scale(1); }
+                100% { transform: scale(1); }
+            }
+
+            /* Kustomisasi link USI FTMM biar lebih rapi pas di-hover */
+            .footer-link {
+                color: #495057;
+                text-decoration: none;
+                transition: color 0.3s ease;
+            }
+            .footer-link:hover {
+                color: #0d6efd; /* Ganti dengan warna tema website lo */
+            }
+        </style>
+
+        <footer class="footer px-4 py-3 border-top bg-light mt-auto">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center w-100 gap-2">
+                
+                <span class="text-secondary small fw-medium text-center text-md-start">
+                    Dibuat dengan <span class="heart-pulse text-danger">❤️</span> dan kopi FamilyMart.
+                </span>
+                
+                <span class="text-secondary small text-center text-md-end">
+                    &copy; {{ date('Y') }} 
+                    <strong>
+                        <a href="#" class="footer-link">USI FTMM</a>
+                    </strong>
+                </span>
+                
             </div>
         </footer>
 
@@ -398,6 +437,33 @@
         }
         setInterval(tick, 1000);
         tick();
+    });
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn  = document.getElementById('sidebarToggleDesktop');
+        const icon = document.getElementById('sidebarToggleIcon');
+        const sidebar = document.getElementById('sidebar');
+
+        if (!btn || !icon || !sidebar) return;
+
+        function updateIcon() {
+            const isNarrow = sidebar.classList.contains('sidebar-narrow');
+            // Narrow = sidebar mengecil = panah menunjuk kanan (expand)
+            icon.style.transform = isNarrow ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        // Update saat tombol diklik
+        btn.addEventListener('click', function () {
+            // Beri jeda kecil agar CoreUI selesai toggle class-nya dulu
+            setTimeout(updateIcon, 50);
+        });
+
+        // Cek kondisi awal saat halaman load
+        updateIcon();
+
+        // Observer: jaga-jaga kalau class berubah dari luar (misal CoreUI restore dari localStorage)
+        new MutationObserver(updateIcon).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
     });
     </script>
 

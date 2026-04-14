@@ -95,7 +95,15 @@
                 <i class="fas fa-bolt text-warning me-1"></i> Focus Mode
             </button>
             <button class="btn btn-light text-dark rounded-pill px-3 py-2 shadow-sm fw-bold border-0" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                <i class="fas fa-cog"></i> <span class="d-none d-sm-inline ms-1">Pengaturan</span>
+                <i class="fas fa-cog"></i>
+            </button>
+            <button class="btn btn-light text-dark rounded-pill px-3 py-2 shadow-sm fw-bold border-0">
+                @can('profile_password_edit')
+                    <a class="nav-link {{ request()->is('profile/password*') ? 'active' : '' }}"
+                    href="{{ route('profile.password.edit') }}">
+                        <i class="nav-icon fas fa-key"></i>
+                    </a>
+                @endcan
             </button>
         </div>
     </div>

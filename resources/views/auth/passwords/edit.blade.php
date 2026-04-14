@@ -1,20 +1,26 @@
 @extends('layouts.admin')
 @section('content')
 
-<h3 class="font-weight-bold text-nowrap"><i class="fas fa-key me-2"></i> Pengaturan Akun</h3>
+<div class="d-flex justify-content-between align-items-center">
+    <h3 class="fw-bold text-nowrap"><i class="fas fa-key me-2"></i> Pengaturan Akun</h3>
+
+    <a href="{{ url()->previous() }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Kembali
+    </a>
+</div>
 
 <div class="row">
     <div class="col-lg-12">
         {{-- Navigasi Tab --}}
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profil Saya</button>
+                <button class="nav-link active text-dark" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profil Saya</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">Ganti Password</button>
+                <button class="nav-link text-dark" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">Ganti Password</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="danger-tab" data-bs-toggle="tab" data-bs-target="#danger" type="button" role="tab" aria-controls="danger" aria-selected="false">Hapus Akun</button>
+                <button class="nav-link text-dark" id="danger-tab" data-bs-toggle="tab" data-bs-target="#danger" type="button" role="tab" aria-controls="danger" aria-selected="false">Hapus Akun</button>
             </li>
         </ul>
 

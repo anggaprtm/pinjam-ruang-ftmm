@@ -213,7 +213,7 @@ table.dataTable thead .sorting_desc {
     color: #4b5563 !important;
     font-weight: 500;
     font-size: 0.875rem;
-    padding: 0.575rem 1rem !important;
+    padding: 0.9rem 1rem !important;
     margin: 1px 8px;
     border-radius: 8px;
     transition: background-color 0.15s ease, color 0.15s ease;
@@ -569,32 +569,64 @@ table.dataTable thead .sorting_desc {
     font-weight: 700;
     flex-shrink: 0;
 }
+/* Maximized: group toggle highlight jika ada nav-link.active di dalamnya */
+.sidebar-nav .nav-group:has(.nav-link.active) > .nav-group-toggle {
+    background-color: #741847 !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+.sidebar-nav .nav-group:has(.nav-link.active) > .nav-group-toggle .nav-icon,
+.sidebar-nav .nav-group:has(.nav-link.active) > .nav-group-toggle .nav-icon i {
+    color: #ffffff !important;
+}
+.sidebar-nav .nav-group:has(.nav-link.active) > .nav-group-toggle::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+}
 
-
+/* Narrow: icon parent highlight jika ada child aktif */
+.sidebar.sidebar-narrow .nav-group:has(.nav-link.active) > .nav-group-toggle .nav-icon,
+.sidebar.sidebar-narrow .nav-group:has(.nav-link.active) > .nav-group-toggle .nav-icon i {
+    color: #fdf0f5 !important;
+}
+.sidebar.sidebar-narrow .nav-group:has(.nav-link.active) > .nav-group-toggle {
+    background-color: #741847 !important;
+}
 /* ─── NAV SPACER ─────────────────────────────────────────────────────────── */
-
 .nav-spacer {
-    /* display: list-item membuat flex: 1 1 auto tidak bekerja — harus block */
     display: block !important;
     flex: 1 1 auto !important;
     min-height: 20px;
 }
 
-/* Saat sidebar narrow, sidebar-nav tetap perlu flex agar spacer bisa push ke bawah */
-/* PENTING: overflow HARUS visible agar flyout submenu bisa keluar dari batas sidebar */
+/* Reset: maximized — profil & logout ikut flow normal */
 @media (min-width: 992px) {
-    .sidebar.sidebar-narrow .sidebar-nav {
-        display: flex !important;
-        flex-direction: column !important;
-        height: 100% !important;
-        overflow: visible !important; /* Jangan pakai auto/hidden — flyout akan terpotong */
-    }
-    .sidebar.sidebar-narrow .nav-spacer {
-        flex: 1 1 auto !important;
-        min-height: 20px;
+    .sidebar:not(.sidebar-narrow) .nav-item-bottom {
+        position: static !important;
+        width: auto !important;
+        bottom: auto !important;
+        left: auto !important;
     }
 }
 
+/* Narrow: profil & logout fixed di bawah */
+@media (min-width: 992px) {
+    .sidebar.sidebar-narrow .nav-spacer {
+        display: none !important;
+        flex: 0 !important;
+    }
+    .sidebar.sidebar-narrow .nav-item-bottom {
+        position: fixed !important;
+        left: 0 !important;
+        width: 70px !important;
+        z-index: 1032 !important;
+    }
+    .sidebar.sidebar-narrow li.nav-item-bottom:nth-last-of-type(2) {
+        bottom: 70px !important;
+    }
+    .sidebar.sidebar-narrow li.nav-item-bottom:nth-last-of-type(1) {
+        bottom: 8px !important;
+    }
+}
 /* Mereset margin negatif bawaan CoreUI v4 pada icon submenu */
 .sidebar-nav .nav-group-items .nav-link .nav-icon,
 .sidebar-nav .nav-group-items .nav-link .nav-icon i {

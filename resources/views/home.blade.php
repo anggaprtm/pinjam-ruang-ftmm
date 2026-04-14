@@ -18,7 +18,7 @@
     .timeline-item:last-child { margin-bottom: 0; }
     .timeline-icon {
         position: absolute;
-        left: -2.15rem; /* Menyesuaikan agar tepat di atas garis border */
+        left: -2.15rem;
         top: 0;
         width: 32px;
         height: 32px;
@@ -51,26 +51,100 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
     }
+
     /* --- CUSTOM WARNA TAB APPROVAL --- */
-    /* Warna background tab saat Aktif (diklik) */
     .nav-pills .nav-link.active, 
     .nav-pills .show > .nav-link {
-        background-color: #741847 !important; /* Ganti warna ini sesuai selera (contoh: Maroon FTMM) */
+        background-color: #741847 !important; 
         color: #ffffff !important;
     }
-
-    /* Warna teks tab saat Tidak Aktif */
     .nav-pills .nav-link {
         color: #6c757d; 
         transition: all 0.2s ease;
     }
-
-    /* Efek hover saat tab Tidak Aktif disorot mouse */
     .nav-pills .nav-link:hover:not(.active) {
         background-color: #f8f9fa;
-        color: #741847; /* Ganti warna teks saat di-hover */
+        color: #741847; 
     }
 
+    /* =========================================
+       MEDIA QUERIES KHUSUS MOBILE (RESPONSIVE)
+       ========================================= */
+    @media (max-width: 767.98px) {
+        /* Bikin tombol pintasan full-width di HP */
+        .quick-actions-wrapper {
+            flex-direction: column;
+        }
+        .quick-action-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1rem !important;
+            display: flex;
+            align-items: center;
+        }
+        .quick-action-btn i {
+            width: 25px;
+            text-align: center;
+            margin-right: 10px !important;
+        }
+
+        /* OVERRIDE STAT CARD ASLI KHUSUS UNTUK HP */
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 15px 10px !important;
+            position: relative;
+        }
+        
+        /* Mereset icon-container bawaan admin template agar ke tengah di HP */
+        .stat-card .icon-container {
+            position: relative !important;
+            width: 45px !important;
+            height: 45px !important;
+            font-size: 1.1rem !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50% !important;
+            margin-right: 0px !important;
+            margin-bottom: 8px;
+            right: auto !important; 
+            top: auto !important;
+            float: none !important;
+        }
+
+        .stat-card .info {
+            width: 100%;
+            padding: 0 !important;
+        }
+        .stat-label {
+            font-size: 0.75rem !important;
+            line-height: 1.2;
+            white-space: normal !important;
+        }
+        .stat-number {
+            font-size: 1.25rem !important;
+            margin-bottom: 2px;
+        }
+
+        /* Sesuaikan ukuran teks pada informasi header */
+        .card-header h6, .card-header h5 {
+            font-size: 1rem !important;
+        }
+        
+        /* Tombol copy jadwal dibikin berjejer rapi di HP */
+        .jadwal-btn-group {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .jadwal-btn-group .btn {
+            flex: 1;
+            font-size: 0.75rem;
+            padding: 0.4rem;
+        }
+    }
 </style>
 @endsection
 
@@ -78,18 +152,18 @@
 <div class="content dashboard-home">
 
     {{-- WELCOME BANNER --}}
-    <div class="welcome-banner mb-3">
+    <div class="welcome-banner mb-3 p-3 p-md-4 rounded shadow-sm bg-primary" style="background: linear-gradient(135deg, #741847, #a9246a);">
         <h4 class="fw-bold text-white mb-1">
             Selamat Datang, {{ Auth::user()->name }}!
         </h4>
 
         @can('home_access')
-            <p class="mb-0 text-white-50">
+            <p class="mb-0 text-white-50 small d-none d-md-block">
                 Dashboard monitoring layanan Fakultas Teknologi Maju dan Multidisiplin.
             </p>
         @endcan
 
-        <div id="current-time" class="mt-2 text-white fw-semibold"></div>
+        <div id="current-time" class="mt-2 text-white fw-semibold small"></div>
     </div>
 
     @can('home_access')
@@ -99,7 +173,7 @@
             <div class="text-muted small fw-bold text-uppercase mb-2 d-flex align-items-center">
                 <i class="fas fa-bolt text-warning me-2"></i> Pintasan Cepat
             </div>
-            <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex quick-actions-wrapper gap-2">
                 <a href="{{ route('admin.permintaan-kegiatan.create') }}" class="btn btn-warning quick-action-btn shadow-sm rounded-pill px-3 fw-bold">
                     <i class="fas fa-concierge-bell me-1"></i> Buat Permintaan
                 </a>
@@ -110,10 +184,10 @@
                     <i class="fas fa-box-open me-1"></i> Tambah Aset
                 </a>
                 <a href="{{ route('admin.riwayat-perjalanan.create') }}" class="btn btn-danger quick-action-btn shadow-sm rounded-pill px-3 fw-bold">
-                    <i class="fas fa-car me-1"></i> Jadwalkan Mobil Dinas
+                    <i class="fas fa-car me-1"></i> Jadwal Mobil Dinas
                 </a>
                 <a href="{{ route('admin.display-config.index') }}" class="btn quick-action-btn shadow-sm rounded-pill px-3 fw-bold" style="background-color: #20a2c9; color: white;">
-                    <i class="fas fa-cog me-1"></i> Konfigurasi Display
+                    <i class="fas fa-cog me-1"></i> Config Display
                 </a>
             </div>
         </div>
@@ -200,7 +274,7 @@
             {{-- 1. STATUS DRIVER --}}
             <div class="col-lg-4">
                 <div class="card h-100 border-0 shadow-sm d-flex flex-column">
-                    <div class="card-header bg-white border-0 d-flex align-items-center" style="min-height: 65px;">
+                    <div class="card-header bg-white border-0 d-flex align-items-center flex-wrap gap-2" style="min-height: 65px;">
                         <h6 class="mb-0 fw-bold d-flex align-items-center">
                             <i class="fas fa-car-side text-primary me-2"></i> Status Driver
                         </h6>
@@ -272,17 +346,17 @@
                 <div class="card h-100 border-0 shadow-sm d-flex flex-column">
                     <div class="card-header bg-white border-0 d-flex align-items-center px-3" style="min-height: 65px;">
                         {{-- Tabs Navigation --}}
-                        <ul class="nav nav-pills nav-fill gap-1 w-100 mb-0" id="approvalTabs" role="tablist">
+                        <ul class="nav nav-pills nav-fill gap-1 w-100 mb-0 flex-nowrap overflow-auto" id="approvalTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active py-2 small fw-bold" id="ruang-tab" data-bs-toggle="tab" data-bs-target="#ruang" type="button" role="tab">
-                                    <i class="fas fa-door-open me-1"></i> Pinjam Ruang
+                                <button class="nav-link active py-2 small fw-bold text-nowrap" id="ruang-tab" data-bs-toggle="tab" data-bs-target="#ruang" type="button" role="tab">
+                                    <i class="fas fa-door-open me-1"></i> Ruang
                                     @if(($pendingApproval->count() ?? 0) > 0)
                                         <span class="badge bg-danger ms-1">{{ $pendingApproval->count() }}</span>
                                     @endif
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link py-2 small fw-bold" id="layanan-tab" data-bs-toggle="tab" data-bs-target="#layanan" type="button" role="tab">
+                                <button class="nav-link py-2 small fw-bold text-nowrap" id="layanan-tab" data-bs-toggle="tab" data-bs-target="#layanan" type="button" role="tab">
                                     <i class="fas fa-concierge-bell me-1"></i> Layanan
                                     @if(($pendingPermintaan->count() ?? 0) > 0)
                                         <span class="badge bg-danger ms-1">{{ $pendingPermintaan->count() }}</span>
@@ -298,15 +372,12 @@
                             {{-- Tab 1: Peminjaman Ruang --}}
                             <div class="tab-pane fade show active h-100" id="ruang" role="tabpanel">
                                 <div class="d-flex flex-column h-100">
-                                    
                                     @if($pendingApproval->isEmpty())
-                                        {{-- Area Kosong Tab 1 --}}
-                                        <div class="d-flex flex-column justify-content-center align-items-center text-muted flex-grow-1">
+                                        <div class="d-flex flex-column justify-content-center align-items-center text-muted flex-grow-1 py-4">
                                             <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
-                                            <p class="small mb-0">Semua pengajuan telah diproses.</p>
+                                            <p class="small mb-0">Semua pengajuan diproses.</p>
                                         </div>
                                     @else
-                                        {{-- Area Scroll Tab 1 --}}
                                         <div class="list-group list-group-flush dashboard-scroll flex-grow-1" style="max-height: 310px; overflow-y: auto;">
                                             @foreach($pendingApproval as $keg)
                                                 <a href="{{ route('admin.kegiatan.index') }}" class="list-group-item list-group-item-action border-light py-3">
@@ -322,12 +393,8 @@
                                             @endforeach
                                         </div>
                                     @endif
-                                    
-                                    {{-- Footer Tab 1 --}}
                                     <div class="card-footer bg-white border-top text-center py-3 mt-auto">
-                                        <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-sm btn-outline-secondary w-100 fw-semibold">
-                                            Verifikasi Kegiatan
-                                        </a>
+                                        <a href="{{ route('admin.kegiatan.index') }}" class="btn btn-sm btn-outline-secondary w-100 fw-semibold">Verifikasi Kegiatan</a>
                                     </div>
                                 </div>
                             </div>
@@ -335,21 +402,18 @@
                             {{-- Tab 2: Permintaan Layanan --}}
                             <div class="tab-pane fade h-100" id="layanan" role="tabpanel">
                                 <div class="d-flex flex-column h-100">
-                                    
                                     @if($pendingPermintaan->isEmpty())
-                                        {{-- Area Kosong Tab 2 --}}
-                                        <div class="d-flex flex-column justify-content-center align-items-center text-muted flex-grow-1">
+                                        <div class="d-flex flex-column justify-content-center align-items-center text-muted flex-grow-1 py-4">
                                             <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
                                             <p class="small mb-0">Tidak ada permintaan baru.</p>
                                         </div>
                                     @else
-                                        {{-- Area Scroll Tab 2 --}}
                                         <div class="list-group list-group-flush dashboard-scroll flex-grow-1" style="max-height: 310px; overflow-y: auto;">
                                             @foreach($pendingPermintaan as $req)
                                                 <a href="{{ route('admin.permintaan-kegiatan.show', $req->id) }}" class="list-group-item list-group-item-action border-light py-3">
                                                     <div class="d-flex align-items-start gap-3">
                                                         <div class="flex-grow-1">
-                                                            <div class="fw-bold text-primary mb-1 text-truncate">{{ $req->nama_kegiatan ?? '-' }}</div>
+                                                            <div class="fw-bold text-primary mb-1 text-truncate" style="max-width: 180px;">{{ $req->nama_kegiatan ?? '-' }}</div>
                                                             <div class="d-flex flex-wrap gap-2">
                                                                 @if($req->request_ruang) <span class="badge bg-info">Ruang</span> @endif
                                                                 @if($req->request_konsumsi) <span class="badge bg-warning">Konsumsi</span> @endif
@@ -364,12 +428,8 @@
                                             @endforeach
                                         </div>
                                     @endif
-                                    
-                                    {{-- Footer Tab 2 --}}
                                     <div class="card-footer bg-white border-top text-center py-3 mt-auto">
-                                        <a href="{{ route('admin.permintaan-kegiatan.index') }}" class="btn btn-sm btn-outline-secondary w-100 fw-semibold">
-                                            Kelola Permintaan
-                                        </a>
+                                        <a href="{{ route('admin.permintaan-kegiatan.index') }}" class="btn btn-sm btn-outline-secondary w-100 fw-semibold">Kelola Permintaan</a>
                                     </div>
                                 </div>
                             </div>
@@ -408,21 +468,21 @@
         </div>
 
         {{-- JADWAL PEMAKAIAN RUANG --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h5 class="mb-0 fw-bold text-primary">
                     <i class="fas fa-calendar-alt me-2"></i> Jadwal Pemakaian Ruang
                 </h5>
 
-                <div class="d-flex flex-wrap gap-2" role="group">
+                <div class="d-flex flex-wrap jadwal-btn-group gap-2" role="group">
                     <button class="btn btn-sm btn-outline-success" id="copyHariIniBtn" @if($kegiatanHariIni->isEmpty()) disabled @endif>
-                        <i class="fas fa-copy me-2"></i> Salin Hari Ini
+                        <i class="fas fa-copy me-1"></i> Salin Hari Ini
                     </button>
                     <button class="btn btn-sm btn-outline-info" id="copyBesokBtn" @if($kegiatanBesok->isEmpty()) disabled @endif>
-                        <i class="fas fa-file-alt me-2"></i> Salin Besok
+                        <i class="fas fa-file-alt me-1"></i> Salin Besok
                     </button>
-                    <a href="{{ route('admin.statistics.index') }}" class="btn btn-sm btn-outline-warning">
-                        <i class="fas fa-chart-bar me-2"></i> Lihat Statistik Lengkap
+                    <a href="{{ route('admin.statistics.index') }}" class="btn btn-sm btn-outline-warning text-nowrap">
+                        <i class="fas fa-chart-bar me-1"></i> Lihat Statistik
                     </a>
                 </div>
             </div>
@@ -431,14 +491,14 @@
                 <textarea id="jadwalHariIniClipboard" class="d-none">{{ trim($jadwalHariIniText ?? '') }}</textarea>
                 <textarea id="jadwalBesokClipboard" class="d-none">{{ trim($jadwalBesokText ?? '') }}</textarea>
 
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <ul class="nav nav-tabs flex-nowrap overflow-auto" id="myTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active fw-bold" id="hari-ini-tab" data-bs-toggle="tab" data-bs-target="#hari-ini" type="button" role="tab">
+                        <button class="nav-link active fw-bold text-nowrap" id="hari-ini-tab" data-bs-toggle="tab" data-bs-target="#hari-ini" type="button" role="tab">
                             Hari Ini
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-bold" id="besok-tab" data-bs-toggle="tab" data-bs-target="#besok" type="button" role="tab">
+                        <button class="nav-link fw-bold text-nowrap" id="besok-tab" data-bs-toggle="tab" data-bs-target="#besok" type="button" role="tab">
                             Besok
                         </button>
                     </li>
@@ -446,10 +506,15 @@
 
                 <div class="tab-content pt-3" id="myTabContent">
                     <div class="tab-pane fade show active" id="hari-ini" role="tabpanel">
-                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanHariIni])
+                        {{-- BUNGKUS DENGAN TABLE-RESPONSIVE AGAR BISA DIGESER DI HP --}}
+                        <div class="table-responsive">
+                            @include('partials.kegiatanTable', ['kegiatans' => $kegiatanHariIni])
+                        </div>
                     </div>
                     <div class="tab-pane fade" id="besok" role="tabpanel">
-                        @include('partials.kegiatanTable', ['kegiatans' => $kegiatanBesok])
+                        <div class="table-responsive">
+                            @include('partials.kegiatanTable', ['kegiatans' => $kegiatanBesok])
+                        </div>
                     </div>
                 </div>
             </div>
@@ -459,24 +524,24 @@
 
     {{-- USER BIASA --}}
     @cannot('home_access')
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white">
                 <h5 class="mb-0 fw-bold">Informasi Peminjaman Ruang</h5>
             </div>
             <div class="card-body">
-                <h2 class="h4">Cara Melakukan Peminjaman Ruang</h2>
-                <ol class="list-group list-group-numbered">
-                    <li class="list-group-item">Klik "Cari Ruang" atau icon 🔍 pada menu sidebar.</li>
-                    <li class="list-group-item">Masukkan waktu mulai dan waktu selesai kegiatan.</li>
-                    <li class="list-group-item">Ketikkan kapasitas ruang yang dibutuhkan.</li>
-                    <li class="list-group-item">Kemudian klik "Cari". Ruang yang tersedia akan muncul di bawahnya.</li>
-                    <li class="list-group-item">Pilih ruang yang tersedia, kemudian klik "Pinjam Ruang".</li>
-                    <li class="list-group-item">Isi semua data yang diperlukan pada form peminjaman.</li>
-                    <li class="list-group-item">Upload berkas Surat Peminjaman Ruang jika diperlukan.</li>
-                    <li class="list-group-item">Klik tombol "Save" atau "Simpan".</li>
-                    <li class="list-group-item">Kegiatan berhasil dibuat dan akan muncul di menu "Kegiatan" untuk diproses.</li>
-                    <li class="list-group-item">Harap tunggu proses verifikasi dari pihak terkait.</li>
-                    <li class="list-group-item">Ketika kegiatan telah disetujui, Anda dapat menggunakan ruangan sesuai jadwal.</li>
+                <h2 class="h5 mb-3">Cara Melakukan Peminjaman Ruang</h2>
+                <ol class="list-group list-group-numbered small">
+                    <li class="list-group-item border-0 px-2 py-1">Klik "Cari Ruang" atau icon 🔍 pada menu sidebar.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Masukkan waktu mulai dan waktu selesai kegiatan.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Ketikkan kapasitas ruang yang dibutuhkan.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Kemudian klik "Cari". Ruang yang tersedia akan muncul di bawahnya.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Pilih ruang yang tersedia, kemudian klik "Pinjam Ruang".</li>
+                    <li class="list-group-item border-0 px-2 py-1">Isi semua data yang diperlukan pada form peminjaman.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Upload berkas Surat Peminjaman Ruang jika diperlukan.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Klik tombol "Save" atau "Simpan".</li>
+                    <li class="list-group-item border-0 px-2 py-1">Kegiatan berhasil dibuat dan akan muncul di menu "Kegiatan" untuk diproses.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Harap tunggu proses verifikasi dari pihak terkait.</li>
+                    <li class="list-group-item border-0 px-2 py-1">Ketika kegiatan telah disetujui, Anda dapat menggunakan ruangan sesuai jadwal.</li>
                 </ol>
             </div>
         </div>

@@ -299,22 +299,20 @@
 
         {{-- 6. PROFIL --}}
         @if(file_exists(app_path('Http/Controllers/Auth/ChangePasswordController.php')))
-            @can('profile_password_edit')
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->is('profile/password*') ? 'active' : '' }}"
-                       href="{{ route('profile.password.edit') }}">
-                        <i class="nav-icon fas fa-key"></i>
-                        {{ trans('global.change_password') }}
+                <li class="nav-item nav-item-bottom">   
+                    <a class="nav-link {{ request()->is('admin/productivity*') || request()->is('profile/password*') ? 'active' : '' }}"
+                    href="{{ route('admin.productivity.index') }}">
+                        <i class="nav-icon fas fa-user-gear"></i>
+                        Productivity
                     </a>
                 </li>
-            @endcan
         @endif
 
         {{-- 7. LOGOUT --}}
-        <li class="nav-item mb-2">
+        <li class="nav-item nav-item-bottom mb-2">   {{-- tambah nav-item-bottom --}}
             <a href="#"
-               class="nav-link nav-link-logout"
-               onclick="event.preventDefault(); document.getElementById('logoutform').submit();">
+            class="nav-link nav-link-logout"
+            onclick="event.preventDefault(); document.getElementById('logoutform').submit();">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
                 {{ trans('global.logout') }}
             </a>
