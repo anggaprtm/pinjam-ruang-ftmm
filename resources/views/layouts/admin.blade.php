@@ -105,20 +105,18 @@
                                 </a>
 
                                 <div class="dropdown-menu dropdown-menu-end pt-0 shadow-sm">
-                                    <div class="dropdown-header bg-light py-2 text-center">
+                                    <div class="dropdown-header border-bottom py-2 text-center">
                                         <strong class="text-primary">{{ Auth::user()->name }}</strong><br>
                                         <small class="text-muted">{{ Auth::user()->email }}</small>
                                     </div>
 
-                                    <a class="dropdown-item" href="{{ route('profile.password.edit') }}">
-                                        <i class="fas fa-user me-2 text-primary"></i> Profil
+                                    <a class="dropdown-item border-bottom" href="{{ route('profile.password.edit') }}">
+                                        <i class="fas fa-user me-2 text-primary"></i>Profil
                                     </a>
-                                    <div class="dropdown-divider"></div>
                                     <a class="dropdown-item text-danger" href="{{ route('logout') }}" 
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                        <i class="fas fa-sign-out-alt me-2 text-danger"></i> Logout
+                                        <i class="fas fa-sign-out-alt me-2 text-danger"></i>Keluar
                                     </a>
-
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                         @csrf
                                     </form>
@@ -468,6 +466,267 @@
     </script>
 
     @yield('scripts')
+    <style>
+        .fab-wrapper {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
 
+        /* State Sembunyi (Ngintip) - Aktif secara default */
+        .fab-wrapper.is-hidden {
+            transform: translateX(45px); 
+            opacity: 0.6;
+        }
+        
+        /* Memberikan sedikit efek hover saat sembunyi agar user tahu itu tombol */
+        .fab-wrapper.is-hidden:hover {
+            transform: translateX(35px);
+            opacity: 1;
+        }
+
+        /* Tombol Sembunyi (Panah) - Diperbesar & dipindah ke tengah kiri */
+        .fab-hide-btn {
+            position: absolute;
+            top: 50%;
+            left: -20px;
+            transform: translateY(-50%); /* Posisi vertikal di tengah robot */
+            width: 32px;
+            height: 32px;
+            background: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #6c757d;
+            box-shadow: -2px 0px 8px rgba(0,0,0,0.15); /* Shadow diarahkan ke kiri */
+            cursor: pointer;
+            z-index: 100; /* Pastikan posisinya paling depan */
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .fab-hide-btn:hover { 
+            background: #f8f9fa; 
+            color: #741847;
+            /* Override transform biar translateY(-50%) gak ketimpa */
+            transform: translateY(-50%) scale(1.1); 
+        }
+
+        /* HILANGKAN tombol panah kalau robot lagi sembunyi (ngintip). 
+        User cukup klik badan robotnya untuk mengeluarkan. */
+        .fab-wrapper.is-hidden .fab-hide-btn {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .fab-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+            bottom: 75px; 
+            right: 0;
+            transform: translateY(20px) scale(0.8);
+            transform-origin: bottom right;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .fab-wrapper.active .fab-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .mascot-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            /* Tambahkan drop-shadow putih yang lumayan tebal */
+            filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 1)); 
+        }
+
+        .fab-item {
+            background-color: #ffffff;
+            color: #333;
+            padding: 10px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            /* Tambahan: Kasih border default warna abu-abu terang */
+            border: 2px solid #e9ecef; 
+            white-space: nowrap;
+        }
+
+        .fab-item:hover { 
+            transform: translateX(-5px); 
+            background-color: #f8f9fa; 
+        }
+        
+        /* Warna border berubah sesuai fungsi pas di-hover */
+        .fab-item.helpdesk:hover { border-color: #0d6efd; color: #0d6efd; }
+        .fab-item.ticketing:hover { border-color: #fd7e14; color: #fd7e14; }
+
+        .fab-main-btn {
+            width: 60px;
+            height: 60px;
+            background: #ffffff;
+            border: 2px solid #741847; 
+            box-shadow: 0 6px 15px rgba(116, 24, 71, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            position: relative;
+        }
+
+        /* --- CSS UNTUK TOOLTIP "Butuh bantuan?" --- */
+        .fab-tooltip {
+            position: absolute;
+            right: 70px; /* Posisi di sebelah kiri tombol */
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #333333;
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            pointer-events: none; /* Biar gak ganggu klik */
+        }
+
+        /* Segitiga kecil (panah) yang nunjuk ke maskot */
+        .fab-tooltip::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 5px 0 5px 6px;
+            border-style: solid;
+            border-color: transparent transparent transparent #333333;
+        }
+
+        /* Saat mode hidden (ngintip), tooltip tetap muncul tapi kita sesuaikan posisinya */
+        .fab-wrapper.is-hidden:hover .fab-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+            right: 75px; /* Kita dorong lebih ke kiri sedikit karena tombolnya lagi geser ke kanan */
+            background-color: #741847; /* Opsional: Ubah warna tooltip pas hidden biar kontras */
+        }
+
+        /* Hilangkan tooltip HANYA saat menu bantuan sedang terbuka (active) */
+        .fab-wrapper.active .fab-tooltip {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
+        .fab-icon { display: inline-block; animation: botHover 3s ease-in-out infinite; }
+        @keyframes botHover {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Rotasi panah saat tersembunyi */
+        .fab-wrapper.is-hidden #toggleHide i { transform: rotate(180deg); }
+    </style>
+
+    <div class="fab-wrapper is-hidden" id="supportFab">
+        <div class="fab-hide-btn" id="toggleHide" title="Tampilkan">
+            <i class="fas fa-chevron-right"></i>
+        </div>
+
+        <div class="fab-menu">
+            <a href="#" class="fab-item helpdesk">
+                <span>Helpdesk Admin</span> <i class="fas fa-headset text-primary"></i>
+            </a>
+            <a href="https://ticketing.ftmm.ac.id" target="_blank" class="fab-item ticketing">
+                <span>Ticketing Support</span> <i class="fas fa-ticket-alt text-warning"></i>
+            </a>
+        </div>
+
+        <button class="fab-main-btn" id="mainBtn">
+            <span class="fab-tooltip">Butuh bantuan?</span>
+            
+            <img src="{{ asset('images/mascot.png') }}" 
+                class="fab-icon mascot-img" 
+                id="mascotIcon" 
+                data-normal="{{ asset('images/mascot.png') }}" 
+                data-active="{{ asset('images/mascot2.png') }}" 
+                alt="Maskot FTMM">
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const wrapper = document.getElementById('supportFab');
+            const mainBtn = document.getElementById('mainBtn');
+            const mascot = document.getElementById('mascotIcon');
+            const toggleHide = document.getElementById('toggleHide'); 
+
+            function updateMascotPose() {
+                if (wrapper.classList.contains('active')) {
+                    mascot.src = mascot.getAttribute('data-active');
+                } else {
+                    mascot.src = mascot.getAttribute('data-normal');
+                }
+            }
+
+            // Aksi saat maskot diklik
+            mainBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                if(wrapper.classList.contains('is-hidden')) {
+                    wrapper.classList.remove('is-hidden');
+                    mascot.src = mascot.getAttribute('data-normal');
+                } else {
+                    wrapper.classList.toggle('active');
+                    updateMascotPose(); 
+                }
+            });
+
+            // Aksi saat tombol panah sembunyi diklik
+            if(toggleHide) {
+                toggleHide.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    wrapper.classList.add('is-hidden');
+                    wrapper.classList.remove('active'); // Pastikan menu tertutup
+                    
+                    // Kembalikan pose ke normal saat sembunyi
+                    mascot.src = mascot.getAttribute('data-normal'); 
+                });
+            }
+
+            // Reset pose jika klik di luar area
+            document.addEventListener('click', function(e) {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('active');
+                    updateMascotPose();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
