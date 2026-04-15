@@ -8,16 +8,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>FTMM-Nexus (LayananTerpadu-FTMM)</title>
-
-    {{-- ═══════════════════════════════════════════════════════
-         CSS — urutan sangat penting, jangan diubah
-         1. Bootstrap 5        (base)
-         2. Font Awesome       (icons)
-         3. DataTables         (pakai versi BS5)
-         4. Plugins
-         5. CoreUI v4          (harus SETELAH Bootstrap 5)
-         6. custom.css         (harus PALING BAWAH)
-    ══════════════════════════════════════════════════════════ --}}
+    <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
 
     {{-- 1. Bootstrap 5 --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">

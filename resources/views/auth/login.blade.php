@@ -5,7 +5,7 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
     <title>Login — FTMM-Nexus (LayananTerpadu-FTMM)</title>
 
-    <!-- Asset statis Bootstrap/FontAwesome/CSS kamu -->
+    <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/fontawesome/css/all.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
