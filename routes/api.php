@@ -17,11 +17,9 @@ Route::group([
     Route::get('signage/agenda-fakultas', [SignageController::class, 'getAgendaFakultas'])->name('signage.agendaFakultas');
 });
 
-// ⬇️ PISAHKAN INI
 Route::get('/v1/display-config/{location}', [DisplayConfigController::class, 'show'])
     ->middleware('throttle:api');
 Route::get('/device-command/{location}', [DeviceController::class, 'getCommand']);
 
-// ⬇️ 2. TARUH ROUTE WEBHOOK DI SINI (PALING BAWAH)
 Route::post('/webhook/tickets', [WebhookTicketController::class, 'receiveTicket'])
     ->middleware('throttle:api'); // Aku tambahin middleware throttle bawaan laravel biar aman dari spam hit
