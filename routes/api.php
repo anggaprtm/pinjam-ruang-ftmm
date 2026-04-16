@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\SignageController;
 use App\Http\Controllers\Api\DisplayConfigController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\WebhookTicketController; // <-- 1. IMPORT CONTROLLERNYA DI SINI
 
 Route::group([
     'prefix' => 'v1',
@@ -20,3 +21,7 @@ Route::group([
 Route::get('/v1/display-config/{location}', [DisplayConfigController::class, 'show'])
     ->middleware('throttle:api');
 Route::get('/device-command/{location}', [DeviceController::class, 'getCommand']);
+
+// ⬇️ 2. TARUH ROUTE WEBHOOK DI SINI (PALING BAWAH)
+Route::post('/webhook/tickets', [WebhookTicketController::class, 'receiveTicket'])
+    ->middleware('throttle:api'); // Aku tambahin middleware throttle bawaan laravel biar aman dari spam hit
