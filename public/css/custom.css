@@ -480,10 +480,34 @@ table.dataTable thead .sorting_desc {
     .sidebar.sidebar-narrow .nav-link-logout .nav-icon i {
         color: #ffffff !important;
     }
+
     .sidebar.sidebar-narrow .nav-group-toggle::after,
-    .sidebar.sidebar-narrow .nav-link .badge,
     .sidebar.sidebar-narrow .nav-group-items .nav-link::before {
         display: none !important;
+    }
+
+    .sidebar.sidebar-narrow .nav-link,
+    .sidebar.sidebar-narrow .nav-group-toggle {
+        position: relative !important; /* Wajib agar absolute badge mengikuti letak kotak ikon */
+    }
+
+    .sidebar.sidebar-narrow .nav-link .badge,
+    .sidebar.sidebar-narrow .nav-group-toggle .badge {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: absolute !important;
+        top: 2px !important;
+        right: 2px !important;
+        margin: 0 !important;
+        padding: 2px 5px !important;
+        font-size: 0.6rem !important;
+        min-width: 18px !important;
+        height: 18px !important;
+        border-radius: 50rem !important;
+        border: 2px solid #ffffff !important; /* Efek potongan putih (iOS style) */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        z-index: 10;
     }
 
     /* 3. SETELAN FLYOUT CONTAINER */
