@@ -17,6 +17,14 @@ class CentralTicket extends Model
         'description',
         'priority',
         'status',
-        'attachment_url'
+        'rating',         // <-- TAMBAHKAN INI
+        'feedback',       // <-- TAMBAHKAN INI
+        'attachment_url',
     ];
+
+    public function replies()
+    {
+        // Menyambungkan tiket dengan balasan-balasannya
+        return $this->hasMany(CentralTicketReply::class, 'central_ticket_id');
+    }
 }

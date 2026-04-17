@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\LemburKegiatanController;
 use App\Http\Controllers\Admin\SuratUndanganController;
 use App\Http\Controllers\Admin\SuratTugasController;
 use App\Http\Controllers\Admin\ProductivityController;
+use App\Http\Controllers\Admin\CentralTicketController;
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -171,6 +172,10 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     });
     Route::get('lembur-kegiatan-rekap-keuangan', [LemburKegiatanController::class, 'rekapKeuangan'])
         ->name('lembur-kegiatan.rekap-keuangan');
+
+    Route::get('central-tickets', [CentralTicketController::class, 'index'])->name('central-tickets.index');
+    Route::get('central-tickets/{id}', [CentralTicketController::class, 'show'])->name('central-tickets.show');
+    Route::post('central-tickets/{id}/reply', [CentralTicketController::class, 'storeReply'])->name('central-tickets.reply');
     
     // ──────────────────────────────────────
     // SURAT UNDANGAN

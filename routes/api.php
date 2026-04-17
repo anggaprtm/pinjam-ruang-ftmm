@@ -22,4 +22,7 @@ Route::get('/v1/display-config/{location}', [DisplayConfigController::class, 'sh
 Route::get('/device-command/{location}', [DeviceController::class, 'getCommand']);
 
 Route::post('/webhook/tickets', [WebhookTicketController::class, 'receiveTicket'])
-    ->middleware('throttle:api'); // Aku tambahin middleware throttle bawaan laravel biar aman dari spam hit
+    ->middleware('throttle:api');
+    
+Route::post('/webhook/ticket-replies', [WebhookTicketController::class, 'receiveReply'])
+    ->middleware('throttle:api');

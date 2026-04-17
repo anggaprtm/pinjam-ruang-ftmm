@@ -34,8 +34,10 @@ class WebhookTicketController extends Controller
                     'description' => $request->description,
                     'priority' => $request->priority,
                     'status' => $request->status,
+                    'rating' => $request->rating,         
+                    'feedback' => $request->feedback,     
                     'attachment_url' => $request->attachment_url,
-                    'created_at' => $request->created_at, // Biar jam pembuatannya sinkron
+                    'created_at' => $request->created_at, 
                 ]
             );
 
@@ -49,5 +51,32 @@ class WebhookTicketController extends Controller
             Log::error("Webhook Gagal Simpan DB Nexus: " . $e->getMessage());
             return response()->json(['message' => 'Gagal menyimpan data di Nexus'], 500);
         }
+    }
+
+    // Method baru untuk menerima balasan tiket
+    public function receiveReply(Request $request)
+    {
+        if ($request->bearerToken() !== 'rahasia-kita-nexus-123') {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Cari tiket induknya di Nexus berdasarkan ID asli dari TickTrack
+        $ticket = CentralTicket::where('original_ticket_id', $request->ticket_id)->first();
+
+        if ($ticket) {
+            // Gunakan updateOrCreate biar gak duplikat
+            $ticket->replies()->updateOrCreate(
+                ['original_reply_id' => $request->reply_id], // Patokan pencarian
+                [
+                    'replier_name' => $request->replier_name,
+                    'replier_role' => $request->replier_role,
+                    'content'      => $request->content,
+                    'created_at'   => $request->created_at,
+                ]
+            );
+            return response()->json(['message' => 'Balasan berhasil disinkronkan ke Nexus']);
+        }
+
+        return response()->json(['message' => 'Tiket induk tidak ditemukan di Nexus'], 404);
     }
 }
