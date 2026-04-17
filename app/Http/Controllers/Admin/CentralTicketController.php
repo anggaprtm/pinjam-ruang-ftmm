@@ -22,6 +22,11 @@ class CentralTicketController extends Controller
             });
         }
 
+        // --- TAMBAHKAN KODE INI BRO ---
+        if ($request->category) {
+            $query->where('category', $request->category);
+        }
+
         if ($request->status) {
             $query->where('status', $request->status);
         }
