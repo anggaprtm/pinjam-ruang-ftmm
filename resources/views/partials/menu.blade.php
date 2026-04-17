@@ -294,14 +294,21 @@
             </li>
         @endcanany
         @can('helpdesk_access')
+        @php
+            // Hitung otomatis jumlah tiket di Nexus yang statusnya masih 'open'
+            $totalOpenTickets = \App\Models\CentralTicket::where('status', 'open')->count();
+        @endphp
         <li class="nav-item">
             <a href="{{ route('admin.central-tickets.index') }}"
                class="nav-link {{ request()->is('admin/central-tickets*') ? 'active' : '' }}">
                 <i class="nav-icon fas fa-headset"></i>
                 Helpdesk Ticketing
+                @if($totalOpenTickets > 0)
+                    <span class="badge bg-danger ms-auto">{{ $totalOpenTickets }}</span>
+                @endif
             </a>
         </li>
-        @endcanany
+        @endcan
 
         {{-- Spacer dorong profil & logout ke bawah --}}
         <li class="nav-item nav-spacer"></li>
