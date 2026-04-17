@@ -505,7 +505,6 @@ table.dataTable thead .sorting_desc {
         min-width: 18px !important;
         height: 18px !important;
         border-radius: 50rem !important;
-        border: 2px solid #ffffff !important; /* Efek potongan putih (iOS style) */
         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
         z-index: 10;
     }
