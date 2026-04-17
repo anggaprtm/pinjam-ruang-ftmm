@@ -293,6 +293,15 @@
                 </ul>
             </li>
         @endcanany
+        @can('helpdesk_access')
+        <li class="nav-item">
+            <a href="{{ route('admin.central-tickets.index') }}"
+               class="nav-link {{ request()->is('admin/central-tickets*') ? 'active' : '' }}">
+                <i class="nav-icon fas fa-headset"></i>
+                Helpdesk Ticketing
+            </a>
+        </li>
+        @endcanany
 
         {{-- Spacer dorong profil & logout ke bawah --}}
         <li class="nav-item nav-spacer"></li>

@@ -90,7 +90,7 @@
 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
     <div>
         <h4 class="fw-bold mb-1" style="color: #1a1d23;">
-            <i class="fas fa-headset me-2 text-primary"></i>Tiket Helpdesk
+            <i class="fas fa-headset me-2"></i>Tiket Helpdesk
         </h4>
         <p class="text-muted small mb-0">Kelola semua laporan masalah yang masuk dari TickTrace.</p>
     </div>
