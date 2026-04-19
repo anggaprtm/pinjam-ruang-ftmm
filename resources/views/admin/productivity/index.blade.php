@@ -684,12 +684,14 @@
                     </select>
                     @endif
 
-                    {{-- BUG FIX #4: Langsung cari saat ketik (oninput, debounced) --}}
-                    <div class="search-input-wrap">
+                    <button class="btn btn-sm btn-outline-secondary ms-3" id="btnToggleView" style="font-family:'Nunito',sans-serif; font-weight:700;">
+                        <i class="fas fa-columns"></i> Kanban
+                    </button>
+
+                    <div class="search-input-wrap ms-2">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Cari tugas..."
                                value="{{ $search }}"
-                               oninput="debounceSearch(this.value)"
                                onkeydown="if(event.key==='Enter') applyFilters()">
                     </div>
                 </div>
@@ -727,9 +729,10 @@
                                     data-desc="{{ $task->description }}"
                                     data-priority="{{ $task->priority }}"
                                     data-deadline="{{ $task->deadline_at ? \Carbon\Carbon::parse($task->deadline_at)->format('d M Y, H:i') : 'Tanpa Tenggat' }}"
-                                    data-subtasks="{{ $task->subTasks->toJson() }}"
-                                    data-attachments="{{ $task->attachments->toJson() }}"
-                                    data-comments="{{ $task->comments->toJson() }}"> {{ $task->title }}
+                                    data-subtasks='{{ $task->subTasks->toJson() }}' 
+                                    data-attachments='{{ $task->attachments->toJson() }}'
+                                    data-comments='{{ $task->comments->toJson() }}'> 
+                                    {{ $task->title }}
                                 </div>
                                 @if($task->description)
                                 <div class="task-description-text" id="desc-{{ $task->id }}">{{ $task->description }}</div>
@@ -829,6 +832,43 @@
                             </p>
                         </div>
                     @endforelse
+                </div>
+                <div class="kanban-board-container d-none" id="kanban-container" style="padding: 1rem 1.25rem; overflow-x: auto;">
+                    {{-- Set max-height agar tidak menembus footer --}}
+                    <div class="d-flex gap-3" style="min-width: 800px; height: calc(100vh - 310px);">
+                        
+                        {{-- Kolom PENDING --}}
+                        <div class="kanban-col rounded p-2 d-flex flex-column" style="flex: 1; background: var(--surface-1); border: 1px solid var(--surface-border);">
+                            <h6 class="fw-bold text-muted mb-3 px-2 mt-1" style="font-family:'Nunito',sans-serif;"><i class="fas fa-circle text-secondary" style="font-size:0.6rem;"></i> Pending</h6>
+                            {{-- Tambahkan overflow-y: auto di sini --}}
+                            <div class="kanban-list flex-grow-1" data-status="pending" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                                @foreach($tasks->where('status', 'pending') as $task)
+                                    @include('admin.productivity.partials.kanban-card', ['task' => $task])
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Kolom IN PROGRESS --}}
+                        <div class="kanban-col rounded p-2 d-flex flex-column" style="flex: 1; background: var(--surface-1); border: 1px solid var(--surface-border);">
+                            <h6 class="fw-bold text-primary mb-3 px-2 mt-1" style="font-family:'Nunito',sans-serif;"><i class="fas fa-spinner fa-spin text-primary" style="font-size:0.7rem;"></i> In Progress</h6>
+                            <div class="kanban-list flex-grow-1" data-status="in_progress" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                                @foreach($tasks->where('status', 'in_progress') as $task)
+                                    @include('admin.productivity.partials.kanban-card', ['task' => $task])
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Kolom COMPLETED --}}
+                        <div class="kanban-col rounded p-2 d-flex flex-column" style="flex: 1; background: var(--surface-1); border: 1px solid var(--surface-border);">
+                            <h6 class="fw-bold text-success mb-3 px-2 mt-1" style="font-family:'Nunito',sans-serif;"><i class="fas fa-check-circle text-success" style="font-size:0.7rem;"></i> Selesai</h6>
+                            <div class="kanban-list flex-grow-1" data-status="completed" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+                                @foreach($tasks->where('status', 'completed') as $task)
+                                    @include('admin.productivity.partials.kanban-card', ['task' => $task])
+                                @endforeach
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
@@ -1384,6 +1424,7 @@
 
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
 // ============================================================
 // STATE
@@ -1531,7 +1572,7 @@ $(document).ready(function () {
     // =========================================================
     // TASKS: ADD
     // =========================================================
-   $('#formAddTask').off('submit').on('submit', function(e) {
+    $('#formAddTask').off('submit').on('submit', function(e) {
         e.preventDefault();
         let btn = $(this).find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
@@ -1542,6 +1583,7 @@ $(document).ready(function () {
                 btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Simpan Tugas');
             });
     });
+
 
     // =========================================================
     // TASKS: TOGGLE STATUS
@@ -1685,9 +1727,6 @@ $(document).ready(function () {
         $.post(`/admin/productivity/tasks/${currentViewTaskId}/comments`, { comment: comment })
             .done(res => {
                 $('#newCommentText').val('');
-                // Render ulang tanpa harus reload page (User Experience lebih mulus)
-                // Catatan: Karena kita cuma tambah ke DOM, idealnya data di HTML attribute juga di-update. 
-                // Tapi untuk amannya dan biar semua (subtask dll) sinkron, reload location juga bisa.
                 location.reload(); 
             })
             .fail(() => Swal.fire('Error', 'Gagal mengirim komentar.', 'error'))
@@ -2069,6 +2108,76 @@ $(document).ready(function () {
             });
         }
     }
+    // ============================================================
+    // KANBAN BOARD LOGIC
+    // ============================================================
+
+    // Toggle View (List vs Kanban)
+    let isKanbanView = false;
+    $('#btnToggleView').click(function() {
+        isKanbanView = !isKanbanView;
+        if (isKanbanView) {
+            $('#task-container').addClass('d-none');
+            $('#kanban-container').removeClass('d-none');
+            $(this).html('<i class="fas fa-list"></i> List View');
+            $(this).removeClass('btn-outline-secondary').addClass('btn-secondary text-white');
+        } else {
+            $('#kanban-container').addClass('d-none');
+            $('#task-container').removeClass('d-none');
+            $(this).html('<i class="fas fa-columns"></i> Kanban View');
+            $(this).removeClass('btn-secondary text-white').addClass('btn-outline-secondary');
+        }
+    });
+
+    // Inisialisasi Sortable.js untuk ketiga kolom Kanban
+    document.querySelectorAll('.kanban-list').forEach(function(list) {
+        new Sortable(list, {
+            group: 'tasks', // Mengizinkan drag antar kolom
+            animation: 150,
+            ghostClass: 'opacity-50', // Tampilan bayangan saat di-drag
+            dragClass: 'shadow-lg',
+            cursor: 'grabbing',
+            
+            // Event saat kartu selesai di-drop ke kolom baru
+            onEnd: function (evt) {
+                let itemEl = evt.item; // Kartu yang di-drag
+                let taskId = $(itemEl).data('id');
+                let newStatus = $(evt.to).data('status'); // Status dari kolom tujuan
+                let oldStatus = $(evt.from).data('status'); // Status awal
+                
+                // Jika dipindah ke kolom yang sama, tidak perlu jalankan AJAX
+                if (newStatus === oldStatus) return;
+
+                // Jalankan AJAX update status
+                $.ajax({
+                    url: `/admin/productivity/tasks/${taskId}/status`,
+                    type: 'PATCH',
+                    data: { status: newStatus }
+                }).done(() => {
+                    Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:1500 })
+                        .fire({ icon: newStatus === 'completed' ? 'success' : 'info', 
+                                title: 'Status tugas diperbarui!' });
+                    
+                    // 🔥 FIX BUG 1: Sinkronisasi ke List View
+                    let listItem = $('#task-' + taskId);
+                    if (listItem.length) {
+                        let checkbox = listItem.find('.task-checkbox');
+                        if (newStatus === 'completed') {
+                            listItem.addClass('completed');
+                            checkbox.prop('checked', true);
+                        } else {
+                            listItem.removeClass('completed');
+                            checkbox.prop('checked', false);
+                        }
+                    }
+                }).fail(() => {
+                    Swal.fire('Gagal!', 'Terjadi kesalahan saat memindah tugas.', 'error');
+                    // Kembalikan kartu ke kolom asalnya jika gagal
+                    evt.from.appendChild(itemEl);
+                });
+            }
+        });
+    });
 });
 </script>
 @endsection

@@ -312,7 +312,9 @@ class ProductivityController extends Controller
 
     public function updateTaskStatus(Request $request, $id)
     {
-        $task = ProductivityTask::where('user_id', Auth::id())->findOrFail($id);
+        $task = ProductivityTask::where(function($q) {
+            $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
+        })->findOrFail($id);
         $task->update(['status' => $request->status]);
 
         if ($request->status === 'completed' && $task->assigned_by) {
