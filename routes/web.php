@@ -217,6 +217,9 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         Route::post('/tasks', [ProductivityController::class, 'storeTask'])->name('tasks.store');
         Route::patch('/tasks/{id}/status', [ProductivityController::class, 'updateTaskStatus'])->name('tasks.status');
         Route::delete('/tasks/{id}', [ProductivityController::class, 'destroyTask'])->name('tasks.destroy');
+        Route::patch('/tasks/{id}',           [ProductivityController::class, 'updateTask'])->name('tasks.update');
+        Route::patch('/tasks/{id}/archive',   [ProductivityController::class, 'archiveTask'])->name('tasks.archive');
+        Route::patch('/tasks/{id}/unarchive', [ProductivityController::class, 'unarchiveTask'])->name('tasks.unarchive');
         
         Route::post('/notes', [ProductivityController::class, 'storeNote'])->name('notes.store');
         Route::delete('/notes/{id}', [ProductivityController::class, 'destroyNote'])->name('notes.destroy');
@@ -225,6 +228,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         Route::post('/habits/{id}/toggle', [ProductivityController::class, 'toggleHabit'])->name('habits.toggle');
         Route::delete('/habits/{id}', [ProductivityController::class, 'destroyHabit'])->name('habits.destroy');
         Route::post('/settings', [ProductivityController::class, 'updateSettings'])->name('settings.update');
+        Route::patch('/notes/{id}', [ProductivityController::class, 'updateNote'])->name('notes.update');
     });
 
     // API Holidays

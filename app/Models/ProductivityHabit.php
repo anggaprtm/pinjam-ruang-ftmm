@@ -12,4 +12,9 @@ class ProductivityHabit extends Model
         'icon', 
         'reminder_time'
     ];
+
+    public function logs()
+    {
+        return $this->hasMany(ProductivityHabitLog::class, 'habit_id');
+    }
 }
