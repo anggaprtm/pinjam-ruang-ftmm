@@ -990,8 +990,11 @@
                     </select>
                     @endif
 
-                    <button class="btn-toggle-kanban" id="btnToggleView">
+                    <button class="btn-toggle-kanban" id="btnViewKanban">
                         <i class="fas fa-columns"></i> Kanban
+                    </button>
+                    <button class="btn-toggle-kanban ms-1" id="btnViewCalendar">
+                        <i class="far fa-calendar-alt"></i> Kalender
                     </button>
 
                     <div class="search-input-wrap ms-2">
@@ -1204,6 +1207,9 @@
                         </div>
                 
                     </div>
+                </div>
+                <div class="d-none" id="calendar-container" style="padding: 1rem 1.25rem; min-height: 60vh; background: var(--surface-0);">
+                    <div id="calendar" style="font-family: 'Nunito', sans-serif;"></div>
                 </div>
             </div>
         </div>
@@ -1760,6 +1766,8 @@
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales/id.global.min.js'></script>
 <script>
 // ============================================================
 // STATE
@@ -2354,28 +2362,110 @@ $(document).ready(function () {
     }
 
     // ============================================================
-    // KANBAN BOARD LOGIC
-    // ✅ BENAR: Di dalam $(document).ready() agar DOM sudah siap
+    // VIEW SWITCHER & CALENDAR LOGIC
     // ============================================================
+    const $taskContainer     = $('#task-container');
+    const $kanbanContainer   = $('#kanban-container');
+    const $calendarContainer = $('#calendar-container');
+    const $btnKanban         = $('#btnViewKanban');
+    const $btnCalendar       = $('#btnViewCalendar');
+    let calendarInstance     = null;
 
-    // --- Toggle List / Kanban View ---
-    let isKanbanView = false;
+    // Fungsi reset semua view
+    function resetViews() {
+        $taskContainer.addClass('d-none');
+        $kanbanContainer.addClass('d-none');
+        $calendarContainer.addClass('d-none');
+        $btnKanban.removeClass('active');
+        $btnCalendar.removeClass('active');
+    }
 
-    // ✅ Pakai $('#btnToggleView') jQuery, konsisten dengan kode di atas
-    //    BUKAN document.getElementById yang bisa null jika dipanggil terlalu awal
-    $('#btnToggleView').on('click', function() {
-        isKanbanView = !isKanbanView;
-        const $taskContainer   = $('#task-container');
-        const $kanbanContainer = $('#kanban-container');
-
-        if (isKanbanView) {
-            $taskContainer.addClass('d-none');
-            $kanbanContainer.removeClass('d-none');
-            $(this).html('<i class="fas fa-list"></i> List View').addClass('active');
-        } else {
-            $kanbanContainer.addClass('d-none');
+    // Toggle Kanban
+    $btnKanban.on('click', function() {
+        if ($(this).hasClass('active')) {
+            // Kembali ke List View
+            resetViews();
             $taskContainer.removeClass('d-none');
-            $(this).html('<i class="fas fa-columns"></i> Kanban').removeClass('active');
+        } else {
+            // Buka Kanban
+            resetViews();
+            $kanbanContainer.removeClass('d-none');
+            $(this).addClass('active');
+        }
+    });
+
+    // Toggle Kalender
+    $btnCalendar.on('click', function() {
+        if ($(this).hasClass('active')) {
+            // Kembali ke List View
+            resetViews();
+            $taskContainer.removeClass('d-none');
+        } else {
+            // Buka Kalender
+            resetViews();
+            $calendarContainer.removeClass('d-none');
+            $(this).addClass('active');
+
+            // Render kalender hanya saat pertama kali dibuka (lazy load)
+            if (!calendarInstance) {
+                let calendarEl = document.getElementById('calendar');
+                calendarInstance = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    
+                    // --- 1. BAHASA INDONESIA ---
+                    locale: 'id',
+                    buttonText: {
+                        today: 'Hari Ini',
+                        month: 'Bulan',
+                        week: 'Minggu',
+                        list: 'Agenda'
+                    },
+                    
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,listWeek'
+                    },
+                    height: 'auto',
+
+                    // --- 2. FORMAT WAKTU (Mencegah 11:59p / 00:00) ---
+                    eventTimeFormat: {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false // Paksa format 24 jam ala Indonesia (misal: 23:59)
+                    },
+                    
+                    // --- 3. MENCEGAH MELUBER KE BESOK ---
+                    displayEventEnd: false, 
+                    defaultTimedEventDuration: '00:01:00', // Set durasi cuma 1 menit (23:59 + 1 mnt = 00:00)
+                    nextDayThreshold: '00:00:00', // Jika selesai pas jam 00:00, jangan tampilkan di hari besoknya
+                    
+                    events: [
+                        @foreach($tasks as $t)
+                            @if($t->deadline_at)
+                            {
+                                id: '{{ $t->id }}',
+                                title: '{!! addslashes($t->title) !!}',
+                                
+                                // Paksa detik menjadi "00" agar FullCalendar tidak membulatkan 23:59:59 menjadi 00:00 besoknya
+                                start: '{{ \Carbon\Carbon::parse($t->deadline_at)->format("Y-m-d\TH:i:00") }}',
+                                allDay: false, 
+                                
+                                backgroundColor: '{{ $t->priority == "high" ? "var(--accent-red)" : ($t->priority == "medium" ? "var(--accent-amber)" : "var(--accent-blue)") }}',
+                                className: '{{ $t->status == "completed" ? "opacity-50" : "" }}'
+                            },
+                            @endif
+                        @endforeach
+                    ],
+                    eventClick: function(info) {
+                        let taskId = info.event.id;
+                        $('.btn-view-task[data-id="'+taskId+'"]').first().click();
+                    }
+                });
+                calendarInstance.render();
+            } else {
+                calendarInstance.updateSize(); 
+            }
         }
     });
 

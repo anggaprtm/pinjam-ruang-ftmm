@@ -318,8 +318,8 @@
                 <li class="nav-item nav-item-bottom">   
                     <a class="nav-link {{ request()->is('admin/productivity*') || request()->is('profile/password*') ? 'active' : '' }}"
                     href="{{ route('admin.productivity.index') }}">
-                        <i class="nav-icon fas fa-user-gear"></i>
-                        Productivity
+                        <i class="nav-icon fas fa-user"></i>
+                        Profil
                     </a>
                 </li>
         @endif
