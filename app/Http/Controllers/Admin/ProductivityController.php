@@ -9,6 +9,7 @@ use App\Models\ProductivityHabit;
 use App\Models\ProductivityHabitLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
 class ProductivityController extends Controller
@@ -24,18 +25,27 @@ class ProductivityController extends Controller
         $tag      = $request->get('tag', '');
         $search   = $request->get('search', '');
 
-        $taskQuery = ProductivityTask::where('user_id', $userId);
+       $taskQuery = ProductivityTask::query();
 
-        // Filter berdasarkan status
-        if ($filter === 'active') {
-            $taskQuery->whereIn('status', ['pending', 'in_progress'])->where('is_archived', false);
-        } elseif ($filter === 'completed') {
-            $taskQuery->where('status', 'completed')->where('is_archived', false);
-        } elseif ($filter === 'archived') {
-            $taskQuery->where('is_archived', true);
+        // Filter berdasarkan status & kepemilikan
+        if ($filter === 'delegated') {
+            // TAMPILKAN TUGAS KELUAR: Saya yang memberi tugas, tapi orang lain yang mengerjakan
+            $taskQuery->where('assigned_by', $userId)
+                      ->where('user_id', '!=', $userId)
+                      ->where('is_archived', false);
         } else {
-            // all — tidak filter status, tapi exclude archive
-            $taskQuery->where('is_archived', false);
+            $taskQuery->where('user_id', $userId);
+
+            if ($filter === 'active') {
+                $taskQuery->whereIn('status', ['pending', 'in_progress'])->where('is_archived', false);
+            } elseif ($filter === 'completed') {
+                $taskQuery->where('status', 'completed')->where('is_archived', false);
+            } elseif ($filter === 'archived') {
+                $taskQuery->where('is_archived', true);
+            } else {
+                // all
+                $taskQuery->where('is_archived', false);
+            }
         }
 
         // Filter tag
@@ -80,6 +90,11 @@ class ProductivityController extends Controller
             ->whereNotNull('deadline_at')
             ->where('deadline_at', '<', now())
             ->count();
+        $statsDelegated = ProductivityTask::where('assigned_by', $userId)
+            ->where('user_id', '!=', $userId)
+            ->whereIn('status', ['pending', 'in_progress']) // <-- Cukup tambahkan baris ini
+            ->where('is_archived', false)
+            ->count();
 
         // Ambil Data Notes
         $notes = ProductivityNote::where('user_id', $userId)->latest()->get();
@@ -114,10 +129,17 @@ class ProductivityController extends Controller
             return $habit;
         });
 
+        $coworkers = \App\Models\User::whereHas('roles', function($q) {
+                $q->where('title', 'Pegawai');
+            })
+            ->where('id', '!=', $userId)
+            ->orderBy('name', 'asc')
+            ->get();
+
         return view('admin.productivity.index', compact(
-            'tasks', 'notes', 'habits', 'today',
+            'tasks', 'notes', 'habits', 'today', 'coworkers',
             'allTags', 'filter', 'sort', 'tag', 'search',
-            'statsTotal', 'statsCompleted', 'statsPending', 'statsOverdue'
+            'statsTotal', 'statsCompleted', 'statsPending', 'statsOverdue', 'statsDelegated'
         ));
     }
 
@@ -126,8 +148,15 @@ class ProductivityController extends Controller
     {
         $request->validate(['title' => 'required|string|max:255']);
 
+        // Tentukan siapa yang mengerjakan dan siapa yang menugaskan
+        $assigneeId = $request->assigned_to ?: Auth::id();
+    
+        // Pastikan kalau dia menugaskan ke dirinya sendiri, assigned_by tetap null
+        $assignedBy = ($request->assigned_to && $request->assigned_to != Auth::id()) ? Auth::id() : null;
+
         $task = ProductivityTask::create([
-            'user_id'       => Auth::id(),
+            'user_id'       => $assigneeId,  
+            'assigned_by'   => $assignedBy,
             'title'         => $request->title,
             'description'   => $request->description,
             'tag'           => $request->tag,
@@ -137,25 +166,93 @@ class ProductivityController extends Controller
             'is_archived'   => false,
         ]);
 
+        // 🔥 LOGIC NOTIFIKASI TELEGRAM DELEGASI 🔥
+        if ($assignedBy && $assigneeId != Auth::id()) {
+            $assignee = \App\Models\User::find($assigneeId);
+            
+            if ($assignee && $assignee->telegram_chat_id) {
+                $assignerName = Auth::user()->name;
+                $deadlineStr = $task->deadline_at ? \Carbon\Carbon::parse($task->deadline_at)->format('d M Y, H:i') : 'Tanpa Tenggat';
+                
+                $msg = "📢 <b>TUGAS BARU DIDELEGASIKAN KEPADAMU!</b>\n\n";
+                $msg .= "👤 <b>Dari:</b> {$assignerName}\n";
+                $msg .= "📌 <b>Tugas:</b> {$task->title}\n";
+                $msg .= "⏰ <b>Deadline:</b> {$deadlineStr}\n\n";
+                $msg .= "Silakan cek dashboard FTMM untuk detailnya. Semangat! 💪";
+
+                // Gunakan token bot dari .env
+                $botToken = env('TELEGRAM_BOT_TOKEN');
+                if ($botToken) {
+                    Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        'chat_id' => $assignee->telegram_chat_id,
+                        'text' => $msg,
+                        'parse_mode' => 'HTML'
+                    ]);
+                }
+            }
+        }
+
         return response()->json(['success' => true, 'task' => $task]);
     }
 
     public function updateTask(Request $request, $id)
     {
         $request->validate(['title' => 'required|string|max:255']);
+        $task = ProductivityTask::where(function($q) {
+                $q->where('user_id', Auth::id())
+                  ->orWhere('assigned_by', Auth::id());
+            })->findOrFail($id);
 
-        $task = ProductivityTask::where('user_id', Auth::id())->findOrFail($id);
+        if ($task->assigned_by && $task->assigned_by != Auth::id() && $task->user_id == Auth::id()) {
+            return response()->json(['message' => 'Anda hanya berhak mengubah status, bukan detail tugas delegasi ini.'], 403);
+        }
+
+        // Tentukan siapa yang akan mengerjakan tugas ini sekarang
+        $newAssigneeId = $request->assigned_to ?: Auth::id();
+        
+        // Cek apakah tugas ini dipindah tangankan ke orang yang berbeda dari sebelumnya
+        $isReassigned = $newAssigneeId != $task->user_id;
+
+        // Logic untuk menentukan jejak pemberi tugas (delegator)
+        $assignedBy = $task->assigned_by; // Default: pertahankan data lama agar tidak hilang jika cuma edit teks
+
+        if ($isReassigned) {
+            if ($newAssigneeId == Auth::id()) {
+                // Jika tugas ditarik atau diambil alih untuk dikerjakan sendiri, maka set null (bukan tugas delegasi lagi)
+                $assignedBy = null;
+            } else {
+                // Jika tugas diover atau diberikan ke orang lain, maka delegatornya adalah user yang sedang mengedit
+                $assignedBy = Auth::id();
+            }
+        }
 
         $task->update([
+            'user_id'     => $newAssigneeId,
+            'assigned_by' => $assignedBy,
             'title'       => $request->title,
             'description' => $request->description,
             'tag'         => $request->tag,
-            'priority'    => $request->priority ?? $task->priority,
+            'priority'    => $request->priority,
             'deadline_at' => $request->deadline_at ?: null,
-            'recurrence'  => $request->recurrence ?? $task->recurrence,
+            'recurrence'  => $request->recurrence,
         ]);
 
-        return response()->json(['success' => true, 'task' => $task->fresh()]);
+        // Kirim notif Telegram jika tugas didelegasikan ke orang lain saat edit
+        if ($isReassigned && $newAssigneeId != Auth::id()) {
+            $this->sendTelegramNotification($task, "Tugas telah diperbarui & didelegasikan kepadamu");
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    private function sendTelegramNotification($task, $title) {
+        $assignee = \App\Models\User::find($task->user_id);
+        if ($assignee && $assignee->telegram_chat_id) {
+            $msg = "📢 <b>{$title}!</b>\n\n👤 <b>Dari:</b> " . Auth::user()->name . "\n📌 <b>Tugas:</b> {$task->title}\n⏰ <b>Deadline:</b> " . ($task->deadline_at ?: 'Tanpa Tenggat') . "\n\nCek dashboard FTMM 💪";
+            \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot".env('TELEGRAM_BOT_TOKEN')."/sendMessage", [
+                'chat_id' => $assignee->telegram_chat_id, 'text' => $msg, 'parse_mode' => 'HTML'
+            ]);
+        }
     }
 
     public function updateSettings(Request $request)
@@ -172,6 +269,23 @@ class ProductivityController extends Controller
     {
         $task = ProductivityTask::where('user_id', Auth::id())->findOrFail($id);
         $task->update(['status' => $request->status]);
+
+        if ($request->status === 'completed' && $task->assigned_by) {
+            $delegator = \App\Models\User::find($task->assigned_by);
+            if ($delegator && $delegator->telegram_chat_id) {
+                $executorName = Auth::user()->name;
+                $msg = "✅ <b>TUGAS DELEGASI SELESAI!</b>\n\n";
+                $msg .= "👤 <b>Dikerjakan oleh:</b> {$executorName}\n";
+                $msg .= "📌 <b>Tugas:</b> {$task->title}\n\n";
+                $msg .= "Kerja bagus! Tim Anda makin produktif. 💪";
+
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot".env('TELEGRAM_BOT_TOKEN')."/sendMessage", [
+                    'chat_id' => $delegator->telegram_chat_id,
+                    'text' => $msg,
+                    'parse_mode' => 'HTML'
+                ]);
+            }
+        }
 
         // 🔥 LOGIC RECURRING TASK
         if ($request->status === 'completed' && $task->recurrence !== 'none') {
@@ -217,7 +331,21 @@ class ProductivityController extends Controller
 
     public function destroyTask($id)
     {
-        ProductivityTask::where('user_id', Auth::id())->findOrFail($id)->delete();
+        // Cari tugas: bisa milik sendiri (user_id) ATAU tugas yang dia delegasikan ke orang (assigned_by)
+        $task = ProductivityTask::where(function($q) {
+            $q->where('user_id', Auth::id())
+            ->orWhere('assigned_by', Auth::id());
+        })->findOrFail($id);
+
+        // KUNCI KEAMANAN: Tolak akses jika yang mau hapus adalah penerima delegasi
+        if ($task->assigned_by && $task->assigned_by != Auth::id() && $task->user_id == Auth::id()) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Anda tidak berhak menghapus tugas delegasi. Hubungi pemberi tugas.'
+            ], 403);
+        }
+
+        $task->delete();
         return response()->json(['success' => true]);
     }
 

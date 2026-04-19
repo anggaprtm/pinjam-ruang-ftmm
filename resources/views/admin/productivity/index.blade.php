@@ -606,6 +606,10 @@
                 <i class="fas fa-check" style="font-size:0.65rem;"></i>
                 <span class="stat-num">{{ $statsCompleted }}</span> Selesai
             </div>
+            <div class="stat-pill" style="background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4);">
+                <i class="fas fa-paper-plane" style="font-size:0.65rem;"></i>
+                <span class="stat-num">{{ $statsDelegated }}</span> Delegasi
+            </div>
             @if($statsOverdue > 0)
             <div class="stat-pill danger">
                 <i class="fas fa-exclamation-triangle" style="font-size:0.65rem;"></i>
@@ -657,6 +661,18 @@
                     <a href="#" onclick="setFilter('active',event)"    class="filter-tab {{ $filter=='active'    ? 'active':'' }}"><i class="fas fa-circle-notch"></i> Aktif</a>
                     <a href="#" onclick="setFilter('completed',event)" class="filter-tab {{ $filter=='completed' ? 'active':'' }}"><i class="fas fa-check-circle"></i> Selesai</a>
                     <a href="#" onclick="setFilter('all',event)"       class="filter-tab {{ $filter=='all'       ? 'active':'' }}"><i class="fas fa-list"></i> Semua</a>
+                    <a href="#" onclick="setFilter('delegated',event)" 
+                    class="filter-tab {{ $filter=='delegated' ? 'active':'' }}" 
+                    style="{{ $filter=='delegated' ? 'background:#e0e7ff;border-color:#4338ca;color:#4338ca;' : '' }}">
+                        <i class="fas fa-paper-plane"></i> 
+                        Delegasi
+                        @if($statsDelegated > 0)
+                            <span class="ms-1 px-2 py-0.5 rounded-pill" 
+                                style="font-size: 0.65rem; background: {{ $filter=='delegated' ? '#fff' : 'var(--brand-maroon)' }}; color: {{ $filter=='delegated' ? '#4338ca' : '#fff' }}; font-weight: 800;">
+                                {{ $statsDelegated }}
+                            </span>
+                        @endif
+                    </a>
                     <a href="#" onclick="setFilter('archived',event)"  class="filter-tab {{ $filter=='archived'  ? 'active':'' }}"><i class="fas fa-archive"></i> Arsip</a>
 
                     @if($allTags->count() > 0)
@@ -735,10 +751,22 @@
                                         @else <i class="fas fa-arrow-down"></i> Low @endif
                                     </span>
                                 </div>
+                                @if($task->assigned_by && $task->assigned_by != Auth::id() && $task->user_id == Auth::id())
+                                    {{-- Skenario 1: Ini tugas masuk (Saya dikasih tugas sama orang) --}}
+                                    <span class="task-badge mt-2" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe;" title="Didelegasikan oleh rekan Anda">
+                                        <i class="fas fa-hand-holding-medical"></i> Dari: {{ $task->assigner->name ?? 'Admin' }}
+                                    </span>
+                                @elseif($task->assigned_by == Auth::id() && $task->user_id != Auth::id())
+                                    {{-- Skenario 2: Ini tugas keluar (Saya ngasih tugas ke orang) --}}
+                                    <span class="task-badge mt-2" style="background:#fce7f3; color:#be185d; border:1px solid #fbcfe8;" title="Sedang dikerjakan oleh rekan Anda">
+                                        <i class="fas fa-user-tag"></i> Kepada: {{ $task->user->name ?? 'Pegawai' }}
+                                    </span>
+                                @endif
                             </div>
 
                             <div class="task-actions">
                                 @if(!$task->is_archived)
+                                    @if(is_null($task->assigned_by) || $task->assigned_by == Auth::id())
                                     <button class="task-action-btn edit btn-edit-task"
                                             data-id="{{ $task->id }}"
                                             data-title="{{ $task->title }}"
@@ -747,9 +775,11 @@
                                             data-priority="{{ $task->priority }}"
                                             data-recurrence="{{ $task->recurrence }}"
                                             data-deadline="{{ $dl ? $dl->format('Y-m-d\TH:i') : '' }}"
+                                            data-assignee="{{ $task->user_id }}"
                                             title="Edit">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
+                                    @endif
                                     <button class="task-action-btn archive btn-archive-task" data-id="{{ $task->id }}" title="Arsipkan">
                                         <i class="fas fa-archive"></i>
                                     </button>
@@ -758,9 +788,11 @@
                                         <i class="fas fa-inbox"></i>
                                     </button>
                                 @endif
+                                @if(is_null($task->assigned_by) || $task->assigned_by == Auth::id())
                                 <button class="task-action-btn danger btn-delete-task" data-id="{{ $task->id }}" title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                                @endif
                             </div>
                         </div>
                     @empty
@@ -950,6 +982,15 @@
                                 <option value="monthly">Bulanan</option>
                             </select>
                         </div>
+                        <div class="d-flex align-items-center gap-2 border-start ps-3" style="min-width: 200px;">
+                            <label><i class="fas fa-user-friends text-primary"></i> Tugaskan:</label>
+                            <select name="assigned_to" id="taskAssigneeSelect" class="form-select form-select-sm w-100" style="font-family:'Nunito',sans-serif;">
+                                <option value="{{ Auth::id() }}">Diri Sendiri</option> 
+                                @foreach($coworkers as $cw)
+                                    <option value="{{ $cw->id }}">{{ $cw->name }}</option> 
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-body" style="padding-top:0.75rem;">
@@ -1016,6 +1057,15 @@
                                 <option value="monthly">Bulanan</option>
                             </select>
                         </div>
+                        <div class="d-flex align-items-center gap-2 border-start ps-3">
+                            <label><i class="fas fa-user-friends text-primary"></i> Tugaskan:</label>
+                            <select name="assigned_to" id="editTaskAssignee" class="form-select form-select-sm" style="width:140px; font-family:'Nunito',sans-serif;">
+                                <option value="">Diri Sendiri</option>
+                                @foreach($coworkers as $cw)
+                                    <option value="{{ $cw->id }}">{{ $cw->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>    
                     </div>
                 </div>
                 <div class="modal-body" style="padding-top:0.75rem;">
@@ -1382,7 +1432,7 @@ $(document).ready(function () {
     // =========================================================
     // TASKS: ADD
     // =========================================================
-    $('#formAddTask').submit(function(e) {
+   $('#formAddTask').off('submit').on('submit', function(e) {
         e.preventDefault();
         let btn = $(this).find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
@@ -1392,11 +1442,6 @@ $(document).ready(function () {
                 Swal.fire('Gagal!', xhr.responseJSON?.message || 'Terjadi kesalahan.', 'error');
                 btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Simpan Tugas');
             });
-    });
-
-    // Enter shortcut di title input
-    document.getElementById('taskTitleInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('formAddTask').dispatchEvent(new Event('submit')); }
     });
 
     // =========================================================
@@ -1429,6 +1474,7 @@ $(document).ready(function () {
         $('#editTaskTag').val(btn.data('tag'));
         $('#editTaskPriority').val(btn.data('priority'));
         $('#editTaskRecurrence').val(btn.data('recurrence'));
+        $('#editTaskAssignee').val(btn.data('assignee')).trigger('change');
         let dl = btn.data('deadline');
         $('#editTaskDeadline').val(dl || '');
         $('#editTaskModal .date-quick-btn').removeClass('active');
@@ -1676,6 +1722,24 @@ $(document).ready(function () {
     if ($.fn.select2) {
         $('#taskTagSelect').select2({ theme:'bootstrap-5', dropdownParent:$('#taskModal'), tags:true, placeholder:'Ketik atau pilih tag...' });
         $('#editTaskTag').select2({ theme:'bootstrap-5', dropdownParent:$('#editTaskModal'), tags:true, placeholder:'Ketik atau pilih tag...' });
+        
+        // --- TAMBAHAN UNTUK SELECT2 DELEGASI ---
+        $('#taskAssigneeSelect').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#taskModal'),
+            placeholder: 'Cari pegawai...',
+            width: '100%' // Agar select2 menyesuaikan lebar parent
+        });
+        
+        // (Opsional) Jika kamu menaruhnya di Edit Modal juga
+        if ($('#editTaskAssignee').length) {
+            $('#editTaskAssignee').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#editTaskModal'),
+                placeholder: 'Cari pegawai...',
+                width: '100%'
+            });
+        }
     }
 });
 </script>

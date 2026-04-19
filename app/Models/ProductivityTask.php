@@ -8,6 +8,7 @@ class ProductivityTask extends Model
 {
     protected $fillable = [
         'user_id',
+        'assigned_by', // <-- Tambahkan ini
         'title',
         'tag',
         'description',
@@ -24,4 +25,16 @@ class ProductivityTask extends Model
     protected $casts = [
         'is_archived' => 'boolean',
     ];
+
+    // Relasi untuk mengetahui siapa pemilik tugas ini
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    // Relasi untuk mengetahui siapa yang mendelegasikan tugas ini
+    public function assigner()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'assigned_by');
+    }
 }
