@@ -234,6 +234,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         Route::delete('/tasks/{task}/subtasks/{subtask}', [ProductivityController::class, 'destroySubTask']);
         Route::post('/tasks/{task}/attachments', [ProductivityController::class, 'storeAttachment']);
         Route::delete('/tasks/{task}/attachments/{attachment}', [ProductivityController::class, 'destroyAttachment']);
+        Route::post('/tasks/{task}/comments', [ProductivityController::class, 'storeComment']);
     });
 
     // API Holidays

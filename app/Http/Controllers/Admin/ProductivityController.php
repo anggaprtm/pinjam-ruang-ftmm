@@ -25,7 +25,7 @@ class ProductivityController extends Controller
         $tag      = $request->get('tag', '');
         $search   = $request->get('search', '');
 
-       $taskQuery = ProductivityTask::with(['subTasks', 'attachments']);
+       $taskQuery = ProductivityTask::with(['subTasks', 'attachments', 'comments.user']);
 
         // Filter berdasarkan status & kepemilikan
         if ($filter === 'delegated') {
@@ -141,6 +141,51 @@ class ProductivityController extends Controller
             'allTags', 'filter', 'sort', 'tag', 'search',
             'statsTotal', 'statsCompleted', 'statsPending', 'statsOverdue', 'statsDelegated'
         ));
+    }
+
+    public function storeComment(Request $request, $taskId)
+    {
+        $request->validate(['comment' => 'required|string']);
+        
+        // Pastikan yang komen adalah yang punya tugas ATAU yang ngasih tugas
+        $task = ProductivityTask::where(function($q) {
+            $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
+        })->findOrFail($taskId);
+
+        $comment = \App\Models\ProductivityTaskComment::create([
+            'task_id' => $task->id,
+            'user_id' => Auth::id(),
+            'comment' => $request->comment
+        ]);
+
+        // 🔥 LOGIC NOTIFIKASI TELEGRAM KOMENTAR BARU 🔥
+        // Jika tugas ini adalah tugas delegasi, beritahu pihak "seberang"
+        if ($task->assigned_by && $task->user_id != $task->assigned_by) {
+            // Tentukan target penerima notif
+            $targetUserId = (Auth::id() == $task->user_id) ? $task->assigned_by : $task->user_id;
+            $targetUser = \App\Models\User::find($targetUserId);
+
+            if ($targetUser && $targetUser->telegram_chat_id) {
+                $commenterName = Auth::user()->name;
+                $msg = "💬 <b>Komentar Baru di Tugas Anda!</b>\n\n";
+                $msg .= "📌 <b>Tugas:</b> {$task->title}\n";
+                $msg .= "🗣 <b>Dari:</b> {$commenterName}\n";
+                $msg .= "📝 <i>\"{$request->comment}\"</i>\n\n";
+                $msg .= "Cek dashboard FTMM untuk membalas.";
+
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot".env('TELEGRAM_BOT_TOKEN')."/sendMessage", [
+                    'chat_id' => $targetUser->telegram_chat_id,
+                    'text' => $msg,
+                    'parse_mode' => 'HTML'
+                ]);
+            }
+        }
+
+        // Return comment yang diload bareng relasi user
+        return response()->json([
+            'success' => true, 
+            'comment' => $comment->load('user')
+        ]);
     }
 
     // --- TASK METHODS ---

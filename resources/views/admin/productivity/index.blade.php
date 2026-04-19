@@ -728,8 +728,8 @@
                                     data-priority="{{ $task->priority }}"
                                     data-deadline="{{ $task->deadline_at ? \Carbon\Carbon::parse($task->deadline_at)->format('d M Y, H:i') : 'Tanpa Tenggat' }}"
                                     data-subtasks="{{ $task->subTasks->toJson() }}"
-                                    data-attachments="{{ $task->attachments->toJson() }}">
-                                    {{ $task->title }}
+                                    data-attachments="{{ $task->attachments->toJson() }}"
+                                    data-comments="{{ $task->comments->toJson() }}"> {{ $task->title }}
                                 </div>
                                 @if($task->description)
                                 <div class="task-description-text" id="desc-{{ $task->id }}">{{ $task->description }}</div>
@@ -1160,6 +1160,19 @@
                         <div id="viewAttachmentList" class="d-flex flex-column gap-2"></div>
                     </div>
                 </div>
+                <hr class="my-4 text-muted">
+                {{-- Comment Section --}}
+                <div class="mb-2">
+                    <label class="text-muted fw-bold small text-uppercase mb-2 d-block"><i class="far fa-comments"></i> Diskusi / Catatan</label>
+                    <div id="viewCommentList" class="d-flex flex-column gap-3 mb-3" style="max-height: 250px; overflow-y: auto;">
+                        </div>
+
+                    {{-- Form Tambah Komentar --}}
+                    <div class="d-flex gap-2">
+                        <input type="text" id="newCommentText" class="form-control form-control-sm" placeholder="Tulis komentar/laporan..." style="font-family:'Nunito',sans-serif;">
+                        <button type="button" class="btn btn-sm btn-brand" id="btnSubmitComment"><i class="fas fa-paper-plane"></i> Kirim</button>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn-ghost" data-bs-dismiss="modal">Tutup</button>
@@ -1576,8 +1589,11 @@ $(document).ready(function () {
         setTimeout(() => document.getElementById('editTaskTitle').focus(), 350);
     });
 
+    let currentViewTaskId = null;
+
     $(document).on('click', '.btn-view-task', function() {
         let btn = $(this);
+        currentViewTaskId = btn.data('id');
         let taskId = btn.data('id');
         
         // Set konten dasar
@@ -1618,9 +1634,71 @@ $(document).ready(function () {
             `;
         });
         $('#viewAttachmentList').html(attHtml || '<p class="text-muted small">Tidak ada lampiran.</p>');
+        let comments = btn.data('comments') || [];
+        renderComments(comments);
 
         // Tampilkan Modal
         new bootstrap.Modal(document.getElementById('viewTaskModal')).show();
+    });
+
+    function renderComments(comments) {
+        let html = '';
+        let currentUserId = {{ Auth::id() }}; // Ambil ID user yang login
+        
+        comments.forEach(c => {
+            let isMe = c.user_id === currentUserId;
+            let align = isMe ? 'text-end' : 'text-start';
+            let bg = isMe ? 'bg-primary-subtle text-primary-emphasis' : 'bg-light border';
+            
+            // Format tanggal (contoh: 12:30 | 19 Apr)
+            let dateObj = new Date(c.created_at);
+            let timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            html += `
+                <div class="d-flex flex-column ${align}">
+                    <small class="text-muted" style="font-size:0.7rem; font-weight:700;">${c.user.name} &bull; ${timeStr}</small>
+                    <div class="p-2 rounded d-inline-block mt-1 ${bg}" style="max-width:85%; align-self: ${isMe ? 'flex-end' : 'flex-start'}; font-family:'Nunito',sans-serif; font-size:0.85rem;">
+                        ${c.comment}
+                    </div>
+                </div>
+            `;
+        });
+        
+        if(comments.length === 0) html = '<div class="text-center text-muted small my-2">Belum ada diskusi.</div>';
+        $('#viewCommentList').html(html);
+        
+        // Auto-scroll ke bawah agar komentar terbaru kelihatan
+        setTimeout(() => {
+            let el = document.getElementById('viewCommentList');
+            el.scrollTop = el.scrollHeight;
+        }, 100);
+    }
+
+    // Event Submit Komentar Baru
+    $('#btnSubmitComment').click(function() {
+        let comment = $('#newCommentText').val().trim();
+        if(!comment || !currentViewTaskId) return;
+
+        let btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.post(`/admin/productivity/tasks/${currentViewTaskId}/comments`, { comment: comment })
+            .done(res => {
+                $('#newCommentText').val('');
+                // Render ulang tanpa harus reload page (User Experience lebih mulus)
+                // Catatan: Karena kita cuma tambah ke DOM, idealnya data di HTML attribute juga di-update. 
+                // Tapi untuk amannya dan biar semua (subtask dll) sinkron, reload location juga bisa.
+                location.reload(); 
+            })
+            .fail(() => Swal.fire('Error', 'Gagal mengirim komentar.', 'error'))
+            .always(() => btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Kirim'));
+    });
+
+    // Bisa submit komen pakai tombol 'Enter'
+    $('#newCommentText').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#btnSubmitComment').click();
+        }
     });
 
 

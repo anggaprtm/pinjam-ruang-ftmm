@@ -49,4 +49,9 @@ class ProductivityTask extends Model
     {
         return $this->hasMany(ProductivityTaskAttachment::class, 'task_id');
     }
+
+    public function comments()
+    {
+        return $this->hasMany(ProductivityTaskComment::class, 'task_id');
+    }
 }
