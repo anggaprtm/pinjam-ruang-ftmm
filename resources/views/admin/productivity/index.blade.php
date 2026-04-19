@@ -563,6 +563,312 @@
 }
 .ck.ck-editor__editable.ck-focused { outline: none !important; border: none !important; }
 
+/* ============================================================
+   KANBAN BOARD
+   ============================================================ */
+ 
+/* Wrapper horizontal scroll */
+.kanban-board-wrap {
+    padding: 1rem 1.25rem 1.25rem;
+    overflow-x: auto;
+    /* Scrollbar tipis */
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-border) transparent;
+}
+.kanban-board-wrap::-webkit-scrollbar { height: 5px; }
+.kanban-board-wrap::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 5px; }
+ 
+/* Baris kolom */
+.kanban-row {
+    display: flex;
+    gap: 1rem;
+    min-width: 760px;                   /* prevent collapse on narrow screens */
+    height: calc(100vh - 320px);
+    min-height: 400px;
+}
+ 
+/* Satu kolom */
+.kanban-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-1);
+    min-width: 220px;
+}
+ 
+/* Header kolom */
+.kanban-col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--surface-border);
+    background: var(--surface-0);
+    flex-shrink: 0;
+}
+.kanban-col-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.kanban-col-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+/* BUG FIX #2: Ganti spinner yang berputar terus dengan dot statis */
+.dot-pending   { background: #94a3b8; }
+.dot-progress  { background: var(--accent-blue); }
+.dot-completed { background: var(--accent-green); }
+ 
+.kanban-col-count {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    border: 1px solid var(--surface-border);
+    min-width: 22px;
+    text-align: center;
+    transition: var(--transition);
+}
+/* Warna count per kolom */
+.kanban-col[data-col="pending"]    .kanban-col-count { background:#f1f5f9; color:#64748b; }
+.kanban-col[data-col="in_progress"] .kanban-col-count { background:#eff6ff; color:#2563eb; border-color:#bfdbfe; }
+.kanban-col[data-col="completed"]  .kanban-col-count { background:#ecfdf5; color:#059669; border-color:#a7f3d0; }
+ 
+/* List area (scrollable) */
+.kanban-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.75rem 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    /* Scrollbar tipis */
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-border) transparent;
+}
+.kanban-list::-webkit-scrollbar { width: 4px; }
+.kanban-list::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 4px; }
+ 
+/* Drop zone highlight */
+.kanban-list.drag-over {
+    background: rgba(116, 24, 71, 0.04);
+    border-radius: var(--radius-sm);
+    outline: 2px dashed rgba(116, 24, 71, 0.2);
+    outline-offset: -2px;
+}
+ 
+/* Empty placeholder */
+.kanban-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    border: 2px dashed var(--surface-border);
+    border-radius: var(--radius-md);
+    margin: 0.25rem 0;
+}
+.kanban-empty i { font-size: 1.5rem; opacity: 0.2; display: block; margin-bottom: 0.5rem; }
+ 
+/* ============================================================
+   KANBAN CARD
+   ============================================================ */
+ 
+.kanban-card {
+    background: var(--surface-0);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--surface-border);
+    overflow: hidden;
+    cursor: grab;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+    user-select: none;
+    position: relative;
+}
+.kanban-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: rgba(116,24,71,0.18);
+}
+.kanban-card:active { cursor: grabbing; }
+ 
+/* BUG FIX #3: Priority bar di atas kartu (bukan border-left inline) — 
+   tidak akan bentrok dengan .task-item::before */
+.kc-priority-bar {
+    height: 3px;
+    width: 100%;
+    flex-shrink: 0;
+}
+ 
+/* Ghost saat di-drag */
+.kanban-card.sortable-ghost {
+    opacity: 0.45;
+    background: var(--surface-2);
+    box-shadow: none;
+    transform: none;
+}
+/* Kartu yang sedang dibawa */
+.kanban-card.sortable-drag {
+    opacity: 1 !important;
+    box-shadow: var(--shadow-lg) !important;
+    transform: rotate(1.5deg) scale(1.02) !important;
+    border-color: rgba(116,24,71,0.3) !important;
+}
+ 
+/* Body kartu */
+.kc-body {
+    padding: 0.75rem 0.85rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+ 
+/* Badges baris atas */
+.kc-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+.kc-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    padding: 1px 7px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+}
+.kc-badge-tag    { background: var(--surface-2); color: var(--text-secondary); border-color: var(--surface-border); }
+.kc-badge-green  { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+.kc-badge-indigo { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+.kc-badge-rose   { background: #fce7f3; color: #be185d; border-color: #fbcfe8; }
+ 
+/* Judul */
+.kc-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.35;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.kc-title:hover { color: var(--brand-maroon); }
+ 
+/* Deskripsi singkat */
+.kc-desc {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+ 
+/* Sub-task progress */
+.kc-subtask-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.kc-subtask-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--surface-2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.kc-subtask-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-green), #34d399);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+.kc-subtask-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+ 
+/* Footer */
+.kc-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.45rem;
+    border-top: 1px solid var(--surface-border);
+    margin-top: 0.1rem;
+}
+.kc-footer-left, .kc-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.kc-deadline {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 3px;
+}
+.kc-overdue  { color: #dc2626 !important; }
+.kc-today    { color: #d97706 !important; }
+.kc-no-deadline { font-family: 'Nunito', sans-serif; font-size: 0.62rem; color: var(--text-muted); opacity: 0.5; display: flex; align-items: center; gap: 3px; }
+.kc-meta-icon {
+    font-size: 0.65rem;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 2px;
+}
+.kc-priority-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+ 
+/* Toggle Button custom */
+.btn-toggle-kanban {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.28rem 0.85rem;
+    border-radius: 50px;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+.btn-toggle-kanban:hover,
+.btn-toggle-kanban.active {
+    background: var(--brand-maroon);
+    border-color: var(--brand-maroon);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(116,24,71,0.25);
+}
+
 /* ---- Entrance animation ---- */
 @keyframes fadeSlideUp {
     from { opacity: 0; transform: translateY(10px); }
@@ -585,7 +891,7 @@
     ============================================================ --}}
     <div class="cmd-header d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h2 class="cmd-header-title">👋 Halo, {{ Auth::user()->name }}</h2>
+            <h2 class="cmd-header-title">👋🏻 Halo, {{ Auth::user()->name }}</h2>
             <p class="cmd-header-subtitle mb-0">
                 <i class="fas fa-calendar-alt me-1"></i>
                 {{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}
@@ -684,7 +990,7 @@
                     </select>
                     @endif
 
-                    <button class="btn btn-sm btn-outline-secondary ms-3" id="btnToggleView" style="font-family:'Nunito',sans-serif; font-weight:700;">
+                    <button class="btn-toggle-kanban" id="btnToggleView">
                         <i class="fas fa-columns"></i> Kanban
                     </button>
 
@@ -833,41 +1139,70 @@
                         </div>
                     @endforelse
                 </div>
-                <div class="kanban-board-container d-none" id="kanban-container" style="padding: 1rem 1.25rem; overflow-x: auto;">
-                    {{-- Set max-height agar tidak menembus footer --}}
-                    <div class="d-flex gap-3" style="min-width: 800px; height: calc(100vh - 310px);">
-                        
-                        {{-- Kolom PENDING --}}
-                        <div class="kanban-col rounded p-2 d-flex flex-column" style="flex: 1; background: var(--surface-1); border: 1px solid var(--surface-border);">
-                            <h6 class="fw-bold text-muted mb-3 px-2 mt-1" style="font-family:'Nunito',sans-serif;"><i class="fas fa-circle text-secondary" style="font-size:0.6rem;"></i> Pending</h6>
-                            {{-- Tambahkan overflow-y: auto di sini --}}
-                            <div class="kanban-list flex-grow-1" data-status="pending" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
-                                @foreach($tasks->where('status', 'pending') as $task)
+                <div class="kanban-board-wrap d-none" id="kanban-container">
+                    <div class="kanban-row">
+                
+                        {{-- ── Kolom PENDING ── --}}
+                        <div class="kanban-col" data-col="pending">
+                            <div class="kanban-col-header">
+                                <div class="kanban-col-title">
+                                    <span class="kanban-col-dot dot-pending"></span>
+                                    Pending
+                                </div>
+                                {{-- BUG FIX #4: Badge count pakai ID agar bisa diupdate JS --}}
+                                <span class="kanban-col-count" id="kc-count-pending">
+                                    {{ $tasks->where('status','pending')->count() }}
+                                </span>
+                            </div>
+                            <div class="kanban-list" data-status="pending" id="kanban-list-pending">
+                                @forelse($tasks->where('status','pending') as $task)
                                     @include('admin.productivity.partials.kanban-card', ['task' => $task])
-                                @endforeach
+                                @empty
+                                    <div class="kanban-empty"><i class="far fa-clipboard"></i> Tidak ada tugas pending</div>
+                                @endforelse
                             </div>
                         </div>
-
-                        {{-- Kolom IN PROGRESS --}}
-                        <div class="kanban-col rounded p-2 d-flex flex-column" style="flex: 1; background: var(--surface-1); border: 1px solid var(--surface-border);">
-                            <h6 class="fw-bold text-primary mb-3 px-2 mt-1" style="font-family:'Nunito',sans-serif;"><i class="fas fa-spinner fa-spin text-primary" style="font-size:0.7rem;"></i> In Progress</h6>
-                            <div class="kanban-list flex-grow-1" data-status="in_progress" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
-                                @foreach($tasks->where('status', 'in_progress') as $task)
+                
+                        {{-- ── Kolom IN PROGRESS ── --}}
+                        <div class="kanban-col" data-col="in_progress">
+                            <div class="kanban-col-header">
+                                <div class="kanban-col-title">
+                                    <span class="kanban-col-dot dot-progress"></span>
+                                    In Progress
+                                </div>
+                                <span class="kanban-col-count" id="kc-count-in_progress">
+                                    {{ $tasks->where('status','in_progress')->count() }}
+                                </span>
+                            </div>
+                            <div class="kanban-list" data-status="in_progress" id="kanban-list-in_progress">
+                                @forelse($tasks->where('status','in_progress') as $task)
                                     @include('admin.productivity.partials.kanban-card', ['task' => $task])
-                                @endforeach
+                                @empty
+                                    <div class="kanban-empty"><i class="fas fa-hourglass-half"></i> Tidak ada tugas berjalan</div>
+                                @endforelse
                             </div>
                         </div>
-
-                        {{-- Kolom COMPLETED --}}
-                        <div class="kanban-col rounded p-2 d-flex flex-column" style="flex: 1; background: var(--surface-1); border: 1px solid var(--surface-border);">
-                            <h6 class="fw-bold text-success mb-3 px-2 mt-1" style="font-family:'Nunito',sans-serif;"><i class="fas fa-check-circle text-success" style="font-size:0.7rem;"></i> Selesai</h6>
-                            <div class="kanban-list flex-grow-1" data-status="completed" style="overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
-                                @foreach($tasks->where('status', 'completed') as $task)
+                
+                        {{-- ── Kolom COMPLETED ── --}}
+                        <div class="kanban-col" data-col="completed">
+                            <div class="kanban-col-header">
+                                <div class="kanban-col-title">
+                                    <span class="kanban-col-dot dot-completed"></span>
+                                    Selesai
+                                </div>
+                                <span class="kanban-col-count" id="kc-count-completed">
+                                    {{ $tasks->where('status','completed')->count() }}
+                                </span>
+                            </div>
+                            <div class="kanban-list" data-status="completed" id="kanban-list-completed">
+                                @forelse($tasks->where('status','completed') as $task)
                                     @include('admin.productivity.partials.kanban-card', ['task' => $task])
-                                @endforeach
+                                @empty
+                                    <div class="kanban-empty"><i class="fas fa-check-circle"></i> Belum ada tugas selesai</div>
+                                @endforelse
                             </div>
                         </div>
-
+                
                     </div>
                 </div>
             </div>
@@ -1449,7 +1784,7 @@ function applyFilters() {
     window.location.href = url.toString();
 }
 
-// BUG FIX #4: Debounce search — langsung proses saat ketik, tapi delay 500ms agar tidak spammy
+// Debounce search
 let searchTimer = null;
 function debounceSearch(val) {
     clearTimeout(searchTimer);
@@ -1460,7 +1795,6 @@ function debounceSearch(val) {
 // TASK MODAL HELPERS
 // ============================================================
 function openTaskModal() {
-    // Reset form
     document.getElementById('formAddTask').reset();
     setQuickDate('none', document.querySelector('#taskModal .date-quick-btn'));
     new bootstrap.Modal(document.getElementById('taskModal')).show();
@@ -1468,7 +1802,7 @@ function openTaskModal() {
 }
 
 function toLocalISO(date) {
-    return new Date(date - date.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+    return new Date(date - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 function setQuickDate(type, btnEl) {
     document.querySelectorAll('#taskModal .date-quick-btn').forEach(b => b.classList.remove('active'));
@@ -1489,7 +1823,6 @@ function setEditQuickDate(type, btnEl) {
     document.getElementById('editTaskDeadline').value = toLocalISO(d);
 }
 
-// Toggle deskripsi task
 function toggleTaskDesc(id) {
     const desc = document.getElementById('desc-' + id);
     const chev = document.getElementById('chevron-' + id);
@@ -1498,7 +1831,6 @@ function toggleTaskDesc(id) {
     if (chev) chev.style.transform = desc.classList.contains('visible') ? 'rotate(180deg)' : '';
 }
 
-// Note modal color
 window.changeModalColor = function(color) {
     document.getElementById('noteModalContainer').style.backgroundColor = color;
     document.getElementById('selectedColor').value = color;
@@ -1516,8 +1848,8 @@ let pomoTime = 25 * 60;
 let isPomoRunning = false;
 
 function updatePomoDisplay() {
-    let m = Math.floor(pomoTime/60), s = pomoTime%60;
-    document.getElementById('pomodoro-time').textContent = (m<10?'0'+m:m) + ':' + (s<10?'0'+s:s);
+    let m = Math.floor(pomoTime / 60), s = pomoTime % 60;
+    document.getElementById('pomodoro-time').textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
 }
 
 window.togglePomodoro = function() {
@@ -1538,16 +1870,13 @@ window.setPomoTime = function(minutes) {
 // ============================================================
 let editorAdd, editorEdit;
 
-// BUG FIX #2: Init CKEditor untuk Add Note
 document.addEventListener('DOMContentLoaded', function() {
-    // Inisialisasi CKEditor Add
     if (typeof ClassicEditor !== 'undefined') {
         ClassicEditor.create(document.querySelector('#noteContent'), {
             toolbar: ['bold', 'italic', 'underline', '|', 'bulletedList', 'numberedList', '|', 'blockQuote', 'undo', 'redo'],
             placeholder: 'Tuangkan pikiranmu di sini...'
         }).then(editor => { editorAdd = editor; }).catch(console.error);
 
-        // Inisialisasi CKEditor Edit Note
         ClassicEditor.create(document.querySelector('#editNoteContent'), {
             toolbar: ['bold', 'italic', 'underline', '|', 'bulletedList', 'numberedList', '|', 'blockQuote', 'undo', 'redo'],
             placeholder: 'Edit catatan...'
@@ -1555,7 +1884,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Reset warna saat modal Add Note dibuka
 document.getElementById('noteModal').addEventListener('show.bs.modal', function() {
     changeModalColor('#fef08a');
     document.querySelector('input[name="_color_radio"][value="#fef08a"]').checked = true;
@@ -1564,7 +1892,7 @@ document.getElementById('noteModal').addEventListener('show.bs.modal', function(
 });
 
 // ============================================================
-// DOCUMENT READY
+// DOCUMENT READY — SEMUA EVENT HANDLER JQUERY DI SINI
 // ============================================================
 $(document).ready(function () {
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
@@ -1584,7 +1912,6 @@ $(document).ready(function () {
             });
     });
 
-
     // =========================================================
     // TASKS: TOGGLE STATUS
     // =========================================================
@@ -1597,24 +1924,26 @@ $(document).ready(function () {
 
         $.ajax({ url: `/admin/productivity/tasks/${id}/status`, type: 'PATCH', data: { status } })
             .done(() => {
-                const T = Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:2000 });
-                T.fire({ icon: status==='completed' ? 'success':'info',
-                         title: status==='completed' ? 'Tugas Selesai! 🎉' : 'Tugas Diaktifkan' });
+                const T = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 });
+                T.fire({ icon: status === 'completed' ? 'success' : 'info',
+                         title: status === 'completed' ? 'Tugas Selesai! 🎉' : 'Tugas Diaktifkan' });
                 if (status === 'completed') setTimeout(() => location.reload(), 2200);
             });
     });
 
     // =========================================================
-    // TASKS: EDIT
+    // TASKS: EDIT — Open & Prefill
     // =========================================================
     $(document).on('click', '.btn-edit-task', function() {
-        let btn = $(this);
-        let taskId = btn.data('id'); 
+        let btn    = $(this);
+        let taskId = btn.data('id');
         $('#editTaskId').val(taskId);
-        let subTasks = btn.data('subtasks') || [];
-        renderSubTasks(taskId, subTasks); // <-- Sekarang taskId sudah ada isinya
+
+        let subTasks    = btn.data('subtasks')    || [];
         let attachments = btn.data('attachments') || [];
+        renderSubTasks(taskId, subTasks);
         renderAttachments(taskId, attachments);
+
         $('#editTaskTitle').val(btn.data('title'));
         $('#editTaskDesc').val(btn.data('desc'));
         $('#editTaskTag').val(btn.data('tag'));
@@ -1631,29 +1960,29 @@ $(document).ready(function () {
         setTimeout(() => document.getElementById('editTaskTitle').focus(), 350);
     });
 
+    // =========================================================
+    // TASKS: VIEW MODAL
+    // =========================================================
     let currentViewTaskId = null;
 
     $(document).on('click', '.btn-view-task', function() {
         let btn = $(this);
         currentViewTaskId = btn.data('id');
         let taskId = btn.data('id');
-        
-        // Set konten dasar
+
         $('#viewTaskTitle').text(btn.data('title'));
         $('#viewTaskDesc').text(btn.data('desc') || 'Tidak ada deskripsi tambahan.');
-        
-        // Render Meta (Deadline & Prioritas)
+
         let metaHtml = `
             <span class="badge bg-primary rounded-pill small"><i class="far fa-clock me-1"></i> ${btn.data('deadline')}</span>
             <span class="badge bg-secondary rounded-pill small"><i class="fas fa-flag me-1"></i> Prioritas: ${btn.data('priority')}</span>
         `;
         $('#viewTaskMeta').html(metaHtml);
 
-        // Render Sub-Tasks (Mode Interaktif)
         let subTasks = btn.data('subtasks') || [];
         let subHtml = '';
         subTasks.forEach(st => {
-            let checked = st.is_completed ? 'checked' : '';
+            let checked   = st.is_completed ? 'checked' : '';
             let textStyle = st.is_completed ? 'text-decoration: line-through; color: #9ca3af;' : '';
             subHtml += `
                 <div class="d-flex align-items-center gap-2 p-2 rounded border bg-white shadow-sm">
@@ -1664,7 +1993,6 @@ $(document).ready(function () {
         });
         $('#viewSubTaskList').html(subHtml || '<p class="text-muted small">Tidak ada checklist.</p>');
 
-        // Render Attachments
         let attachments = btn.data('attachments') || [];
         let attHtml = '';
         attachments.forEach(att => {
@@ -1676,26 +2004,22 @@ $(document).ready(function () {
             `;
         });
         $('#viewAttachmentList').html(attHtml || '<p class="text-muted small">Tidak ada lampiran.</p>');
+
         let comments = btn.data('comments') || [];
         renderComments(comments);
 
-        // Tampilkan Modal
         new bootstrap.Modal(document.getElementById('viewTaskModal')).show();
     });
 
     function renderComments(comments) {
         let html = '';
-        let currentUserId = {{ Auth::id() }}; // Ambil ID user yang login
-        
+        let currentUserId = {{ Auth::id() }};
         comments.forEach(c => {
-            let isMe = c.user_id === currentUserId;
-            let align = isMe ? 'text-end' : 'text-start';
-            let bg = isMe ? 'bg-primary-subtle text-primary-emphasis' : 'bg-light border';
-            
-            // Format tanggal (contoh: 12:30 | 19 Apr)
+            let isMe   = c.user_id === currentUserId;
+            let align  = isMe ? 'text-end' : 'text-start';
+            let bg     = isMe ? 'bg-primary-subtle text-primary-emphasis' : 'bg-light border';
             let dateObj = new Date(c.created_at);
-            let timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
+            let timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             html += `
                 <div class="d-flex flex-column ${align}">
                     <small class="text-muted" style="font-size:0.7rem; font-weight:700;">${c.user.name} &bull; ${timeStr}</small>
@@ -1705,46 +2029,33 @@ $(document).ready(function () {
                 </div>
             `;
         });
-        
-        if(comments.length === 0) html = '<div class="text-center text-muted small my-2">Belum ada diskusi.</div>';
+        if (comments.length === 0) html = '<div class="text-center text-muted small my-2">Belum ada diskusi.</div>';
         $('#viewCommentList').html(html);
-        
-        // Auto-scroll ke bawah agar komentar terbaru kelihatan
         setTimeout(() => {
             let el = document.getElementById('viewCommentList');
-            el.scrollTop = el.scrollHeight;
+            if (el) el.scrollTop = el.scrollHeight;
         }, 100);
     }
 
-    // Event Submit Komentar Baru
     $('#btnSubmitComment').click(function() {
         let comment = $('#newCommentText').val().trim();
-        if(!comment || !currentViewTaskId) return;
-
+        if (!comment || !currentViewTaskId) return;
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
-        $.post(`/admin/productivity/tasks/${currentViewTaskId}/comments`, { comment: comment })
-            .done(res => {
-                $('#newCommentText').val('');
-                location.reload(); 
-            })
+        $.post(`/admin/productivity/tasks/${currentViewTaskId}/comments`, { comment })
+            .done(() => { $('#newCommentText').val(''); location.reload(); })
             .fail(() => Swal.fire('Error', 'Gagal mengirim komentar.', 'error'))
             .always(() => btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Kirim'));
     });
 
-    // Bisa submit komen pakai tombol 'Enter'
     $('#newCommentText').on('keypress', function(e) {
-        if (e.which === 13) {
-            $('#btnSubmitComment').click();
-        }
+        if (e.which === 13) $('#btnSubmitComment').click();
     });
-
 
     function renderSubTasks(taskId, subTasks) {
         let html = '';
         subTasks.forEach(st => {
-            let checked = st.is_completed ? 'checked' : '';
+            let checked   = st.is_completed ? 'checked' : '';
             let textStyle = st.is_completed ? 'text-decoration: line-through; color: #9ca3af;' : 'color: #374151;';
             html += `
                 <div class="d-flex align-items-center justify-content-between p-1 border rounded bg-light" id="subtask-${st.id}">
@@ -1756,98 +2067,76 @@ $(document).ready(function () {
                 </div>
             `;
         });
-        if(subTasks.length === 0) html = '<div class="text-muted" style="font-size:0.75rem;">Belum ada sub-task.</div>';
+        if (subTasks.length === 0) html = '<div class="text-muted" style="font-size:0.75rem;">Belum ada sub-task.</div>';
         $('#subTaskList').html(html);
     }
 
-    // --- FUNGSI RENDER ATTACHMENTS ---
     function renderAttachments(taskId, attachments) {
         let html = '';
         attachments.forEach(att => {
-            let fileUrl = `/storage/${att.file_path}`;
             html += `
                 <div class="d-flex align-items-center justify-content-between p-1 border rounded bg-light" id="att-${att.id}">
-                    <a href="${fileUrl}" target="_blank" class="text-truncate" style="font-size: 0.8rem; font-family:'Nunito',sans-serif; text-decoration:none; max-width:80%;">
+                    <a href="/storage/${att.file_path}" target="_blank" class="text-truncate" style="font-size: 0.8rem; font-family:'Nunito',sans-serif; text-decoration:none; max-width:80%;">
                         <i class="far fa-file-alt me-1 text-primary"></i> ${att.file_name}
                     </a>
                     <button type="button" class="btn btn-sm text-danger p-0 delete-attachment" data-task="${taskId}" data-id="${att.id}"><i class="fas fa-times"></i></button>
                 </div>
             `;
         });
-        if(attachments.length === 0) html = '<div class="text-muted" style="font-size:0.75rem;">Belum ada lampiran.</div>';
+        if (attachments.length === 0) html = '<div class="text-muted" style="font-size:0.75rem;">Belum ada lampiran.</div>';
         $('#attachmentList').html(html);
     }
 
-    // --- AJAX ACTION: ADD SUB-TASK ---
     $('#btnAddSubTask').click(function() {
         let taskId = $('#editTaskId').val();
-        let title = $('#newSubTaskTitle').val();
-        if(!title) return;
-        
+        let title  = $('#newSubTaskTitle').val();
+        if (!title) return;
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-        
-        $.post(`/admin/productivity/tasks/${taskId}/subtasks`, { title: title })
-            .done(res => {
-                $('#newSubTaskTitle').val('');
-                // Simpelnya reload halaman aja biar update datanya, atau append HTML secara manual
-                location.reload(); 
-            })
+        $.post(`/admin/productivity/tasks/${taskId}/subtasks`, { title })
+            .done(() => location.reload())
             .fail(() => Swal.fire('Error', 'Gagal menambah sub-task', 'error'))
             .always(() => btn.prop('disabled', false).html('<i class="fas fa-plus"></i>'));
     });
 
-    // --- AJAX ACTION: TOGGLE SUB-TASK ---
     $(document).on('change', '.toggle-subtask', function() {
         let taskId = $(this).data('task');
-        let subId = $(this).data('id');
+        let subId  = $(this).data('id');
         $.ajax({ url: `/admin/productivity/tasks/${taskId}/subtasks/${subId}/toggle`, type: 'PATCH' })
-            .done(() => { location.reload(); });
+            .done(() => location.reload());
     });
 
-    // --- AJAX ACTION: DELETE SUB-TASK ---
     $(document).on('click', '.delete-subtask', function() {
         let taskId = $(this).data('task');
-        let subId = $(this).data('id');
+        let subId  = $(this).data('id');
         $.ajax({ url: `/admin/productivity/tasks/${taskId}/subtasks/${subId}`, type: 'DELETE' })
-            .done(() => { $('#subtask-' + subId).remove(); });
+            .done(() => $('#subtask-' + subId).remove());
     });
 
-    // --- AJAX ACTION: UPLOAD FILE ---
     $('#btnUploadAttachment').click(function() {
-        let taskId = $('#editTaskId').val();
+        let taskId    = $('#editTaskId').val();
         let fileInput = $('#newAttachmentFile')[0];
-        if(fileInput.files.length === 0) return Swal.fire('Ops!', 'Pilih file dulu', 'warning');
-        
+        if (fileInput.files.length === 0) return Swal.fire('Ops!', 'Pilih file dulu', 'warning');
         let formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
         $.ajax({
             url: `/admin/productivity/tasks/${taskId}/attachments`,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(res) {
-                $('#newAttachmentFile').val('');
-                location.reload(); 
-            },
-            error: function(xhr) {
+            type: 'POST', data: formData, processData: false, contentType: false,
+            success: () => location.reload(),
+            error: xhr => {
                 Swal.fire('Gagal', xhr.responseJSON?.message || 'Gagal upload', 'error');
                 btn.prop('disabled', false).html('<i class="fas fa-upload"></i>');
             }
         });
     });
 
-    // --- AJAX ACTION: DELETE ATTACHMENT ---
     $(document).on('click', '.delete-attachment', function() {
         let taskId = $(this).data('task');
-        let attId = $(this).data('id');
+        let attId  = $(this).data('id');
         $.ajax({ url: `/admin/productivity/tasks/${taskId}/attachments/${attId}`, type: 'DELETE' })
-            .done(() => { $('#att-' + attId).remove(); });
+            .done(() => $('#att-' + attId).remove());
     });
 
     $('#formEditTask').submit(function(e) {
@@ -1859,8 +2148,8 @@ $(document).ready(function () {
             .done(res => {
                 if (res.success) {
                     $('#editTaskModal').modal('hide');
-                    Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:2000 })
-                        .fire({ icon:'success', title:'Tugas berhasil diperbarui!' });
+                    Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 })
+                        .fire({ icon: 'success', title: 'Tugas berhasil diperbarui!' });
                     setTimeout(() => location.reload(), 1500);
                 }
             })
@@ -1886,8 +2175,8 @@ $(document).ready(function () {
                 $.ajax({ url: `/admin/productivity/tasks/${id}/archive`, type: 'PATCH' })
                     .done(() => {
                         $('#task-' + id).slideUp(350, function() { $(this).remove(); });
-                        Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:2000 })
-                            .fire({ icon:'info', title:'Tugas diarsipkan.' });
+                        Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 })
+                            .fire({ icon: 'info', title: 'Tugas diarsipkan.' });
                     });
             }
         });
@@ -1897,8 +2186,8 @@ $(document).ready(function () {
         let id = $(this).data('id');
         $.ajax({ url: `/admin/productivity/tasks/${id}/unarchive`, type: 'PATCH' })
             .done(() => {
-                Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:2000 })
-                    .fire({ icon:'success', title:'Tugas dipulihkan!' });
+                Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 })
+                    .fire({ icon: 'success', title: 'Tugas dipulihkan!' });
                 setTimeout(() => location.reload(), 1200);
             });
     });
@@ -1918,32 +2207,24 @@ $(document).ready(function () {
     });
 
     // =========================================================
-    // BUG FIX #3: HABITS — Update progress bar real-time TANPA reload
+    // HABITS
     // =========================================================
     const habitTotal = {{ $habitTotal ?? 0 }};
     let habitDoneCount = {{ $habitCompleted ?? 0 }};
 
     $(document).on('click', '.habit-toggle', function() {
-        let id   = $(this).data('id');
-        let item = $('#habit-' + id);
+        let id     = $(this).data('id');
+        let item   = $('#habit-' + id);
         let wasDone = item.hasClass('done');
-
         $.post(`/admin/productivity/habits/${id}/toggle`, function(res) {
-            // Toggle class visual
             item.toggleClass('done', res.is_completed);
-
-            // Update counter
-            if (res.is_completed && !wasDone) habitDoneCount = Math.min(habitTotal, habitDoneCount + 1);
+            if (res.is_completed && !wasDone)  habitDoneCount = Math.min(habitTotal, habitDoneCount + 1);
             else if (!res.is_completed && wasDone) habitDoneCount = Math.max(0, habitDoneCount - 1);
-
-            // Update progress bar & label
             const pct = habitTotal > 0 ? Math.round((habitDoneCount / habitTotal) * 100) : 0;
             $('#habit-progress-fill').css('width', pct + '%');
             $('#habit-progress-label').text(habitDoneCount + '/' + habitTotal);
-
-            // Toast
-            Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:1500 })
-                .fire({ icon: res.is_completed ? 'success':'info',
+            Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 })
+                .fire({ icon: res.is_completed ? 'success' : 'info',
                         title: res.is_completed ? '✅ Habit selesai!' : 'Habit dibatalkan' });
         });
     });
@@ -1958,17 +2239,14 @@ $(document).ready(function () {
     $(document).on('click', '.btn-delete-habit', function() {
         let id = $(this).data('id');
         $.ajax({ url: `/admin/productivity/habits/${id}`, type: 'DELETE' })
-            .done(() => { $('#habit-' + id).slideUp(); });
+            .done(() => $('#habit-' + id).slideUp());
     });
 
     // =========================================================
-    // BUG FIX #2: NOTES — Tambah, Edit, Hapus dengan CKEditor
+    // NOTES
     // =========================================================
-
-    // Submit Tambah Note
     $('#formAddNote').submit(function(e) {
         e.preventDefault();
-        // Ambil konten dari CKEditor
         if (editorAdd) $('#noteContent').val(editorAdd.getData());
         let btn = $(this).find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>...');
@@ -1980,58 +2258,37 @@ $(document).ready(function () {
             });
     });
 
-    // Buka modal Edit Note & prefill
     $(document).on('click', '.btn-edit-note', function() {
-        let btn = $(this);
-        let id      = btn.data('id');
-        let title   = btn.data('title');
-        let content = btn.data('content'); // HTML dari server
-        let color   = btn.data('color') || '#fef08a';
-
-        $('#editNoteId').val(id);
-        $('#editNoteTitle').val(title);
-
-        // Set warna modal & pilih radio
+        let btn   = $(this);
+        let color = btn.data('color') || '#fef08a';
+        $('#editNoteId').val(btn.data('id'));
+        $('#editNoteTitle').val(btn.data('title'));
         changeEditModalColor(color);
         $('input[name="_edit_color_radio"][value="' + color + '"]').prop('checked', true);
-
-        // Set konten ke CKEditor edit
-        if (editorEdit) {
-            editorEdit.setData(content);
-        } else {
-            $('#editNoteContent').val(content);
-        }
-
+        if (editorEdit) editorEdit.setData(btn.data('content'));
+        else $('#editNoteContent').val(btn.data('content'));
         new bootstrap.Modal(document.getElementById('editNoteModal')).show();
     });
 
-    // Submit Edit Note
     $('#formEditNote').submit(function(e) {
         e.preventDefault();
         let id  = $('#editNoteId').val();
         if (editorEdit) $('#editNoteContent').val(editorEdit.getData());
-
         let btn = $(this).find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>...');
-
-        $.ajax({
-            url: `/admin/productivity/notes/${id}`,
-            type: 'PATCH',
-            data: $(this).serialize()
-        })
-        .done(() => {
-            $('#editNoteModal').modal('hide');
-            Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:2000 })
-                .fire({ icon:'success', title:'Catatan diperbarui!' });
-            setTimeout(() => location.reload(), 1500);
-        })
-        .fail(xhr => {
-            Swal.fire('Gagal', xhr.responseJSON?.message || 'Cek isian Anda.', 'error');
-            btn.prop('disabled', false).html('<i class="fas fa-save"></i> Simpan Perubahan');
-        });
+        $.ajax({ url: `/admin/productivity/notes/${id}`, type: 'PATCH', data: $(this).serialize() })
+            .done(() => {
+                $('#editNoteModal').modal('hide');
+                Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 })
+                    .fire({ icon: 'success', title: 'Catatan diperbarui!' });
+                setTimeout(() => location.reload(), 1500);
+            })
+            .fail(xhr => {
+                Swal.fire('Gagal', xhr.responseJSON?.message || 'Cek isian Anda.', 'error');
+                btn.prop('disabled', false).html('<i class="fas fa-save"></i> Simpan Perubahan');
+            });
     });
 
-    // Hapus Note
     $(document).on('click', '.btn-delete-note', function() {
         let id = $(this).data('id');
         $.ajax({ url: `/admin/productivity/notes/${id}`, type: 'DELETE' })
@@ -2048,8 +2305,8 @@ $(document).ready(function () {
         $.post("{{ route('admin.productivity.settings.update') }}", $(this).serialize())
             .done(() => {
                 $('#settingsModal').modal('hide');
-                Swal.mixin({ toast:true, position:'top-end', showConfirmButton:false, timer:2000 })
-                    .fire({ icon:'success', title:'Pengaturan disimpan!' });
+                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 })
+                    .fire({ icon: 'success', title: 'Pengaturan disimpan!' });
             })
             .always(() => btn.prop('disabled', false).html('<i class="fas fa-save"></i> Simpan'));
     });
@@ -2059,7 +2316,8 @@ $(document).ready(function () {
     // =========================================================
     $('#btn-pomo-start').click(function() {
         if (isPomoRunning) {
-            clearInterval(pomoInterval); isPomoRunning = false;
+            clearInterval(pomoInterval);
+            isPomoRunning = false;
             $(this).html('<i class="fas fa-play"></i> Lanjut');
             document.getElementById('pomodoro-label').textContent = 'Dijeda...';
         } else {
@@ -2069,8 +2327,9 @@ $(document).ready(function () {
             pomoInterval = setInterval(() => {
                 if (pomoTime > 0) { pomoTime--; updatePomoDisplay(); }
                 else {
-                    clearInterval(pomoInterval); isPomoRunning = false;
-                    Swal.fire({ title:'Waktu Fokus Habis! 🎉', text:'Kerja bagus! Istirahatkan matamu 5 menit.', icon:'success' });
+                    clearInterval(pomoInterval);
+                    isPomoRunning = false;
+                    Swal.fire({ title: 'Waktu Fokus Habis! 🎉', text: 'Kerja bagus! Istirahatkan matamu 5 menit.', icon: 'success' });
                     window.setPomoTime(25);
                 }
             }, 1000);
@@ -2079,105 +2338,136 @@ $(document).ready(function () {
 
     $('#btn-pomo-reset').click(function() { window.setPomoTime(25); });
 
-    // Date input listener (clear quick btn state)
     $('#taskDeadlineInput').on('change', function() {
         $('#taskModal .date-quick-btn').removeClass('active');
         if (!$(this).val()) $('#taskModal .date-quick-btn:first').addClass('active');
     });
 
-    // Tags select2 jika tersedia
+    // Select2
     if ($.fn.select2) {
-        $('#taskTagSelect').select2({ theme:'bootstrap-5', dropdownParent:$('#taskModal'), tags:true, placeholder:'Ketik atau pilih tag...' });
-        $('#editTaskTag').select2({ theme:'bootstrap-5', dropdownParent:$('#editTaskModal'), tags:true, placeholder:'Ketik atau pilih tag...' });
-        
-        // --- TAMBAHAN UNTUK SELECT2 DELEGASI ---
-        $('#taskAssigneeSelect').select2({
-            theme: 'bootstrap-5',
-            dropdownParent: $('#taskModal'),
-            placeholder: 'Cari pegawai...',
-            width: '100%' // Agar select2 menyesuaikan lebar parent
-        });
-        
-        // (Opsional) Jika kamu menaruhnya di Edit Modal juga
+        $('#taskTagSelect').select2({ theme: 'bootstrap-5', dropdownParent: $('#taskModal'), tags: true, placeholder: 'Ketik atau pilih tag...' });
+        $('#editTaskTag').select2({ theme: 'bootstrap-5', dropdownParent: $('#editTaskModal'), tags: true, placeholder: 'Ketik atau pilih tag...' });
+        $('#taskAssigneeSelect').select2({ theme: 'bootstrap-5', dropdownParent: $('#taskModal'), placeholder: 'Cari pegawai...', width: '100%' });
         if ($('#editTaskAssignee').length) {
-            $('#editTaskAssignee').select2({
-                theme: 'bootstrap-5',
-                dropdownParent: $('#editTaskModal'),
-                placeholder: 'Cari pegawai...',
-                width: '100%'
-            });
+            $('#editTaskAssignee').select2({ theme: 'bootstrap-5', dropdownParent: $('#editTaskModal'), placeholder: 'Cari pegawai...', width: '100%' });
         }
     }
+
     // ============================================================
     // KANBAN BOARD LOGIC
+    // ✅ BENAR: Di dalam $(document).ready() agar DOM sudah siap
     // ============================================================
 
-    // Toggle View (List vs Kanban)
+    // --- Toggle List / Kanban View ---
     let isKanbanView = false;
-    $('#btnToggleView').click(function() {
+
+    // ✅ Pakai $('#btnToggleView') jQuery, konsisten dengan kode di atas
+    //    BUKAN document.getElementById yang bisa null jika dipanggil terlalu awal
+    $('#btnToggleView').on('click', function() {
         isKanbanView = !isKanbanView;
+        const $taskContainer   = $('#task-container');
+        const $kanbanContainer = $('#kanban-container');
+
         if (isKanbanView) {
-            $('#task-container').addClass('d-none');
-            $('#kanban-container').removeClass('d-none');
-            $(this).html('<i class="fas fa-list"></i> List View');
-            $(this).removeClass('btn-outline-secondary').addClass('btn-secondary text-white');
+            $taskContainer.addClass('d-none');
+            $kanbanContainer.removeClass('d-none');
+            $(this).html('<i class="fas fa-list"></i> List View').addClass('active');
         } else {
-            $('#kanban-container').addClass('d-none');
-            $('#task-container').removeClass('d-none');
-            $(this).html('<i class="fas fa-columns"></i> Kanban View');
-            $(this).removeClass('btn-secondary text-white').addClass('btn-outline-secondary');
+            $kanbanContainer.addClass('d-none');
+            $taskContainer.removeClass('d-none');
+            $(this).html('<i class="fas fa-columns"></i> Kanban').removeClass('active');
         }
     });
 
-    // Inisialisasi Sortable.js untuk ketiga kolom Kanban
-    document.querySelectorAll('.kanban-list').forEach(function(list) {
-        new Sortable(list, {
-            group: 'tasks', // Mengizinkan drag antar kolom
-            animation: 150,
-            ghostClass: 'opacity-50', // Tampilan bayangan saat di-drag
-            dragClass: 'shadow-lg',
-            cursor: 'grabbing',
-            
-            // Event saat kartu selesai di-drop ke kolom baru
-            onEnd: function (evt) {
-                let itemEl = evt.item; // Kartu yang di-drag
-                let taskId = $(itemEl).data('id');
-                let newStatus = $(evt.to).data('status'); // Status dari kolom tujuan
-                let oldStatus = $(evt.from).data('status'); // Status awal
-                
-                // Jika dipindah ke kolom yang sama, tidak perlu jalankan AJAX
+    // --- Helper: update badge count header kolom ---
+    function updateKanbanCounts() {
+        ['pending', 'in_progress', 'completed'].forEach(function(status) {
+            const list  = document.getElementById('kanban-list-' + status);
+            const badge = document.getElementById('kc-count-' + status);
+            if (list && badge) {
+                badge.textContent = list.querySelectorAll('.kanban-card').length;
+            }
+        });
+    }
+
+    // --- Helper: tampilkan/sembunyikan empty state per kolom ---
+    function syncEmptyState(list) {
+        const hasCards = list.querySelectorAll('.kanban-card').length > 0;
+        let emptyEl    = list.querySelector('.kanban-empty');
+        if (!hasCards && !emptyEl) {
+            emptyEl = document.createElement('div');
+            emptyEl.className = 'kanban-empty';
+            emptyEl.innerHTML = '<i class="far fa-clipboard"></i> Tidak ada tugas di sini';
+            list.appendChild(emptyEl);
+        } else if (hasCards && emptyEl) {
+            emptyEl.remove();
+        }
+    }
+
+    // --- Sortable.js ---
+    document.querySelectorAll('.kanban-list').forEach(function(listEl) {
+        new Sortable(listEl, {
+            group:             'kanban-tasks',
+            animation:         180,
+            ghostClass:        'sortable-ghost',
+            dragClass:         'sortable-drag',
+            handle:            '.kanban-card',
+            scroll:            true,
+            scrollSensitivity: 60,
+            scrollSpeed:       10,
+
+            onStart: function() {
+                document.querySelectorAll('.kanban-list').forEach(function(l) { l.classList.add('drag-over'); });
+            },
+
+            onEnd: function(evt) {
+                document.querySelectorAll('.kanban-list').forEach(function(l) { l.classList.remove('drag-over'); });
+
+                const cardEl    = evt.item;
+                const taskId    = cardEl.dataset.id;
+                const newStatus = evt.to.dataset.status;
+                const oldStatus = evt.from.dataset.status;
+
+                syncEmptyState(evt.from);
+                syncEmptyState(evt.to);
+                updateKanbanCounts();
+
                 if (newStatus === oldStatus) return;
 
-                // Jalankan AJAX update status
                 $.ajax({
-                    url: `/admin/productivity/tasks/${taskId}/status`,
+                    url:  `/admin/productivity/tasks/${taskId}/status`,
                     type: 'PATCH',
                     data: { status: newStatus }
-                }).done(() => {
-                    Swal.mixin({ toast:true, position:'bottom-end', showConfirmButton:false, timer:1500 })
-                        .fire({ icon: newStatus === 'completed' ? 'success' : 'info', 
-                                title: 'Status tugas diperbarui!' });
-                    
-                    // 🔥 FIX BUG 1: Sinkronisasi ke List View
-                    let listItem = $('#task-' + taskId);
-                    if (listItem.length) {
-                        let checkbox = listItem.find('.task-checkbox');
+                })
+                .done(function() {
+                    const listItem = document.getElementById('task-' + taskId);
+                    if (listItem) {
+                        const checkbox = listItem.querySelector('.task-checkbox');
                         if (newStatus === 'completed') {
-                            listItem.addClass('completed');
-                            checkbox.prop('checked', true);
+                            listItem.classList.add('completed');
+                            if (checkbox) checkbox.checked = true;
                         } else {
-                            listItem.removeClass('completed');
-                            checkbox.prop('checked', false);
+                            listItem.classList.remove('completed');
+                            if (checkbox) checkbox.checked = false;
                         }
                     }
-                }).fail(() => {
+                    Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 })
+                        .fire({ icon: newStatus === 'completed' ? 'success' : 'info', title: 'Status tugas diperbarui!' });
+                })
+                .fail(function() {
+                    evt.from.insertBefore(cardEl, evt.from.children[evt.oldIndex] || null);
+                    syncEmptyState(evt.from);
+                    syncEmptyState(evt.to);
+                    updateKanbanCounts();
                     Swal.fire('Gagal!', 'Terjadi kesalahan saat memindah tugas.', 'error');
-                    // Kembalikan kartu ke kolom asalnya jika gagal
-                    evt.from.appendChild(itemEl);
                 });
             }
         });
     });
+
+    // Inisialisasi count saat load
+    updateKanbanCounts();
+
 });
 </script>
 @endsection
