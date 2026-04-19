@@ -39,6 +39,7 @@ use App\Http\Controllers\Admin\SuratUndanganController;
 use App\Http\Controllers\Admin\SuratTugasController;
 use App\Http\Controllers\Admin\ProductivityController;
 use App\Http\Controllers\Admin\CentralTicketController;
+use App\Http\Controllers\Admin\ProductivityRoutineController;
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -235,6 +236,11 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         Route::post('/tasks/{task}/attachments', [ProductivityController::class, 'storeAttachment']);
         Route::delete('/tasks/{task}/attachments/{attachment}', [ProductivityController::class, 'destroyAttachment']);
         Route::post('/tasks/{task}/comments', [ProductivityController::class, 'storeComment']);
+        Route::get('/routine', [ProductivityRoutineController::class, 'index'])->name('routine.index');
+        Route::post('/routine', [ProductivityRoutineController::class, 'store'])->name('routine.store');
+        Route::post('/routine/{task}/submit', [ProductivityRoutineController::class, 'submitLog'])->name('routine.submit');
+        Route::put('/routine/{task}', [ProductivityRoutineController::class, 'update'])->name('routine.update');
+        Route::patch('/routine/log/{log}/verify', [ProductivityRoutineController::class, 'verifyLog'])->name('routine.verify');
     });
 
     // API Holidays

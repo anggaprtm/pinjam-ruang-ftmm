@@ -927,8 +927,14 @@
                 <button onclick="openTaskModal()" class="header-btn">
                     <i class="fas fa-plus"></i> Tambah Tugas
                 </button>
+                <a href="{{ route('admin.productivity.routine.index') }}" class="header-btn" style="text-decoration: none;">
+                    <i class="fas fa-clipboard"></i> Rutinan
+                </a>
                 <button onclick="togglePomodoro()" class="header-btn">
                     <i class="fas fa-bolt" style="color:#fbbf24;"></i> Focus
+                </button>
+                <button class="header-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="fas fa-cog"></i>
                 </button>
                 <button class="header-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
                     <i class="fas fa-cog"></i>

@@ -119,6 +119,26 @@ class User extends Authenticatable
         return $this->hasOne(TendikDetail::class, 'user_id');
     }
 
+    public function isKTU()
+    {
+        // Menggunakan optional agar tidak error jika tendikDetail kosong
+        $jabatan = optional($this->tendikDetail)->nama_jabatan;
+        if (!$jabatan) return false;
+        
+        $jabatan = strtolower($jabatan);
+        return str_contains($jabatan, 'kepala bagian tata usaha') || str_contains($jabatan, 'kepala tata usaha');
+    }
+
+    public function isKasubag()
+    {
+        $jabatan = optional($this->tendikDetail)->nama_jabatan;
+        if (!$jabatan) return false;
+        
+        $jabatan = strtolower($jabatan);
+        // Cek apakah mengandung kata "Kepala Sub"
+        return str_contains($jabatan, 'kepala sub bagian') || str_contains($jabatan, 'kepala subbagian');
+    }
+
     // public function isAdmin()
     // {
     //     return $this->roles()->where('role_id', 1)->exists(); 
