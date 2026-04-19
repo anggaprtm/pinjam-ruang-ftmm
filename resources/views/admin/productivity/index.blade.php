@@ -720,12 +720,16 @@
                             @endif
 
                             <div class="task-content">
-                                <div class="task-title-text" onclick="toggleTaskDesc({{ $task->id }})">
+                                <div class="task-title-text btn-view-task" 
+                                    style="cursor: pointer;"
+                                    data-id="{{ $task->id }}"
+                                    data-title="{{ $task->title }}"
+                                    data-desc="{{ $task->description }}"
+                                    data-priority="{{ $task->priority }}"
+                                    data-deadline="{{ $task->deadline_at ? \Carbon\Carbon::parse($task->deadline_at)->format('d M Y, H:i') : 'Tanpa Tenggat' }}"
+                                    data-subtasks="{{ $task->subTasks->toJson() }}"
+                                    data-attachments="{{ $task->attachments->toJson() }}">
                                     {{ $task->title }}
-                                    @if($task->description)
-                                        <i class="fas fa-chevron-down ms-1" id="chevron-{{ $task->id }}"
-                                           style="font-size:0.6rem;color:var(--text-muted);transition:transform 0.2s;"></i>
-                                    @endif
                                 </div>
                                 @if($task->description)
                                 <div class="task-description-text" id="desc-{{ $task->id }}">{{ $task->description }}</div>
@@ -1121,6 +1125,45 @@
                     <button type="submit" class="btn-brand"><i class="fas fa-save"></i> Simpan Perubahan</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-cmd" id="viewTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #4b5563, #1f2937);">
+                <h5 class="modal-title"><i class="fas fa-eye me-2"></i> Detail Tugas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <h3 id="viewTaskTitle" class="fw-bold mb-1" style="font-family:'Montserrat',sans-serif; color:var(--text-primary);"></h3>
+                    <div id="viewTaskMeta" class="d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted fw-bold small text-uppercase mb-2 d-block">Deskripsi</label>
+                    <div id="viewTaskDesc" class="p-3 rounded bg-light border" style="font-family:'Nunito',sans-serif; font-size:0.9rem; min-height:60px; white-space: pre-wrap;"></div>
+                </div>
+
+                <div class="row">
+                    {{-- Sub-Task Section --}}
+                    <div class="col-md-6 border-end">
+                        <label class="text-muted fw-bold small text-uppercase mb-2 d-block">Checklist Progres</label>
+                        <div id="viewSubTaskList" class="d-flex flex-column gap-2"></div>
+                    </div>
+
+                    {{-- Attachment Section --}}
+                    <div class="col-md-6">
+                        <label class="text-muted fw-bold small text-uppercase mb-2 d-block">Lampiran File</label>
+                        <div id="viewAttachmentList" class="d-flex flex-column gap-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn-ghost" data-bs-dismiss="modal">Tutup</button>
+            </div>
         </div>
     </div>
 </div>
@@ -1523,12 +1566,61 @@ $(document).ready(function () {
         $('#editTaskPriority').val(btn.data('priority'));
         $('#editTaskRecurrence').val(btn.data('recurrence'));
         $('#editTaskAssignee').val(btn.data('assignee')).trigger('change');
+
         let dl = btn.data('deadline');
         $('#editTaskDeadline').val(dl || '');
         $('#editTaskModal .date-quick-btn').removeClass('active');
         if (!dl) $('#editBtnNone').addClass('active');
+
         new bootstrap.Modal(document.getElementById('editTaskModal')).show();
         setTimeout(() => document.getElementById('editTaskTitle').focus(), 350);
+    });
+
+    $(document).on('click', '.btn-view-task', function() {
+        let btn = $(this);
+        let taskId = btn.data('id');
+        
+        // Set konten dasar
+        $('#viewTaskTitle').text(btn.data('title'));
+        $('#viewTaskDesc').text(btn.data('desc') || 'Tidak ada deskripsi tambahan.');
+        
+        // Render Meta (Deadline & Prioritas)
+        let metaHtml = `
+            <span class="badge bg-primary rounded-pill small"><i class="far fa-clock me-1"></i> ${btn.data('deadline')}</span>
+            <span class="badge bg-secondary rounded-pill small"><i class="fas fa-flag me-1"></i> Prioritas: ${btn.data('priority')}</span>
+        `;
+        $('#viewTaskMeta').html(metaHtml);
+
+        // Render Sub-Tasks (Mode Interaktif)
+        let subTasks = btn.data('subtasks') || [];
+        let subHtml = '';
+        subTasks.forEach(st => {
+            let checked = st.is_completed ? 'checked' : '';
+            let textStyle = st.is_completed ? 'text-decoration: line-through; color: #9ca3af;' : '';
+            subHtml += `
+                <div class="d-flex align-items-center gap-2 p-2 rounded border bg-white shadow-sm">
+                    <input type="checkbox" class="form-check-input toggle-subtask" data-task="${taskId}" data-id="${st.id}" ${checked} style="cursor:pointer; width:18px; height:18px;">
+                    <span class="small" style="${textStyle}">${st.title}</span>
+                </div>
+            `;
+        });
+        $('#viewSubTaskList').html(subHtml || '<p class="text-muted small">Tidak ada checklist.</p>');
+
+        // Render Attachments
+        let attachments = btn.data('attachments') || [];
+        let attHtml = '';
+        attachments.forEach(att => {
+            attHtml += `
+                <a href="/storage/${att.file_path}" target="_blank" class="d-flex align-items-center justify-content-between p-2 rounded border bg-white shadow-sm text-decoration-none">
+                    <span class="small text-dark text-truncate" style="max-width: 85%;"><i class="far fa-file-alt me-2 text-primary"></i> ${att.file_name}</span>
+                    <i class="fas fa-download text-muted small"></i>
+                </a>
+            `;
+        });
+        $('#viewAttachmentList').html(attHtml || '<p class="text-muted small">Tidak ada lampiran.</p>');
+
+        // Tampilkan Modal
+        new bootstrap.Modal(document.getElementById('viewTaskModal')).show();
     });
 
 
