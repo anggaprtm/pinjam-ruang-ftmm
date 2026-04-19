@@ -286,11 +286,23 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <a href="{{ route('admin.central-tickets.show', $ticket->id) }}"
-                               class="btn btn-sm btn-outline-primary"
-                               style="border-radius:8px; font-size:0.8rem; padding:4px 12px;">
-                                <i class="fas fa-eye me-1"></i>Detail
-                            </a>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ route('admin.central-tickets.show', $ticket->id) }}"
+                                   class="btn btn-sm btn-outline-primary"
+                                   style="border-radius:8px; padding:4px 10px;" title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                {{-- Form Hapus Tiket --}}
+                                <form action="{{ route('admin.central-tickets.destroy', $ticket->id) }}" method="POST" class="d-inline form-delete">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete" 
+                                            style="border-radius:8px; padding:4px 10px;" title="Hapus Tiket">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -335,6 +347,37 @@ $(document).ready(function() {
         width: '100%',
         allowClear: true,
         minimumResultsForSearch: 10
+    });
+});
+</script>
+<script>
+$(document).ready(function() {
+    $('.my-select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        allowClear: true,
+        minimumResultsForSearch: 10
+    });
+
+    // --- TAMBAHKAN SCRIPT SWEETALERT HAPUS INI ---
+    $('.btn-delete').on('click', function(e) {
+        e.preventDefault();
+        let form = $(this).closest('form');
+        
+        Swal.fire({
+            title: 'Hapus Tiket Ini?',
+            text: "Data tiket dan riwayat percakapannya akan dihapus dari Nexus!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
     });
 });
 </script>

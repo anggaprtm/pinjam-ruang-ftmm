@@ -105,9 +105,21 @@
         </div>
         <p class="text-muted small mb-0">Informasi lengkap mengenai aduan yang masuk dari sistem TickTrace.</p>
     </div>
-    <a href="{{ route('admin.central-tickets.index') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">
-        <i class="fas fa-arrow-left me-1"></i> Kembali
-    </a>
+    <div class="d-flex gap-2">
+        {{-- Tombol Hapus --}}
+        <form action="{{ route('admin.central-tickets.destroy', $ticket->id) }}" method="POST" class="d-inline form-delete">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="btn btn-sm btn-danger shadow-sm btn-delete" style="border-radius:8px;">
+                <i class="fas fa-trash-alt me-1"></i> Hapus Tiket
+            </button>
+        </form>
+        
+        {{-- Tombol Kembali --}}
+        <a href="{{ route('admin.central-tickets.index') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">
+            <i class="fas fa-arrow-left me-1"></i> Kembali
+        </a>
+    </div>
 </div>
 
 <div class="row g-4">
@@ -376,6 +388,38 @@
 
 @section('scripts')
 @parent
+<script>
+$(document).ready(function() {
+    $('.my-select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        allowClear: true,
+        minimumResultsForSearch: 10
+    });
+
+    // --- TAMBAHKAN SCRIPT SWEETALERT HAPUS INI ---
+    $('.btn-delete').on('click', function(e) {
+        e.preventDefault();
+        let form = $(this).closest('form');
+        
+        Swal.fire({
+            title: 'Hapus Tiket Ini?',
+            text: "Data tiket dan riwayat percakapannya akan dihapus dari Nexus!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+});
+</script>
+
 @if(session('success') && $ticket->status === 'resolved')
 <script>
 document.addEventListener('DOMContentLoaded', function() {

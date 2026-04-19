@@ -104,4 +104,18 @@ class CentralTicketController extends Controller
         $ticket = CentralTicket::findOrFail($id);
         return view('admin.central-ticket.show', compact('ticket'));
     }
+
+    public function destroy($id)
+    {
+        $ticket = CentralTicket::findOrFail($id);
+        
+        // Hapus semua riwayat balasan terlebih dahulu (mencegah error foreign key)
+        $ticket->replies()->delete();
+        
+        // Hapus tiket utama
+        $ticket->delete();
+
+        return redirect()->route('admin.central-tickets.index')
+                         ->with('success', 'Tiket berhasil dihapus secara permanen dari sistem Nexus.');
+    }
 }

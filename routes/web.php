@@ -176,6 +176,7 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('central-tickets', [CentralTicketController::class, 'index'])->name('central-tickets.index');
     Route::get('central-tickets/{id}', [CentralTicketController::class, 'show'])->name('central-tickets.show');
     Route::post('central-tickets/{id}/reply', [CentralTicketController::class, 'storeReply'])->name('central-tickets.reply');
+    Route::delete('/central-tickets/{id}', [CentralTicketController::class, 'destroy'])->name('central-tickets.destroy');
     
     // ──────────────────────────────────────
     // SURAT UNDANGAN
