@@ -37,4 +37,16 @@ class ProductivityTask extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'assigned_by');
     }
+
+    // Relasi ke Sub-Tasks
+    public function subTasks()
+    {
+        return $this->hasMany(ProductivitySubTask::class, 'task_id');
+    }
+
+    // Relasi ke Attachments (Lampiran)
+    public function attachments()
+    {
+        return $this->hasMany(ProductivityTaskAttachment::class, 'task_id');
+    }
 }

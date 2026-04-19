@@ -750,6 +750,23 @@
                                         @elseif($task->priority=='medium') <i class="fas fa-minus"></i> Med
                                         @else <i class="fas fa-arrow-down"></i> Low @endif
                                     </span>
+                                    {{-- Indikator Sub-Task --}}
+                                    @if($task->subTasks->count() > 0)
+                                        @php
+                                            $completedSub = $task->subTasks->where('is_completed', true)->count();
+                                            $totalSub = $task->subTasks->count();
+                                        @endphp
+                                        <span class="task-badge" style="background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db;" title="Checklist Sub-task">
+                                            <i class="fas fa-tasks"></i> {{ $completedSub }}/{{ $totalSub }}
+                                        </span>
+                                    @endif
+
+                                    {{-- Indikator Attachment --}}
+                                    @if($task->attachments->count() > 0)
+                                        <span class="task-badge" style="background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db;" title="Ada Lampiran File">
+                                            <i class="fas fa-paperclip"></i> {{ $task->attachments->count() }}
+                                        </span>
+                                    @endif
                                 </div>
                                 @if($task->assigned_by && $task->assigned_by != Auth::id() && $task->user_id == Auth::id())
                                     {{-- Skenario 1: Ini tugas masuk (Saya dikasih tugas sama orang) --}}
@@ -776,6 +793,8 @@
                                             data-recurrence="{{ $task->recurrence }}"
                                             data-deadline="{{ $dl ? $dl->format('Y-m-d\TH:i') : '' }}"
                                             data-assignee="{{ $task->user_id }}"
+                                            data-subtasks="{{ $task->subTasks->toJson() }}"
+                                            data-attachments="{{ $task->attachments->toJson() }}"
                                             title="Edit">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
@@ -1070,8 +1089,32 @@
                 </div>
                 <div class="modal-body" style="padding-top:0.75rem;">
                     <label class="mb-1">Deskripsi:</label>
-                    <textarea name="description" id="editTaskDesc" class="task-desc-textarea"
-                              placeholder="Catatan tambahan..."></textarea>
+                    <textarea name="description" id="editTaskDesc" class="task-desc-textarea mb-3"
+                            placeholder="Catatan tambahan..."></textarea>
+                    
+                    <div class="row border-top pt-3 mt-2">
+                        {{-- KOLOM SUB-TASK --}}
+                        <div class="col-md-6 border-end">
+                            <label class="mb-2 text-primary"><i class="fas fa-tasks"></i> Sub-Task (Checklist)</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <input type="text" id="newSubTaskTitle" class="form-control form-control-sm" placeholder="Tambah item baru..." style="font-family:'Nunito',sans-serif;">
+                                <button type="button" class="btn btn-sm btn-brand" id="btnAddSubTask"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <div id="subTaskList" class="d-flex flex-column gap-1" style="max-height: 150px; overflow-y: auto;">
+                                </div>
+                        </div>
+
+                        {{-- KOLOM LAMPIRAN --}}
+                        <div class="col-md-6">
+                            <label class="mb-2 text-primary"><i class="fas fa-paperclip"></i> Lampiran File</label>
+                            <div class="d-flex gap-2 mb-2">
+                                <input type="file" id="newAttachmentFile" class="form-control form-control-sm" style="font-family:'Nunito',sans-serif;">
+                                <button type="button" class="btn btn-sm btn-brand" id="btnUploadAttachment"><i class="fas fa-upload"></i></button>
+                            </div>
+                            <div id="attachmentList" class="d-flex flex-column gap-1" style="max-height: 150px; overflow-y: auto;">
+                                </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-ghost" data-bs-dismiss="modal">Batal</button>
@@ -1468,7 +1511,12 @@ $(document).ready(function () {
     // =========================================================
     $(document).on('click', '.btn-edit-task', function() {
         let btn = $(this);
-        $('#editTaskId').val(btn.data('id'));
+        let taskId = btn.data('id'); 
+        $('#editTaskId').val(taskId);
+        let subTasks = btn.data('subtasks') || [];
+        renderSubTasks(taskId, subTasks); // <-- Sekarang taskId sudah ada isinya
+        let attachments = btn.data('attachments') || [];
+        renderAttachments(taskId, attachments);
         $('#editTaskTitle').val(btn.data('title'));
         $('#editTaskDesc').val(btn.data('desc'));
         $('#editTaskTag').val(btn.data('tag'));
@@ -1481,6 +1529,116 @@ $(document).ready(function () {
         if (!dl) $('#editBtnNone').addClass('active');
         new bootstrap.Modal(document.getElementById('editTaskModal')).show();
         setTimeout(() => document.getElementById('editTaskTitle').focus(), 350);
+    });
+
+
+    function renderSubTasks(taskId, subTasks) {
+        let html = '';
+        subTasks.forEach(st => {
+            let checked = st.is_completed ? 'checked' : '';
+            let textStyle = st.is_completed ? 'text-decoration: line-through; color: #9ca3af;' : 'color: #374151;';
+            html += `
+                <div class="d-flex align-items-center justify-content-between p-1 border rounded bg-light" id="subtask-${st.id}">
+                    <div class="d-flex align-items-center gap-2" style="font-size: 0.8rem; font-family:'Nunito',sans-serif;">
+                        <input type="checkbox" class="form-check-input mt-0 toggle-subtask" data-task="${taskId}" data-id="${st.id}" ${checked} style="cursor:pointer;">
+                        <span style="${textStyle}">${st.title}</span>
+                    </div>
+                    <button type="button" class="btn btn-sm text-danger p-0 delete-subtask" data-task="${taskId}" data-id="${st.id}"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+        });
+        if(subTasks.length === 0) html = '<div class="text-muted" style="font-size:0.75rem;">Belum ada sub-task.</div>';
+        $('#subTaskList').html(html);
+    }
+
+    // --- FUNGSI RENDER ATTACHMENTS ---
+    function renderAttachments(taskId, attachments) {
+        let html = '';
+        attachments.forEach(att => {
+            let fileUrl = `/storage/${att.file_path}`;
+            html += `
+                <div class="d-flex align-items-center justify-content-between p-1 border rounded bg-light" id="att-${att.id}">
+                    <a href="${fileUrl}" target="_blank" class="text-truncate" style="font-size: 0.8rem; font-family:'Nunito',sans-serif; text-decoration:none; max-width:80%;">
+                        <i class="far fa-file-alt me-1 text-primary"></i> ${att.file_name}
+                    </a>
+                    <button type="button" class="btn btn-sm text-danger p-0 delete-attachment" data-task="${taskId}" data-id="${att.id}"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+        });
+        if(attachments.length === 0) html = '<div class="text-muted" style="font-size:0.75rem;">Belum ada lampiran.</div>';
+        $('#attachmentList').html(html);
+    }
+
+    // --- AJAX ACTION: ADD SUB-TASK ---
+    $('#btnAddSubTask').click(function() {
+        let taskId = $('#editTaskId').val();
+        let title = $('#newSubTaskTitle').val();
+        if(!title) return;
+        
+        let btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        
+        $.post(`/admin/productivity/tasks/${taskId}/subtasks`, { title: title })
+            .done(res => {
+                $('#newSubTaskTitle').val('');
+                // Simpelnya reload halaman aja biar update datanya, atau append HTML secara manual
+                location.reload(); 
+            })
+            .fail(() => Swal.fire('Error', 'Gagal menambah sub-task', 'error'))
+            .always(() => btn.prop('disabled', false).html('<i class="fas fa-plus"></i>'));
+    });
+
+    // --- AJAX ACTION: TOGGLE SUB-TASK ---
+    $(document).on('change', '.toggle-subtask', function() {
+        let taskId = $(this).data('task');
+        let subId = $(this).data('id');
+        $.ajax({ url: `/admin/productivity/tasks/${taskId}/subtasks/${subId}/toggle`, type: 'PATCH' })
+            .done(() => { location.reload(); });
+    });
+
+    // --- AJAX ACTION: DELETE SUB-TASK ---
+    $(document).on('click', '.delete-subtask', function() {
+        let taskId = $(this).data('task');
+        let subId = $(this).data('id');
+        $.ajax({ url: `/admin/productivity/tasks/${taskId}/subtasks/${subId}`, type: 'DELETE' })
+            .done(() => { $('#subtask-' + subId).remove(); });
+    });
+
+    // --- AJAX ACTION: UPLOAD FILE ---
+    $('#btnUploadAttachment').click(function() {
+        let taskId = $('#editTaskId').val();
+        let fileInput = $('#newAttachmentFile')[0];
+        if(fileInput.files.length === 0) return Swal.fire('Ops!', 'Pilih file dulu', 'warning');
+        
+        let formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        
+        let btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: `/admin/productivity/tasks/${taskId}/attachments`,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                $('#newAttachmentFile').val('');
+                location.reload(); 
+            },
+            error: function(xhr) {
+                Swal.fire('Gagal', xhr.responseJSON?.message || 'Gagal upload', 'error');
+                btn.prop('disabled', false).html('<i class="fas fa-upload"></i>');
+            }
+        });
+    });
+
+    // --- AJAX ACTION: DELETE ATTACHMENT ---
+    $(document).on('click', '.delete-attachment', function() {
+        let taskId = $(this).data('task');
+        let attId = $(this).data('id');
+        $.ajax({ url: `/admin/productivity/tasks/${taskId}/attachments/${attId}`, type: 'DELETE' })
+            .done(() => { $('#att-' + attId).remove(); });
     });
 
     $('#formEditTask').submit(function(e) {

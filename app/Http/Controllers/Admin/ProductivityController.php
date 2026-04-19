@@ -25,7 +25,7 @@ class ProductivityController extends Controller
         $tag      = $request->get('tag', '');
         $search   = $request->get('search', '');
 
-       $taskQuery = ProductivityTask::query();
+       $taskQuery = ProductivityTask::with(['subTasks', 'attachments']);
 
         // Filter berdasarkan status & kepemilikan
         if ($filter === 'delegated') {
@@ -312,6 +312,61 @@ class ProductivityController extends Controller
             $task->update(['recurrence' => 'none']);
         }
 
+        return response()->json(['success' => true]);
+    }
+
+    public function storeSubTask(Request $request, $taskId)
+    {
+        $request->validate(['title' => 'required|string|max:255']);
+        $task = ProductivityTask::where(function($q) {
+            $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
+        })->findOrFail($taskId);
+
+        $subTask = $task->subTasks()->create(['title' => $request->title]);
+        return response()->json(['success' => true, 'subTask' => $subTask]);
+    }
+
+    public function toggleSubTask($taskId, $subTaskId)
+    {
+        $subTask = \App\Models\ProductivitySubTask::where('task_id', $taskId)->findOrFail($subTaskId);
+        $subTask->update(['is_completed' => !$subTask->is_completed]);
+        return response()->json(['success' => true, 'is_completed' => $subTask->is_completed]);
+    }
+
+    public function destroySubTask($taskId, $subTaskId)
+    {
+        \App\Models\ProductivitySubTask::where('task_id', $taskId)->findOrFail($subTaskId)->delete();
+        return response()->json(['success' => true]);
+    }
+
+    // =========================================================
+    // ATTACHMENT METHODS
+    // =========================================================
+    public function storeAttachment(Request $request, $taskId)
+    {
+        $request->validate(['file' => 'required|file|max:5120']); // Maks 5MB
+        $task = ProductivityTask::where(function($q) {
+            $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
+        })->findOrFail($taskId);
+
+        $file = $request->file('file');
+        $fileName = $file->getClientOriginalName();
+        // Simpan ke storage/app/public/tasks/attachments
+        $filePath = $file->store('tasks/attachments', 'public'); 
+
+        $attachment = $task->attachments()->create([
+            'file_name' => $fileName,
+            'file_path' => $filePath
+        ]);
+
+        return response()->json(['success' => true, 'attachment' => $attachment]);
+    }
+
+    public function destroyAttachment($taskId, $attachmentId)
+    {
+        $attachment = \App\Models\ProductivityTaskAttachment::where('task_id', $taskId)->findOrFail($attachmentId);
+        \Illuminate\Support\Facades\Storage::disk('public')->delete($attachment->file_path);
+        $attachment->delete();
         return response()->json(['success' => true]);
     }
 

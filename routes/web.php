@@ -229,6 +229,11 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
         Route::delete('/habits/{id}', [ProductivityController::class, 'destroyHabit'])->name('habits.destroy');
         Route::post('/settings', [ProductivityController::class, 'updateSettings'])->name('settings.update');
         Route::patch('/notes/{id}', [ProductivityController::class, 'updateNote'])->name('notes.update');
+        Route::post('/tasks/{task}/subtasks', [ProductivityController::class, 'storeSubTask']);
+        Route::patch('/tasks/{task}/subtasks/{subtask}/toggle', [ProductivityController::class, 'toggleSubTask']);
+        Route::delete('/tasks/{task}/subtasks/{subtask}', [ProductivityController::class, 'destroySubTask']);
+        Route::post('/tasks/{task}/attachments', [ProductivityController::class, 'storeAttachment']);
+        Route::delete('/tasks/{task}/attachments/{attachment}', [ProductivityController::class, 'destroyAttachment']);
     });
 
     // API Holidays
