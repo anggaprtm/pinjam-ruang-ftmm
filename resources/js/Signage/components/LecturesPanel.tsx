@@ -5,8 +5,8 @@ import { AgendaItem } from '../types';
 import AutoScrollList from './AutoScrollList';
 
 interface LecturesPanelProps {
-    data: AgendaItem[];          // jadwal kuliah biasa
-    ujianData?: AgendaItem[];    // jadwal UTS/UAS hari ini
+    data: AgendaItem[];
+    ujianData?: AgendaItem[];
 }
 
 const LecturesPanel: React.FC<LecturesPanelProps> = ({ data, ujianData = [] }) => {
@@ -20,13 +20,12 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data, ujianData = [] }) =
         return () => clearInterval(timer);
     }, []);
 
-    // Switch mode: kalau ada ujian hari ini, tampilkan ujian
-    const isExamMode   = ujianData.length > 0;
-    const displayData  = isExamMode ? ujianData : data;
-    const panelTitle   = isExamMode ? 'JADWAL UJIAN' : 'AGENDA PERKULIAHAN';
-    const panelIcon    = isExamMode
-        ? <ClipboardList className="w-6 h-6 text-amber-400" />
-        : <BookOpen className="w-6 h-6 text-electric-400" />;
+    const isExamMode  = ujianData.length > 0;
+    const displayData = isExamMode ? ujianData : data;
+    const panelTitle  = isExamMode ? 'JADWAL UJIAN' : 'AGENDA PERKULIAHAN';
+    const panelIcon   = isExamMode
+        ? <ClipboardList className="w-5 h-5" />
+        : <BookOpen className="w-5 h-5" />;
 
     const getStatus = (timeString: string) => {
         try {
@@ -46,7 +45,7 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data, ujianData = [] }) =
         <GlassPanel
             title={panelTitle}
             icon={panelIcon}
-            className="h-full bg-navy-900/80 border-white/10"
+            className="h-full"
         >
             <AutoScrollList
                 data={displayData}
@@ -58,69 +57,79 @@ const LecturesPanel: React.FC<LecturesPanelProps> = ({ data, ujianData = [] }) =
                     const isNow      = status === 'Now';
                     const isFinished = status === 'Finished';
 
+                    // ── Warna aksen bar kiri ──
+                    const accentCls = isNow && isExamMode  ? 'bg-warning-600'
+                                    : isNow && !isExamMode ? 'bg-maroon-600'
+                                    : isFinished           ? 'bg-surface-3'
+                                    :                        'bg-surface-border';
+
+                    // ── Card background ──
+                    const cardBgCls = isNow && isExamMode  ? 'bg-warning-50 border-warning-400/40'
+                                    : isNow && !isExamMode ? 'bg-maroon-50 border-maroon-200'
+                                    : isFinished           ? 'bg-surface-1 border-surface-border opacity-50'
+                                    :                        'bg-surface-1 border-surface-border hover:bg-surface-2';
+
                     return (
                         <div className={`
-                            relative flex items-stretch rounded-lg overflow-hidden transition-all duration-500
-                            ${isNow && isExamMode  ? 'bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.15)]' : ''}
-                            ${isNow && !isExamMode ? 'bg-electric-500/10 shadow-[0_0_20px_rgba(0,242,255,0.1)]' : ''}
-                            ${isFinished           ? 'opacity-40' : ''}
-                            ${!isNow && !isFinished ? 'bg-white/4 hover:bg-white/7' : ''}
+                            relative flex items-stretch rounded-lg overflow-hidden
+                            border transition-all duration-300 ${cardBgCls}
                         `}>
                             {/* Accent bar kiri */}
-                            <div className={`shrink-0 w-1 ${
-                                isNow && isExamMode  ? 'bg-amber-400'    :
-                                isNow && !isExamMode ? 'bg-electric-500' :
-                                isFinished           ? 'bg-gray-700'     : 'bg-white/15'
-                            }`} />
+                            <div className={`shrink-0 w-1 ${accentCls}`} />
 
                             <div className="flex-1 px-3 py-2.5 min-w-0">
                                 {/* Baris 1: Judul + live badge */}
                                 <div className="flex items-center gap-2 mb-1.5 min-w-0">
                                     <h3 className={`flex-1 font-bold text-sm leading-tight truncate ${
-                                        isNow ? 'text-white' : 'text-gray-300'
+                                        isFinished ? 'text-ink-muted line-through' : 'text-ink-primary'
                                     }`}>
                                         {lecture.title}
                                     </h3>
                                     {isNow && (
                                         <span className="relative flex h-2 w-2 shrink-0">
                                             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                                                isExamMode ? 'bg-amber-400' : 'bg-emerald-400'
+                                                isExamMode ? 'bg-warning-400' : 'bg-maroon-400'
                                             }`} />
                                             <span className={`relative inline-flex h-2 w-2 rounded-full ${
-                                                isExamMode ? 'bg-amber-500' : 'bg-emerald-500'
+                                                isExamMode ? 'bg-warning-600' : 'bg-maroon-600'
                                             }`} />
                                         </span>
                                     )}
                                 </div>
 
-                                {/* Baris 2: Badge + Ruang + Jam */}
-                                <div className="flex items-center gap-3 text-[11px]">
+                                {/* Baris 2: Badge kode + Ruang + Jam */}
+                                <div className="flex items-center gap-2.5 text-[11px] flex-wrap">
+                                    {/* Kode matkul */}
                                     <span className={`shrink-0 text-[9px] font-extrabold px-1.5 py-0.5 rounded tracking-wider font-mono ${
-                                        isNow && isExamMode  ? 'bg-amber-400 text-black'         :
-                                        isNow && !isExamMode ? 'bg-electric-500 text-black'       :
-                                        isExamMode           ? 'bg-amber-500/20 text-amber-400'   :
-                                                               'bg-white/10 text-white/40'
+                                        isNow && isExamMode  ? 'bg-warning-400 text-warning-800'
+                                        : isNow && !isExamMode ? 'bg-maroon-600 text-white'
+                                        : isExamMode           ? 'bg-warning-50 text-warning-600 border border-warning-400/40'
+                                        :                        'bg-surface-2 text-ink-secondary border border-surface-border'
                                     }`}>
                                         {(lecture as any).course_code || `LEC-${String(index + 1).padStart(2,'0')}`}
                                     </span>
+
+                                    {/* Ruang */}
                                     <div className={`flex items-center gap-1 ${
-                                        isNow ? (isExamMode ? 'text-amber-400/80' : 'text-electric-400/80') : 'text-gray-500'
+                                        isNow ? (isExamMode ? 'text-warning-600' : 'text-maroon-600') : 'text-ink-secondary'
                                     }`}>
                                         <MapPin size={10} className="shrink-0" />
                                         <span className="truncate">{lecture.room}</span>
                                     </div>
+
+                                    {/* Jam */}
                                     <div className={`flex items-center gap-1 font-mono shrink-0 ${
-                                        isNow ? 'text-gray-300' : 'text-gray-600'
+                                        isNow ? 'text-ink-primary' : 'text-ink-muted'
                                     }`}>
                                         <Clock size={10} className="shrink-0" />
                                         {lecture.time}
                                     </div>
                                 </div>
 
-                                {/* Baris 3: Pengawas — hanya mode ujian */}
+                                {/* Baris 3: Pengawas (hanya ujian) */}
                                 {isExamMode && !isSpesifikLantai && (lecture as any).pengawas && (
                                     <div className={`mt-1 text-[10px] flex items-center gap-1 ${
-                                        isNow ? 'text-amber-300/70' : 'text-gray-600'
+                                        isNow ? 'text-warning-600' : 'text-ink-muted'
                                     }`}>
                                         <span className="font-semibold">Pengawas:</span>
                                         <span className="truncate">{(lecture as any).pengawas}</span>
