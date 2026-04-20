@@ -173,12 +173,12 @@ const App: React.FC = () => {
       const data: ApiResponse = await res.json();
 
       triggerDataUpdate(() => {
-        setLectures(data.lectures   ?? []);
-        setEvents(data.events       ?? []);
+        setLectures(data.jadwal_kuliah_hari_ini   ?? []);
+        setEvents(data.kegiatan_mendatang       ?? []);
         setJadwalUjian(data.jadwal_ujian ?? []);
-        setMeetingsData(data.meetings ?? []);
-        setRooms(data.rooms         ?? []);
-        setConfig(data.config       ?? null);
+        setMeetingsData(data.sidang_rapat ?? []);
+        setRooms(data.room_availability ?? []);
+        setConfig(data.config ?? null);
         if (data.config?.mode === 'announcement') {
           setSignageMode('announcement');
         } else {
