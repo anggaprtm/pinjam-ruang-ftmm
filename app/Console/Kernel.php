@@ -17,11 +17,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:google-calendar')->everyFifteenMinutes();
         $schedule->command('attendance:sync')->weekdays()->at('08:30')->timezone('Asia/Jakarta');
         $schedule->command('attendance:sync')->weekdays()->at('23:00')->timezone('Asia/Jakarta');
-        // 1. Rekap Produktivitas Pagi (Jalan setiap jam 07:00 pagi)
+        // 1. Rekap Pagi (Misal jalan tiap jam 07:00 pagi)
         $schedule->command('productivity:remind morning')->dailyAt('07:00');
-
-        // 2. Cek Deadline H-1 Jam (Jalan setiap 15 menit untuk ngecek apakah ada tugas mepet)
-        $schedule->command('productivity:remind deadline')->everyFifteenMinutes();
+        // 2. Reminder H-1 Jam (Jalan tiap menit untuk ngecek mana yang kurang dari 1 jam)
+        $schedule->command('productivity:remind deadline')->everyMinute();
+        // 3. Exact Reminder / Perintah /remind (Jalan tiap menit untuk alarm waktu pas)
+        $schedule->command('productivity:remind exact')->everyMinute();
 
         // --- BACA SETTING DARI DATABASE ---
         if (Schema::hasTable('bot_settings')) {
