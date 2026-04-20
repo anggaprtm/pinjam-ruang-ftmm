@@ -96,7 +96,7 @@ class TelegramBotListen extends Command
 
     private function replyWithId($chatId, $name)
     {
-        $message = "Halo, <b>$name</b>! 👋\n\nID Telegram kamu: <code>$chatId</code>\n\nSilakan copy angka di atas dan paste ke halaman Profil di website FTMM-Nexusku.";
+        $message = "Halo, <b>$name</b>! 👋\n\nID Telegram kamu: <code>$chatId</code>\n\nSilakan copy angka di atas dan paste ke halaman Profil di website FTMM-Nexus.";
         Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $message, 'parse_mode' => 'HTML']);
     }
 
@@ -429,9 +429,9 @@ class TelegramBotListen extends Command
 
         $rawInput = trim(substr($text, 6)); // Potong '/book '
         
-        // Validasi format (harus ada 2 buah '@')
+        // Validasi format (harus ada minimal 2 buah '@')
         if (empty($rawInput) || substr_count($rawInput, '@') < 2) {
-            $msg = "❌ <b>Format Booking Salah!</b>\nGunakan format:\n<code>/book [Nama Kegiatan] @[Nama Ruang] @[Waktu Mulai]-[Waktu Selesai]</code>\n\nContoh:\n<code>/book Rapat Evaluasi @GC-701 @besok 09:00-11:30</code>";
+            $msg = "❌ <b>Format Booking Salah!</b>\nGunakan format:\n<code>/book [Acara] @[Ruang] @[Waktu] [opsional: untuk Nama]</code>\n\nContoh Biasa:\n<code>/book Rapat Pimpinan @GC-701 @besok 09:00-11:00</code>\n\nContoh Pesankan Orang Lain:\n<code>/book Rapat Prodi @GC-602 @lusa 13:00-15:00 untuk Budi</code>";
             Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
             return;
         }
@@ -440,10 +440,38 @@ class TelegramBotListen extends Command
         $parts = explode('@', $rawInput);
         $title = trim($parts[0]);
         $ruangName = trim($parts[1]);
-        $timeStr = strtolower(trim($parts[2])); // contoh: "besok 09:00-11:30"
+        
+        $timeStrOriginal = trim($parts[2]); 
+        $timeStr = strtolower($timeStrOriginal);
+        $targetUser = $user; // Default peminjam adalah diri sendiri
+
+        // =======================================================
+        // FITUR BARU: Delegasi Pemohon (Keyword: "untuk [nama]")
+        // =======================================================
+        if (str_contains($timeStr, 'untuk ')) {
+            $splitUntuk = explode('untuk ', $timeStr);
+            $timeStr = trim($splitUntuk[0]); // Sisa format waktu (misal: "besok 09:00-11:00")
+            $targetName = trim($splitUntuk[1]); // Nama target (misal: "budi")
+
+            // Cek apakah user yang ngetik command punya hak mendelegasikan
+            if ($user->isAdmin() || $user->hasRole('Pegawai')) {
+                // Cari target di database berdasarkan nama
+                $foundUser = \App\Models\User::where('name', 'like', "%{$targetName}%")->first();
+                
+                if ($foundUser) {
+                    $targetUser = $foundUser;
+                } else {
+                    Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "❌ Pegawai/Dosen dengan nama mengandung kata <b>'{$targetName}'</b> tidak ditemukan di database."]);
+                    return;
+                }
+            } else {
+                Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "❌ Anda tidak memiliki hak akses untuk meminjamkan ruangan atas nama orang lain."]);
+                return;
+            }
+        }
 
         // 1. CARI RUANGAN BERDASARKAN NAMA
-        $ruangan = Ruangan::where('nama', 'like', "%{$ruangName}%")->first();
+        $ruangan = \App\Models\Ruangan::where('nama', 'like', "%{$ruangName}%")->first();
         if (!$ruangan) {
             Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "❌ Ruangan mengandung kata <b>'{$ruangName}'</b> tidak ditemukan di sistem."]);
             return;
@@ -451,8 +479,8 @@ class TelegramBotListen extends Command
 
         // 2. PARSING WAKTU MULAI & SELESAI
         $timeParts = explode('-', $timeStr);
-        $startStr = trim($timeParts[0]); // "besok 09:00"
-        $endStr = isset($timeParts[1]) ? trim($timeParts[1]) : null; // "11:30"
+        $startStr = trim($timeParts[0]); 
+        $endStr = isset($timeParts[1]) ? trim($timeParts[1]) : null; 
 
         $waktuMulai = $this->parseSmartDate($startStr);
         if (!$waktuMulai) {
@@ -460,9 +488,9 @@ class TelegramBotListen extends Command
             return;
         }
 
-        $waktuSelesai = $waktuMulai->copy()->addHours(2); // Default 2 jam jika tidak diset
+        $waktuSelesai = $waktuMulai->copy()->addHours(2); // Default 2 jam jika tidak diset jam pulangnya
         if ($endStr) {
-            $endStr = str_replace('.', ':', $endStr); // Jaga-jaga user ngetik "11.30"
+            $endStr = str_replace('.', ':', $endStr); 
             try {
                 $waktuSelesai = Carbon::parse($waktuMulai->format('Y-m-d') . ' ' . $endStr);
             } catch (\Exception $e) {}
@@ -478,13 +506,12 @@ class TelegramBotListen extends Command
             'waktu_mulai' => $waktuMulai->format('Y-m-d H:i:s'),
             'waktu_selesai' => $waktuSelesai->format('Y-m-d H:i:s'),
             'ruangan_id' => $ruangan->id,
-            'tipe_berulang' => 'harian', // Supaya loop di service cuma jalan 1x
+            'tipe_berulang' => 'harian', 
         ];
 
         $bentrok = $eventService->isRoomTaken($requestData);
 
         if ($bentrok) {
-            // Ambil saran ruangan kosong (ambil 3 ruangan setara kapasitasnya)
             $saran = $eventService->getSuggestedRooms($requestData, $ruangan->kapasitas ?? 0);
             
             $msg = "⚠️ <b>MAAF, RUANGAN BENTROK!</b>\n\n";
@@ -505,7 +532,6 @@ class TelegramBotListen extends Command
         }
 
         // 4. JIKA AMAN, SIMPAN KE DATABASE
-        // Jika pemohon adalah Admin -> langsung disetujui, jika Pegawai -> butuh verifikasi
         $status = ($user->isAdmin()) ? 'disetujui' : 'belum_disetujui';
         
         $kegiatan = Kegiatan::create([
@@ -514,10 +540,10 @@ class TelegramBotListen extends Command
             'jenis_kegiatan' => 'Lainnya',
             'waktu_mulai' => $waktuMulai->format('Y-m-d H:i:s'),
             'waktu_selesai' => $waktuSelesai->format('Y-m-d H:i:s'),
-            'user_id' => $user->id,
+            'user_id' => $targetUser->id,       // Menggunakan target User (Bisa diri sendiri atau orang yang didelegasikan)
             'status' => $status,
-            'nama_pic' => $user->name,
-            'deskripsi' => 'Dipesan melalui Telegram Bot',
+            'nama_pic' => $targetUser->name,    // Nama penanggung jawabnya
+            'deskripsi' => "Dipesan melalui Telegram Bot oleh {$user->name}",
         ]);
 
         \App\Models\KegiatanHistory::create([
@@ -528,14 +554,30 @@ class TelegramBotListen extends Command
             'created_at' => now(),
         ]);
 
-        $statusText = ($status === 'disetujui') ? "✅ <b>Disetujui Otomatis (Admin)</b>" : "⏳ <b>Menunggu Verifikasi</b>";
+        $statusText = ($status === 'disetujui') ? "✅ <b>Disetujui Otomatis</b>" : "⏳ <b>Menunggu Verifikasi</b>";
 
         $msg = "🏢 <b>BOOKING BERHASIL DICATAT!</b>\n\n";
         $msg .= "📌 <b>Kegiatan:</b> {$title}\n";
         $msg .= "📍 <b>Ruangan:</b> {$ruangan->nama}\n";
+        if ($targetUser->id !== $user->id) {
+            $msg .= "👤 <b>Pemohon:</b> {$targetUser->name} <i>(Dipesankan oleh Anda)</i>\n";
+        }
         $msg .= "🕒 <b>Waktu:</b> " . $waktuMulai->translatedFormat('d M Y, H:i') . " s/d " . $waktuSelesai->format('H:i') . " WIB\n";
         $msg .= "Status: " . $statusText;
 
+        // Kirim konfirmasi ke Admin/Orang yang ngetik command
         Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
+
+        // NOTIFIKASI KE TARGET USER (JIKA DIPESANKAN OLEH ORANG LAIN & PUNYA TELEGRAM)
+        if ($targetUser->id !== $user->id && !empty($targetUser->telegram_chat_id)) {
+            $notifMsg = "🏢 <b>ANDA DIDAFTARKAN PEMINJAMAN RUANG</b>\n\n";
+            $notifMsg .= "Sistem mendeteksi <b>{$user->name}</b> baru saja memesankan ruangan atas nama Anda.\n\n";
+            $notifMsg .= "📌 <b>Kegiatan:</b> {$title}\n";
+            $notifMsg .= "📍 <b>Ruang:</b> {$ruangan->nama}\n";
+            $notifMsg .= "🕒 <b>Waktu:</b> " . $waktuMulai->translatedFormat('d M Y, H:i') . " - " . $waktuSelesai->format('H:i') . " WIB\n\n";
+            $notifMsg .= "Silakan cek Dashboard FTMM-Nexus untuk melengkapi dokumen pendukung.";
+            
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $targetUser->telegram_chat_id, 'text' => $notifMsg, 'parse_mode' => 'HTML']);
+        }
     }
 }
