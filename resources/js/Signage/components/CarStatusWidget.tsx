@@ -56,14 +56,14 @@ const CarStatusWidget: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-surface-border bg-surface-1">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-success-50 flex items-center justify-center">
-            <Car className="w-3.5 h-3.5 text-success-600" />
+          <div className="w-6 h-6 rounded-md bg-ftmmBlue-50 flex items-center justify-center">
+            <Car className="w-3.5 h-3.5 text-ftmmBlue-600" />
           </div>
           <span className="text-[11px] font-extrabold tracking-widest text-ink-primary uppercase">
             Mobil Dinas
           </span>
         </div>
-        <Activity size={13} className="text-success-600 animate-pulse" />
+        <Activity size={13} className="text-ftmmBlue-600 animate-pulse" />
       </div>
 
       {/* Cars list */}
@@ -81,7 +81,7 @@ const CarStatusWidget: React.FC = () => {
               <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${
                 isOnDuty      ? 'bg-danger-600'
                 : isMaintenance ? 'bg-warning-600'
-                :                 'bg-success-600'
+                :                 'bg-ftmmBlue-600'
               }`} />
 
               {/* Standby / Maintenance: compact */}
@@ -105,7 +105,7 @@ const CarStatusWidget: React.FC = () => {
                       Service
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success-50 text-success-600 border border-success-400/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-ftmmBlue-50 text-ftmmBlue-600 border border-ftmmBlue-400/30">
                       Stand By
                     </span>
                   )}

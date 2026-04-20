@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JadwalPerkuliahan;
 use App\Models\Kegiatan;
 use App\Models\Semester;
+use App\Models\DisplayConfig;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,20 @@ class SignageController extends Controller
         // Ambil Filter URL
         $filterLantai = $request->query('lantai');
         $filterGedung = $request->query('gedung');
+        $location = $filterLantai ? 'lt-' . $filterLantai : 'default';
+
+        $config = DisplayConfig::where('is_active', 1)
+            ->where('location', $location)
+            ->with('contents')
+            ->first();
+
+        // fallback ke default kalau tidak ada config khusus lantai
+        if (!$config && $location !== 'default') {
+            $config = DisplayConfig::where('is_active', 1)
+                ->where('location', 'default')
+                ->with('contents')
+                ->first();
+        }
 
         // ==========================================
         // 1. QUERY JADWAL KULIAH (UPDATED LOGIC)
@@ -264,8 +279,15 @@ class SignageController extends Controller
             'jadwal_ujian'           => $jadwalUjian,
             'kegiatan_mendatang'     => $kegiatan, 
             'sidang_rapat'           => $sidangRapat,
-            'room_availability'      => $roomAvailability, // <--- Data Baru
+            'room_availability'      => $roomAvailability,
+            'config' => $config ? [
+                'mode' => $config->mode,
+                'running_text' => $config->running_text,
+                'panel_visibility' => $config->panel_visibility,
+                'contents' => $config->contents,
+            ] : null,
         ]);
+
     }
 
     public function getCars()

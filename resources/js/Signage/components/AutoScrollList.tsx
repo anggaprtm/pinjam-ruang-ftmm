@@ -61,8 +61,8 @@ function AutoScrollList<T extends { id: number | string }>({
             
             {shouldScroll && (
                 <>
-                    <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-surface-1 via-surface-1/80 to-transparent z-10 pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-b from-surface-1 via-surface-1/80 to-transparent z-10 pointer-events-none" />
+                    <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-surface-1 via-surface-1/40 to-transparent z-10 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-surface-1 via-surface-1/40 to-transparent z-10 pointer-events-none" />
                 </>
             )}
         </div>

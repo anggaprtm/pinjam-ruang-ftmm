@@ -4,7 +4,7 @@ import GlassPanel from './GlassPanel';
 import { AgendaItem } from '../types';
 import AutoScrollList from './AutoScrollList';
 
-const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop';
+const DEFAULT_EVENT_IMAGE = '/images/event.JPG';
 
 interface EventsPanelProps {
     data: AgendaItem[];

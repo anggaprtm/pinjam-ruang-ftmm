@@ -294,7 +294,7 @@ const App: React.FC = () => {
                     onClick={() => { setPanelFade(false); setTimeout(() => { setCenterPanel('rooms'); setPanelFade(true); }, 400); }}
                     className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full transition-all ${
                       centerPanel === 'rooms'
-                        ? 'bg-success-600 text-white'
+                        ? 'bg-ftmmBlue-600 text-white'
                         : 'text-ink-secondary hover:text-ink-primary bg-surface-2 border border-surface-border'
                     }`}
                   >
@@ -340,8 +340,8 @@ const App: React.FC = () => {
             {/* Badge INFO */}
             <div className="relative shrink-0 bg-maroon-800 text-white text-[11px] font-extrabold px-5 h-full flex items-center uppercase tracking-widest z-10">
               INFO
-              {/* Segitiga aksen */}
-              <div className="absolute top-0 -right-2.5 w-0 h-0
+            {/* Segitiga aksen */}
+            <div className="absolute top-0 -right-2.5 w-0 h-0
                 border-t-[18px] border-t-transparent
                 border-b-[18px] border-b-transparent
                 border-l-[10px] border-l-maroon-800" />
@@ -360,12 +360,20 @@ const App: React.FC = () => {
         )}
 
         {/* ── FOOTER ── */}
-        <div className="shrink-0 h-7 flex items-center justify-between px-3 text-[11px] border-t border-surface-border">
-          <span className={`flex items-center gap-1.5 font-mono font-bold tracking-widest ${isOnline ? 'text-success-600' : 'text-danger-600'}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-success-400 animate-pulse' : 'bg-danger-600'}`} />
+        <div className="relative shrink-0 h-7 flex items-center justify-between px-3 text-[11px] border-t border-surface-border">
+
+          {/* LEFT: ONLINE STATUS */}
+          <span className={`flex items-center gap-1.5 font-mono font-bold tracking-widest ${isOnline ? 'text-ftmmBlue-600' : 'text-danger-600'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-ftmmBlue-400 animate-pulse' : 'bg-danger-600'}`} />
             {isOnline ? 'ONLINE' : 'OFFLINE'}
           </span>
 
+          {/* CENTER: BRAND TEXT */}
+          <div className="absolute left-1/2 -translate-x-1/2 text-ink-secondary font-semibold tracking-wide">
+            FTMM UNAIR - Beraksi dalam Kolaborasi
+          </div>
+
+          {/* RIGHT: LAST UPDATE */}
           <div className="flex items-center gap-3">
             {showUpdated && (
               <span className="flash-update text-maroon-600 font-mono font-bold text-[10px] flex items-center gap-1">
@@ -377,6 +385,7 @@ const App: React.FC = () => {
               {lastUpdate ? `Last update: ${lastUpdate}` : ''}
             </span>
           </div>
+
         </div>
 
       </div>

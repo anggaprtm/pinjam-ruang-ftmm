@@ -41,8 +41,8 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
               <span>{totalRooms} ruangan</span>
             </div>
             <div className="w-px h-3 bg-surface-border" />
-            <div className="flex items-center gap-1.5 text-xs font-mono text-success-600">
-              <span className="w-2 h-2 rounded-full bg-success-400 animate-pulse" />
+            <div className="flex items-center gap-1.5 text-xs font-mono text-ftmmBlue-600">
+              <span className="w-2 h-2 rounded-full bg-ftmmBlue-400 animate-pulse" />
               {totalKosong} tersedia
             </div>
             <div className="w-px h-3 bg-surface-border" />
@@ -65,21 +65,21 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
                       relative flex flex-col gap-1.5 p-3 rounded-xl border transition-all duration-300
                       ${isOccupied
                         ? 'bg-danger-50 border-danger-400/30'
-                        : 'bg-success-50 border-success-400/30'
+                        : 'bg-ftmmBlue-50 border-ftmmBlue-400/30'
                       }
                     `}
                     style={{ minHeight: '5.5rem' }}
                   >
                     {/* Accent bar kiri */}
                     <div className={`absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl ${
-                      isOccupied ? 'bg-danger-600' : 'bg-success-600'
+                      isOccupied ? 'bg-danger-600' : 'bg-ftmmBlue-600'
                     }`} />
 
                     {/* Nama ruang */}
                     <div className="flex items-start justify-between gap-1.5">
                       <span
                         className={`font-bold text-sm leading-snug line-clamp-2 flex-1 min-w-0 ${
-                          isOccupied ? 'text-danger-800' : 'text-success-800'
+                          isOccupied ? 'text-danger-800' : 'text-ftmmBlue-800'
                         }`}
                         title={room.nama}
                       >
@@ -90,7 +90,7 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
                       <div className={`shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono ${
                         isOccupied
                           ? 'bg-danger-50 text-danger-600 border border-danger-400/30'
-                          : 'bg-success-50 text-success-600 border border-success-400/30'
+                          : 'bg-ftmmBlue-50 text-ftmmBlue-600 border border-ftmmBlue-400/30'
                       }`}>
                         <Users size={10} />
                         {room.kapasitas}
@@ -99,7 +99,7 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
 
                     {/* Separator */}
                     <div className={`border-t ${
-                      isOccupied ? 'border-danger-400/20' : 'border-success-400/20'
+                      isOccupied ? 'border-danger-400/20' : 'border-ftmmBlue-400/20'
                     }`} />
 
                     {/* Status */}
@@ -116,8 +116,8 @@ const RoomAvailabilityPanel: React.FC<Props> = ({ data }) => {
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-success-600">
-                        <span className="w-1.5 h-1.5 rounded-full bg-success-400 animate-pulse shrink-0" />
+                      <div className="flex items-center gap-1.5 text-ftmmBlue-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-ftmmBlue-400 animate-pulse shrink-0" />
                         <span className="text-[11px] font-bold tracking-wide">TERSEDIA</span>
                       </div>
                     )}
