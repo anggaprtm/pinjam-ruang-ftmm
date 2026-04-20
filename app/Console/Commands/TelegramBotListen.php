@@ -9,6 +9,8 @@ use App\Models\ProductivityNote;
 use App\Models\ProductivityTask;
 use App\Models\AgendaFakultas;
 use App\Models\Kegiatan;
+use App\Models\Ruangan;
+use App\Services\EventService;
 use Carbon\Carbon;
 
 class TelegramBotListen extends Command
@@ -75,11 +77,8 @@ class TelegramBotListen extends Command
                             } elseif ($textLower === '/kegiatan') {
                                 $this->handleListKegiatan($chatId);
                             } elseif (str_starts_with($textLower, '/book ')) {
-                                // Placeholder sebelum fitur booking bentrok selesai
-                                Http::post("{$this->baseUrl}/sendMessage", [
-                                    'chat_id' => $chatId,
-                                    'text' => "Fitur /book sedang dalam pengembangan. Menunggu sinkronisasi EventService 🛠️"
-                                ]);
+                                $eventService = app(EventService::class);
+                                $this->handleBookCommand($chatId, $text, $eventService);
                             }
                         } 
                         // 2. HANDLE KLIK TOMBOL (CALLBACK QUERY)
@@ -110,6 +109,8 @@ class TelegramBotListen extends Command
         $msg .= "📋 <b>Jadwal Hari Ini:</b>\n<code>/list</code> atau <code>/hariini</code>\n\n";
         $msg .= "🏛️ <b>Cek Agenda Fakultas:</b> <code>/agenda</code>\n";
         $msg .= "🏢 <b>Jadwal Ruangan Hari Ini:</b> <code>/kegiatan</code>\n\n";
+        $msg .= "🏢 <b>Booking Ruangan:</b>\n<code>/book [Acara] @[Ruang] @[Tanggal/Hari] [Jam Mulai]-[Jam Selesai]</code>\n";
+        $msg .= "<i>Contoh: /book Rapat Internal @GC-701 @besok 09:00-11:00</i>\n\n";
         $msg .= "<i>Contoh Format Waktu yang didukung:</i>\n";
         $msg .= "- <code>@besok 15:00</code>\n- <code>@lusa</code>\n- <code>@jumat 09.30</code>\n- <code>@15 april 2026</code>\n- <code>@16:00</code> (hari ini)";
 
@@ -413,6 +414,127 @@ class TelegramBotListen extends Command
             $msg .= "📍 <b>{$ruang}</b> ({$jam})\n";
             $msg .= "└ {$keg->nama_kegiatan} <i>(PIC: {$pic})</i>\n\n";
         }
+
+        Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
+    }
+
+    /**
+     * FITUR: Booking Ruangan via Telegram
+     * Format: /book [Judul] @[Nama Ruang] @[Waktu Mulai]-[Waktu Selesai]
+     */
+    private function handleBookCommand($chatId, $text, EventService $eventService)
+    {
+        $user = User::where('telegram_chat_id', (string)$chatId)->first();
+        if (!$user) { $this->replyUnregistered($chatId); return; }
+
+        $rawInput = trim(substr($text, 6)); // Potong '/book '
+        
+        // Validasi format (harus ada 2 buah '@')
+        if (empty($rawInput) || substr_count($rawInput, '@') < 2) {
+            $msg = "❌ <b>Format Booking Salah!</b>\nGunakan format:\n<code>/book [Nama Kegiatan] @[Nama Ruang] @[Waktu Mulai]-[Waktu Selesai]</code>\n\nContoh:\n<code>/book Rapat Evaluasi @GC-701 @besok 09:00-11:30</code>";
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
+            return;
+        }
+
+        // Pecah berdasarkan '@'
+        $parts = explode('@', $rawInput);
+        $title = trim($parts[0]);
+        $ruangName = trim($parts[1]);
+        $timeStr = strtolower(trim($parts[2])); // contoh: "besok 09:00-11:30"
+
+        // 1. CARI RUANGAN BERDASARKAN NAMA
+        $ruangan = Ruangan::where('nama', 'like', "%{$ruangName}%")->first();
+        if (!$ruangan) {
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "❌ Ruangan mengandung kata <b>'{$ruangName}'</b> tidak ditemukan di sistem."]);
+            return;
+        }
+
+        // 2. PARSING WAKTU MULAI & SELESAI
+        $timeParts = explode('-', $timeStr);
+        $startStr = trim($timeParts[0]); // "besok 09:00"
+        $endStr = isset($timeParts[1]) ? trim($timeParts[1]) : null; // "11:30"
+
+        $waktuMulai = $this->parseSmartDate($startStr);
+        if (!$waktuMulai) {
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "❌ Format tanggal/waktu mulai tidak dikenali."]);
+            return;
+        }
+
+        $waktuSelesai = $waktuMulai->copy()->addHours(2); // Default 2 jam jika tidak diset
+        if ($endStr) {
+            $endStr = str_replace('.', ':', $endStr); // Jaga-jaga user ngetik "11.30"
+            try {
+                $waktuSelesai = Carbon::parse($waktuMulai->format('Y-m-d') . ' ' . $endStr);
+            } catch (\Exception $e) {}
+        }
+
+        if ($waktuSelesai->lte($waktuMulai)) {
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "❌ Waktu selesai harus lebih dari waktu mulai."]);
+            return;
+        }
+
+        // 3. CEK BENTROK VIA EVENT SERVICE
+        $requestData = [
+            'waktu_mulai' => $waktuMulai->format('Y-m-d H:i:s'),
+            'waktu_selesai' => $waktuSelesai->format('Y-m-d H:i:s'),
+            'ruangan_id' => $ruangan->id,
+            'tipe_berulang' => 'harian', // Supaya loop di service cuma jalan 1x
+        ];
+
+        $bentrok = $eventService->isRoomTaken($requestData);
+
+        if ($bentrok) {
+            // Ambil saran ruangan kosong (ambil 3 ruangan setara kapasitasnya)
+            $saran = $eventService->getSuggestedRooms($requestData, $ruangan->kapasitas ?? 0);
+            
+            $msg = "⚠️ <b>MAAF, RUANGAN BENTROK!</b>\n\n";
+            $msg .= "Ruang <b>{$ruangan->nama}</b> tidak tersedia karena sedang dipakai:\n";
+            $msg .= "📌 <b>{$bentrok->nama_kegiatan}</b>\n\n";
+
+            if ($saran->isNotEmpty()) {
+                $msg .= "💡 <b>Saran Ruangan Alternatif (Kosong):</b>\n";
+                foreach ($saran->take(3) as $s) {
+                    $msg .= "- {$s->nama} (Kapasitas: {$s->kapasitas})\n";
+                }
+            } else {
+                $msg .= "<i>Sayangnya tidak ada ruangan lain yang kosong di jam tersebut.</i>";
+            }
+
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
+            return;
+        }
+
+        // 4. JIKA AMAN, SIMPAN KE DATABASE
+        // Jika pemohon adalah Admin -> langsung disetujui, jika Pegawai -> butuh verifikasi
+        $status = ($user->isAdmin()) ? 'disetujui' : 'belum_disetujui';
+        
+        $kegiatan = Kegiatan::create([
+            'ruangan_id' => $ruangan->id,
+            'nama_kegiatan' => $title,
+            'jenis_kegiatan' => 'Lainnya',
+            'waktu_mulai' => $waktuMulai->format('Y-m-d H:i:s'),
+            'waktu_selesai' => $waktuSelesai->format('Y-m-d H:i:s'),
+            'user_id' => $user->id,
+            'status' => $status,
+            'nama_pic' => $user->name,
+            'deskripsi' => 'Dipesan melalui Telegram Bot',
+        ]);
+
+        \App\Models\KegiatanHistory::create([
+            'kegiatan_id' => $kegiatan->id,
+            'user_id' => $user->id,
+            'action' => 'created',
+            'note' => 'Booking via Telegram',
+            'created_at' => now(),
+        ]);
+
+        $statusText = ($status === 'disetujui') ? "✅ <b>Disetujui Otomatis (Admin)</b>" : "⏳ <b>Menunggu Verifikasi</b>";
+
+        $msg = "🏢 <b>BOOKING BERHASIL DICATAT!</b>\n\n";
+        $msg .= "📌 <b>Kegiatan:</b> {$title}\n";
+        $msg .= "📍 <b>Ruangan:</b> {$ruangan->nama}\n";
+        $msg .= "🕒 <b>Waktu:</b> " . $waktuMulai->translatedFormat('d M Y, H:i') . " s/d " . $waktuSelesai->format('H:i') . " WIB\n";
+        $msg .= "Status: " . $statusText;
 
         Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
     }
