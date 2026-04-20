@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use App\Models\ProductivityNote;
 use App\Models\ProductivityTask;
+use App\Models\AgendaFakultas;
+use App\Models\Kegiatan;
 use Carbon\Carbon;
 
 class TelegramBotListen extends Command
@@ -63,7 +65,21 @@ class TelegramBotListen extends Command
                             } elseif (str_starts_with($textLower, '/remind ')) {
                                 $this->handleTaskOrRemind($chatId, $text, 'remind');
                             } elseif ($textLower === '/list' || $textLower === '/hariini') {
-                                $this->handleListCommand($chatId); // FITUR BARU
+                                $this->handleListCommand($chatId); 
+                            } 
+                            // --- FITUR BARU MULAI DARI SINI ---
+                            elseif ($textLower === '/agenda') {
+                                $this->handleListAgenda($chatId);
+                            } elseif (str_starts_with($textLower, '/addagenda ')) {
+                                $this->handleAddAgenda($chatId, $text);
+                            } elseif ($textLower === '/kegiatan') {
+                                $this->handleListKegiatan($chatId);
+                            } elseif (str_starts_with($textLower, '/book ')) {
+                                // Placeholder sebelum fitur booking bentrok selesai
+                                Http::post("{$this->baseUrl}/sendMessage", [
+                                    'chat_id' => $chatId,
+                                    'text' => "Fitur /book sedang dalam pengembangan. Menunggu sinkronisasi EventService 🛠️"
+                                ]);
                             }
                         } 
                         // 2. HANDLE KLIK TOMBOL (CALLBACK QUERY)
@@ -92,6 +108,8 @@ class TelegramBotListen extends Command
         $msg .= "✅ <b>Tugas Baru:</b>\n<code>/task [judul] @[waktu]</code>\n\n";
         $msg .= "⏰ <b>Pengingat:</b>\n<code>/remind [pesan] @[waktu]</code>\n\n";
         $msg .= "📋 <b>Jadwal Hari Ini:</b>\n<code>/list</code> atau <code>/hariini</code>\n\n";
+        $msg .= "🏛️ <b>Cek Agenda Fakultas:</b> <code>/agenda</code>\n";
+        $msg .= "🏢 <b>Jadwal Ruangan Hari Ini:</b> <code>/kegiatan</code>\n\n";
         $msg .= "<i>Contoh Format Waktu yang didukung:</i>\n";
         $msg .= "- <code>@besok 15:00</code>\n- <code>@lusa</code>\n- <code>@jumat 09.30</code>\n- <code>@15 april 2026</code>\n- <code>@16:00</code> (hari ini)";
 
@@ -293,6 +311,109 @@ class TelegramBotListen extends Command
     private function replyUnregistered($chatId)
     {
         $msg = "❌ Akun Telegram Anda belum ditautkan.\n\nMasukkan ID <code>$chatId</code> di web.";
+        Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
+    }
+
+    /**
+     * FITUR: Menampilkan Agenda Fakultas Bulan Ini
+     */
+    private function handleListAgenda($chatId)
+    {
+        $now = Carbon::now();
+        
+        $agendas = AgendaFakultas::whereMonth('tanggal_mulai', $now->month)
+                    ->whereYear('tanggal_mulai', $now->year)
+                    ->orderBy('tanggal_mulai', 'asc')
+                    ->get();
+
+        if ($agendas->isEmpty()) {
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "📅 Tidak ada Agenda Fakultas di bulan " . $now->translatedFormat('F Y')]);
+            return;
+        }
+
+        $msg = "🏛️ <b>Agenda Fakultas (" . $now->translatedFormat('F Y') . ")</b>\n\n";
+        foreach ($agendas as $agenda) {
+            $tgl = Carbon::parse($agenda->tanggal_mulai)->translatedFormat('d M');
+            $msg .= "🔹 <b>{$tgl}</b> - {$agenda->judul}\n";
+        }
+
+        Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
+    }
+
+    /**
+     * FITUR: Tambah Agenda Fakultas Baru via Telegram
+     */
+    private function handleAddAgenda($chatId, $text)
+    {
+        $user = User::where('telegram_chat_id', (string)$chatId)->first();
+        if (!$user) { $this->replyUnregistered($chatId); return; }
+
+        // Pastikan hanya atasan/admin yang bisa nambah agenda fakultas (Opsional, sesuaikan rolenya)
+        if (!$user->isAdmin() && !$user->hasRole('Pegawai')) {
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "❌ Anda tidak memiliki akses menambah Agenda Fakultas."]);
+            return;
+        }
+
+        $rawInput = trim(substr($text, 11)); // potong '/addagenda '
+        if (empty($rawInput)) return;
+
+        $title = $rawInput;
+        $tanggalMulai = Carbon::today();
+
+        if (str_contains($rawInput, '@')) {
+            $parts = explode('@', $rawInput);
+            $title = trim($parts[0]);
+            $timeStr = strtolower(trim($parts[1]));
+            
+            $parsedDate = $this->parseSmartDate($timeStr);
+            if ($parsedDate) {
+                $tanggalMulai = $parsedDate;
+            }
+        }
+
+        AgendaFakultas::create([
+            'judul' => $title,
+            'kategori' => 'Lainnya', // Default
+            'warna' => '#3b82f6',    // Default biru
+            'tanggal_mulai' => $tanggalMulai->format('Y-m-d'),
+            'is_all_day' => true,
+            'tampil_di_signage' => true,
+            'created_by' => $user->id,
+        ]);
+
+        $msg = "🏛️✅ <b>Agenda Fakultas berhasil ditambahkan!</b>\nDiset untuk tanggal: <b>" . $tanggalMulai->translatedFormat('d M Y') . "</b>";
+        Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
+    }
+
+    /**
+     * FITUR: Menampilkan Kegiatan/Peminjaman Ruang Hari Ini
+     */
+    private function handleListKegiatan($chatId)
+    {
+        $today = Carbon::today()->format('Y-m-d');
+        
+        // Ambil kegiatan yang disetujui dan berlangsung hari ini
+        $kegiatans = Kegiatan::with(['ruangan', 'user'])
+                    ->where('status', 'disetujui')
+                    ->whereDate('waktu_mulai', $today)
+                    ->orderBy('waktu_mulai', 'asc')
+                    ->get();
+
+        if ($kegiatans->isEmpty()) {
+            Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => "🏢 Tidak ada jadwal kegiatan / pemakaian ruang hari ini."]);
+            return;
+        }
+
+        $msg = "🏢 <b>Jadwal Kegiatan Hari Ini:</b>\n\n";
+        foreach ($kegiatans as $keg) {
+            $jam = Carbon::parse($keg->waktu_mulai)->format('H:i') . " - " . Carbon::parse($keg->waktu_selesai)->format('H:i');
+            $ruang = $keg->ruangan ? $keg->ruangan->nama : 'Ruang tdk diketahui';
+            $pic = explode(' ', $keg->nama_pic ?? ($keg->user->name ?? 'Anonim'))[0]; // Ambil nama depan saja
+            
+            $msg .= "📍 <b>{$ruang}</b> ({$jam})\n";
+            $msg .= "└ {$keg->nama_kegiatan} <i>(PIC: {$pic})</i>\n\n";
+        }
+
         Http::post("{$this->baseUrl}/sendMessage", ['chat_id' => $chatId, 'text' => $msg, 'parse_mode' => 'HTML']);
     }
 }
