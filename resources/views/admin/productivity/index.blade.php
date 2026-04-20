@@ -707,22 +707,20 @@
 }
 .kanban-card:active { cursor: grabbing; }
  
-/* BUG FIX #3: Priority bar di atas kartu (bukan border-left inline) — 
-   tidak akan bentrok dengan .task-item::before */
 .kc-priority-bar {
     height: 3px;
     width: 100%;
     flex-shrink: 0;
 }
  
-/* Ghost saat di-drag */
+
 .kanban-card.sortable-ghost {
     opacity: 0.45;
     background: var(--surface-2);
     box-shadow: none;
     transform: none;
 }
-/* Kartu yang sedang dibawa */
+
 .kanban-card.sortable-drag {
     opacity: 1 !important;
     box-shadow: var(--shadow-lg) !important;
@@ -730,7 +728,6 @@
     border-color: rgba(116,24,71,0.3) !important;
 }
  
-/* Body kartu */
 .kc-body {
     padding: 0.75rem 0.85rem 0.7rem;
     display: flex;
@@ -738,7 +735,6 @@
     gap: 0.5rem;
 }
  
-/* Badges baris atas */
 .kc-badges {
     display: flex;
     flex-wrap: wrap;
@@ -761,7 +757,6 @@
 .kc-badge-indigo { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
 .kc-badge-rose   { background: #fce7f3; color: #be185d; border-color: #fbcfe8; }
  
-/* Judul */
 .kc-title {
     font-family: 'Nunito', sans-serif;
     font-size: 0.875rem;
@@ -773,7 +768,6 @@
 }
 .kc-title:hover { color: var(--brand-maroon); }
  
-/* Deskripsi singkat */
 .kc-desc {
     font-family: 'Nunito', sans-serif;
     font-size: 0.75rem;
@@ -781,7 +775,6 @@
     line-height: 1.5;
 }
  
-/* Sub-task progress */
 .kc-subtask-wrap {
     display: flex;
     align-items: center;
@@ -809,7 +802,6 @@
     flex-shrink: 0;
 }
  
-/* Footer */
 .kc-footer {
     display: flex;
     justify-content: space-between;
@@ -845,7 +837,6 @@
     flex-shrink: 0;
 }
  
-/* Toggle Button custom */
 .btn-toggle-kanban {
     display: inline-flex;
     align-items: center;
@@ -869,7 +860,6 @@
     box-shadow: 0 2px 8px rgba(116,24,71,0.25);
 }
 
-/* ---- Entrance animation ---- */
 @keyframes fadeSlideUp {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -885,10 +875,6 @@
 
 @section('content')
 <div class="container-fluid p-0">
-
-    {{-- ============================================================
-         HEADER
-    ============================================================ --}}
     <div class="cmd-header d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
             <h2 class="cmd-header-title">👋🏻 Halo, {{ Auth::user()->name }}</h2>
@@ -936,19 +922,19 @@
                 <button class="header-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
                     <i class="fas fa-cog"></i>
                 </button>
-                <button class="header-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                    <i class="fas fa-cog"></i>
+                <button class="header-btn">
+                    @can('profile_password_edit')
+                        <a class="nav-link {{ request()->is('profile/password*') ? 'active' : '' }}"
+                        href="{{ route('profile.password.edit') }}">
+                            <i class="fas fa-key"></i>
+                        </a>
+                    @endcan
                 </button>
             </div>
         </div>
     </div>
 
-    {{-- ============================================================
-         MAIN: Tasks (8) + Habits (4)
-    ============================================================ --}}
     <div class="row g-4 mb-4">
-
-        {{-- ---- TASKS PANEL ---- --}}
         <div class="col-xl-8 col-lg-7">
             <div class="panel-card">
                 <div class="panel-header">
