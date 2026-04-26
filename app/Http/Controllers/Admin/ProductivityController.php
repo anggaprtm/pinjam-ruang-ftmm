@@ -269,6 +269,7 @@ class ProductivityController extends Controller
             'remind_morning'  => $request->boolean('remind_morning'),
             'remind_h_minus_1'=> $request->boolean('remind_h_minus_1'),
         ]);
+        $task->load(['subTasks', 'attachments', 'comments']);
 
         // Notifikasi Telegram jika delegasi
         if ($assignedBy) {
@@ -319,7 +320,7 @@ class ProductivityController extends Controller
             'remind_h_minus_1' => $request->boolean('remind_h_minus_1'),
         ]);
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'task' => $task->fresh()]);
     }
 
     public function updateTaskStatus(Request $request, $id)

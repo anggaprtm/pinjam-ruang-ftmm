@@ -36,36 +36,34 @@
 }
 
 /* ══════════════════════════════════════
-   HEADER — Modern Command Center
+   HEADER — Compact Command Center
 ══════════════════════════════════════ */
 .cmd-header {
-    /* Kembali ke warna branding Maroon FTMM */
     background: linear-gradient(135deg, var(--brand-maroon) 0%, #9c2456 55%, var(--brand-maroon-dk) 100%);
     border-radius: 20px;
-    padding: 1rem 1.5rem; /* Padding disesuaikan agar tidak terlalu menganga */
+    padding: 0.85rem 1.25rem;          /* was: 1rem 1.5rem */
     margin-bottom: 1.5rem;
     box-shadow: 0 12px 32px rgba(116,24,71,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
-    position: relative; 
+    position: relative;
     overflow: hidden;
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: 1.25rem;                       /* was: 1.5rem */
     justify-content: space-between;
-    align-items: center; /* Center agar lebih padat ke tengah */
+    align-items: center;
 }
 .cmd-header::before {
     content: ''; position: absolute; top: -70px; right: -70px;
     width: 220px; height: 220px;
     background: rgba(255,255,255,0.045); border-radius: 50%;
 }
-
 .cmd-header::after {
     content: ''; position: absolute; bottom: -90px; left: 32%;
     width: 260px; height: 260px;
     background: rgba(255,255,255,0.03); border-radius: 50%;
 }
-
-/* --- OPTICAL ALIGNMENT CLASSES --- */
+ 
+/* ── Kiri: Profil ── */
 .header-profile-section {
     display: flex;
     flex-direction: column;
@@ -75,49 +73,40 @@
 .greeting-wrapper {
     display: flex;
     align-items: center;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.2rem;             /* was: 0.35rem */
 }
 .greeting-icon {
-    width: 36px; /* Lebar tetap penahan emoticon */
-    font-size: 1.6rem;
+    width: 32px;                        /* was: 36px */
+    font-size: 1.35rem;                 /* was: 1.6rem */
     text-align: left;
     line-height: 1;
 }
 .cmd-header-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 1.65rem; 
+    font-size: 1.35rem;                 /* was: 1.65rem */
     color: #ffffff;
     font-weight: 800;
-    margin: 0; 
+    margin: 0;
     letter-spacing: -0.3px;
 }
-
 .subtitle-wrapper {
     display: flex;
     align-items: center;
     color: rgba(255,255,255,0.75);
-    font-size: 0.9rem; 
+    font-size: 0.8rem;                  /* was: 0.9rem */
     font-family: 'Nunito', sans-serif;
 }
 .subtitle-icon {
-    width: 36px; /* Harus sama persis dengan .greeting-icon */
-    font-size: 1rem;
+    width: 32px;                        /* was: 36px — harus sama dengan .greeting-icon */
+    font-size: 0.9rem;
     text-align: left;
-    padding-left: 2px; /* Koreksi optis kecil untuk icon font-awesome */
+    padding-left: 2px;
 }
-
-/* Modifikasi Toolbar agar lebih rapat */
-.header-toolbar {
-    display: flex;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
-
-/* Bento-style Stats Grid */
+ 
+/* ── Kiri: Bento Stats ── */
 .header-stats-grid {
     display: flex;
-    gap: 1rem;
+    gap: 0.65rem;                       /* was: 1rem */
     position: relative;
     z-index: 1;
     flex-wrap: wrap;
@@ -127,9 +116,9 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 1rem 1.25rem;
-    min-width: 130px;
+    border-radius: 12px;                /* was: 16px */
+    padding: 0.55rem 0.9rem;            /* was: 1rem 1.25rem — ini perubahan terbesar */
+    min-width: 90px;                    /* was: 130px */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -141,30 +130,30 @@
 }
 .stat-bento-value {
     font-family: 'Montserrat', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.2rem;                  /* was: 1.5rem */
     font-weight: 800;
     color: #fff;
     line-height: 1;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.25rem;             /* was: 0.4rem */
 }
 .stat-bento-label {
     font-family: 'Nunito', sans-serif;
-    font-size: 0.75rem;
+    font-size: 0.68rem;                 /* was: 0.75rem */
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-.stat-bento.danger .stat-bento-label { color: #fca5a5; }
+.stat-bento.danger .stat-bento-label  { color: #fca5a5; }
 .stat-bento.warning .stat-bento-label { color: #fcd34d; }
 .stat-bento.success .stat-bento-label { color: #6ee7b7; }
 .stat-bento.primary .stat-bento-label { color: #a5b4fc; }
-
-/* Progress Bar Redesign */
+ 
+/* ── Kanan: Progress Bar ── */
 .daily-progress-wrap {
     background: rgba(0,0,0,0.2);
-    border-radius: 16px;
-    padding: 1.25rem;
-    min-width: 260px;
+    border-radius: 12px;                /* was: 16px */
+    padding: 0.75rem 1rem;              /* was: 1.25rem — ini perubahan terbesar */
+    min-width: 240px;                   /* was: 260px */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -172,56 +161,236 @@
 }
 .daily-progress-count {
     font-family: 'Nunito', sans-serif;
-    font-size: 0.85rem; 
+    font-size: 0.78rem;                 /* was: 0.85rem */
     color: rgba(255,255,255,0.9);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;              /* was: 0.75rem */
 }
 .daily-progress-bar {
-    height: 8px; 
+    height: 6px;                        /* was: 8px */
     background: rgba(255,255,255,0.1);
-    border-radius: 12px; 
+    border-radius: 12px;
     overflow: hidden;
 }
 .daily-progress-fill {
-    height: 100%; 
+    height: 100%;
     border-radius: 12px;
     background: linear-gradient(90deg, #34d399, #10b981);
     box-shadow: 0 0 10px rgba(16,185,129,0.4);
 }
-
-/* Header Tool Bar */
+ 
+/* ── Kanan: Toolbar ── */
 .header-toolbar {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     width: 100%;
     justify-content: flex-end;
-    margin-top: 1rem;
-    padding-top: 1.5rem;
+    flex-wrap: wrap;
+    padding-top: 0.5rem;
     border-top: 1px solid rgba(255,255,255,0.1);
 }
 .header-btn {
     background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.15);
-    color: #fff; 
-    border-radius: 12px;
-    padding: 0.6rem 1.2rem; 
-    font-size: 0.85rem; 
+    color: #fff;
+    border-radius: 10px;                /* was: 12px */
+    padding: 0.45rem 1rem;              /* was: 0.6rem 1.2rem */
+    font-size: 0.8rem;                  /* was: 0.85rem */
     font-weight: 700;
     font-family: 'Nunito', sans-serif;
-    cursor: pointer; 
+    cursor: pointer;
     transition: all 0.2s ease;
-    display: inline-flex; 
-    align-items: center; 
-    gap: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     text-decoration: none;
 }
-.header-btn:hover { 
-    background: #fff; 
-    color: var(--brand-maroon-dk); 
+.header-btn:hover {
+    background: #fff;
+    color: var(--brand-maroon-dk);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-.header-btn i { font-size: 1rem; }
+.header-btn i { font-size: 0.9rem; }
+
+
+/* ══════════════════════════════════════
+   RESPONSIVE — Mobile & Tablet
+══════════════════════════════════════ */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+    .cmd-header {
+        gap: 0.85rem;
+    }
+
+    .cmd-header > .d-flex.flex-column.align-items-end {
+        align-items: flex-start !important;
+        width: 100%;
+    }
+    .daily-progress-wrap {
+        min-width: 200px;
+    }
+
+    .header-toolbar {
+        justify-content: flex-start;
+    }
+    .header-stats-grid {
+        gap: 0.5rem;
+    }
+    .stat-bento {
+        min-width: 78px;
+    }
+
+    .task-panel-body {
+        max-height: calc(100vh - 260px);
+    }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
+    .cmd-header {
+        border-radius: 14px;
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    /* Kolom kanan: align-items-end → flex-start di mobile */
+    .cmd-header > .d-flex.flex-column.align-items-end {
+        align-items: flex-start !important;
+        width: 100%;
+    }
+    .daily-progress-wrap {
+        width: 100%;
+        min-width: unset;
+    }
+    .header-toolbar {
+        justify-content: flex-start;
+    }
+
+    .cmd-header-title {
+        font-size: 1.1rem;
+    }
+    .greeting-icon {
+        font-size: 1.1rem;
+    }
+    .header-stats-grid {
+        gap: 0.4rem;
+    }
+    .stat-bento {
+        min-width: 62px;
+        padding: 0.45rem 0.6rem;
+        border-radius: 10px;
+    }
+    .stat-bento-value {
+        font-size: 1rem;
+    }
+    .stat-bento-label {
+        font-size: 0.58rem;
+    }
+    .daily-progress-wrap {
+        padding: 0.65rem 0.85rem;
+        border-radius: 10px;
+    }
+    .header-btn {
+        padding: 0.4rem 0.7rem;
+        font-size: 0.72rem;
+    }
+    .header-btn span.d-none-mobile {
+        display: none; /* sembunyikan label teks, sisakan ikon */
+    }
+
+    /* Filter bar scroll horizontal di mobile */
+    .filter-bar-prod {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0.6rem 0.9rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.3rem;
+    }
+    .filter-bar-prod::-webkit-scrollbar { display: none; }
+    .filter-tab {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+    .search-input-wrap {
+        flex-shrink: 0;
+        margin-left: 0.25rem;
+    }
+    .search-input-wrap input {
+        width: 140px;
+    }
+    .search-input-wrap input:focus {
+        width: 160px;
+    }
+
+    /* Panel header stack di mobile */
+    .panel-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+    .panel-header .d-flex {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    /* Task item compact di mobile */
+    .task-actions {
+        opacity: 1; /* Selalu tampil di mobile (tidak ada hover) */
+    }
+    .task-action-btn {
+        width: 26px;
+        height: 26px;
+    }
+
+    /* Kanban scroll horizontal di mobile */
+    .kanban-row {
+        min-width: 600px;
+        height: auto;
+        min-height: 400px;
+    }
+
+    /* Task panel body full height di mobile */
+    .task-panel-body {
+        max-height: 65vh;
+    }
+
+    /* Layout kolom mobile */
+    .col-xl-8, .col-xl-4,
+    .col-lg-7, .col-lg-5 {
+        /* Bootstrap handles ini, tapi tambahan safeguard: */
+    }
+
+    /* Notes grid 1 kolom di mobile */
+    .notes-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Modal full width di mobile */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* Very small mobile (< 480px) */
+@media (max-width: 480px) {
+    .cmd-header-title {
+        font-size: 1rem;
+    }
+    .stat-bento-value {
+        font-size: 0.95rem;
+    }
+    .header-btn {
+        padding: 0.38rem 0.6rem;
+        font-size: 0.7rem;
+        border-radius: 8px;
+    }
+    /* Sembunyikan teks di tombol header, sisakan ikon */
+    .header-btn .btn-label { display: none; }
+}
 
 /* ══════════════════════════════════════
    PANEL CARD
@@ -693,44 +862,44 @@
          HEADER — Daily Command Center
     ══════════════════════════════════ --}}
     <div class="cmd-header">
-        
-        {{-- Kiri: Profil & Bento Stats --}}
-        <div class="d-flex flex-column gap-3">
+
+        {{-- Kiri: Profil (atas) + Stats (bawah) --}}
+        <div class="d-flex flex-column gap-2" style="z-index:1;position:relative;">
             <div class="header-profile-section">
                 <div class="greeting-wrapper">
                     <span class="greeting-icon">{{ $emoji }}</span>
                     <h2 class="cmd-header-title">{{ $greeting }}, {{ Auth::user()->name }}</h2>
                 </div>
                 <div class="subtitle-wrapper">
-                    <span class="subtitle-icon"><i class="fas fa-calendar-alt"></i></span>
+                    <span class="subtitle-icon"></span>
                     <span>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</span>
                 </div>
             </div>
 
-            <div class="header-stats-grid mt-2">
+            <div class="header-stats-grid">
                 @if($statsOverdue > 0)
                 <div class="stat-bento danger">
                     <div class="stat-bento-value">{{ $statsOverdue }}</div>
-                    <div class="stat-bento-label"><i class="fas fa-exclamation-circle me-1"></i> Terlambat</div>
+                    <div class="stat-bento-label"><i class="fas fa-exclamation-circle me-1"></i>Terlambat</div>
                 </div>
                 @endif
                 <div class="stat-bento warning">
                     <div class="stat-bento-value">{{ $statsPending }}</div>
-                    <div class="stat-bento-label"><i class="fas fa-clock me-1"></i> Aktif</div>
+                    <div class="stat-bento-label"><i class="fas fa-clock me-1"></i>Aktif</div>
                 </div>
                 <div class="stat-bento success">
                     <div class="stat-bento-value">{{ $statsCompleted }}</div>
-                    <div class="stat-bento-label"><i class="fas fa-check-double me-1"></i> Selesai</div>
+                    <div class="stat-bento-label"><i class="fas fa-check-double me-1"></i>Selesai</div>
                 </div>
             </div>
         </div>
 
-        {{-- Kanan: Progress & Toolbar (Dikelompokkan agar tidak ada ruang kosong menganga) --}}
-        <div class="d-flex flex-column align-items-end gap-3" style="z-index:1;">
-            <div class="daily-progress-wrap" style="min-width: 300px;">
-                <div class="d-flex justify-content-between align-items-end mb-2">
-                    <div class="stat-bento-label text-white opacity-75">Progress Harian</div>
-                    <div class="fw-bold text-white" style="font-family:'Montserrat',sans-serif;">{{ $dailyPct }}%</div>
+        {{-- Kanan: Progress (atas) + Toolbar (bawah) --}}
+        <div class="d-flex flex-column align-items-end gap-2" style="z-index:1;">
+            <div class="daily-progress-wrap">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="stat-bento-label" style="color:rgba(255,255,255,0.75);">Progress Harian</div>
+                    <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.9rem;color:#fff;">{{ $dailyPct }}%</div>
                 </div>
                 <div class="daily-progress-bar">
                     <div class="daily-progress-fill" style="width: {{ $dailyPct }}%;"></div>
@@ -1105,13 +1274,6 @@
     </div>
 
 </div>
-
-{{-- ══════════════════════════════════════════════════════════
-     PARTIAL: Task Item (inline untuk kepraktisan)
-     Agar bisa diinclude dari 2 tempat (grouped & flat)
-══════════════════════════════════════════════════════════ --}}
-{{-- NOTE: Pindahkan ke resources/views/admin/productivity/partials/task-item.blade.php
-     dan hapus blok ini, lalu gunakan @include(...) --}}
 
 {{-- ══════════════════════════════════════════════════════════
      MODALS
@@ -1650,10 +1812,66 @@ $(document).ready(function () {
     // TASK: ADD
     $('#formAddTask').off('submit').on('submit', function(e) {
         e.preventDefault();
-        let btn = $(this).find('button[type="submit"]');
+        let $form = $(this);
+        let btn   = $form.find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
-        $.post("{{ route('admin.productivity.tasks.store') }}", $(this).serialize())
-            .done(res => { if (res.success) location.reload(); })
+        
+        $.post("{{ route('admin.productivity.tasks.store') }}", $form.serialize())
+            .done(res => {
+                if (res.success && res.task) {
+                    $('#taskModal').modal('hide');
+                    $form[0].reset();
+                    btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Simpan Tugas');
+
+                    // Inject task baru ke atas list tanpa reload
+                    const t = res.task;
+                    const priorityClass = 'priority-' + t.priority;
+                    const newHtml = `
+                    <div class="task-item ${priorityClass}" id="task-${t.id}" style="animation:fadeSlideUp 0.25s ease both;">
+                        <input type="checkbox" class="task-check task-checkbox" data-id="${t.id}" autocomplete="off">
+                        <div class="task-content">
+                            <div class="task-title-text btn-view-task" data-id="${t.id}" data-title="${t.title}"
+                                data-desc="${t.description||''}" data-priority="${t.priority}"
+                                data-deadline="${t.deadline_at ? t.deadline_at : 'Tanpa Deadline'}"
+                                data-subtasks="[]" data-attachments="[]" data-comments="[]">
+                                ${t.title}
+                            </div>
+                            <div class="task-meta">
+                                ${t.tag ? `<span class="task-badge badge-tag"><i class="fas fa-hashtag"></i> ${t.tag}</span>` : ''}
+                                ${t.deadline_at ? `<span class="task-badge badge-deadline"><i class="far fa-calendar-alt"></i> ${t.deadline_at}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn edit btn-edit-task" data-id="${t.id}"
+                                data-title="${t.title}" data-desc="${t.description||''}"
+                                data-tag="${t.tag||''}" data-priority="${t.priority}"
+                                data-recurrence="${t.recurrence||'none'}" data-assignee=""
+                                data-deadline="${t.deadline_at||''}" data-subtasks="[]" data-attachments="[]">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button class="task-action-btn danger btn-delete-task" data-id="${t.id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>`;
+
+                    // Tambah ke task list yang terlihat
+                    let $taskList = $('#task-container .task-list').first();
+                    if ($taskList.length) {
+                        $taskList.prepend(newHtml);
+                        // Update counter badge
+                        let $badge = $('.panel-count-badge');
+                        $badge.text(parseInt($badge.text() || 0) + 1);
+                    } else {
+                        // Kalau list kosong (empty state), reload sekali
+                        location.reload();
+                        return;
+                    }
+
+                    Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 })
+                        .fire({ icon: 'success', title: '✅ Tugas berhasil ditambahkan!' });
+                }
+            })
             .fail(xhr => {
                 Swal.fire('Gagal!', xhr.responseJSON?.message || 'Terjadi kesalahan.', 'error');
                 btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Simpan Tugas');
@@ -1872,11 +2090,29 @@ $(document).ready(function () {
         if (!comment || !currentViewTaskId) return;
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        
         $.post(`/admin/productivity/tasks/${currentViewTaskId}/comments`, { comment })
-            .done(() => { $('#newCommentText').val(''); location.reload(); })
+            .done(res => {
+                $('#newCommentText').val('');
+                // Append komentar baru ke DOM
+                let now = new Date();
+                let timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                let newComment = `
+                <div class="d-flex flex-column text-end">
+                    <small class="text-muted" style="font-size:0.7rem;font-weight:700;">Anda &bull; ${timeStr}</small>
+                    <div class="p-2 rounded d-inline-block mt-1 bg-primary-subtle text-primary-emphasis"
+                        style="max-width:85%;align-self:flex-end;font-family:'Nunito',sans-serif;font-size:0.85rem;">
+                        ${comment}
+                    </div>
+                </div>`;
+                $('#viewCommentList').append(newComment);
+                let el = document.getElementById('viewCommentList');
+                if (el) el.scrollTop = el.scrollHeight;
+            })
             .fail(() => Swal.fire('Error', 'Gagal mengirim komentar.', 'error'))
             .always(() => btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Kirim'));
     });
+    
     $('#newCommentText').on('keypress', function(e) { if (e.which === 13) $('#btnSubmitComment').click(); });
 
     function renderSubTasks(taskId, subTasks) {
@@ -1914,12 +2150,30 @@ $(document).ready(function () {
 
     $('#btnAddSubTask').click(function() {
         let taskId = $('#editTaskId').val();
-        let title  = $('#newSubTaskTitle').val();
+        let title  = $('#newSubTaskTitle').val().trim();
         if (!title) return;
         let btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        
         $.post(`/admin/productivity/tasks/${taskId}/subtasks`, { title })
-            .done(() => location.reload())
+            .done(res => {
+                if (res.success && res.subTask) {
+                    let st = res.subTask;
+                    let newRow = `
+                    <div class="d-flex align-items-center justify-content-between p-1 border rounded bg-light" id="subtask-${st.id}">
+                        <div class="d-flex align-items-center gap-2" style="font-size:0.8rem;font-family:'Nunito',sans-serif;">
+                            <input type="checkbox" class="form-check-input mt-0 toggle-subtask" data-task="${taskId}" data-id="${st.id}" style="cursor:pointer;">
+                            <span style="color:#374151;">${st.title}</span>
+                        </div>
+                        <button type="button" class="btn btn-sm text-danger p-0 delete-subtask" data-task="${taskId}" data-id="${st.id}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>`;
+                    $('#subTaskList .text-muted').remove(); // hapus placeholder
+                    $('#subTaskList').append(newRow);
+                    $('#newSubTaskTitle').val('').focus();
+                }
+            })
             .fail(() => Swal.fire('Error', 'Gagal menambah sub-task', 'error'))
             .always(() => btn.prop('disabled', false).html('<i class="fas fa-plus"></i>'));
     });
@@ -1927,8 +2181,18 @@ $(document).ready(function () {
     $(document).on('change', '.toggle-subtask', function() {
         let taskId = $(this).data('task');
         let subId  = $(this).data('id');
+        let $span  = $(this).siblings('span');
+        let isDone = $(this).is(':checked');
+        
+        // Optimistic UI
+        $span.css(isDone ? {'text-decoration':'line-through','color':'#9ca3af'} : {'text-decoration':'none','color':'#374151'});
+        
         $.ajax({ url: `/admin/productivity/tasks/${taskId}/subtasks/${subId}/toggle`, type: 'PATCH' })
-            .done(() => location.reload());
+            .fail(() => {
+                // Revert
+                $span.css(isDone ? {'text-decoration':'none','color':'#374151'} : {'text-decoration':'line-through','color':'#9ca3af'});
+                $(this).prop('checked', !isDone);
+            });
     });
 
     $(document).on('click', '.delete-subtask', function() {
@@ -1970,13 +2234,38 @@ $(document).ready(function () {
         let id  = $('#editTaskId').val();
         let btn = $(this).find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>...');
+        
         $.ajax({ url: `/admin/productivity/tasks/${id}`, type: 'PATCH', data: $(this).serialize() })
             .done(res => {
                 if (res.success) {
                     $('#editTaskModal').modal('hide');
                     Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 })
                         .fire({ icon: 'success', title: 'Tugas berhasil diperbarui!' });
-                    setTimeout(() => location.reload(), 1500);
+                    
+                    // Update judul di list view secara DOM
+                    if (res.task) {
+                        let t = res.task;
+                        let $item = $('#task-' + id);
+                        $item.find('.task-title-text').text(t.title)
+                            .data('title', t.title)
+                            .data('desc', t.description || '')
+                            .data('priority', t.priority)
+                            .data('deadline', t.deadline_at || 'Tanpa Deadline');
+                        $item.find('.btn-edit-task')
+                            .data('title', t.title)
+                            .data('desc', t.description || '')
+                            .data('priority', t.priority)
+                            .data('tag', t.tag || '')
+                            .data('deadline', t.deadline_at || '');
+                        // Update priority class
+                        $item.removeClass('priority-high priority-medium priority-low')
+                            .addClass('priority-' + t.priority);
+                        // Update kanban card title jika ada
+                        $('.kanban-card[data-id="' + id + '"] .kc-title').text(t.title);
+                    } else {
+                        // Fallback reload jika server tidak return task
+                        setTimeout(() => location.reload(), 800);
+                    }
                 }
             })
             .fail(xhr => {
@@ -1988,21 +2277,23 @@ $(document).ready(function () {
     // TASK: ARCHIVE / UNARCHIVE / DELETE
     $(document).on('click', '.btn-archive-task', function() {
         let id = $(this).data('id');
+        let $item = $('#task-' + id);
         $.ajax({ url: `/admin/productivity/tasks/${id}/archive`, type: 'PATCH' })
             .done(() => {
+                $item.fadeOut(250, function() { $(this).remove(); });
                 Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 })
                     .fire({ icon: 'info', title: 'Tugas diarsipkan' });
-                setTimeout(() => location.reload(), 1600);
             });
     });
 
     $(document).on('click', '.btn-unarchive-task', function() {
         let id = $(this).data('id');
+        let $item = $('#task-' + id);
         $.ajax({ url: `/admin/productivity/tasks/${id}/unarchive`, type: 'PATCH' })
             .done(() => {
+                $item.fadeOut(250, function() { $(this).remove(); });
                 Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 })
                     .fire({ icon: 'success', title: 'Tugas dipulihkan!' });
-                setTimeout(() => location.reload(), 1600);
             });
     });
 
@@ -2049,9 +2340,17 @@ $(document).ready(function () {
 
     $('#formAddHabit').submit(function(e) {
         e.preventDefault();
+        let btn = $(this).find('button[type="submit"]');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>');
         $.post("{{ route('admin.productivity.habits.store') }}", $(this).serialize())
-            .done(() => location.reload())
-            .fail(xhr => Swal.fire('Gagal', xhr.responseJSON?.message, 'error'));
+            .done(() => {
+                $('#habitModal').modal('hide');
+                location.reload();
+            })
+            .fail(xhr => {
+                Swal.fire('Gagal', xhr.responseJSON?.message, 'error');
+                btn.prop('disabled', false).html('<i class="fas fa-plus"></i> Tambah');
+            });
     });
 
     $(document).on('click', '.btn-delete-habit', function() {
@@ -2067,7 +2366,12 @@ $(document).ready(function () {
         let btn = $(this).find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>...');
         $.post("{{ route('admin.productivity.notes.store') }}", $(this).serialize())
-            .done(() => location.reload())
+            .done(() => {
+                $('#noteModal').modal('hide');
+                Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1000 })
+                    .fire({ icon: 'success', title: 'Catatan disimpan!' });
+                setTimeout(() => location.reload(), 800); // reload cepat setelah modal tutup
+            })
             .fail(xhr => {
                 Swal.fire('Gagal', xhr.responseJSON?.message || 'Cek isian Anda.', 'error');
                 btn.prop('disabled', false).html('<i class="fas fa-thumbtack"></i> Tempel');
@@ -2088,16 +2392,16 @@ $(document).ready(function () {
 
     $('#formEditNote').submit(function(e) {
         e.preventDefault();
-        let id  = $('#editNoteId').val();
+        let id = $('#editNoteId').val();
         if (editorEdit) $('#editNoteContent').val(editorEdit.getData());
         let btn = $(this).find('button[type="submit"]');
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>...');
         $.ajax({ url: `/admin/productivity/notes/${id}`, type: 'PATCH', data: $(this).serialize() })
             .done(() => {
                 $('#editNoteModal').modal('hide');
-                Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 })
+                Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1000 })
                     .fire({ icon: 'success', title: 'Catatan diperbarui!' });
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => location.reload(), 800);
             })
             .fail(xhr => {
                 Swal.fire('Gagal', xhr.responseJSON?.message || 'Cek isian Anda.', 'error');
