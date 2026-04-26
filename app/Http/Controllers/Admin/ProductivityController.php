@@ -17,57 +17,87 @@ class ProductivityController extends Controller
     public function index(Request $request)
     {
         $userId = Auth::id();
-        $today = Carbon::today()->format('Y-m-d');
+        $today  = Carbon::today()->format('Y-m-d');
 
-        // --- Filter & Sort Logic ---
-        $filter   = $request->get('filter', 'active');   // active | completed | archived | all
-        $sort     = $request->get('sort', 'deadline');   // deadline | priority | created
-        $tag      = $request->get('tag', '');
-        $search   = $request->get('search', '');
+        // ── Filter Temporal (bukan status) ──────────────────────────────
+        // today | upcoming | all | delegated | archived
+        $filter = $request->get('filter', 'today');
+        $sort   = $request->get('sort', 'deadline');
+        $tag    = $request->get('tag', '');
+        $search = $request->get('search', '');
 
-       $taskQuery = ProductivityTask::with(['subTasks', 'attachments', 'comments.user']);
+        if (!empty($search)) {
+            $filter = 'all'; 
+        }
 
-        // Filter berdasarkan status & kepemilikan
+        $taskQuery = ProductivityTask::with(['subTasks', 'attachments', 'comments.user']);
+
+        // ── Logika Filter Utama ──────────────────────────────────────────
         if ($filter === 'delegated') {
-            // TAMPILKAN TUGAS KELUAR: Saya yang memberi tugas, tapi orang lain yang mengerjakan
+            // Tugas keluar: saya yang memberi, orang lain yang mengerjakan
             $taskQuery->where('assigned_by', $userId)
                       ->where('user_id', '!=', $userId)
                       ->where('is_archived', false);
-        } else {
-            $taskQuery->where('user_id', $userId);
 
-            if ($filter === 'active') {
-                $taskQuery->whereIn('status', ['pending', 'in_progress'])->where('is_archived', false);
-            } elseif ($filter === 'completed') {
-                $taskQuery->where('status', 'completed')->where('is_archived', false);
-            } elseif ($filter === 'archived') {
-                $taskQuery->where('is_archived', true);
-            } else {
-                // all
-                $taskQuery->where('is_archived', false);
-            }
+        } elseif ($filter === 'archived') {
+            $taskQuery->where('user_id', $userId)
+                      ->where('is_archived', true);
+
+        } elseif ($filter === 'upcoming') {
+            // Tugas aktif dengan deadline BESOK atau lebih, plus tanpa deadline
+            $taskQuery->where('user_id', $userId)
+                      ->where('is_archived', false)
+                      ->whereIn('status', ['pending', 'in_progress'])
+                      ->where(function ($q) use ($today) {
+                          $q->whereNull('deadline_at')
+                            ->orWhere('deadline_at', '>', Carbon::today()->endOfDay());
+                      });
+
+        } elseif ($filter === 'all') {
+            $taskQuery->where('user_id', $userId)
+                      ->where('is_archived', false);
+
+        } else {
+            // DEFAULT: 'today' — Overdue + Deadline hari ini + In Progress tanpa tenggat + SELESAI HARI INI
+            $taskQuery->where('user_id', $userId)
+                      ->where('is_archived', false)
+                      ->where(function ($q) use ($today) {
+                          // 1. Tugas Aktif (Overdue, Hari Ini, Tanpa Tenggat)
+                          $q->where(function ($q1) use ($today) {
+                              $q1->whereIn('status', ['pending', 'in_progress'])
+                                 ->where(function ($q2) use ($today) {
+                                     $q2->whereNotNull('deadline_at')
+                                        ->where('deadline_at', '<', Carbon::today()->startOfDay())
+                                        ->orWhereDate('deadline_at', $today)
+                                        ->orWhereNull('deadline_at');
+                                 });
+                          })
+                          // 2. PERBAIKAN: Tugas yang diselesaikan hari ini
+                          ->orWhere(function ($q1) use ($today) {
+                              $q1->where('status', 'completed')
+                                 ->whereDate('updated_at', $today); 
+                          });
+                      });
         }
 
-        // Filter tag
+        // ── Tag & Search ─────────────────────────────────────────────────
         if ($tag) {
             $taskQuery->where('tag', $tag);
         }
-
-        // Search
         if ($search) {
-            $taskQuery->where(function($q) use ($search) {
+            $taskQuery->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        // Sorting
+        // ── Sorting ──────────────────────────────────────────────────────
         if ($sort === 'priority') {
             $taskQuery->orderByRaw("FIELD(priority, 'high', 'medium', 'low')");
         } elseif ($sort === 'created') {
             $taskQuery->latest();
         } else {
-            // Default: deadline
+            // Default deadline — overdue dulu, lalu urutan deadline
             $taskQuery->orderByRaw("FIELD(status, 'pending', 'in_progress', 'completed')")
                       ->orderByRaw("CASE WHEN deadline_at IS NULL THEN 1 ELSE 0 END")
                       ->orderBy('deadline_at', 'asc');
@@ -75,15 +105,30 @@ class ProductivityController extends Controller
 
         $tasks = $taskQuery->get();
 
-        // Semua tag unik milik user (untuk filter dropdown)
+        // ── Kelompokkan untuk tampilan "Hari Ini" ────────────────────────
+        $tasksOverdueGroup  = $tasks->filter(fn($t) =>
+            $t->deadline_at &&
+            Carbon::parse($t->deadline_at)->lt(Carbon::today()->startOfDay()) &&
+            $t->status !== 'completed'
+        );
+        $tasksTodayGroup    = $tasks->filter(fn($t) =>
+            // Masuk sini jika deadline-nya hari ini ATAU diselesaikan hari ini
+            ($t->deadline_at && Carbon::parse($t->deadline_at)->isToday()) || 
+            ($t->status === 'completed' && Carbon::parse($t->updated_at)->isToday())
+        );
+        $tasksOtherGroup    = $tasks->filter(fn($t) =>
+            !$t->deadline_at && $t->status !== 'completed'
+        );
+
+        // ── Semua Tag unik ───────────────────────────────────────────────
         $allTags = ProductivityTask::where('user_id', $userId)
             ->whereNotNull('tag')->where('tag', '!=', '')
             ->distinct()->pluck('tag');
 
-        // Stats untuk header
+        // ── Stats Header ─────────────────────────────────────────────────
         $statsTotal     = ProductivityTask::where('user_id', $userId)->where('is_archived', false)->count();
         $statsCompleted = ProductivityTask::where('user_id', $userId)->where('status', 'completed')->where('is_archived', false)->count();
-        $statsPending   = ProductivityTask::where('user_id', $userId)->whereIn('status', ['pending','in_progress'])->where('is_archived', false)->count();
+        $statsPending   = ProductivityTask::where('user_id', $userId)->whereIn('status', ['pending', 'in_progress'])->where('is_archived', false)->count();
         $statsOverdue   = ProductivityTask::where('user_id', $userId)
             ->whereIn('status', ['pending', 'in_progress'])
             ->where('is_archived', false)
@@ -92,46 +137,62 @@ class ProductivityController extends Controller
             ->count();
         $statsDelegated = ProductivityTask::where('assigned_by', $userId)
             ->where('user_id', '!=', $userId)
-            ->whereIn('status', ['pending', 'in_progress']) // <-- Cukup tambahkan baris ini
+            ->whereIn('status', ['pending', 'in_progress'])
             ->where('is_archived', false)
             ->count();
 
-        // Ambil Data Notes
+        // ── Stats Harian (khusus untuk header hari ini) ──────────────────
+        $statsTodayTotal = ProductivityTask::where('user_id', $userId)
+            ->where('is_archived', false)
+            ->where(function ($q) use ($today) {
+                // 1. Deadline hari ini (wajib dikerjakan hari ini)
+                $q->whereDate('deadline_at', $today)
+                // 2. Terlambat tapi belum selesai (harus diselesaikan hari ini)
+                  ->orWhere(function ($q2) use ($today) {
+                      $q2->whereNotNull('deadline_at')
+                         ->where('deadline_at', '<', Carbon::today()->startOfDay())
+                         ->whereIn('status', ['pending', 'in_progress']);
+                  })
+                // 3. SELESAI HARI INI (Apa pun deadlinenya, ini poin produktivitas ekstra!)
+                  ->orWhere(function ($q3) use ($today) {
+                      $q3->where('status', 'completed')
+                         ->whereDate('updated_at', $today);
+                  });
+            })->count();
+
+        // Hanya hitung tugas yang benar-benar DISELESAIKAN HARI INI
+        $statsTodayDone = ProductivityTask::where('user_id', $userId)
+            ->where('is_archived', false)
+            ->where('status', 'completed')
+            ->whereDate('updated_at', $today)
+            ->count();
+
+        // ── Notes & Habits ───────────────────────────────────────────────
         $notes = ProductivityNote::where('user_id', $userId)->latest()->get();
 
-        // Ambil Data Habits beserta log hari ini
-        $habits = ProductivityHabit::with(['logs' => function($q) {
-            $q->where('is_completed', true);
-        }])
-        ->where('user_id', $userId)
-        ->get()
-        ->map(function ($habit) use ($today) {
-            // Ambil daftar tanggal dari memory (bukan hit database berulang kali)
-            $completedDates = $habit->logs->pluck('tanggal')->map(function($date) {
-                return Carbon::parse($date)->format('Y-m-d');
-            })->toArray();
+        $habits = ProductivityHabit::with(['logs' => fn($q) => $q->where('is_completed', true)])
+            ->where('user_id', $userId)
+            ->get()
+            ->map(function ($habit) use ($today) {
+                $completedDates = $habit->logs->pluck('tanggal')->map(
+                    fn($date) => Carbon::parse($date)->format('Y-m-d')
+                )->toArray();
 
-            $habit->is_completed_today = in_array($today, $completedDates);
+                $habit->is_completed_today = in_array($today, $completedDates);
 
-            // Hitung Streak
-            $streak = 0;
-            $checkDate = Carbon::today();
-            
-            if ($habit->is_completed_today) { $streak++; }
-            $checkDate->subDay();
-
-            while (in_array($checkDate->format('Y-m-d'), $completedDates)) {
-                $streak++;
+                $streak    = 0;
+                $checkDate = Carbon::today();
+                if ($habit->is_completed_today) { $streak++; }
                 $checkDate->subDay();
-            }
+                while (in_array($checkDate->format('Y-m-d'), $completedDates)) {
+                    $streak++;
+                    $checkDate->subDay();
+                }
+                $habit->streak = $streak;
+                return $habit;
+            });
 
-            $habit->streak = $streak;
-            return $habit;
-        });
-
-        $coworkers = \App\Models\User::whereHas('roles', function($q) {
-                $q->where('title', 'Pegawai');
-            })
+        $coworkers = \App\Models\User::whereHas('roles', fn($q) => $q->where('title', 'Pegawai'))
             ->where('id', '!=', $userId)
             ->orderBy('name', 'asc')
             ->get();
@@ -139,101 +200,95 @@ class ProductivityController extends Controller
         return view('admin.productivity.index', compact(
             'tasks', 'notes', 'habits', 'today', 'coworkers',
             'allTags', 'filter', 'sort', 'tag', 'search',
-            'statsTotal', 'statsCompleted', 'statsPending', 'statsOverdue', 'statsDelegated'
+            'statsTotal', 'statsCompleted', 'statsPending', 'statsOverdue', 'statsDelegated',
+            'statsTodayTotal', 'statsTodayDone',
+            'tasksOverdueGroup', 'tasksTodayGroup', 'tasksOtherGroup'
         ));
     }
 
+    // =========================================================
+    // COMMENT METHODS
+    // =========================================================
     public function storeComment(Request $request, $taskId)
     {
         $request->validate(['comment' => 'required|string']);
-        
-        // Pastikan yang komen adalah yang punya tugas ATAU yang ngasih tugas
-        $task = ProductivityTask::where(function($q) {
+
+        $task = ProductivityTask::where(function ($q) {
             $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
         })->findOrFail($taskId);
 
         $comment = \App\Models\ProductivityTaskComment::create([
             'task_id' => $task->id,
             'user_id' => Auth::id(),
-            'comment' => $request->comment
+            'comment' => $request->comment,
         ]);
 
-        // 🔥 LOGIC NOTIFIKASI TELEGRAM KOMENTAR BARU 🔥
-        // Jika tugas ini adalah tugas delegasi, beritahu pihak "seberang"
         if ($task->assigned_by && $task->user_id != $task->assigned_by) {
-            // Tentukan target penerima notif
             $targetUserId = (Auth::id() == $task->user_id) ? $task->assigned_by : $task->user_id;
-            $targetUser = \App\Models\User::find($targetUserId);
+            $targetUser   = \App\Models\User::find($targetUserId);
 
             if ($targetUser && $targetUser->telegram_chat_id) {
                 $commenterName = Auth::user()->name;
-                $msg = "💬 <b>Komentar Baru di Tugas Anda!</b>\n\n";
+                $msg  = "💬 <b>Komentar Baru di Tugas Anda!</b>\n\n";
                 $msg .= "📌 <b>Tugas:</b> {$task->title}\n";
                 $msg .= "🗣 <b>Dari:</b> {$commenterName}\n";
                 $msg .= "📝 <i>\"{$request->comment}\"</i>\n\n";
                 $msg .= "Cek dashboard FTMM untuk membalas.";
 
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot".env('TELEGRAM_BOT_TOKEN')."/sendMessage", [
-                    'chat_id' => $targetUser->telegram_chat_id,
-                    'text' => $msg,
-                    'parse_mode' => 'HTML'
+                Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/sendMessage", [
+                    'chat_id'    => $targetUser->telegram_chat_id,
+                    'text'       => $msg,
+                    'parse_mode' => 'HTML',
                 ]);
             }
         }
 
-        // Return comment yang diload bareng relasi user
-        return response()->json([
-            'success' => true, 
-            'comment' => $comment->load('user')
-        ]);
+        return response()->json(['success' => true, 'comment' => $comment->load('user')]);
     }
 
-    // --- TASK METHODS ---
+    // =========================================================
+    // TASK CRUD
+    // =========================================================
     public function storeTask(Request $request)
     {
         $request->validate(['title' => 'required|string|max:255']);
 
-        // Tentukan siapa yang mengerjakan dan siapa yang menugaskan
         $assigneeId = $request->assigned_to ?: Auth::id();
-    
-        // Pastikan kalau dia menugaskan ke dirinya sendiri, assigned_by tetap null
         $assignedBy = ($request->assigned_to && $request->assigned_to != Auth::id()) ? Auth::id() : null;
 
         $task = ProductivityTask::create([
-            'user_id'       => $assigneeId,  
-            'assigned_by'   => $assignedBy,
-            'title'         => $request->title,
-            'description'   => $request->description,
-            'tag'           => $request->tag,
-            'priority'      => $request->priority ?? 'medium',
-            'deadline_at'   => $request->deadline_at ?: null,
-            'recurrence'    => $request->recurrence ?? 'none',
-            'is_archived'   => false,
+            'user_id'         => $assigneeId,
+            'assigned_by'     => $assignedBy,
+            'title'           => $request->title,
+            'description'     => $request->description,
+            'tag'             => $request->tag,
+            'priority'        => $request->priority ?? 'low',
+            'status'          => 'pending',
+            'deadline_at'     => $request->deadline_at ?: null,
+            'recurrence'      => $request->recurrence ?? 'none',
+            'remind_morning'  => $request->boolean('remind_morning'),
+            'remind_h_minus_1'=> $request->boolean('remind_h_minus_1'),
         ]);
 
-        // 🔥 LOGIC NOTIFIKASI TELEGRAM DELEGASI 🔥
-        if ($assignedBy && $assigneeId != Auth::id()) {
+        // Notifikasi Telegram jika delegasi
+        if ($assignedBy) {
             $assignee = \App\Models\User::find($assigneeId);
-            
             if ($assignee && $assignee->telegram_chat_id) {
                 $assignerName = Auth::user()->name;
-                $deadlineStr = $task->deadline_at ? \Carbon\Carbon::parse($task->deadline_at)->format('d M Y, H:i') : 'Tanpa Tenggat';
-                
-                $msg = "📢 <b>TUGAS BARU DIDELEGASIKAN KEPADAMU!</b>\n\n";
-                $msg .= "👤 <b>Dari:</b> {$assignerName}\n";
+                $deadline     = $task->deadline_at
+                    ? Carbon::parse($task->deadline_at)->translatedFormat('d F Y, H:i')
+                    : 'Tanpa tenggat';
+                $msg  = "📋 <b>Tugas Baru Didelegasikan!</b>\n\n";
                 $msg .= "📌 <b>Tugas:</b> {$task->title}\n";
-                $msg .= "⏰ <b>Deadline:</b> {$deadlineStr}\n\n";
-                $msg .= "Silakan cek dashboard FTMM untuk detailnya. Semangat! 💪";
+                $msg .= "👤 <b>Dari:</b> {$assignerName}\n";
+                $msg .= "⏰ <b>Deadline:</b> {$deadline}\n\n";
+                $msg .= "Cek dashboard FTMM untuk detail selengkapnya.";
 
-                // Gunakan token bot dari .env
-                $botToken = env('TELEGRAM_BOT_TOKEN');
-                if ($botToken) {
-                    Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                        'chat_id' => $assignee->telegram_chat_id,
-                        'text' => $msg,
-                        'parse_mode' => 'HTML'
-                    ]);
-                }
+                Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/sendMessage", [
+                    'chat_id'    => $assignee->telegram_chat_id,
+                    'text'       => $msg,
+                    'parse_mode' => 'HTML',
+                ]);
             }
         }
 
@@ -243,117 +298,80 @@ class ProductivityController extends Controller
     public function updateTask(Request $request, $id)
     {
         $request->validate(['title' => 'required|string|max:255']);
-        $task = ProductivityTask::where(function($q) {
-                $q->where('user_id', Auth::id())
-                  ->orWhere('assigned_by', Auth::id());
-            })->findOrFail($id);
 
-        if ($task->assigned_by && $task->assigned_by != Auth::id() && $task->user_id == Auth::id()) {
-            return response()->json(['message' => 'Anda hanya berhak mengubah status, bukan detail tugas delegasi ini.'], 403);
-        }
+        $task = ProductivityTask::where(function ($q) {
+            $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
+        })->findOrFail($id);
 
-        // Tentukan siapa yang akan mengerjakan tugas ini sekarang
-        $newAssigneeId = $request->assigned_to ?: Auth::id();
-        
-        // Cek apakah tugas ini dipindah tangankan ke orang yang berbeda dari sebelumnya
-        $isReassigned = $newAssigneeId != $task->user_id;
-
-        // Logic untuk menentukan jejak pemberi tugas (delegator)
-        $assignedBy = $task->assigned_by; // Default: pertahankan data lama agar tidak hilang jika cuma edit teks
-
-        if ($isReassigned) {
-            if ($newAssigneeId == Auth::id()) {
-                // Jika tugas ditarik atau diambil alih untuk dikerjakan sendiri, maka set null (bukan tugas delegasi lagi)
-                $assignedBy = null;
-            } else {
-                // Jika tugas diover atau diberikan ke orang lain, maka delegatornya adalah user yang sedang mengedit
-                $assignedBy = Auth::id();
-            }
-        }
+        $assigneeId = $request->assigned_to ?: Auth::id();
+        $assignedBy = ($request->assigned_to && $request->assigned_to != Auth::id()) ? Auth::id() : null;
 
         $task->update([
-            'user_id'     => $newAssigneeId,
-            'assigned_by' => $assignedBy,
-            'title'       => $request->title,
-            'description' => $request->description,
-            'tag'         => $request->tag,
-            'priority'    => $request->priority,
-            'deadline_at' => $request->deadline_at ?: null,
-            'recurrence'  => $request->recurrence,
+            'user_id'          => $assigneeId,
+            'assigned_by'      => $assignedBy,
+            'title'            => $request->title,
+            'description'      => $request->description,
+            'tag'              => $request->tag,
+            'priority'         => $request->priority ?? $task->priority,
+            'deadline_at'      => $request->deadline_at ?: null,
+            'recurrence'       => $request->recurrence ?? $task->recurrence,
+            'remind_morning'   => $request->boolean('remind_morning'),
+            'remind_h_minus_1' => $request->boolean('remind_h_minus_1'),
         ]);
 
-        // Kirim notif Telegram jika tugas didelegasikan ke orang lain saat edit
-        if ($isReassigned && $newAssigneeId != Auth::id()) {
-            $this->sendTelegramNotification($task, "Tugas telah diperbarui & didelegasikan kepadamu");
-        }
-
-        return response()->json(['success' => true]);
-    }
-
-    private function sendTelegramNotification($task, $title) {
-        $assignee = \App\Models\User::find($task->user_id);
-        if ($assignee && $assignee->telegram_chat_id) {
-            $msg = "📢 <b>{$title}!</b>\n\n👤 <b>Dari:</b> " . Auth::user()->name . "\n📌 <b>Tugas:</b> {$task->title}\n⏰ <b>Deadline:</b> " . ($task->deadline_at ?: 'Tanpa Tenggat') . "\n\nCek dashboard FTMM 💪";
-            \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot".env('TELEGRAM_BOT_TOKEN')."/sendMessage", [
-                'chat_id' => $assignee->telegram_chat_id, 'text' => $msg, 'parse_mode' => 'HTML'
-            ]);
-        }
-    }
-
-    public function updateSettings(Request $request)
-    {
-        $user = Auth::user();
-        $user->update([
-            'telegram_remind_morning'  => $request->has('telegram_remind_morning'),
-            'telegram_remind_deadline' => $request->has('telegram_remind_deadline'),
-        ]);
         return response()->json(['success' => true]);
     }
 
     public function updateTaskStatus(Request $request, $id)
     {
-        $task = ProductivityTask::where(function($q) {
+        $task = ProductivityTask::where(function ($q) {
             $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
         })->findOrFail($id);
+
         $task->update(['status' => $request->status]);
 
+        // Notifikasi delegasi selesai
         if ($request->status === 'completed' && $task->assigned_by) {
             $delegator = \App\Models\User::find($task->assigned_by);
             if ($delegator && $delegator->telegram_chat_id) {
                 $executorName = Auth::user()->name;
-                $msg = "✅ <b>TUGAS DELEGASI SELESAI!</b>\n\n";
+                $msg  = "✅ <b>TUGAS DELEGASI SELESAI!</b>\n\n";
                 $msg .= "👤 <b>Dikerjakan oleh:</b> {$executorName}\n";
                 $msg .= "📌 <b>Tugas:</b> {$task->title}\n\n";
                 $msg .= "Kerja bagus! Tim Anda makin produktif. 💪";
 
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot".env('TELEGRAM_BOT_TOKEN')."/sendMessage", [
-                    'chat_id' => $delegator->telegram_chat_id,
-                    'text' => $msg,
-                    'parse_mode' => 'HTML'
+                Http::post("https://api.telegram.org/bot" . env('TELEGRAM_BOT_TOKEN') . "/sendMessage", [
+                    'chat_id'    => $delegator->telegram_chat_id,
+                    'text'       => $msg,
+                    'parse_mode' => 'HTML',
                 ]);
             }
         }
 
-        // 🔥 LOGIC RECURRING TASK
-        if ($request->status === 'completed' && $task->recurrence !== 'none') {
+        // Recurring task
+        if ($request->status === 'completed' && in_array($task->recurrence, ['daily', 'weekly', 'monthly'])) {
             $nextDeadline = $task->deadline_at
                 ? Carbon::parse($task->deadline_at)
                 : Carbon::today()->setHour(23)->setMinute(59);
 
-            if ($task->recurrence === 'daily')   $nextDeadline->addDay();
-            elseif ($task->recurrence === 'weekly')  $nextDeadline->addWeek();
-            elseif ($task->recurrence === 'monthly') $nextDeadline->addMonth();
+            if ($task->recurrence === 'daily')        $nextDeadline->addDay();
+            elseif ($task->recurrence === 'weekly')   $nextDeadline->addWeek();
+            elseif ($task->recurrence === 'monthly')  $nextDeadline->addMonth();
 
             ProductivityTask::create([
-                'user_id'     => $task->user_id,
-                'title'       => $task->title,
-                'description' => $task->description,
-                'tag'         => $task->tag,
-                'priority'    => $task->priority,
-                'recurrence'  => $task->recurrence,
-                'status'      => 'pending',
-                'deadline_at' => $nextDeadline,
-                'is_archived' => false,
+                'user_id'          => $task->user_id,
+                'assigned_by'      => $task->assigned_by,
+                'title'            => $task->title,
+                'description'      => $task->description,
+                'tag'              => $task->tag,
+                'priority'         => $task->priority,
+                'recurrence'       => $task->recurrence,
+                'status'           => 'pending',
+                'deadline_at'      => $nextDeadline,
+                'is_archived'      => false,
+                // Pastikan nilai boolean default terbawa agar tidak error constraint DB
+                'remind_morning'   => $task->remind_morning ?? false, 
+                'remind_h_minus_1' => $task->remind_h_minus_1 ?? false,
             ]);
 
             $task->update(['recurrence' => 'none']);
@@ -365,7 +383,7 @@ class ProductivityController extends Controller
     public function storeSubTask(Request $request, $taskId)
     {
         $request->validate(['title' => 'required|string|max:255']);
-        $task = ProductivityTask::where(function($q) {
+        $task = ProductivityTask::where(function ($q) {
             $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
         })->findOrFail($taskId);
 
@@ -391,19 +409,18 @@ class ProductivityController extends Controller
     // =========================================================
     public function storeAttachment(Request $request, $taskId)
     {
-        $request->validate(['file' => 'required|file|max:5120']); // Maks 5MB
-        $task = ProductivityTask::where(function($q) {
+        $request->validate(['file' => 'required|file|max:5120']);
+        $task = ProductivityTask::where(function ($q) {
             $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
         })->findOrFail($taskId);
 
-        $file = $request->file('file');
+        $file     = $request->file('file');
         $fileName = $file->getClientOriginalName();
-        // Simpan ke storage/app/public/tasks/attachments
-        $filePath = $file->store('tasks/attachments', 'public'); 
+        $filePath = $file->store('tasks/attachments', 'public');
 
         $attachment = $task->attachments()->create([
             'file_name' => $fileName,
-            'file_path' => $filePath
+            'file_path' => $filePath,
         ]);
 
         return response()->json(['success' => true, 'attachment' => $attachment]);
@@ -433,17 +450,14 @@ class ProductivityController extends Controller
 
     public function destroyTask($id)
     {
-        // Cari tugas: bisa milik sendiri (user_id) ATAU tugas yang dia delegasikan ke orang (assigned_by)
-        $task = ProductivityTask::where(function($q) {
-            $q->where('user_id', Auth::id())
-            ->orWhere('assigned_by', Auth::id());
+        $task = ProductivityTask::where(function ($q) {
+            $q->where('user_id', Auth::id())->orWhere('assigned_by', Auth::id());
         })->findOrFail($id);
 
-        // KUNCI KEAMANAN: Tolak akses jika yang mau hapus adalah penerima delegasi
         if ($task->assigned_by && $task->assigned_by != Auth::id() && $task->user_id == Auth::id()) {
             return response()->json([
-                'success' => false, 
-                'message' => 'Anda tidak berhak menghapus tugas delegasi. Hubungi pemberi tugas.'
+                'success' => false,
+                'message' => 'Anda tidak berhak menghapus tugas delegasi. Hubungi pemberi tugas.',
             ], 403);
         }
 
@@ -451,12 +465,14 @@ class ProductivityController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // --- NOTE METHODS ---
+    // =========================================================
+    // NOTE METHODS
+    // =========================================================
     public function storeNote(Request $request)
     {
         $request->validate(['content' => 'required|string']);
         $bgColor = $request->bg_color ?? '#fef08a';
-        $note = ProductivityNote::create([
+        $note    = ProductivityNote::create([
             'user_id'  => Auth::id(),
             'title'    => $request->title,
             'content'  => $request->content,
@@ -465,13 +481,27 @@ class ProductivityController extends Controller
         return response()->json(['success' => true, 'note' => $note]);
     }
 
+    public function updateNote(Request $request, $id)
+    {
+        $request->validate(['content' => 'required|string']);
+        $note = ProductivityNote::where('user_id', Auth::id())->findOrFail($id);
+        $note->update([
+            'title'    => $request->title,
+            'content'  => $request->content,
+            'bg_color' => $request->bg_color ?? $note->bg_color,
+        ]);
+        return response()->json(['success' => true, 'note' => $note->fresh()]);
+    }
+
     public function destroyNote($id)
     {
         ProductivityNote::where('user_id', Auth::id())->findOrFail($id)->delete();
         return response()->json(['success' => true]);
     }
 
-    // --- HABIT METHODS ---
+    // =========================================================
+    // HABIT METHODS
+    // =========================================================
     public function storeHabit(Request $request)
     {
         $request->validate(['name' => 'required|string|max:255']);
@@ -487,7 +517,7 @@ class ProductivityController extends Controller
     {
         $habit = ProductivityHabit::where('user_id', Auth::id())->findOrFail($id);
         $today = Carbon::today()->format('Y-m-d');
-        $log = ProductivityHabitLog::firstOrNew([
+        $log   = ProductivityHabitLog::firstOrNew([
             'habit_id' => $habit->id,
             'tanggal'  => $today,
         ]);
@@ -500,20 +530,5 @@ class ProductivityController extends Controller
     {
         ProductivityHabit::where('user_id', Auth::id())->findOrFail($id)->delete();
         return response()->json(['success' => true]);
-    }
-
-    public function updateNote(Request $request, $id)
-    {
-        $request->validate(['content' => 'required|string']);
- 
-        $note = ProductivityNote::where('user_id', Auth::id())->findOrFail($id);
- 
-        $note->update([
-            'title'    => $request->title,
-            'content'  => $request->content,
-            'bg_color' => $request->bg_color ?? $note->bg_color,
-        ]);
- 
-        return response()->json(['success' => true, 'note' => $note->fresh()]);
     }
 }
