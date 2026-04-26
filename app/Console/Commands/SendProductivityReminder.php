@@ -79,13 +79,13 @@ class SendProductivityReminder extends Command
                     $msg .= "\n";
                 }
 
-                if ($habits->isNotEmpty()) {
-                    $msg .= "🌱 <b>Jangan Lupa Habitmu:</b>\n";
-                    foreach ($habits as $habit) {
-                        $msg .= "- {$habit->name}\n";
-                    }
-                    $msg .= "\n";
-                }
+                // if ($habits->isNotEmpty()) {
+                //     $msg .= "🌱 <b>Jangan Lupa Habitmu:</b>\n";
+                //     foreach ($habits as $habit) {
+                //         $msg .= "- {$habit->name}\n";
+                //     }
+                //     $msg .= "\n";
+                // }
 
                 $msg .= "Cek dashboard untuk detailnya. Semangat! 🔥";
 
