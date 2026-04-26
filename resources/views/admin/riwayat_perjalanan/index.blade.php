@@ -468,7 +468,21 @@ $(function () {
         order: [[ 2, 'desc' ]],
         pageLength: 25,
         select: { style: 'multi+shift', selector: 'td:first-child' },
-        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+        language: {                                                    // ← TAMBAH INI
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            lengthMenu: "Tampilkan _MENU_ data",
+            search: "Cari:",
+            paginate: {
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            },
+            zeroRecords: "Tidak ada data ditemukan",
+            emptyTable: "Tidak ada data tersedia",
+            processing: "Memuat..."
+        },   
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center d-none d-md-block'B><'dt-top-right'f>>" +
              "<'row'<'col-sm-12'tr>>" +
              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
     });

@@ -134,15 +134,57 @@
             font-size: 1rem !important;
         }
         
-        /* Tombol copy jadwal dibikin berjejer rapi di HP */
+        /* Tombol copy jadwal dibikin rapi di HP */
         .jadwal-btn-group {
             width: 100%;
-            justify-content: space-between;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important; /* Jarak antar tombol */
         }
         .jadwal-btn-group .btn {
-            flex: 1;
-            font-size: 0.75rem;
-            padding: 0.4rem;
+            flex: 1 1 calc(50% - 8px); /* Tampil 2 kolom agar proporsional */
+            white-space: nowrap; /* Mencegah teks enter/turun ke bawah */
+            font-size: 0.8rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Tombol ketiga (Lihat Statistik) dibikin full width di bawahnya */
+        .jadwal-btn-group .btn:nth-child(3) {
+            flex: 1 1 100%; 
+        }
+
+        /* Perbaikan teks "Tidak ada kegiatan" di mobile */
+        #myTabContent .table-responsive,
+        #myTabContent .table-responsive table {
+            width: 100%;
+            text-align: center !important;
+        }
+        
+        /* Memaksa elemen flex di dalam state kosong agar ke tengah */
+        #myTabContent .table-responsive div {
+            justify-content: center !important;
+            text-align: center !important;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Memaksa row kosong / empty state ke tengah */
+        .home-kegiatan-table td[colspan="4"] {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            text-align: center !important;
+            padding-left: 0 !important; /* Reset padding kiri jika ada dari template */
+        }
+        
+        .home-kegiatan-table td[colspan="4"] p {
+            width: 100% !important;
+            text-align: center !important;
+            margin: 0 auto !important;
         }
     }
 </style>

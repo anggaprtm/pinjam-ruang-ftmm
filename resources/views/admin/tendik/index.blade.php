@@ -89,7 +89,7 @@
         pageLength: 50,
         columnDefs: [{ orderable: false, className: 'select-checkbox', targets: 0 }, { orderable: false, targets: -1 }],
         select: { style: 'multi+shift', selector: 'td:first-child' },
-        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center'B><'dt-top-right'f>>" +
+        dom: "<'dt-top-row'<'dt-top-left'l><'dt-top-center d-none d-md-block'B><'dt-top-right'f>>" +
               "<'row'<'col-sm-12'tr>>" +
               "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
         });

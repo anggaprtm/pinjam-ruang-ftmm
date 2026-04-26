@@ -63,7 +63,7 @@
                         </button>
 
                         {{-- Brand mobile --}}
-                        <a class="header-brand d-lg-none" href="#">LayananFTMM</a>
+                        <a class="header-brand d-lg-none" href="#">FTMM-Nexus</a>
 
                         {{-- Toggler desktop --}}
                         <button class="header-toggler d-none d-lg-inline-flex me-3 align-items-center justify-content-center" 
