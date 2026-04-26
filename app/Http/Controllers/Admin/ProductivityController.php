@@ -7,6 +7,7 @@ use App\Models\ProductivityTask;
 use App\Models\ProductivityNote;
 use App\Models\ProductivityHabit;
 use App\Models\ProductivityHabitLog;
+use App\Models\AbsensiLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -197,12 +198,16 @@ class ProductivityController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
+        $absensiHariIni = AbsensiLog::where('user_id', $userId)
+            ->whereDate('tanggal', $today)
+            ->first();
+
         return view('admin.productivity.index', compact(
             'tasks', 'notes', 'habits', 'today', 'coworkers',
             'allTags', 'filter', 'sort', 'tag', 'search',
             'statsTotal', 'statsCompleted', 'statsPending', 'statsOverdue', 'statsDelegated',
             'statsTodayTotal', 'statsTodayDone',
-            'tasksOverdueGroup', 'tasksTodayGroup', 'tasksOtherGroup'
+            'tasksOverdueGroup', 'tasksTodayGroup', 'tasksOtherGroup','absensiHariIni'
         ));
     }
 

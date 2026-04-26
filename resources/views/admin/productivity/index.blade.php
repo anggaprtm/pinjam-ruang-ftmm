@@ -844,6 +844,35 @@
     elseif ($hour < 18)   $greeting = '🌤️ Selamat Sore';
     else                  $greeting = '🌙 Selamat Malam';
 
+    $absenText  = 'Belum Absen';
+    $absenColor = 'rgba(255,255,255,0.15)'; // Default abu transparan
+    $absenIcon  = 'fas fa-fingerprint';
+
+    if (isset($absensiHariIni)) {
+        if (in_array($absensiHariIni->status, ['hadir', 'terlambat'])) {
+            if (empty($absensiHariIni->jam_keluar) || $absensiHariIni->jam_keluar == '-') {
+                // Sudah absen masuk, belum pulang
+                $absenText  = 'In: ' . substr($absensiHariIni->jam_masuk, 0, 5);
+                $absenColor = $absensiHariIni->status === 'terlambat' ? '#f59e0b' : '#10b981'; // Amber jika telat, Hijau jika tepat waktu
+                $absenIcon  = 'fas fa-sign-in-alt';
+            } else {
+                // Sudah absen pulang
+                $absenText  = 'Out: ' . substr($absensiHariIni->jam_keluar, 0, 5);
+                $absenColor = '#3b82f6'; // Biru
+                $absenIcon  = 'fas fa-check-circle';
+            }
+        } elseif (in_array($absensiHariIni->status, ['cuti', 'izin', 'sakit'])) {
+            $absenText  = ucfirst($absensiHariIni->status);
+            $absenColor = '#6366f1'; // Indigo
+            $absenIcon  = 'fas fa-user-md';
+        } else {
+            // Alpha dll
+            $absenText  = ucfirst($absensiHariIni->status);
+            $absenColor = '#ef4444'; // Merah
+            $absenIcon  = 'fas fa-times-circle';
+        }
+    }
+
     $dailyPct = $statsTodayTotal > 0 ? round(($statsTodayDone / $statsTodayTotal) * 100) : 0;
     $remainingToday = $statsTodayTotal - $statsTodayDone;
 @endphp
@@ -870,9 +899,19 @@
                     <span class="greeting-icon">{{ $emoji }}</span>
                     <h2 class="cmd-header-title">{{ $greeting }}, {{ Auth::user()->name }}</h2>
                 </div>
-                <div class="subtitle-wrapper">
-                    <span class="subtitle-icon"></span>
-                    <span>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</span>
+                <div class="subtitle-wrapper d-flex align-items-center flex-wrap" style="gap: 8px;">
+                    <div class="d-flex align-items-center">
+                        <span class="subtitle-icon"></span>
+                        <span>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</span>
+                    </div>
+                    
+                    {{-- Dot Separator --}}
+                    <div style="width: 4px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 50%;"></div>
+                    
+                    {{-- Badge Status Absen --}}
+                    <span style="background: {{ $absenColor }}; color: #ffffff; padding: 2px 10px; border-radius: 20px; font-weight: 800; font-size: 0.65rem; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                        <i class="{{ $absenIcon }}"></i> {{ $absenText }}
+                    </span>
                 </div>
             </div>
 
