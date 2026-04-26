@@ -8,6 +8,7 @@ use App\Models\ProductivityNote;
 use App\Models\ProductivityHabit;
 use App\Models\ProductivityHabitLog;
 use App\Models\AbsensiLog;
+use App\Models\HariLibur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -198,6 +199,11 @@ class ProductivityController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
+        $todayDate = Carbon::today();
+        $isWeekend = $todayDate->isWeekend();
+        $dataLibur = HariLibur::whereDate('tanggal', $today)->first();
+        $isLibur   = $isWeekend || $dataLibur;
+
         $absensiHariIni = AbsensiLog::where('user_id', $userId)
             ->whereDate('tanggal', $today)
             ->first();
@@ -207,7 +213,7 @@ class ProductivityController extends Controller
             'allTags', 'filter', 'sort', 'tag', 'search',
             'statsTotal', 'statsCompleted', 'statsPending', 'statsOverdue', 'statsDelegated',
             'statsTodayTotal', 'statsTodayDone',
-            'tasksOverdueGroup', 'tasksTodayGroup', 'tasksOtherGroup','absensiHariIni'
+            'tasksOverdueGroup', 'tasksTodayGroup', 'tasksOtherGroup','absensiHariIni','isLibur', 'dataLibur'
         ));
     }
 

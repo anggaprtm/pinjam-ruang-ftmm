@@ -844,37 +844,55 @@
     elseif ($hour < 18)   $greeting = '🌤️ Selamat Sore';
     else                  $greeting = '🌙 Selamat Malam';
 
-    $absenText  = 'Belum Absen';
-    $absenColor = 'rgba(255,255,255,0.15)'; // Default abu transparan
-    $absenIcon  = 'fas fa-fingerprint';
+    $absenText  = $isLibur ? 'Libur' : 'Belum Absen';
+    $absenColor = 'rgba(255,255,255,0.15)';
+    $absenIcon  = $isLibur ? 'fas fa-calendar-day' : 'fas fa-fingerprint';
+    $batasPulang = now()->isFriday() ? '15:00' : '15:30';
 
     if (isset($absensiHariIni)) {
-        if (in_array($absensiHariIni->status, ['hadir', 'terlambat'])) {
-            if (empty($absensiHariIni->jam_keluar) || $absensiHariIni->jam_keluar == '-') {
-                // Sudah absen masuk, belum pulang
-                $absenText  = 'In: ' . substr($absensiHariIni->jam_masuk, 0, 5);
-                $absenColor = $absensiHariIni->status === 'terlambat' ? '#f59e0b' : '#10b981'; // Amber jika telat, Hijau jika tepat waktu
-                $absenIcon  = 'fas fa-sign-in-alt';
-            } else {
-                // Sudah absen pulang
-                $absenText  = 'Out: ' . substr($absensiHariIni->jam_keluar, 0, 5);
-                $absenColor = '#3b82f6'; // Biru
-                $absenIcon  = 'fas fa-check-circle';
+        $checkIn  = $absensiHariIni->jam_masuk;
+        $checkOut = $absensiHariIni->jam_keluar;
+        
+        if ($isLibur) {
+            // --- LOGIKA HARI LIBUR (LEMBUR) ---
+            if ($checkIn && (!$checkOut || $checkOut == '-')) {
+                $absenText  = 'Lembur Aktif';
+                $absenColor = '#f59e0b'; // Amber
+                $absenIcon  = 'fas fa-stopwatch';
+            } elseif ($checkIn && $checkOut && $checkOut != '-') {
+                // Hitung durasi lembur
+                $start = \Carbon\Carbon::parse($checkIn);
+                $end   = \Carbon\Carbon::parse($checkOut);
+                $durasi = $start->diffInHours($end);
+
+                if ($durasi >= 4) {
+                    $absenText  = 'Lembur Selesai (' . $durasi . ' Jam)';
+                    $absenColor = '#6366f1'; // Indigo
+                } else {
+                    $absenText  = 'Presensi Libur (< 4 Jam)';
+                    $absenColor = '#94a3b8'; // Grey
+                }
+                $absenIcon = 'fas fa-check-double';
             }
-        } elseif (in_array($absensiHariIni->status, ['cuti', 'izin', 'sakit'])) {
-            $absenText  = ucfirst($absensiHariIni->status);
-            $absenColor = '#6366f1'; // Indigo
-            $absenIcon  = 'fas fa-user-md';
         } else {
-            // Alpha dll
-            $absenText  = ucfirst($absensiHariIni->status);
-            $absenColor = '#ef4444'; // Merah
-            $absenIcon  = 'fas fa-times-circle';
+            // --- LOGIKA HARI KERJA ---
+            if ($checkIn && (!$checkOut || $checkOut == '-')) {
+                $absenText  = 'Masuk: ' . substr($checkIn, 0, 5);
+                $absenColor = $absensiHariIni->status == 'terlambat' ? '#ef4444' : '#10b981';
+                $absenIcon  = 'fas fa-sign-in-alt';
+            } elseif ($checkIn && $checkOut && $checkOut != '-') {
+                if ($checkOut < $batasPulang) {
+                    $absenText  = 'Pulang Awal: ' . substr($checkOut, 0, 5);
+                    $absenColor = '#f59e0b'; // Warning
+                    $absenIcon  = 'fas fa-door-open';
+                } else {
+                    $absenText  = 'Selesai: ' . substr($checkOut, 0, 5);
+                    $absenColor = '#3b82f6';
+                    $absenIcon  = 'fas fa-user-check';
+                }
+            }
         }
     }
-
-    $dailyPct = $statsTodayTotal > 0 ? round(($statsTodayDone / $statsTodayTotal) * 100) : 0;
-    $remainingToday = $statsTodayTotal - $statsTodayDone;
 @endphp
 
 <div class="container-fluid p-0">
@@ -909,8 +927,16 @@
                     <div style="width: 4px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 50%;"></div>
                     
                     {{-- Badge Status Absen --}}
-                    <span style="background: {{ $absenColor }}; color: #ffffff; padding: 2px 10px; border-radius: 20px; font-weight: 800; font-size: 0.65rem; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-                        <i class="{{ $absenIcon }}"></i> {{ $absenText }}
+                    <span style="background: {{ $absenColor }}; color: #ffffff; padding: 2px 12px; border-radius: 20px; font-weight: 800; font-size: 0.65rem; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                        <i class="{{ $absenIcon }}"></i> 
+                        {{ $absenText }}
+                        
+                        {{-- Tambahan info jika sedang lembur --}}
+                        @if($isLibur && isset($absensiHariIni) && (!$absensiHariIni->jam_keluar || $absensiHariIni->jam_keluar == '-'))
+                            <small style="opacity: 0.8; font-weight: 400; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 5px; margin-left: 2px;">
+                                Sejak {{ substr($absensiHariIni->jam_masuk, 0, 5) }}
+                            </small>
+                        @endif
                     </span>
                 </div>
             </div>
