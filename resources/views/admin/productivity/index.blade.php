@@ -893,9 +893,9 @@
             }
            
         }
-        $dailyPct = $statsTodayTotal > 0 ? round(($statsTodayDone / $statsTodayTotal) * 100) : 0;
-        $remainingToday = $statsTodayTotal - $statsTodayDone;
     }
+    $dailyPct = $statsTodayTotal > 0 ? round(($statsTodayDone / $statsTodayTotal) * 100) : 0;
+    $remainingToday = $statsTodayTotal - $statsTodayDone;
 @endphp
 
 <div class="container-fluid p-0">
