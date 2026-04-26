@@ -36,97 +36,192 @@
 }
 
 /* ══════════════════════════════════════
-   HEADER — Daily Command Center
+   HEADER — Modern Command Center
 ══════════════════════════════════════ */
 .cmd-header {
-    background: linear-gradient(135deg, var(--brand-maroon) 0%, #9c2456 55%, #741847 100%);
-    border-radius: var(--radius-xl);
-    padding: 1.75rem 2rem;
+    /* Kembali ke warna branding Maroon FTMM */
+    background: linear-gradient(135deg, var(--brand-maroon) 0%, #9c2456 55%, var(--brand-maroon-dk) 100%);
+    border-radius: 20px;
+    padding: 1rem 1.5rem; /* Padding disesuaikan agar tidak terlalu menganga */
     margin-bottom: 1.5rem;
-    box-shadow: 0 8px 32px rgba(116,24,71,0.28), inset 0 1px 0 rgba(255,255,255,0.15);
-    position: relative; overflow: hidden;
+    box-shadow: 0 12px 32px rgba(116,24,71,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+    position: relative; 
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: space-between;
+    align-items: center; /* Center agar lebih padat ke tengah */
 }
 .cmd-header::before {
     content: ''; position: absolute; top: -70px; right: -70px;
     width: 220px; height: 220px;
     background: rgba(255,255,255,0.045); border-radius: 50%;
 }
+
 .cmd-header::after {
     content: ''; position: absolute; bottom: -90px; left: 32%;
     width: 260px; height: 260px;
     background: rgba(255,255,255,0.03); border-radius: 50%;
 }
+
+/* --- OPTICAL ALIGNMENT CLASSES --- */
+.header-profile-section {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+.greeting-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.35rem;
+}
+.greeting-icon {
+    width: 36px; /* Lebar tetap penahan emoticon */
+    font-size: 1.6rem;
+    text-align: left;
+    line-height: 1;
+}
 .cmd-header-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 1.55rem; color: #fff;
-    margin: 0; line-height: 1.2;
-}
-.cmd-header-subtitle {
-    color: rgba(255,255,255,0.65);
-    font-size: 0.875rem; margin-top: 0.35rem;
-    font-family: 'Nunito', sans-serif;
+    font-size: 1.65rem; 
+    color: #ffffff;
+    font-weight: 800;
+    margin: 0; 
+    letter-spacing: -0.3px;
 }
 
-/* Daily Progress Bar dalam Header */
-.daily-progress-wrap {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: var(--radius-lg);
-    padding: 0.9rem 1.25rem;
-    backdrop-filter: blur(8px);
-    min-width: 220px;
-}
-.daily-progress-label {
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.72rem; font-weight: 700;
+.subtitle-wrapper {
+    display: flex;
+    align-items: center;
     color: rgba(255,255,255,0.75);
-    text-transform: uppercase; letter-spacing: 0.04em;
-    margin-bottom: 0.45rem;
-    display: flex; justify-content: space-between;
+    font-size: 0.9rem; 
+    font-family: 'Nunito', sans-serif;
 }
-.daily-progress-bar {
-    height: 7px; background: rgba(255,255,255,0.2);
-    border-radius: 10px; overflow: hidden;
+.subtitle-icon {
+    width: 36px; /* Harus sama persis dengan .greeting-icon */
+    font-size: 1rem;
+    text-align: left;
+    padding-left: 2px; /* Koreksi optis kecil untuk icon font-awesome */
 }
-.daily-progress-fill {
-    height: 100%; border-radius: 10px;
-    background: linear-gradient(90deg, #34d399, #10b981);
-    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+
+/* Modifikasi Toolbar agar lebih rapat */
+.header-toolbar {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Bento-style Stats Grid */
+.header-stats-grid {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+}
+.stat-bento {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    min-width: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.stat-bento:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.1);
+}
+.stat-bento-value {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+}
+.stat-bento-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.stat-bento.danger .stat-bento-label { color: #fca5a5; }
+.stat-bento.warning .stat-bento-label { color: #fcd34d; }
+.stat-bento.success .stat-bento-label { color: #6ee7b7; }
+.stat-bento.primary .stat-bento-label { color: #a5b4fc; }
+
+/* Progress Bar Redesign */
+.daily-progress-wrap {
+    background: rgba(0,0,0,0.2);
+    border-radius: 16px;
+    padding: 1.25rem;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.05);
 }
 .daily-progress-count {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1.1rem; color: #fff;
-    font-weight: 800; margin-bottom: 0.15rem;
-}
-
-/* Stat Pills */
-.stat-pill {
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 50px; padding: 0.4rem 0.95rem;
-    color: #fff; font-size: 0.77rem; font-weight: 700;
     font-family: 'Nunito', sans-serif;
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    backdrop-filter: blur(8px); transition: var(--transition);
-    white-space: nowrap; cursor: default;
+    font-size: 0.85rem; 
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 0.75rem;
 }
-.stat-pill .stat-num { font-family: 'Montserrat', sans-serif; }
-.stat-pill.danger  { background: rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.5); }
-.stat-pill.success { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
-.stat-pill.warning { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.4); }
+.daily-progress-bar {
+    height: 8px; 
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px; 
+    overflow: hidden;
+}
+.daily-progress-fill {
+    height: 100%; 
+    border-radius: 12px;
+    background: linear-gradient(90deg, #34d399, #10b981);
+    box-shadow: 0 0 10px rgba(16,185,129,0.4);
+}
 
-/* Header action buttons */
+/* Header Tool Bar */
+.header-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
 .header-btn {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #fff; border-radius: var(--radius-sm);
-    padding: 0.45rem 1rem; font-size: 0.8rem; font-weight: 700;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff; 
+    border-radius: 12px;
+    padding: 0.6rem 1.2rem; 
+    font-size: 0.85rem; 
+    font-weight: 700;
     font-family: 'Nunito', sans-serif;
-    cursor: pointer; transition: var(--transition);
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    backdrop-filter: blur(8px); text-decoration: none;
+    cursor: pointer; 
+    transition: all 0.2s ease;
+    display: inline-flex; 
+    align-items: center; 
+    gap: 0.5rem;
+    text-decoration: none;
 }
-.header-btn:hover { background: rgba(255,255,255,0.25); color: #fff; }
+.header-btn:hover { 
+    background: #fff; 
+    color: var(--brand-maroon-dk); 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.header-btn i { font-size: 1rem; }
 
 /* ══════════════════════════════════════
    PANEL CARD
@@ -163,7 +258,7 @@
 /* ══════════════════════════════════════
    TEMPORAL FILTER BAR (Hari Ini / Mendatang / dll)
 ══════════════════════════════════════ */
-.filter-bar {
+.filter-bar-prod {
     display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;
     padding: 0.7rem 1.25rem;
     background: var(--surface-0);
@@ -586,78 +681,80 @@
 
 <div class="container-fluid p-0">
 
+    @php
+        $hour = (int) now()->format('H');
+        if ($hour < 11) { $greeting = 'Selamat Pagi'; $emoji = '🌅'; }
+        elseif ($hour < 15) { $greeting = 'Selamat Siang'; $emoji = '☀️'; }
+        elseif ($hour < 18) { $greeting = 'Selamat Sore'; $emoji = '🌤️'; }
+        else { $greeting = 'Selamat Malam'; $emoji = '🌙'; }
+    @endphp
+
     {{-- ══════════════════════════════════
-         HEADER — Daily Briefing
+         HEADER — Daily Command Center
     ══════════════════════════════════ --}}
-    <div class="cmd-header d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div style="z-index:1; position:relative;">
-            <h2 class="cmd-header-title">{{ $greeting }}, {{ Auth::user()->name }}</h2>
-            <p class="cmd-header-subtitle mb-0">
-                <i class="fas fa-calendar-alt me-1"></i>
-                {{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}
-            </p>
-            {{-- Mini stat row --}}
-            <div class="d-flex flex-wrap gap-2 mt-3">
+    <div class="cmd-header">
+        
+        {{-- Kiri: Profil & Bento Stats --}}
+        <div class="d-flex flex-column gap-3">
+            <div class="header-profile-section">
+                <div class="greeting-wrapper">
+                    <span class="greeting-icon">{{ $emoji }}</span>
+                    <h2 class="cmd-header-title">{{ $greeting }}, {{ Auth::user()->name }}</h2>
+                </div>
+                <div class="subtitle-wrapper">
+                    <span class="subtitle-icon"><i class="fas fa-calendar-alt"></i></span>
+                    <span>{{ \Carbon\Carbon::parse($today)->translatedFormat('l, d F Y') }}</span>
+                </div>
+            </div>
+
+            <div class="header-stats-grid mt-2">
                 @if($statsOverdue > 0)
-                <div class="stat-pill danger">
-                    <i class="fas fa-exclamation-triangle" style="font-size:0.65rem;"></i>
-                    <span class="stat-num">{{ $statsOverdue }}</span> Terlambat
+                <div class="stat-bento danger">
+                    <div class="stat-bento-value">{{ $statsOverdue }}</div>
+                    <div class="stat-bento-label"><i class="fas fa-exclamation-circle me-1"></i> Terlambat</div>
                 </div>
                 @endif
-                <div class="stat-pill warning">
-                    <i class="fas fa-list" style="font-size:0.65rem;"></i>
-                    <span class="stat-num">{{ $statsPending }}</span> Aktif
+                <div class="stat-bento warning">
+                    <div class="stat-bento-value">{{ $statsPending }}</div>
+                    <div class="stat-bento-label"><i class="fas fa-clock me-1"></i> Aktif</div>
                 </div>
-                <div class="stat-pill success">
-                    <i class="fas fa-check" style="font-size:0.65rem;"></i>
-                    <span class="stat-num">{{ $statsCompleted }}</span> Selesai
+                <div class="stat-bento success">
+                    <div class="stat-bento-value">{{ $statsCompleted }}</div>
+                    <div class="stat-bento-label"><i class="fas fa-check-double me-1"></i> Selesai</div>
                 </div>
-                @if($statsDelegated > 0)
-                <div class="stat-pill" style="background:rgba(99,102,241,0.25);border-color:rgba(99,102,241,0.45);">
-                    <i class="fas fa-paper-plane" style="font-size:0.65rem;"></i>
-                    <span class="stat-num">{{ $statsDelegated }}</span> Delegasi
-                </div>
-                @endif
             </div>
         </div>
 
-        <div class="d-flex flex-column align-items-end gap-3" style="z-index:1; position:relative;">
-            {{-- Daily progress box --}}
-            <div class="daily-progress-wrap">
-                <div class="daily-progress-count">
-                    @if($dailyPct === 100) 🎉 Semua selesai!
-                    @elseif($remainingToday > 0) {{ $remainingToday }} tugas tersisa hari ini
-                    @else Tidak ada tugas hari ini
-                    @endif
-                </div>
-                <div class="daily-progress-label">
-                    <span>Progress Harian</span>
-                    <span>{{ $statsTodayDone }}/{{ $statsTodayTotal }}</span>
+        {{-- Kanan: Progress & Toolbar (Dikelompokkan agar tidak ada ruang kosong menganga) --}}
+        <div class="d-flex flex-column align-items-end gap-3" style="z-index:1;">
+            <div class="daily-progress-wrap" style="min-width: 300px;">
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <div class="stat-bento-label text-white opacity-75">Progress Harian</div>
+                    <div class="fw-bold text-white" style="font-family:'Montserrat',sans-serif;">{{ $dailyPct }}%</div>
                 </div>
                 <div class="daily-progress-bar">
                     <div class="daily-progress-fill" style="width: {{ $dailyPct }}%;"></div>
                 </div>
+                <div class="daily-progress-count mt-2 mb-0">
+                    @if($dailyPct === 100 && $statsTodayTotal > 0) 🎉 Kerja bagus! Semua selesai.
+                    @elseif($remainingToday > 0) <i class="fas fa-bullseye text-warning me-1"></i> {{ $remainingToday }} tugas tersisa hari ini.
+                    @else Belum ada target hari ini.
+                    @endif
+                </div>
             </div>
-            {{-- Action buttons --}}
-            <div class="d-flex gap-2 flex-wrap justify-content-end">
+
+            <div class="header-toolbar">
                 <button onclick="openTaskModal()" class="header-btn">
-                    <i class="fas fa-plus"></i> Tambah Tugas
+                    <i class="fas fa-plus"></i> Tugas Baru
                 </button>
-                <a href="{{ route('admin.productivity.routine.index') }}" class="header-btn" style="text-decoration:none;">
-                    <i class="fas fa-clipboard"></i> Rutinan
+                <a href="{{ route('admin.productivity.routine.index') }}" class="header-btn">
+                    <i class="fas fa-clipboard-list"></i> Rutinan
                 </a>
                 <button onclick="togglePomodoro()" class="header-btn">
-                    <i class="fas fa-bolt" style="color:#fbbf24;"></i> Focus
+                    <i class="fas fa-bolt text-warning"></i> Focus
                 </button>
-                <button class="header-btn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <button class="header-btn px-3" data-bs-toggle="modal" data-bs-target="#settingsModal">
                     <i class="fas fa-cog"></i>
-                </button>
-                <button class="header-btn">
-                    @can('profile_password_edit')
-                        <a class="nav-link" href="{{ route('profile.password.edit') }}">
-                            <i class="fas fa-key"></i>
-                        </a>
-                    @endcan
                 </button>
             </div>
         </div>
@@ -709,7 +806,7 @@
                 </div>
 
                 {{-- ── Temporal Filter Bar ── --}}
-                <div class="filter-bar">
+                <div class="filter-bar-prod">
                     <a href="#" onclick="setFilter('today',event)"
                        class="filter-tab tab-today {{ $filter=='today' ? 'active':'' }}">
                         <i class="fas fa-sun"></i> Hari Ini

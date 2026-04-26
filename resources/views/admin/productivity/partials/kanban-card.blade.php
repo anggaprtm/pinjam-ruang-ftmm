@@ -23,7 +23,6 @@
     $completedSub = $task->subTasks->where('is_completed', true)->count();
     $subPct       = $totalSub > 0 ? round(($completedSub / $totalSub) * 100) : 0;
 
-    // BUG FIX #1: Encode JSON dengan benar — hindari single-quote attribute breakage
     $jsonSubtasks     = htmlspecialchars($task->subTasks->toJson(),     ENT_QUOTES, 'UTF-8');
     $jsonAttachments  = htmlspecialchars($task->attachments->toJson(),  ENT_QUOTES, 'UTF-8');
     $jsonComments     = htmlspecialchars($task->comments->toJson(),     ENT_QUOTES, 'UTF-8');

@@ -9,6 +9,9 @@
     $priorityClass  = 'priority-' . $task->priority; // priority-high, priority-medium, priority-low
     $overdueClass   = $isOverdue ? 'task-overdue' : '';
     $completedClass = $isCompleted ? 'completed' : '';
+    $jsonSubtasks     = htmlspecialchars($task->subTasks->toJson(), ENT_QUOTES, 'UTF-8');
+    $jsonAttachments  = htmlspecialchars($task->attachments->toJson(), ENT_QUOTES, 'UTF-8');
+    $jsonComments     = htmlspecialchars($task->comments->toJson(), ENT_QUOTES, 'UTF-8');
 @endphp
 
 <div class="task-item {{ $priorityClass }} {{ $completedClass }} {{ $overdueClass }}" id="task-{{ $task->id }}">
@@ -30,9 +33,9 @@
              data-desc="{{ $task->description }}"
              data-priority="{{ ucfirst($task->priority) }}"
              data-deadline="{{ $task->deadline_at ? \Carbon\Carbon::parse($task->deadline_at)->translatedFormat('d M Y, H:i') : 'Tanpa Deadline' }}"
-             data-subtasks="{{ $task->subTasks->toJson() }}"
-             data-attachments="{{ $task->attachments->toJson() }}"
-             data-comments="{{ $task->comments->toJson() }}">
+             data-subtasks="{{ $jsonSubtasks }}"
+             data-attachments="{{ $jsonAttachments }}"
+             data-comments="{{ $jsonComments }}">
             {{ $task->title }}
         </div>
 
