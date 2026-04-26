@@ -891,7 +891,10 @@
                     $absenIcon  = 'fas fa-user-check';
                 }
             }
+           
         }
+        $dailyPct = $statsTodayTotal > 0 ? round(($statsTodayDone / $statsTodayTotal) * 100) : 0;
+        $remainingToday = $statsTodayTotal - $statsTodayDone;
     }
 @endphp
 
