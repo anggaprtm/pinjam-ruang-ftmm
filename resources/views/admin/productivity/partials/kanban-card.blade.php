@@ -50,14 +50,14 @@
                     {{ ['daily'=>'Harian','weekly'=>'Mingguan','monthly'=>'Bulanan'][$task->recurrence] ?? '' }}
                 </span>
             @endif
-            {{-- Delegasi incoming --}}
+            {{-- Delegasi incoming/outgoing --}}
             @if($task->assigned_by && $task->assigned_by != Auth::id() && $task->user_id == Auth::id())
-                <span class="kc-badge kc-badge-indigo" title="Delegasi masuk">
-                    <i class="fas fa-arrow-down"></i> Masuk
+                <span class="kc-badge kc-badge-indigo" title="Dari: {{ $task->assigner->name ?? 'Pegawai' }}">
+                    <i class="fas fa-arrow-down"></i> Dari {{ $task->assigner->name ?? '' }}
                 </span>
             @elseif($task->assigned_by == Auth::id() && $task->user_id != Auth::id())
-                <span class="kc-badge kc-badge-rose" title="Delegasi keluar">
-                    <i class="fas fa-arrow-up"></i> Keluar
+                <span class="kc-badge kc-badge-rose" title="Ke: {{ $task->user->name ?? 'Pegawai' }}">
+                    <i class="fas fa-arrow-up"></i> Ke {{ $task->user->name ?? '' }}
                 </span>
             @endif
         </div>

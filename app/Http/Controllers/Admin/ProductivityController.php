@@ -30,7 +30,7 @@ class ProductivityController extends Controller
             $filter = 'all'; 
         }
 
-        $taskQuery = ProductivityTask::with(['subTasks', 'attachments', 'comments.user']);
+        $taskQuery = ProductivityTask::with(['subTasks', 'attachments', 'comments.user', 'user', 'assigner']);
 
         // ── Logika Filter Utama ──────────────────────────────────────────
         if ($filter === 'delegated') {
@@ -269,7 +269,27 @@ class ProductivityController extends Controller
             'remind_morning'  => $request->boolean('remind_morning'),
             'remind_h_minus_1'=> $request->boolean('remind_h_minus_1'),
         ]);
-        $task->load(['subTasks', 'attachments', 'comments']);
+        $task->load(['subTasks', 'attachments', 'comments', 'user', 'assigner']);
+
+        $deadlineText = 'Tanpa Deadline';
+        $deadlineBadgeHtml = '';
+
+        if ($task->deadline_at) {
+            $dl = \Carbon\Carbon::parse($task->deadline_at);
+            if ($dl->lt(\Carbon\Carbon::today()->startOfDay())) {
+                $deadlineBadgeHtml = '<span class="task-badge badge-overdue"><i class="fas fa-exclamation-circle"></i> ' . $dl->translatedFormat('d M Y, H:i') . '</span>';
+                $deadlineText = $dl->translatedFormat('d M Y, H:i');
+            } elseif ($dl->isToday()) {
+                $deadlineBadgeHtml = '<span class="task-badge badge-today"><i class="far fa-clock"></i> Hari ini, ' . $dl->format('H:i') . '</span>';
+                $deadlineText = 'Hari ini, ' . $dl->format('H:i');
+            } else {
+                $deadlineBadgeHtml = '<span class="task-badge badge-deadline"><i class="far fa-calendar-alt"></i> ' . $dl->translatedFormat('d M Y, H:i') . '</span>';
+                $deadlineText = $dl->translatedFormat('d M Y, H:i');
+            }
+        }
+
+        $task->formatted_deadline = $deadlineText;
+        $task->deadline_badge_html = $deadlineBadgeHtml;
 
         // Notifikasi Telegram jika delegasi
         if ($assignedBy) {
@@ -293,7 +313,11 @@ class ProductivityController extends Controller
             }
         }
 
-        return response()->json(['success' => true, 'task' => $task]);
+        return response()->json([
+            'success' => true, 
+            'task' => $task, 
+            'stats' => $this->getDailyStats() 
+        ]);
     }
 
     public function updateTask(Request $request, $id)
@@ -378,7 +402,7 @@ class ProductivityController extends Controller
             $task->update(['recurrence' => 'none']);
         }
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'stats' => $this->getDailyStats()]);
     }
 
     public function storeSubTask(Request $request, $taskId)
@@ -463,7 +487,7 @@ class ProductivityController extends Controller
         }
 
         $task->delete();
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'stats' => $this->getDailyStats()]);
     }
 
     // =========================================================
@@ -531,5 +555,34 @@ class ProductivityController extends Controller
     {
         ProductivityHabit::where('user_id', Auth::id())->findOrFail($id)->delete();
         return response()->json(['success' => true]);
+    }
+
+    private function getDailyStats() {
+        $userId = Auth::id();
+        $today = \Carbon\Carbon::today()->format('Y-m-d');
+        
+        $statsTodayTotal = ProductivityTask::where('user_id', $userId)
+            ->where('is_archived', false)
+            ->where(function ($q) use ($today) {
+                $q->whereDate('deadline_at', $today)
+                ->orWhere(function ($q2) use ($today) {
+                    $q2->whereNotNull('deadline_at')->where('deadline_at', '<', \Carbon\Carbon::today()->startOfDay())->whereIn('status', ['pending', 'in_progress']);
+                })
+                ->orWhere(function ($q3) use ($today) {
+                    $q3->where('status', 'completed')->whereDate('updated_at', $today);
+                });
+            })->count();
+
+        $statsTodayDone = ProductivityTask::where('user_id', $userId)
+            ->where('is_archived', false)->where('status', 'completed')->whereDate('updated_at', $today)->count();
+
+        $pct = $statsTodayTotal > 0 ? round(($statsTodayDone / $statsTodayTotal) * 100) : 0;
+        
+        return [
+            'total' => $statsTodayTotal,
+            'done'  => $statsTodayDone,
+            'pct'   => $pct,
+            'remaining' => $statsTodayTotal - $statsTodayDone
+        ];
     }
 }

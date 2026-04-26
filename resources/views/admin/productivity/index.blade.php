@@ -899,12 +899,12 @@
             <div class="daily-progress-wrap">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="stat-bento-label" style="color:rgba(255,255,255,0.75);">Progress Harian</div>
-                    <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.9rem;color:#fff;">{{ $dailyPct }}%</div>
+                    <div id="daily-progress-pct" style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.9rem;color:#fff;">{{ $dailyPct }}%</div>
                 </div>
                 <div class="daily-progress-bar">
-                    <div class="daily-progress-fill" style="width: {{ $dailyPct }}%;"></div>
+                    <div class="daily-progress-fill" id="daily-progress-fill" style="width: {{ $dailyPct }}%;"></div>
                 </div>
-                <div class="daily-progress-count mt-2 mb-0">
+                <div class="daily-progress-count mt-2 mb-0" id="daily-progress-text">
                     @if($dailyPct === 100 && $statsTodayTotal > 0) 🎉 Kerja bagus! Semua selesai.
                     @elseif($remainingToday > 0) <i class="fas fa-bullseye text-warning me-1"></i> {{ $remainingToday }} tugas tersisa hari ini.
                     @else Belum ada target hari ini.
@@ -1710,7 +1710,27 @@ function applyFilters() {
 
 function openTaskModal() {
     new bootstrap.Modal(document.getElementById('taskModal')).show();
-    setTimeout(() => document.getElementById('taskTitleInput').focus(), 350);
+}
+$('#taskModal').on('shown.bs.modal', function () { $('#taskTitleInput').focus(); });
+$('#editTaskModal').on('shown.bs.modal', function () { $('#editTaskTitle').focus(); });
+
+// ==========================================
+// 2. PERBAIKAN SEAMLESS PROGRESS BAR
+// ==========================================
+function syncDailyProgress(stats) {
+    if (!stats) return;
+    $('#daily-progress-pct').text(stats.pct + '%');
+    $('#daily-progress-fill').css('width', stats.pct + '%');
+
+    let countText = '';
+    if (stats.pct === 100 && stats.total > 0) {
+        countText = '🎉 Kerja bagus! Semua selesai.';
+    } else if (stats.remaining > 0) {
+        countText = `<i class="fas fa-bullseye text-warning me-1"></i> ${stats.remaining} tugas tersisa hari ini.`;
+    } else {
+        countText = 'Belum ada target hari ini.';
+    }
+    $('#daily-progress-text').html(countText);
 }
 
 // Quick date buttons
@@ -1819,6 +1839,7 @@ $(document).ready(function () {
         $.post("{{ route('admin.productivity.tasks.store') }}", $form.serialize())
             .done(res => {
                 if (res.success && res.task) {
+                    if (res.stats) syncDailyProgress(res.stats);
                     $('#taskModal').modal('hide');
                     $form[0].reset();
                     btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Simpan Tugas');
@@ -1832,13 +1853,13 @@ $(document).ready(function () {
                         <div class="task-content">
                             <div class="task-title-text btn-view-task" data-id="${t.id}" data-title="${t.title}"
                                 data-desc="${t.description||''}" data-priority="${t.priority}"
-                                data-deadline="${t.deadline_at ? t.deadline_at : 'Tanpa Deadline'}"
+                                data-deadline="${t.formatted_deadline}"
                                 data-subtasks="[]" data-attachments="[]" data-comments="[]">
                                 ${t.title}
                             </div>
                             <div class="task-meta">
                                 ${t.tag ? `<span class="task-badge badge-tag"><i class="fas fa-hashtag"></i> ${t.tag}</span>` : ''}
-                                ${t.deadline_at ? `<span class="task-badge badge-deadline"><i class="far fa-calendar-alt"></i> ${t.deadline_at}</span>` : ''}
+                                ${t.deadline_badge_html}
                             </div>
                         </div>
                         <div class="task-actions">
@@ -1930,6 +1951,8 @@ $(document).ready(function () {
                     .fire({ icon: status === 'completed' ? 'success' : 'info',
                             title: status === 'completed' ? 'Tugas Selesai! 🎉' : 'Tugas Diaktifkan' });
                 
+                            if (res.stats) syncDailyProgress(res.stats);
+                
                 // PERBAIKAN PROGRESS BAR: Cek yang benar apakah ada di list "Hari Ini"
                 if (item.closest('.task-list').prevAll('.divider-today').length > 0 || $('.tab-today').hasClass('active')) {
                     updateDailyProgress(status === 'completed');
@@ -1964,28 +1987,49 @@ $(document).ready(function () {
     // ========================================================
     // REVISI TASK: DELETE BUTTON
     // ========================================================
-    $(document).on('click', '.btn-delete-task', function() {
-        let id = $(this).data('id');
-        let $taskItem = $('#task-' + id); // Amankan context variabel
+    $(document).off('click', '.btn-delete-task').on('click', '.btn-delete-task', function() {
+        let btn = $(this);
+        let id = btn.data('id');
+        let isDelegated = btn.data('delegated');
+
+        // CEGAT DISINI: Jika ini tugas delegasi masuk, langsung tampilkan alert penolakan
+        if (isDelegated === true || isDelegated === 'true') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Akses Ditolak',
+                text: 'Task yang didelegasikan ke Anda tidak bisa dihapus, hanya bisa dihapus pemberi delegasi.',
+                confirmButtonColor: '#741847'
+            });
+            return; // Hentikan eksekusi, alert konfirmasi hapus tidak akan muncul
+        }
+
+        // Jika bukan tugas delegasi, lanjut ke konfirmasi hapus normal
+        let $taskItem = $('#task-' + id);
+        let $kanbanCard = $('.kanban-card[data-id="' + id + '"]');
 
         Swal.fire({
-            title: 'Hapus Tugas?', text: 'Tindakan ini tidak dapat dibatalkan.',
-            icon: 'warning', showCancelButton: true,
-            confirmButtonColor: '#741847', cancelButtonText: 'Batal', confirmButtonText: 'Ya, Hapus!'
+            title: 'Hapus Tugas?', 
+            text: 'Tindakan ini tidak dapat dibatalkan.',
+            icon: 'warning', 
+            showCancelButton: true,
+            confirmButtonColor: '#741847', 
+            cancelButtonText: 'Batal', 
+            confirmButtonText: 'Ya, Hapus!'
         }).then(result => {
             if (result.isConfirmed) {
                 $.ajax({ url: `/admin/productivity/tasks/${id}`, type: 'DELETE' })
                     .done(res => {
                         if (res.success) {
-                            // Bug Arrow function diperbaiki menggunakan standar function()
-                            $taskItem.fadeOut(300, function() { 
-                                $(this).remove(); 
-                            });
+                            $taskItem.fadeOut(300, function() { $(this).remove(); });
+                            $kanbanCard.fadeOut(300, function() { $(this).remove(); if(typeof updateKanbanCounts === 'function') updateKanbanCounts(); });
+                            if (res.stats) syncDailyProgress(res.stats);
+                            
                             Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 })
                                 .fire({ icon: 'success', title: 'Tugas dihapus!' });
-                        } else {
-                            Swal.fire('Gagal', res.message, 'error');
                         }
+                    })
+                    .fail(xhr => {
+                        Swal.fire('Error', xhr.responseJSON?.message || 'Gagal menghapus tugas.', 'error');
                     });
             }
         });
@@ -2295,26 +2339,6 @@ $(document).ready(function () {
                 Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1500 })
                     .fire({ icon: 'success', title: 'Tugas dipulihkan!' });
             });
-    });
-
-    $(document).on('click', '.btn-delete-task', function() {
-        let id = $(this).data('id');
-        Swal.fire({
-            title: 'Hapus Tugas?', text: 'Tindakan ini tidak dapat dibatalkan.',
-            icon: 'warning', showCancelButton: true,
-            confirmButtonColor: '#741847', cancelButtonText: 'Batal', confirmButtonText: 'Ya, Hapus!'
-        }).then(result => {
-            if (result.isConfirmed) {
-                $.ajax({ url: `/admin/productivity/tasks/${id}`, type: 'DELETE' })
-                    .done(res => {
-                        if (res.success) {
-                            $('#task-' + id).fadeOut(300, () => { $(this).remove(); location.reload(); });
-                        } else {
-                            Swal.fire('Gagal', res.message, 'error');
-                        }
-                    });
-            }
-        });
     });
 
     // HABITS

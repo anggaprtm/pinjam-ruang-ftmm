@@ -81,10 +81,12 @@
 
             {{-- Indikator Delegasi --}}
             @if($task->assigned_by && $task->assigned_by !== Auth::id() && $task->user_id === Auth::id())
-                <span class="task-badge badge-tag" title="Tugas masuk dari orang lain"><i class="fas fa-user-tie"></i> Delegasi Masuk</span>
+                <span class="task-badge badge-tag" title="Tugas dari {{ $task->assigner->name ?? 'Pegawai' }}">
+                    <i class="fas fa-user-tie"></i> Dari: {{ $task->assigner->name ?? '' }}
+                </span>
             @elseif($task->assigned_by === Auth::id() && $task->user_id !== Auth::id())
-                <span class="task-badge" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe;" title="Tugas yang Anda delegasikan">
-                    <i class="fas fa-paper-plane"></i> Ke Pegawai Lain
+                <span class="task-badge" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe;" title="Didelegasikan ke {{ $task->user->name ?? 'Pegawai' }}">
+                    <i class="fas fa-paper-plane"></i> Ke: {{ $task->user->name ?? '' }}
                 </span>
             @endif
         </div>
@@ -132,7 +134,9 @@
         @endif
 
         {{-- Delete Button --}}
-        <button class="task-action-btn danger btn-delete-task" title="Hapus Tugas" data-id="{{ $task->id }}">
+        <button class="task-action-btn danger btn-delete-task" title="Hapus Tugas" 
+            data-id="{{ $task->id }}"
+            data-delegated="{{ ($task->assigned_by && $task->assigned_by !== Auth::id() && $task->user_id === Auth::id()) ? 'true' : 'false' }}">
             <i class="fas fa-trash-alt"></i>
         </button>
     </div>
