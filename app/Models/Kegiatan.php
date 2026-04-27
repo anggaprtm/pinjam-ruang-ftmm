@@ -26,6 +26,7 @@ class Kegiatan extends Model
 
     protected $fillable = [
         'ruangan_id',
+        'recurring_group_id',
         'nama_kegiatan',
         'jenis_kegiatan',
         'poster',
@@ -111,6 +112,11 @@ class Kegiatan extends Model
         return $this->belongsToMany(Barang::class, 'barang_kegiatan')
             ->withPivot('jumlah', 'status')
             ->withTimestamps();
+    }
+
+    public function getIsRecurringAttribute()
+    {
+        return !is_null($this->recurring_group_id);
     }
 
     /**

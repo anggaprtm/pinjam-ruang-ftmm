@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class EventService
 {
@@ -154,9 +155,13 @@ class EventService
             Log::error('[createEvents] Carbon Parsing Failed: ' . $e->getMessage());
             return [];
         }
+
+        $isRecurring = !empty($requestData['berulang_sampai']);
+        $recurringGroupId = $isRecurring ? (string) \Illuminate\Support\Str::uuid() : null;
         
         $baseData = [
             'ruangan_id'    => $requestData['ruangan_id'],
+            'recurring_group_id' => $recurringGroupId,
             'nama_kegiatan' => $requestData['nama_kegiatan'],
             'jenis_kegiatan'     => $requestData['jenis_kegiatan'] ?? 'Lainnya',
             'poster'             => $requestData['poster'] ?? null,

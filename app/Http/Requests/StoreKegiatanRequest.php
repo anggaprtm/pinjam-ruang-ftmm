@@ -14,6 +14,26 @@ class StoreKegiatanRequest extends FormRequest
         return Gate::allows('kegiatan_create');
     }
 
+    protected function prepareForValidation()
+    {
+        // Fungsi bantuan untuk translate bulan ID -> EN
+        $translateDate = function($dateStr) {
+            if (!$dateStr) return $dateStr;
+            
+            $id = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            $en = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            return str_replace($id, $en, $dateStr);
+        };
+
+        // Replace request lama dengan yang sudah di-translate
+        $this->merge([
+            'waktu_mulai'     => $this->has('waktu_mulai') ? $translateDate($this->waktu_mulai) : null,
+            'waktu_selesai'   => $this->has('waktu_selesai') ? $translateDate($this->waktu_selesai) : null,
+            'berulang_sampai' => $this->has('berulang_sampai') ? $translateDate($this->berulang_sampai) : null,
+        ]);
+    }
+
     public function rules()
     {
         return [

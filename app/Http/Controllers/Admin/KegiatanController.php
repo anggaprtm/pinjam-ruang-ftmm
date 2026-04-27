@@ -105,8 +105,11 @@ class KegiatanController extends Controller
                         $buttons .= '<a class="btn btn-sm btn-success" href="' . route('admin.kegiatan.edit', $row->id) . '" title="Edit"><i class="fas fa-edit text-white"></i></a>';
                     }
                     if ($user->can('kegiatan_delete')) {
-                        // Tetap gunakan js-delete-btn agar terhubung dengan SweetAlert
-                        $buttons .= '<button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="' . route('admin.kegiatan.destroy', $row->id) . '" title="Hapus"><i class="fas fa-trash text-white"></i></button>';
+                        // Cek apakah data ini punya recurring_group_id (true/false)
+                        $isRecurring = $row->recurring_group_id ? 'true' : 'false';
+                        
+                        // Tambahkan data-is-recurring ke dalam tombol
+                        $buttons .= '<button type="button" class="btn btn-sm btn-danger js-delete-btn" data-url="' . route('admin.kegiatan.destroy', $row->id) . '" data-is-recurring="' . $isRecurring . '" title="Hapus"><i class="fas fa-trash text-white"></i></button>';
                     }
                 }
 
@@ -229,8 +232,8 @@ class KegiatanController extends Controller
                 'permintaan_id' => $permintaan->id,
                 'nama_kegiatan' => $permintaan->nama_kegiatan,
                 'jenis_kegiatan' => $permintaan->jenis_kegiatan,
-                'waktu_mulai' => \Carbon\Carbon::parse($start)->format($format),
-                'waktu_selesai' => \Carbon\Carbon::parse($end)->format($format),
+                'waktu_mulai' => \Carbon\Carbon::parse($start)->format('Y-m-d H:i'),
+                'waktu_selesai' => \Carbon\Carbon::parse($end)->format('Y-m-d H:i'),
                 'deskripsi' => $permintaan->catatan_konsumsi, 
                 'user_id' => $permintaan->user_id, 
                 'nama_pic' => $permintaan->user->name ?? $permintaan->picUser->name,
@@ -351,39 +354,32 @@ class KegiatanController extends Controller
 
     public function update(UpdateKegiatanRequest $request, Kegiatan $kegiatan, EventService $eventService)
     {
-        // Ambil semua data dari request
-        // Tambahan: User tidak bisa update jika sudah disetujui
         if (auth()->user()->hasRole('User') && $kegiatan->status === 'disetujui') {
             abort(Response::HTTP_FORBIDDEN, '403 Forbidden: Anda tidak dapat mengubah data yang sudah disetujui.');
         }
 
-        // Gabungkan nilai lama + yang baru (supaya payload lengkap untuk isRoomTaken)
-        $payload = array_merge($kegiatan->toArray(), $request->all());
-        $payload['ignore_id'] = $kegiatan->id;
-
-        // Jika file surat_izin akan diganti, simpan path di payload dulu (tetap cek bentrok dulu)
-        if ($request->hasFile('surat_izin')) {
-            $payload['__new_surat_izin'] = true; // penanda sementara
-        }
-
-        // 1. Ambil semua request dan paksa format tanggalnya
+        // 1. Persiapan Data & Hitung Selisih Waktu (Offset)
         $data = $request->all();
-        $data['waktu_mulai'] = \Carbon\Carbon::parse($data['waktu_mulai'])->format('Y-m-d H:i:s');
-        $data['waktu_selesai'] = \Carbon\Carbon::parse($data['waktu_selesai'])->format('Y-m-d H:i:s');
+        $rawOldStart = \Carbon\Carbon::parse($kegiatan->getRawOriginal('waktu_mulai'));
+        $newStart = \Carbon\Carbon::parse($data['waktu_mulai']);
+        $newEnd = \Carbon\Carbon::parse($data['waktu_selesai']);
 
-        // 2. Gabungkan payload dengan data yang sudah diformat
+        // Hitung selisih detik antara waktu lama dan baru untuk digeser ke acara lain
+        $diffStartInSeconds = $rawOldStart->diffInSeconds($newStart, false);
+        $diffDurationInSeconds = $newStart->diffInSeconds($newEnd, false);
+
+        // Format untuk update record utama
+        $data['waktu_mulai'] = $newStart->format('Y-m-d H:i:s');
+        $data['waktu_selesai'] = $newEnd->format('Y-m-d H:i:s');
+
+        // 2. Cek Bentrok untuk Acara Utama
         $payload = array_merge($kegiatan->toArray(), $data);
         $payload['ignore_id'] = $kegiatan->id;
-
-        if ($request->hasFile('surat_izin')) {
-            $payload['__new_surat_izin'] = true;
-        }
-
         $bentrok = $eventService->isRoomTaken($payload);
+        
         if ($bentrok) {
             $ruanganDiminta = \App\Models\Ruangan::find($request->ruangan_id);
             $minKapasitas = $ruanganDiminta->kapasitas ?? 0;
-
             $saranRuangan = $eventService->getSuggestedRooms($payload, $minKapasitas);
 
             return back()->withInput($request->all())
@@ -392,15 +388,11 @@ class KegiatanController extends Controller
                 ->withErrors('Bentrok dengan kegiatan: ' . $bentrok->nama_kegiatan);
         }
 
-        // Baru proses file (setelah aman)
-        $data = $request->all();
-
+        // 3. Handle File Upload
         if ($request->hasFile('poster')) {
-            // Hapus poster lama jika ada
             if ($kegiatan->poster && \Storage::disk('public')->exists($kegiatan->poster)) {
                 \Storage::disk('public')->delete($kegiatan->poster);
             }
-            // Upload yang baru
             $data['poster'] = $request->file('poster')->store('posters', 'public');
         }
         if ($request->hasFile('surat_izin')) {
@@ -410,46 +402,94 @@ class KegiatanController extends Controller
             $data['surat_izin'] = $request->file('surat_izin')->store('surat_izin', 'public');
         }
 
+        // 4. LOGIKA UPDATE MASSAL (Termasuk Jam & Ruangan)
+        $mode = $request->input('edit_mode', 'this');
+        
+        if ($kegiatan->recurring_group_id && $mode !== 'this') {
+            // 1. Ambil semua event dalam rangkaian (kecuali yang sedang diedit)
+            $query = Kegiatan::where('recurring_group_id', $kegiatan->recurring_group_id)
+                            ->where('id', '!=', $kegiatan->id);
+
+            if ($mode === 'following') {
+                $query->where('waktu_mulai', '>=', $kegiatan->getRawOriginal('waktu_mulai'));
+            }
+
+            $affectedEvents = $query->get();
+
+            // 2. TAHAP VALIDASI: Cek bentrok untuk SETIAP event baru
+            foreach ($affectedEvents as $event) {
+                $eventOldStart = \Carbon\Carbon::parse($event->getRawOriginal('waktu_mulai'));
+                $eventNewStart = $eventOldStart->addSeconds($diffStartInSeconds);
+                $eventNewEnd = $eventNewStart->copy()->addSeconds($diffDurationInSeconds);
+
+                // Buat payload dummy untuk pengecekan
+                $checkPayload = [
+                    'ignore_id' => $event->id,
+                    'ruangan_id' => $data['ruangan_id'],
+                    'waktu_mulai' => $eventNewStart->format('Y-m-d H:i:s'),
+                    'waktu_selesai' => $eventNewEnd->format('Y-m-d H:i:s'),
+                ];
+
+                // Panggil EventService
+                $bentrokInstance = $eventService->isRoomTaken($checkPayload);
+
+                if ($bentrokInstance) {
+                    // Jika ada satu saja yang bentrok, batalkan semua dan kasih tahu tanggalnya
+                    $tanggalBentrok = $eventNewStart->translatedFormat('d M Y');
+                    return back()->withInput($request->all())
+                        ->withErrors("Gagal update serentak! Terdapat bentrok pada tanggal $tanggalBentrok dengan kegiatan: " . $bentrokInstance->nama_kegiatan);
+                }
+            }
+
+            foreach ($affectedEvents as $event) {
+                // Hitung waktu baru berdasarkan offset
+                $eventOldStart = \Carbon\Carbon::parse($event->getRawOriginal('waktu_mulai'));
+                $eventNewStart = $eventOldStart->addSeconds($diffStartInSeconds);
+                $eventNewEnd = $eventNewStart->copy()->addSeconds($diffDurationInSeconds);
+
+                // Update detail + jam + ruangan
+                $event->update([
+                    'nama_kegiatan'      => $data['nama_kegiatan'],
+                    'jenis_kegiatan'     => $data['jenis_kegiatan'],
+                    'ruangan_id'         => $data['ruangan_id'],
+                    'waktu_mulai'        => $eventNewStart->format('Y-m-d H:i:s'),
+                    'waktu_selesai'      => $eventNewEnd->format('Y-m-d H:i:s'),
+                    'nama_pic'           => $data['nama_pic'] ?? $event->nama_pic,
+                    'nomor_telepon'      => $data['nomor_telepon'] ?? $event->nomor_telepon,
+                    'deskripsi'          => $data['deskripsi'] ?? $event->deskripsi,
+                    'poster'             => $data['poster'] ?? $event->poster,
+                    'surat_izin'         => $data['surat_izin'] ?? $event->surat_izin,
+                    'dosen_pembimbing_1' => $data['dosen_pembimbing_1'] ?? $event->dosen_pembimbing_1,
+                    'dosen_pembimbing_2' => $data['dosen_pembimbing_2'] ?? $event->dosen_pembimbing_2,
+                    'dosen_penguji_1'    => $data['dosen_penguji_1'] ?? $event->dosen_penguji_1,
+                    'dosen_penguji_2'    => $data['dosen_penguji_2'] ?? $event->dosen_penguji_2,
+                ]);
+            }
+        }
+
+        // 5. Update Record Utama & History
         $oldStatus = $kegiatan->status;
+        if (\Illuminate\Support\Str::startsWith($oldStatus, 'revisi_')) {
+            $data['status'] = match($oldStatus) {
+                'revisi_operator'          => 'belum_disetujui',
+                'revisi_kemahasiswaan'     => 'verifikasi_kemahasiswaan',
+                'revisi_kasubag_akademik'  => 'verifikasi_kasubag_akademik',
+                'revisi_kasubag_sarpras'   => 'verifikasi_kasubag_sarpras',
+                default                    => 'belum_disetujui',
+            };
+        }
 
         $kegiatan->update($data);
 
-        // Tambahkan history untuk perubahan (edit oleh pemohon)
         \App\Models\KegiatanHistory::create([
             'kegiatan_id' => $kegiatan->id,
             'user_id' => auth()->id(),
             'action' => 'edited',
-            'note' => 'Data kegiatan diperbarui',
-            'meta' => null,
+            'note' => "Update massal mode: $mode",
             'created_at' => now(),
         ]);
 
-        // Jika ini adalah resubmisi setelah revisi, kembalikan status ke tahap verifikasi yang sesuai
-        if (Str::startsWith($oldStatus, 'revisi_')) {
-            switch ($oldStatus) {
-                case 'revisi_operator':
-                    // Jika revisi dari status awal
-                    $kegiatan->status = 'belum_disetujui';
-                    break;
-                case 'revisi_kemahasiswaan':
-                    // Balik ke meja Kemahasiswaan
-                    $kegiatan->status = 'verifikasi_kemahasiswaan';
-                    break;
-                case 'revisi_kasubag_akademik':
-                    // Balik ke meja Akademik
-                    $kegiatan->status = 'verifikasi_kasubag_akademik';
-                    break;
-                case 'revisi_kasubag_sarpras':
-                    // Balik ke meja Sarpras
-                    $kegiatan->status = 'verifikasi_kasubag_sarpras';
-                    break;
-                default:
-                    $kegiatan->status = 'belum_disetujui';
-            }
-            $kegiatan->save();
-        }
-
-        return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil diperbarui.');
+        return redirect()->route('admin.kegiatan.index')->with('success', 'Rangkaian kegiatan berhasil diperbarui.');
     }
 
     public function editSuratIzin(Kegiatan $kegiatan)
@@ -491,7 +531,7 @@ class KegiatanController extends Controller
         return view('admin.kegiatan.show', compact('kegiatan', 'barangs'));
     }
 
-    public function destroy(Kegiatan $kegiatan)
+    public function destroy(Request $request, Kegiatan $kegiatan)
     {
         abort_if(Gate::denies('kegiatan_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
@@ -500,8 +540,25 @@ class KegiatanController extends Controller
             abort(Response::HTTP_FORBIDDEN, '403 Forbidden: Anda tidak dapat menghapus data yang sudah disetujui.');
         }
 
+        // Tangkap mode delete dari frontend (default 'this' jika tidak ada)
+        $mode = $request->input('delete_mode', 'this'); 
 
-        $kegiatan->delete();
+        if ($kegiatan->recurring_group_id) {
+            if ($mode === 'all') {
+                Kegiatan::where('recurring_group_id', $kegiatan->recurring_group_id)->delete();
+            } elseif ($mode === 'following') {
+                // Ambil format asli dari database (Y-m-d H:i:s)
+                $waktuMulaiMentah = $kegiatan->getRawOriginal('waktu_mulai');
+                
+                Kegiatan::where('recurring_group_id', $kegiatan->recurring_group_id)
+                        ->where('waktu_mulai', '>=', $waktuMulaiMentah)
+                        ->delete();
+            } else {
+                $kegiatan->delete();
+            }
+        } else {
+            $kegiatan->delete();
+        }
 
         return back();
     }

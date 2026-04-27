@@ -110,7 +110,7 @@
                                 type="text" 
                                 name="waktu_mulai" 
                                 id="waktu_mulai" 
-                                value="{{ old('waktu_mulai', $kegiatan->getRawOriginal('waktu_mulai') ? \Carbon\Carbon::parse($kegiatan->getRawOriginal('waktu_mulai'))->format('d M Y H:i') : '') }}" 
+                                value="{{ old('waktu_mulai', $kegiatan->getRawOriginal('waktu_mulai') ? \Carbon\Carbon::parse($kegiatan->getRawOriginal('waktu_mulai'))->format('Y-m-d H:i') : '') }}" 
                                 required>
                         </div>
                         @if($errors->has('waktu_mulai'))
@@ -126,7 +126,7 @@
                                 type="text" 
                                 name="waktu_selesai" 
                                 id="waktu_selesai" 
-                                value="{{ old('waktu_selesai', $kegiatan->getRawOriginal('waktu_selesai') ? \Carbon\Carbon::parse($kegiatan->getRawOriginal('waktu_selesai'))->format('d M Y H:i') : '') }}" 
+                                value="{{ old('waktu_selesai', $kegiatan->getRawOriginal('waktu_selesai') ? \Carbon\Carbon::parse($kegiatan->getRawOriginal('waktu_selesai'))->format('Y-m-d H:i') : '') }}" 
                                 required>
                         </div>
                         @if($errors->has('waktu_selesai'))
@@ -155,6 +155,26 @@
                     @if($errors->has('user_id'))
                         <div class="invalid-feedback">{{ $errors->first('user_id') }}</div>
                     @endif
+                </div>
+            @endif
+
+            @if($kegiatan->recurring_group_id)
+                <div class="alert alert-warning mb-3 shadow-sm border-warning">
+                    <h6 class="fw-bold text-dark"><i class="fas fa-sync-alt me-2"></i>Edit Rangkaian Kegiatan</h6>
+                    <p class="small text-dark mb-2">Ini adalah kegiatan berulang. Sejauh mana perubahan detail ini akan diterapkan? <br><em>(Catatan: Perubahan Ruangan dan Jadwal hanya akan diterapkan pada acara ini saja demi menghindari bentrok).</em></p>
+                    
+                    <div class="form-check mb-1">
+                        <input class="form-check-input" type="radio" name="edit_mode" id="edit_this" value="this" checked>
+                        <label class="form-check-label text-dark" for="edit_this">Hanya acara ini</label>
+                    </div>
+                    <div class="form-check mb-1">
+                        <input class="form-check-input" type="radio" name="edit_mode" id="edit_following" value="following">
+                        <label class="form-check-label text-dark" for="edit_following">Acara ini dan selanjutnya</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="edit_mode" id="edit_all" value="all">
+                        <label class="form-check-label text-dark" for="edit_all">Semua acara dalam rangkaian ini</label>
+                    </div>
                 </div>
             @endif
 

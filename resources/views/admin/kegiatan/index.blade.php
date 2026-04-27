@@ -672,10 +672,38 @@ $('#reset-btn').on('click', function(e) {
 $(document).on('click', '.js-delete-btn', function (e) {
     e.preventDefault();
     const deleteUrl = $(this).data('url');
+    
+    // Ambil status berulang dari tombol
+    const isRecurring = $(this).data('is-recurring') === true;
+
+    // Default HTML untuk kegiatan biasa
+    let htmlContent = "Data ini akan dihapus secara permanen!";
+    
+    // Jika kegiatan berulang, ubah HTML SweetAlert jadi radio button
+    if (isRecurring) {
+        htmlContent = `
+            <div class="text-start mt-3" style="font-size: 15px;">
+                <p class="mb-3 text-danger fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Ini adalah kegiatan berulang.</p>
+                <p class="mb-2">Apa yang ingin Anda hapus?</p>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="delete_mode" id="del_this" value="this" checked>
+                    <label class="form-check-label" for="del_this" style="cursor: pointer;">Hanya acara ini</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="delete_mode" id="del_following" value="following">
+                    <label class="form-check-label" for="del_following" style="cursor: pointer;">Acara ini dan selanjutnya</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="delete_mode" id="del_all" value="all">
+                    <label class="form-check-label" for="del_all" style="cursor: pointer;">Semua acara dalam rangkaian ini</label>
+                </div>
+            </div>
+        `;
+    }
 
     Swal.fire({
         title: 'Apakah Anda yakin?',
-        text: "Data ini akan dihapus secara permanen!",
+        html: htmlContent,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -683,27 +711,37 @@ $(document).on('click', '.js-delete-btn', function (e) {
         confirmButtonText: 'Ya, hapus!',
         cancelButtonText: 'Batal'
     }).then((result) => {
-            if (result.isConfirmed) {
-                // Tampilkan overlay saat request berjalan
-                $('#globalLoadingOverlay').removeClass('d-none');
-                $.ajax({
-                    headers: {'x-csrf-token': _token}, // Pastikan variabel _token ada
-                    method: 'POST', // Method tetap POST karena kita akan spoofing DELETE
-                    url: deleteUrl,
-                    data: { _method: 'DELETE' }
-                })
-                .done(function () { 
-                    table.ajax.reload(function () {
-                        $('#globalLoadingOverlay').addClass('d-none');
-                        Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
-                    });
-                })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    $('#globalLoadingOverlay').addClass('d-none');
-                    // Opsi: Tampilkan pesan error jika gagal
-                    Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
-                });
+        if (result.isConfirmed) {
+            
+            // Ambil value radio button yang dipilih user (jika berulang)
+            let selectedMode = 'this';
+            if (isRecurring) {
+                selectedMode = document.querySelector('input[name="delete_mode"]:checked').value;
             }
+
+            // Tampilkan overlay saat request berjalan
+            $('#globalLoadingOverlay').removeClass('d-none');
+            
+            $.ajax({
+                headers: {'x-csrf-token': _token},
+                method: 'POST',
+                url: deleteUrl,
+                data: { 
+                    _method: 'DELETE',
+                    delete_mode: selectedMode // Lempar pilihan user ke controller
+                }
+            })
+            .done(function () { 
+                table.ajax.reload(function () {
+                    $('#globalLoadingOverlay').addClass('d-none');
+                    Swal.fire('Berhasil!', 'Data telah dihapus.', 'success');
+                });
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                $('#globalLoadingOverlay').addClass('d-none');
+                Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data.', 'error');
+            });
+        }
     });
 });
 
