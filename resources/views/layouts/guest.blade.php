@@ -6,6 +6,14 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="manifest" href="/manifest.json">
+        <meta name="theme-color" content="#741847">
+
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="FTMM Nexus">
+
+        <link rel="apple-touch-icon" href="/icons/icon-192.png">
         <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
