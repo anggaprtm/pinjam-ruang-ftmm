@@ -10,7 +10,8 @@ use App\Models\User;
 use App\Models\AbsensiLog;
 use App\Models\BotSetting;
 use App\Models\HariLibur;
-use App\Models\PeriodeJamKerja; // Tambahkan import model ini
+use App\Models\PeriodeJamKerja;
+use App\Models\JadwalWfh;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PeringatanKedisiplinanMail;
@@ -32,68 +33,39 @@ class SendAbsenceReminder extends Command
 
         // 1. AMBIL SETTING DARI DATABASE
         $botSetting = BotSetting::first();
-        if (!$botSetting) {
-            $this->error("Setting bot belum diatur di database (Tabel bot_settings kosong).");
-            return;
-        }
+        if (!$botSetting) return;
 
         $now = Carbon::now();
         $tahun = $now->year;
-        $bulan = $now->month; 
         $bulanStr = $now->format('m'); 
         $hariIniStr = $now->format('d-m-Y'); 
         $tanggalDB = $now->format('Y-m-d');
         $hariKe = $now->dayOfWeekIso; 
 
-        $isWeekend = $hariKe > 5; // Sabtu = 6, Minggu = 7
-        $liburNasional = HariLibur::whereDate('tanggal', $tanggalDB)->first(); 
-
-        if ($isWeekend || $liburNasional) {
-            $alasanLibur = $liburNasional ? $liburNasional->keterangan : 'Akhir Pekan (Sabtu/Minggu)';
-            $this->info("🏝️ Hari ini libur ({$alasanLibur}). Bot istirahat, tidak ada notifikasi yang dikirim.");
+        // 1. CEK LIBUR
+        if ($hariKe > 5 || HariLibur::whereDate('tanggal', $tanggalDB)->exists()) {
+            $this->info("🏝️ Hari libur/weekend. Bot istirahat.");
             return; 
         }
 
-        // ==========================================================
-        // LOGIC JADWAL DINAMIS (PENENTUAN BATAS JAM)
-        // ==========================================================
+        // 2. TENTUKAN JAM LIMIT
         $jadwalKerja = PeriodeJamKerja::whereDate('tanggal_mulai', '<=', $tanggalDB)
             ->whereDate('tanggal_selesai', '>=', $tanggalDB)
             ->first();
 
-        $isFriday = ($hariKe == 5);
+        $jamMasukLimit = $jadwalKerja ? Carbon::parse($jadwalKerja->jam_masuk)->format('H:i') : '08:00';
+        $batasJamPulang = ($hariKe == 5) 
+            ? ($jadwalKerja ? Carbon::parse($jadwalKerja->jam_pulang_jumat)->format('H:i') : '17:00')
+            : ($jadwalKerja ? Carbon::parse($jadwalKerja->jam_pulang_senin_kamis)->format('H:i') : '16:30');
 
-        // Tentukan Batas Masuk
-        $jamMasukLimit = $jadwalKerja ? \Carbon\Carbon::parse($jadwalKerja->jam_masuk)->format('H:i') : '08:00';
-
-        // Tentukan Batas Pulang
-        if ($jadwalKerja) {
-            $batasJamPulang = $isFriday 
-                ? \Carbon\Carbon::parse($jadwalKerja->jam_pulang_jumat)->format('H:i') 
-                : \Carbon\Carbon::parse($jadwalKerja->jam_pulang_senin_kamis)->format('H:i');
-        } else {
-            // Fallback jam reguler
-            $batasJamPulang = $isFriday ? '17:00' : '16:30'; 
-        }
-
-        $targetRoles = ['Pegawai']; // Default
-        
-        if ($tipe === 'pagi') {
-            $targetRoles = ['Pegawai', 'Dosen']; // Pagi untuk semuanya
-        } elseif ($tipe === 'siang_dosen') {
-            $targetRoles = ['Dosen']; // Siang eksklusif untuk dosen
-        }
-
-        // Bikin Query Builder awal
+        // 3. TARIK USER
+        $targetRoles = ($tipe === 'siang_dosen') ? ['Dosen'] : ['Pegawai', 'Dosen'];
         $query = User::with(['roles', 'dosenDetail'])
             ->whereHas('roles', fn($q) => $q->whereIn('title', $targetRoles))
             ->whereNotNull('nip');
 
-        // Jika BUKAN evaluasi, WAJIB punya Telegram
-        // Jika evaluasi, tarik semua (termasuk yang "No ID")
         if ($tipe !== 'evaluasi') {
-            $query->whereNotNull('telegram_chat_id')
-                  ->where('telegram_chat_id', '!=', '');
+            $query->whereNotNull('telegram_chat_id')->where('telegram_chat_id', '!=', '');
         }
 
         $users = $query->get();
@@ -106,130 +78,95 @@ class SendAbsenceReminder extends Command
         }
 
         foreach ($users as $user) {
-            $this->info("Processing: {$user->name}...");
+            // Cek Keaktifan
+            if ($user->roles->contains('title', 'Dosen') && ($user->dosenDetail->status_keaktifan ?? 'Aktif') !== 'Aktif') continue;
 
-            $isDosen = $user->roles->contains('title', 'Dosen');
-            if ($isDosen) {
-                $statusKeaktifan = $user->dosenDetail->status_keaktifan ?? 'Aktif';
-                if ($statusKeaktifan !== 'Aktif') {
-                    $this->warn("   -> Di-skip (Status: {$statusKeaktifan})");
-                    continue; 
+            // --- LOGIKA DETERMINASI WFH (Source of Truth Internal) ---
+           $isJadwalWfh = JadwalWfh::where(function($q) use ($tanggalDB) {
+                // 1. Global + Tanggal Insidental
+                $q->where('is_global', true)->where('tanggal', $tanggalDB);
+            })->orWhere(function($q) use ($hariKe) {
+                // 2. Global + Hari Rutin
+                $q->where('is_global', true)->where('hari_rutin', $hariKe);
+            })->orWhere(function($q) use ($user, $tanggalDB) {
+                // 3. Spesifik + Tanggal Insidental (Cek Relasi Pivot)
+                $q->where('is_global', false)->where('tanggal', $tanggalDB)
+                  ->whereHas('users', fn($sub) => $sub->where('users.id', $user->id));
+            })->orWhere(function($q) use ($user, $hariKe) {
+                // 4. Spesifik + Hari Rutin (Cek Relasi Pivot)
+                $q->where('is_global', false)->where('hari_rutin', $hariKe)
+                  ->whereHas('users', fn($sub) => $sub->where('users.id', $user->id));
+            })->exists();
+
+            // LOGIC A: REMINDER PAGI (Tanpa Scraping API)
+            if ($tipe === 'pagi' && $botSetting->pagi_aktif) {
+                $isDosen = $user->roles->contains('title', 'Dosen');
+                
+                if ($isDosen) {
+                    $template = $isJadwalWfh ? ($botSetting->pagi_pesan_dosen_wfh ?? $botSetting->pagi_pesan_dosen) : $botSetting->pagi_pesan_dosen;
+                } else {
+                    $template = $isJadwalWfh ? ($botSetting->pagi_pesan_wfh ?? $botSetting->pagi_pesan) : $botSetting->pagi_pesan;
                 }
-            }
 
-            // LOGIC 1: REMINDER PAGI
-            if ($tipe === 'pagi') {
-                if ($botSetting->pagi_aktif) {
-                    
-                    // 1. Cek apakah user ini punya role "Dosen"
-                    $isDosen = $user->roles->contains('title', 'Dosen');
-
-                    // 2. Tentukan template pesan yang mau dipakai
-                    // Kalau Dosen, pakai pagi_pesan_dosen. Kalau di DB kosong, fallback ke pagi_pesan biasa.
-                    // Kalau bukan Dosen (Tendik), langsung pakai pagi_pesan biasa.
-                    $templatePesan = $isDosen 
-                        ? ($botSetting->pagi_pesan_dosen ?? $botSetting->pagi_pesan) 
-                        : $botSetting->pagi_pesan;
-
-                    // 3. Masukkan template yang sudah dipilih ke str_replace
-                    $msg = str_replace(
-                        ['{nama}', '{tanggal}'], 
-                        [$user->name, $hariIniStr], 
-                        $templatePesan // <-- Pakai variabel ini, jangan $botSetting->pagi_pesan langsung
-                    );
-                    
-                    $telegram->sendMessage($user->telegram_chat_id, $msg);
-                    
-                    // Opsional: Biar di terminal kelihatan jelas bot ngirim template yang mana
-                    $roleLabel = $isDosen ? 'Dosen' : 'Tendik';
-                    $this->info("   -> Reminder Pagi ($roleLabel) dikirim.");
-                    
-                    sleep(1); 
-                }
+                $msg = str_replace(['{nama}', '{tanggal}'], [$user->name, $hariIniStr], $template);
+                $telegram->sendMessage($user->telegram_chat_id, $msg);
+                $this->info("   -> Pagi (".($isJadwalWfh?'WFH':'WFO').") sent to {$user->name}");
                 continue; 
             }
 
-            // START SCRAPING
+            // --- PROSES SCRAPING API (Untuk Masuk, Pulang, Siang, Evaluasi) ---
             if (strlen($user->nip) < 10) continue;
-
             $url = "https://infoabsen.unair.ac.id/absen/api_absen_8.php?nip={$user->nip}&tahun={$tahun}&bulan={$bulanStr}";
 
             try {
                 $response = Http::timeout(15)->get($url);
-                
                 if ($response->successful()) {
                     $crawler = new Crawler($response->body());
-                    
                     $foundNode = null;
                     $crawler->filter('table tr')->each(function (Crawler $node) use ($hariIniStr, &$foundNode) {
-                        // FIX: Ubah batas minimal kolom jadi 11 karena kita butuh mode_kerja
-                        if ($node->filter('td')->count() > 11) {
-                            $tanggalDiTabel = trim($node->filter('td')->eq(0)->text());
-                            if ($tanggalDiTabel === $hariIniStr) {
-                                $foundNode = $node;
-                                return false; 
+                        if ($node->filter('td')->count() > 11) { // Ambil sampe index 11 (Status)
+                            if (trim($node->filter('td')->eq(0)->text()) === $hariIniStr) {
+                                $foundNode = $node; return false; 
                             }
                         }
                     });
 
-                    $scanMasuk = '-';
-                    $scanKeluar = '-';
-                    $modeKerjaRaw = null;
-                    $statusKehadiran = 'alpha';
-                    $dataDitemukan = false;
+                    $scanMasuk = '-'; $scanKeluar = '-'; $modeKerjaApi = null; $statusKehadiran = 'alpha';
 
                     if ($foundNode) {
-                        $dataDitemukan = true;
                         $scanMasuk = trim($foundNode->filter('td')->eq(5)->text());
                         $scanKeluar = trim($foundNode->filter('td')->eq(8)->text());
-                        
-                        // Tarik data mode kerja
-                        $modeKerjaRaw = trim($foundNode->filter('td')->eq(11)->text());
-                        $modeKerjaStr = strtolower($modeKerjaRaw);
+                        $modeKerjaApi = trim($foundNode->filter('td')->eq(11)->text());
 
-                        // Tentukan status kehadiran
-                        if (str_contains($modeKerjaStr, 'dinas luar')) {
+                        if (str_contains(strtolower($modeKerjaApi), 'dinas luar')) {
                             $statusKehadiran = 'dinas';
                         } elseif ($scanMasuk !== '-' && !empty($scanMasuk)) {
                             $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
                         }
-                    } else {
-                        $this->warn("   -> Data tanggal $hariIniStr tidak ditemukan di tabel.");
                     }
 
-                    // UPDATE DATABASE
-                    if ($dataDitemukan) {
-                        $log = AbsensiLog::updateOrCreate(
-                            ['user_id' => $user->id, 'tanggal' => $tanggalDB],
-                            [
-                                'jam_masuk'        => ($scanMasuk === '-' || $scanMasuk === '' ? null : $scanMasuk),
-                                'jam_keluar'       => ($scanKeluar === '-' || $scanKeluar === '' ? null : $scanKeluar),
-                                'batas_jam_masuk'  => $jamMasukLimit,
-                                'batas_jam_keluar' => $batasJamPulang,
-                                'status'           => $statusKehadiran,
-                                'mode_kerja'       => $modeKerjaRaw, // Insert mode kerja ke DB via Reminder
-                                'updated_at'       => now(),
-                            ]
-                        );
-                    } else {
-                        $log = AbsensiLog::where('user_id', $user->id)->where('tanggal', $tanggalDB)->first();
-                    }
+                    // Sync Log ke DB
+                    $log = AbsensiLog::updateOrCreate(
+                        ['user_id' => $user->id, 'tanggal' => $tanggalDB],
+                        [
+                            'jam_masuk' => ($scanMasuk === '-' ? null : $scanMasuk),
+                            'jam_keluar' => ($scanKeluar === '-' ? null : $scanKeluar),
+                            'status' => $statusKehadiran,
+                            'mode_kerja' => $modeKerjaApi,
+                            'updated_at' => now(),
+                        ]
+                    );
 
-                    if (!$log) {
-                        continue; 
-                    }
-
-                    // PROSES NOTIFIKASI
+                    // --- LOGIKA NOTIFIKASI BERDASARKAN MODE KERJA ---
                     $history = $log->notif_history ?? [];
-                    $pesanTerkirim = false; 
-
-                    // Set flag untuk filter logika (Dinas & Belum Scan)
+                    $pesanTerkirim = false;
+                    
+                    // Rapikan variabel agar konsisten
                     $isDinasLuar = str_contains(strtolower($log->mode_kerja ?? ''), 'dinas luar');
                     $belumMasuk = empty($log->jam_masuk) || $log->jam_masuk === '-';
 
                     if ($tipe === 'siang_dosen' && $botSetting->siang_dosen_aktif) {
                         if (!empty($log->jam_masuk) && !isset($history['siang_dosen_sudah'])) {
-                            // Jika sudah absen masuk
                             $msg = str_replace(
                                 ['{nama}', '{tanggal}', '{jam_masuk}'], 
                                 [$user->name, $hariIniStr, $log->jam_masuk], 
@@ -241,7 +178,6 @@ class SendAbsenceReminder extends Command
                             $pesanTerkirim = true;
                             
                         } elseif (empty($log->jam_masuk) && !isset($history['siang_dosen_belum'])) {
-                            // Jika belum absen masuk
                             $msg = str_replace(
                                 ['{nama}', '{tanggal}'], 
                                 [$user->name, $hariIniStr], 
@@ -254,55 +190,40 @@ class SendAbsenceReminder extends Command
                         }
                     }
 
-                    // LOGIC 2: PERINGATAN MASUK
-                    if ($tipe === 'masuk' && $botSetting->masuk_aktif) {
-                        // Filter: Jangan ingatkan kalau dia sedang dinas luar
-                        if (!$isDinasLuar && empty($log->jam_masuk) && !isset($history['telat_masuk'])) {
-                            $msg = str_replace(
-                                ['{nama}', '{tanggal}'], 
-                                [$user->name, $hariIniStr], 
-                                $botSetting->masuk_pesan
-                            );
-                            
+                    // LOGIC 2: MASUK
+                    if ($tipe === 'masuk' && $botSetting->masuk_aktif && !$isDinasLuar) {
+                        if ($belumMasuk && !isset($history['telat_masuk'])) {
+                            $template = $isJadwalWfh ? ($botSetting->masuk_pesan_wfh ?? $botSetting->masuk_pesan) : $botSetting->masuk_pesan;
+                            $msg = str_replace(['{nama}', '{tanggal}'], [$user->name, $hariIniStr], $template);
                             $telegram->sendMessage($user->telegram_chat_id, $msg);
-                            $this->warn("   -> Notif Belum Masuk dikirim.");
-                            $history['telat_masuk'] = $now->format('H:i');
+                            $history['telat_masuk'] = $now->format('H:i'); 
                             $pesanTerkirim = true;
-                        } elseif ($isDinasLuar) {
-                            $this->info("   -> Skip Notif Masuk (Mode Kerja: Dinas Luar)");
                         }
                     }
 
                     // LOGIC 3: SORE / PULANG
-                    if ($tipe === 'pulang' && $botSetting->pulang_aktif) { 
-                        // Filter: Jangan ingatkan pulang jika dia dinas ATAU dari pagi belum absen masuk (alpha)
+                    if ($tipe === 'pulang' && $botSetting->pulang_aktif) {
+                        // Pastikan tidak dinas DAN sudah absen masuk
                         if (!$isDinasLuar && !$belumMasuk) {
+                            
+                            $template = $isJadwalWfh ? ($botSetting->pulang_pesan_wfh ?? $botSetting->pulang_pesan) : $botSetting->pulang_pesan;
+
                             if (empty($log->jam_keluar) && !isset($history['belum_pulang'])) {
-                                $msg = str_replace(
-                                    ['{nama}', '{tanggal}', '{batas_jam}'], 
-                                    [$user->name, $hariIniStr, $batasJamPulang],
-                                    $botSetting->pulang_pesan
-                                );
-                                
+                                $msg = str_replace(['{nama}', '{tanggal}', '{batas_jam}'], [$user->name, $hariIniStr, $batasJamPulang], $template);
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
-                                $this->warn("   -> Notif Belum Pulang dikirim.");
-                                $history['belum_pulang'] = $now->format('H:i');
+                                $history['belum_pulang'] = $now->format('H:i'); 
                                 $pesanTerkirim = true;
                             } 
                             elseif (!empty($log->jam_keluar) && $log->jam_keluar < $batasJamPulang && !isset($history['pulang_awal'])) {
                                 $prefix = "⚠️ <b>PERHATIAN!</b> Sistem mencatat Anda scan keluar pukul <b>{$log->jam_keluar}</b>.\n\n";
-                                $msg = $prefix . str_replace(
-                                    ['{nama}', '{tanggal}', '{batas_jam}'], 
-                                    [$user->name, $hariIniStr, $batasJamPulang],
-                                    $botSetting->pulang_pesan
-                                );
-
+                                $msg = $prefix . str_replace(['{nama}', '{tanggal}', '{batas_jam}'], [$user->name, $hariIniStr, $batasJamPulang], $template);
                                 $telegram->sendMessage($user->telegram_chat_id, $msg);
                                 $this->warn("   -> Notif Pulang Awal dikirim.");
                                 $history['pulang_awal'] = $now->format('H:i');
                                 $pesanTerkirim = true;
                             }
                         } else {
+                            // Info log di terminal agar kita tahu kenapa bot tidak ngirim
                             $alasanSkip = $isDinasLuar ? "Dinas Luar" : "Belum Absen Masuk";
                             $this->info("   -> Skip Notif Pulang (Alasan: $alasanSkip)");
                         }
@@ -313,7 +234,7 @@ class SendAbsenceReminder extends Command
                         if ($log->status === 'terlambat') {
                             $totalTelat = AbsensiLog::where('user_id', $user->id)
                                 ->whereYear('tanggal', $tahun)
-                                ->whereMonth('tanggal', $bulan)
+                                ->whereMonth('tanggal', $now->month) // FIX: ganti $bulan jadi $now->month
                                 ->where('status', 'terlambat')
                                 ->count();
 

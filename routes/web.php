@@ -40,6 +40,7 @@ use App\Http\Controllers\Admin\SuratTugasController;
 use App\Http\Controllers\Admin\ProductivityController;
 use App\Http\Controllers\Admin\CentralTicketController;
 use App\Http\Controllers\Admin\ProductivityRoutineController;
+use App\Http\Controllers\Admin\JadwalWfhController;
 
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -165,8 +166,8 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
     Route::post('aset-fakultas/export-zip', [AsetFakultasController::class, 'exportZip'])->name('aset-fakultas.export-zip');
     Route::post('aset-fakultas/mass-move', [AsetFakultasController::class, 'massMove'])->name('aset-fakultas.mass-move');
     Route::resource('aset-fakultas', AsetFakultasController::class)->parameters(['aset-fakultas' => 'asetFakultas']);
-    Route::resource('lembur-kegiatan', LemburKegiatanController::class)
-        ->names('lembur-kegiatan');
+    Route::resource('lembur-kegiatan', LemburKegiatanController::class)->names('lembur-kegiatan');
+    Route::resource('jadwal-wfh', JadwalWfhController::class)->names('jadwal-wfh');
     Route::prefix('lembur-kegiatan/{lemburKegiatan}')->name('admin.lembur-kegiatan.')->group(function () {
         Route::post('assign',         [LemburKegiatanController::class, 'assignPegawai'])->name('assign');
         Route::post('remove-pegawai', [LemburKegiatanController::class, 'removePegawai'])->name('remove-pegawai');

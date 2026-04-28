@@ -75,7 +75,7 @@
         @endcanany
 
         {{-- 3. AKADEMIK & KEGIATAN --}}
-        <li class="nav-group {{ request()->is('admin/kegiatan*') || request()->is('admin/jadwal*') || request()->is('admin/kalender*') || request()->is('admin/cari-ruang*') ? 'show' : '' }}">
+        <li class="nav-group {{ request()->is('admin/kegiatan*') || request()->is('admin/jadwal-perkuliahan*') || request()->is('admin/kalender*') || request()->is('admin/cari-ruang*') ? 'show' : '' }}">
             <a class="nav-group-toggle" href="#">
                 <i class="nav-icon fas fa-graduation-cap"></i>
                 Akademik & Kegiatan
@@ -96,7 +96,7 @@
                 @can('kuliah_access')
                     <li class="nav-item">
                         <a href="{{ route('admin.jadwal-perkuliahan.index') }}"
-                           class="nav-link {{ request()->is('admin/jadwal*') ? 'active' : '' }}">
+                           class="nav-link {{ request()->is('admin/jadwal-perkuliahan*') ? 'active' : '' }}">
                             <span class="nav-icon"><i class="fas fa-calendar-alt"></i></span>
                             Jadwal Perkuliahan
                         </a>

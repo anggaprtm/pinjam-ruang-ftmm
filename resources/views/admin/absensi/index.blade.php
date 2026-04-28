@@ -93,11 +93,14 @@
             <a href="{{ route('admin.periode-jam-kerja.index') }}" class="btn btn-outline-success fw-bold shadow-sm d-flex align-items-center flex-grow-1 flex-md-grow-0 justify-content-center" style="border-radius: 10px;">
                 <i class="fas fa-clock me-2"></i> Atur Jadwal
             </a>
+            <a href="{{ route('admin.jadwal-wfh.index') }}" class="btn btn-outline-success fw-bold shadow-sm d-flex align-items-center flex-grow-1 flex-md-grow-0 justify-content-center" style="border-radius: 10px;">
+                <i class="fas fa-user-clock me-2"></i> Atur WFH
+            </a>
 
             <a href="{{ route('admin.lembur-kegiatan.index') }}" 
             class="btn btn-outline-warning fw-bold shadow-sm d-flex align-items-center flex-grow-1 flex-md-grow-0 justify-content-center" 
             style="border-radius: 10px;">
-                <i class="fas fa-business-time me-2"></i> Kegiatan Lembur
+                <i class="fas fa-business-time me-2"></i> Atur Lembur
             </a>
 
             {{-- FORM FILTER TANGGAL --}}

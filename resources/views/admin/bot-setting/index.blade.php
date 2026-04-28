@@ -37,12 +37,23 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Isi Pesan Pagi (Tendik)</label>
-                            <textarea name="pagi_pesan" class="form-control" rows="3">{{ $setting->pagi_pesan ?? 'Selamat Pagi {nama}, jangan lupa absen ya!' }}</textarea>
+                            <label class="form-label fw-bold">Isi Pesan Pagi (Tendik - WFO)</label>
+                            <textarea name="pagi_pesan" class="form-control" rows="2">{{ $setting->pagi_pesan }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-info"><i class="fas fa-laptop-house me-1"></i> Isi Pesan Pagi (Tendik - WFH)</label>
+                            <textarea name="pagi_pesan_wfh" class="form-control border-info" rows="2">{{ $setting->pagi_pesan_wfh }}</textarea>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Isi Pesan Pagi (Dosen - WFO)</label>
+                            <textarea name="pagi_pesan_dosen" class="form-control" rows="2">{{ $setting->pagi_pesan_dosen }}</textarea>
                         </div>
                         <div class="mb-2">
-                            <label class="form-label fw-bold">Isi Pesan Pagi (Dosen)</label>
-                            <textarea name="pagi_pesan_dosen" class="form-control" rows="3">{{ $setting->pagi_pesan_dosen ?? 'Selamat Pagi Bpk/Ibu {nama}, selamat mengajar hari ini!' }}</textarea>
+                            <label class="form-label fw-bold text-info"><i class="fas fa-laptop-house me-1"></i> Isi Pesan Pagi (Dosen - WFH)</label>
+                            <textarea name="pagi_pesan_dosen_wfh" class="form-control border-info" rows="2">{{ $setting->pagi_pesan_dosen_wfh }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -64,9 +75,14 @@
                                 <input type="time" name="masuk_jam" class="form-control" value="{{ $setting->masuk_jam ?? '07:50' }}">
                             </div>
                         </div>
-                        <div class="mb-2">
-                            <label class="form-label fw-bold">Isi Pesan</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Isi Pesan (Khusus WFO)</label>
                             <textarea name="masuk_pesan" class="form-control" rows="3">{{ $setting->masuk_pesan }}</textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold text-info"><i class="fas fa-laptop-house me-1"></i> Isi Pesan (Khusus WFH)</label>
+                            <textarea name="masuk_pesan_wfh" class="form-control border-info" rows="3" placeholder="Contoh: Jangan lupa presensi online via aplikasi X ya!">{{ $setting->masuk_pesan_wfh }}</textarea>
+                            <small class="text-muted">Pesan ini akan dikirim jika pegawai dijadwalkan WFH pada hari tersebut.</small>
                         </div>
                     </div>
                 </div>
@@ -87,9 +103,13 @@
                                 <input type="time" name="pulang_jam" class="form-control" value="{{ $setting->pulang_jam ?? '17:00' }}">
                             </div>
                         </div>
-                        <div class="mb-2">
-                            <label class="form-label fw-bold">Isi Pesan</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Isi Pesan (Khusus WFO)</label>
                             <textarea name="pulang_pesan" class="form-control" rows="3">{{ $setting->pulang_pesan }}</textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold text-info"><i class="fas fa-laptop-house me-1"></i> Isi Pesan (Khusus WFH)</label>
+                            <textarea name="pulang_pesan_wfh" class="form-control border-info" rows="3" placeholder="Contoh: Waktu WFH hari ini telah usai, silakan scan keluar via web.">{{ $setting->pulang_pesan_wfh }}</textarea>
                         </div>
                     </div>
                 </div>
