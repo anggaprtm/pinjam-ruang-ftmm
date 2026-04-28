@@ -324,34 +324,51 @@
                                                 {{ $durasiKerja }}
                                             </td>
                                             <td class="text-center text-nowrap">
-                                                @if($status == 'hadir')
-                                                    @if(isset($isLibur) && $isLibur)
-                                                        <span class="badge bg-info text-white rounded-pill">Lembur Valid</span>
-                                                    @else
-                                                        <span class="badge bg-success rounded-pill">Tepat Waktu</span>
-                                                    @endif
-                                                @elseif($status == 'terlambat')
-                                                    <span class="badge bg-warning text-dark rounded-pill">Terlambat</span>
-                                                @elseif(in_array($status, ['cuti', 'tugas belajar']))
-                                                    <span class="badge bg-secondary text-white rounded-pill px-3">
-                                                        <i class="fas fa-plane-departure me-1"></i> {{ ucwords($status) }}
-                                                    </span>
-                                                @else
-                                                    @if(isset($isLibur) && $isLibur && ($jamMasuk !== '-' || $jamKeluar !== '-'))
-                                                        @if($jamMasuk !== '-' && $jamKeluar === '-')
-                                                            <span class="badge bg-warning text-dark rounded-pill">Sedang Lembur</span>
-                                                        @else
-                                                            <span class="badge bg-danger rounded-pill" title="Durasi kurang dari 4 jam">Tidak Valid (< 4 Jam)</span>
-                                                        @endif
-                                                    @else
-                                                        <span class="badge bg-secondary rounded-pill">Belum Scan</span>
-                                                    @endif
-                                                @endif
+                                            @php
+                                                $modeKerjaBadge = '';
+                                                $modeKerjaStr = strtolower($log->mode_kerja ?? '');
+                                                
+                                                // Tentukan warna badge tambahan untuk mode kerja
+                                                if (str_contains($modeKerjaStr, 'wfh') || str_contains($modeKerjaStr, 'rumah')) {
+                                                    $modeKerjaBadge = '<span class="badge border border-info text-info ms-1">WFH</span>';
+                                                } elseif (str_contains($modeKerjaStr, 'dinas luar')) {
+                                                    $modeKerjaBadge = '<span class="badge border border-primary text-primary ms-1">Dinas Luar</span>';
+                                                } elseif (str_contains($modeKerjaStr, 'wfo') || str_contains($modeKerjaStr, 'kantor')) {
+                                                    $modeKerjaBadge = '<span class="badge border border-success text-success ms-1">WFO</span>';
+                                                }
+                                            @endphp
 
-                                                @if($isPulangAwal)
-                                                    <span class="badge bg-danger rounded-pill ms-1">Pulang Awal</span>
+                                            @if(str_contains($modeKerjaStr, 'dinas luar'))
+                                                {{-- Handle khusus Dinas Luar yang scan masuk/keluarnya "-" --}}
+                                                <span class="badge bg-primary rounded-pill"><i class="fas fa-briefcase me-1"></i> Dinas Luar</span>
+                                            @elseif($status == 'hadir')
+                                                @if(isset($isLibur) && $isLibur)
+                                                    <span class="badge bg-info text-white rounded-pill">Lembur Valid</span> {!! $modeKerjaBadge !!}
+                                                @else
+                                                    <span class="badge bg-success rounded-pill">Tepat Waktu</span> {!! $modeKerjaBadge !!}
                                                 @endif
-                                            </td>
+                                            @elseif($status == 'terlambat')
+                                                <span class="badge bg-warning text-dark rounded-pill">Terlambat</span> {!! $modeKerjaBadge !!}
+                                            @elseif(in_array($status, ['cuti', 'tugas belajar']))
+                                                <span class="badge bg-secondary text-white rounded-pill px-3">
+                                                    <i class="fas fa-plane-departure me-1"></i> {{ ucwords($status) }}
+                                                </span>
+                                            @else
+                                                @if(isset($isLibur) && $isLibur && ($jamMasuk !== '-' || $jamKeluar !== '-'))
+                                                    @if($jamMasuk !== '-' && $jamKeluar === '-')
+                                                        <span class="badge bg-warning text-dark rounded-pill">Sedang Lembur</span>
+                                                    @else
+                                                        <span class="badge bg-danger rounded-pill" title="Durasi kurang dari 4 jam">Tidak Valid (< 4 Jam)</span>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-secondary rounded-pill">Belum Scan</span>
+                                                @endif
+                                            @endif
+
+                                            @if($isPulangAwal && !str_contains($modeKerjaStr, 'dinas luar'))
+                                                <span class="badge bg-danger rounded-pill ms-1">Pulang Awal</span>
+                                            @endif
+                                        </td>
                                         @endif
                                         
                                         {{-- FIX: flex-wrap dan min-width agar badge notifikasi bisa turun ke bawah saat mentok --}}
