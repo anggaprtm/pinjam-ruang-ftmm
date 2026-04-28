@@ -162,7 +162,8 @@ class SendAbsenceReminder extends Command
                     
                     $foundNode = null;
                     $crawler->filter('table tr')->each(function (Crawler $node) use ($hariIniStr, &$foundNode) {
-                        if ($node->filter('td')->count() > 8) {
+                        // FIX: Ubah batas minimal kolom jadi 11 karena kita butuh mode_kerja
+                        if ($node->filter('td')->count() > 11) {
                             $tanggalDiTabel = trim($node->filter('td')->eq(0)->text());
                             if ($tanggalDiTabel === $hariIniStr) {
                                 $foundNode = $node;
@@ -173,6 +174,7 @@ class SendAbsenceReminder extends Command
 
                     $scanMasuk = '-';
                     $scanKeluar = '-';
+                    $modeKerjaRaw = null;
                     $statusKehadiran = 'alpha';
                     $dataDitemukan = false;
 
@@ -180,15 +182,22 @@ class SendAbsenceReminder extends Command
                         $dataDitemukan = true;
                         $scanMasuk = trim($foundNode->filter('td')->eq(5)->text());
                         $scanKeluar = trim($foundNode->filter('td')->eq(8)->text());
+                        
+                        // Tarik data mode kerja
+                        $modeKerjaRaw = trim($foundNode->filter('td')->eq(11)->text());
+                        $modeKerjaStr = strtolower($modeKerjaRaw);
 
-                        if ($scanMasuk !== '-' && !empty($scanMasuk)) {
+                        // Tentukan status kehadiran
+                        if (str_contains($modeKerjaStr, 'dinas luar')) {
+                            $statusKehadiran = 'dinas';
+                        } elseif ($scanMasuk !== '-' && !empty($scanMasuk)) {
                             $statusKehadiran = ($scanMasuk > $jamMasukLimit) ? 'terlambat' : 'hadir';
                         }
                     } else {
                         $this->warn("   -> Data tanggal $hariIniStr tidak ditemukan di tabel.");
                     }
 
-                    // UPDATE DATABASE (Sekarang menyimpan snapshot batas jam)
+                    // UPDATE DATABASE
                     if ($dataDitemukan) {
                         $log = AbsensiLog::updateOrCreate(
                             ['user_id' => $user->id, 'tanggal' => $tanggalDB],
@@ -198,6 +207,7 @@ class SendAbsenceReminder extends Command
                                 'batas_jam_masuk'  => $jamMasukLimit,
                                 'batas_jam_keluar' => $batasJamPulang,
                                 'status'           => $statusKehadiran,
+                                'mode_kerja'       => $modeKerjaRaw, // Insert mode kerja ke DB via Reminder
                                 'updated_at'       => now(),
                             ]
                         );
@@ -212,6 +222,10 @@ class SendAbsenceReminder extends Command
                     // PROSES NOTIFIKASI
                     $history = $log->notif_history ?? [];
                     $pesanTerkirim = false; 
+
+                    // Set flag untuk filter logika (Dinas & Belum Scan)
+                    $isDinasLuar = str_contains(strtolower($log->mode_kerja ?? ''), 'dinas luar');
+                    $belumMasuk = empty($log->jam_masuk) || $log->jam_masuk === '-';
 
                     if ($tipe === 'siang_dosen' && $botSetting->siang_dosen_aktif) {
                         if (!empty($log->jam_masuk) && !isset($history['siang_dosen_sudah'])) {
@@ -242,7 +256,8 @@ class SendAbsenceReminder extends Command
 
                     // LOGIC 2: PERINGATAN MASUK
                     if ($tipe === 'masuk' && $botSetting->masuk_aktif) {
-                        if (empty($log->jam_masuk) && !isset($history['telat_masuk'])) {
+                        // Filter: Jangan ingatkan kalau dia sedang dinas luar
+                        if (!$isDinasLuar && empty($log->jam_masuk) && !isset($history['telat_masuk'])) {
                             $msg = str_replace(
                                 ['{nama}', '{tanggal}'], 
                                 [$user->name, $hariIniStr], 
@@ -253,35 +268,43 @@ class SendAbsenceReminder extends Command
                             $this->warn("   -> Notif Belum Masuk dikirim.");
                             $history['telat_masuk'] = $now->format('H:i');
                             $pesanTerkirim = true;
+                        } elseif ($isDinasLuar) {
+                            $this->info("   -> Skip Notif Masuk (Mode Kerja: Dinas Luar)");
                         }
                     }
 
                     // LOGIC 3: SORE / PULANG
                     if ($tipe === 'pulang' && $botSetting->pulang_aktif) { 
-                        if (empty($log->jam_keluar) && !isset($history['belum_pulang'])) {
-                            $msg = str_replace(
-                                ['{nama}', '{tanggal}', '{batas_jam}'], 
-                                [$user->name, $hariIniStr, $batasJamPulang], // Variabel dinamis
-                                $botSetting->pulang_pesan
-                            );
-                            
-                            $telegram->sendMessage($user->telegram_chat_id, $msg);
-                            $this->warn("   -> Notif Belum Pulang dikirim.");
-                            $history['belum_pulang'] = $now->format('H:i');
-                            $pesanTerkirim = true;
-                        } 
-                        elseif (!empty($log->jam_keluar) && $log->jam_keluar < $batasJamPulang && !isset($history['pulang_awal'])) {
-                            $prefix = "⚠️ <b>PERHATIAN!</b> Sistem mencatat Anda scan keluar pukul <b>{$log->jam_keluar}</b>.\n\n";
-                            $msg = $prefix . str_replace(
-                                ['{nama}', '{tanggal}', '{batas_jam}'], 
-                                [$user->name, $hariIniStr, $batasJamPulang], // Variabel dinamis
-                                $botSetting->pulang_pesan
-                            );
+                        // Filter: Jangan ingatkan pulang jika dia dinas ATAU dari pagi belum absen masuk (alpha)
+                        if (!$isDinasLuar && !$belumMasuk) {
+                            if (empty($log->jam_keluar) && !isset($history['belum_pulang'])) {
+                                $msg = str_replace(
+                                    ['{nama}', '{tanggal}', '{batas_jam}'], 
+                                    [$user->name, $hariIniStr, $batasJamPulang],
+                                    $botSetting->pulang_pesan
+                                );
+                                
+                                $telegram->sendMessage($user->telegram_chat_id, $msg);
+                                $this->warn("   -> Notif Belum Pulang dikirim.");
+                                $history['belum_pulang'] = $now->format('H:i');
+                                $pesanTerkirim = true;
+                            } 
+                            elseif (!empty($log->jam_keluar) && $log->jam_keluar < $batasJamPulang && !isset($history['pulang_awal'])) {
+                                $prefix = "⚠️ <b>PERHATIAN!</b> Sistem mencatat Anda scan keluar pukul <b>{$log->jam_keluar}</b>.\n\n";
+                                $msg = $prefix . str_replace(
+                                    ['{nama}', '{tanggal}', '{batas_jam}'], 
+                                    [$user->name, $hariIniStr, $batasJamPulang],
+                                    $botSetting->pulang_pesan
+                                );
 
-                            $telegram->sendMessage($user->telegram_chat_id, $msg);
-                            $this->warn("   -> Notif Pulang Awal dikirim.");
-                            $history['pulang_awal'] = $now->format('H:i');
-                            $pesanTerkirim = true;
+                                $telegram->sendMessage($user->telegram_chat_id, $msg);
+                                $this->warn("   -> Notif Pulang Awal dikirim.");
+                                $history['pulang_awal'] = $now->format('H:i');
+                                $pesanTerkirim = true;
+                            }
+                        } else {
+                            $alasanSkip = $isDinasLuar ? "Dinas Luar" : "Belum Absen Masuk";
+                            $this->info("   -> Skip Notif Pulang (Alasan: $alasanSkip)");
                         }
                     }
 
