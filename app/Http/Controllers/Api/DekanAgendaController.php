@@ -109,4 +109,24 @@ class DekanAgendaController extends Controller
 
         return 'finished';
     }
+
+    public function refresh(Request $request)
+    {
+        $weekOffset = (int) $request->query('week_offset', 0);
+        $cacheKey   = "dekan_agenda_week_{$weekOffset}";
+
+        Cache::forget($cacheKey);
+
+        // Langsung fetch ulang dan return datanya sekalian
+        $events = $this->fetchFromGoogle($weekOffset);
+        Cache::put($cacheKey, $events, 300);
+
+        return response()->json([
+            'success'     => true,
+            'message'     => 'Cache berhasil diperbarui',
+            'date'        => Carbon::now('Asia/Jakarta')->toDateString(),
+            'week_offset' => $weekOffset,
+            'data'        => $events,
+        ]);
+    }
 }

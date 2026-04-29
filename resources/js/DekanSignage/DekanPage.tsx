@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
     Calendar, Clock, MapPin,
     Cloud, CloudRain, CloudSnow, CloudLightning,
-    Wind, Droplets, Thermometer, Users, ChevronLeft, ChevronRight, Sun
+    Wind, Droplets, Thermometer, Users, ChevronLeft, ChevronRight, Sun, RefreshCw
 } from 'lucide-react';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -194,7 +194,10 @@ const ALLDAY_COLORS = [
 // ══════════════════════════════════════════════════════════════════════
 // HEADER
 // ══════════════════════════════════════════════════════════════════════
-const DekanHeader: React.FC<{ weather: WeatherData | null }> = ({ weather }) => {
+const DekanHeader: React.FC<{
+    weather: WeatherData | null;
+    ongoingEvent?: DekanEvent | null;
+}> = ({ weather, ongoingEvent }) => {
     const [time, setTime] = useState(new Date());
     useEffect(() => {
         const iv = setInterval(() => setTime(new Date()), 1000);
@@ -224,30 +227,6 @@ const DekanHeader: React.FC<{ weather: WeatherData | null }> = ({ weather }) => 
                             Agenda Dekan • Fakultas Teknologi Maju dan Multidisiplin
                         </span>
                     </div>
-                    {weather && wInfo && (
-                        <div className="flex items-center gap-3 px-4 py-1.5 rounded-full"
-                            style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                            <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: wInfo.color }}>
-                                {wInfo.icon}
-                                <span className="text-white/90">{wInfo.label}</span>
-                            </span>
-                            <div className="w-px h-3 bg-white/20" />
-                            <span className="flex items-center gap-1 text-white text-sm font-bold">
-                                <Thermometer size={11} className="opacity-60" />
-                                {weather.temp}°C <span className="text-[11px] opacity-50">/ {weather.feelsLike}°C</span>
-                            </span>
-                            <div className="w-px h-3 bg-white/20" />
-                            <span className="flex items-center gap-1 text-white/80 text-xs">
-                                <Droplets size={11} className="opacity-60" />{weather.humidity}%
-                            </span>
-                            <div className="w-px h-3 bg-white/20" />
-                            <span className="flex items-center gap-1 text-white/80 text-xs">
-                                <Wind size={11} className="opacity-60" />{weather.windspeed} km/h
-                            </span>
-                            <div className="w-px h-3 bg-white/20" />
-                            <span className="text-[10px] text-white/40 font-mono uppercase tracking-widest">Surabaya</span>
-                        </div>
-                    )}
                 </div>
                 {/* Clock */}
                 <div className="shrink-0 text-right">
@@ -348,6 +327,7 @@ const DekanPage: React.FC = () => {
     const [loading, setLoading]       = useState(true);
     const [weekOffset, setWeekOffset] = useState(0);
     const [lastSync, setLastSync]     = useState<Date | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
     const nowLineRef                  = useRef<HTMLDivElement>(null);
 
     const [nowStr, setNowStr] = useState(() => {
@@ -402,6 +382,20 @@ const DekanPage: React.FC = () => {
         } catch {}
     }, []);
 
+    const handleRefresh = useCallback(async () => {
+        setRefreshing(true);
+        try {
+            const res  = await fetch(
+                `${API_BASE}/signage/agenda-dekan/refresh?week_offset=${weekOffset}`,
+                { method: 'POST', headers: hdrs }
+            );
+            const json = await res.json();
+            setDekanData(json.data ?? []);
+            setLastSync(new Date());
+        } catch {}
+        finally { setRefreshing(false); }
+    }, [weekOffset]);
+
     useEffect(() => {
         Promise.all([fetchDekan(), fetchRapat(), fetchWeather()])
             .finally(() => setLoading(false));
@@ -421,6 +415,11 @@ const DekanPage: React.FC = () => {
     const hourLabels = Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => HOUR_START + i);
     const nowH       = parseInt(nowStr.split(':')[0]);
     const nowTop     = (nowH >= HOUR_START && nowH < HOUR_END) ? timeToTop(nowStr) : null;
+
+    // Cari event ongoing hari ini (untuk Opsi 1 & 2)
+    const ongoingEvent = dekanData.find(
+        ev => ev.status === 'ongoing' && !ev.is_all_day
+    ) ?? null;
 
     // Group events by date
     const byDate: Record<string, DekanEvent[]> = {};
@@ -447,7 +446,7 @@ const DekanPage: React.FC = () => {
             style={{ background: 'linear-gradient(160deg,#fdf4f7 0%,#fff8fa 50%,#f9f0f4 100%)' }}>
 
             {/* Header */}
-            <DekanHeader weather={weather} />
+            <DekanHeader weather={weather} ongoingEvent={ongoingEvent} />
 
             {/* Body */}
             <div className="flex-1 min-h-0 flex gap-3">
@@ -494,6 +493,22 @@ const DekanPage: React.FC = () => {
                             <ChevronRight size={14} />
                         </button>
 
+                        {/* Tombol Refresh Manual */}
+                        <button
+                            onClick={handleRefresh}
+                            disabled={refreshing}
+                            title="Refresh data dari Google Calendar"
+                            className="flex items-center justify-center w-7 h-7 rounded-lg"
+                            style={{
+                                border: '1px solid #f0dce5',
+                                color: refreshing ? '#c97fa0' : '#741847',
+                                background: refreshing ? '#fdf4f7' : 'transparent',
+                                cursor: refreshing ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s',
+                            }}>
+                            <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+                        </button>
+
                         {weekOffset !== 0 && (
                             <button onClick={() => setWeekOffset(0)}
                                 className="text-[10px] font-bold px-3 py-1 rounded-full"
@@ -502,6 +517,46 @@ const DekanPage: React.FC = () => {
                             </button>
                         )}
                     </div>
+
+                    {/* ── OPSI 1: Sticky banner ongoing di bawah nav bar — hapus blok ini jika pilih Opsi 2 ── */}
+                    {ongoingEvent && weekOffset === 0 && (
+                        <div className="shrink-0 mx-3 mt-2.5 mb-0 flex items-center gap-3 px-4 py-2.5 rounded-xl"
+                            style={{
+                                background: 'linear-gradient(90deg, #fdf0f4 0%, #fff8fa 100%)',
+                                border: '1px solid #e8b4cc',
+                                borderLeft: '4px solid #741847',
+                            }}>
+                            {/* Pulse dot */}
+                            <span className="relative flex h-2.5 w-2.5 shrink-0">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#741847] opacity-40" />
+                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#741847]" />
+                            </span>
+                            <div className="flex flex-col min-w-0 flex-1">
+                                <span className="text-[9px] font-extrabold tracking-widest text-[#741847]/50 uppercase leading-none mb-0.5">
+                                    Sedang Berlangsung
+                                </span>
+                                <span className="text-sm font-bold text-[#3d1227] truncate leading-tight">
+                                    {ongoingEvent.title}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                                <span className="flex items-center gap-1 text-xs font-mono text-[#9c2456]">
+                                    <Clock size={11} />
+                                    {ongoingEvent.start_time} – {ongoingEvent.end_time}
+                                </span>
+                                {ongoingEvent.location && (
+                                    <>
+                                        <div className="w-px h-3 bg-[#e8b4cc]" />
+                                        <span className="flex items-center gap-1 text-xs text-[#9c2456]/70 max-w-[200px] truncate">
+                                            <MapPin size={11} className="shrink-0" />
+                                            {ongoingEvent.location}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {/* ── END OPSI 1 ── */}
 
                     {/* Grid */}
                     <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide">

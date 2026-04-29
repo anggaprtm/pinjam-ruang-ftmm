@@ -17,6 +17,8 @@ Route::group([
     Route::get('signage/vertical-data', [SignageController::class, 'getVerticalData'])->name('signage.verticalData');
     Route::get('signage/agenda-fakultas', [SignageController::class, 'getAgendaFakultas'])->name('signage.agendaFakultas');
     Route::get('signage/agenda-dekan', [DekanAgendaController::class, 'index'])->name('signage.agendaDekan');
+    Route::post('signage/agenda-dekan/refresh', [DekanAgendaController::class, 'refresh'])
+    ->name('signage.agendaDekan.refresh');
 });
 
 Route::get('/v1/display-config/{location}', [DisplayConfigController::class, 'show'])
