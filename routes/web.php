@@ -251,6 +251,9 @@ Route::middleware(['auth'])->prefix('admin')->as('admin.')->group(function () {
 Route::get('/dashboard-signage', function () {
     return view('signage');
 });
+Route::get('/signage-dekan', function () {
+    return view('signage-dekan');
+});
 
 // === Grup PROFILE (Change Password) dengan pengecekan file controller (sesuai rute lama)
 Route::middleware(['auth'])->prefix('profile')->as('profile.')->group(function () {

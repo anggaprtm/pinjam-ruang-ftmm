@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\SignageController;
 use App\Http\Controllers\Api\DisplayConfigController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\WebhookTicketController; // <-- 1. IMPORT CONTROLLERNYA DI SINI
+use App\Http\Controllers\Api\DekanAgendaController;
 
 Route::group([
     'prefix' => 'v1',
@@ -15,6 +16,7 @@ Route::group([
     Route::get('signage/requests', [SignageController::class, 'getPendingRequests'])->name('signage.requests');
     Route::get('signage/vertical-data', [SignageController::class, 'getVerticalData'])->name('signage.verticalData');
     Route::get('signage/agenda-fakultas', [SignageController::class, 'getAgendaFakultas'])->name('signage.agendaFakultas');
+    Route::get('signage/agenda-dekan', [DekanAgendaController::class, 'index'])->name('signage.agendaDekan');
 });
 
 Route::get('/v1/display-config/{location}', [DisplayConfigController::class, 'show'])

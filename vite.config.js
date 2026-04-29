@@ -8,7 +8,8 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                'resources/js/Signage/index.tsx', 
+                'resources/js/Signage/index.tsx',
+                'resources/js/DekanSignage/index.tsx', 
             ],
             refresh: true,
         }),

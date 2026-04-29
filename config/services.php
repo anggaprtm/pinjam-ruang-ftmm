@@ -34,5 +34,8 @@ return [
     'signage' => [
         'key' => env('SIGNAGE_API_KEY', ''),
     ],
+    'google_dekan' => [
+        'calendar_id' => env('GOOGLE_DEKAN_CALENDAR_ID'),
+    ],
 
 ];
