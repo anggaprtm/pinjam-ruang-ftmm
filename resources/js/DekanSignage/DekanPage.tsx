@@ -196,8 +196,7 @@ const ALLDAY_COLORS = [
 // ══════════════════════════════════════════════════════════════════════
 const DekanHeader: React.FC<{
     weather: WeatherData | null;
-    ongoingEvent?: DekanEvent | null;
-}> = ({ weather, ongoingEvent }) => {
+}> = ({ weather }) => {
     const [time, setTime] = useState(new Date());
     useEffect(() => {
         const iv = setInterval(() => setTime(new Date()), 1000);
@@ -221,12 +220,40 @@ const DekanHeader: React.FC<{
                 </div>
                 {/* Center */}
                 <div className="flex-1 min-w-0 flex flex-col items-center gap-1.5">
+                    
+                    {/* Title Pill */}
                     <div className="px-5 py-1.5 rounded-full"
                         style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}>
                         <span className="text-white/90 font-semibold text-sm tracking-wide">
                             Agenda Dekan • Fakultas Teknologi Maju dan Multidisiplin
                         </span>
                     </div>
+
+                    {/* Weather Pill (Sekarang sejajar di luar Title Pill) */}
+                    {weather && wInfo && (
+                        <div className="flex items-center gap-3 px-4 py-1.5 rounded-full"
+                            style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                            <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: wInfo.color }}>
+                                {wInfo.icon}
+                                <span className="text-white/90">{wInfo.label}</span>
+                            </span>
+                            <div className="w-px h-3 bg-white/20" />
+                            <span className="flex items-center gap-1 text-white text-sm font-bold">
+                                <Thermometer size={11} className="opacity-60" />
+                                {weather.temp}°C <span className="text-[11px] opacity-50">/ {weather.feelsLike}°C</span>
+                            </span>
+                            <div className="w-px h-3 bg-white/20" />
+                            <span className="flex items-center gap-1 text-white/80 text-xs">
+                                <Droplets size={11} className="opacity-60" />{weather.humidity}%
+                            </span>
+                            <div className="w-px h-3 bg-white/20" />
+                            <span className="flex items-center gap-1 text-white/80 text-xs">
+                                <Wind size={11} className="opacity-60" />{weather.windspeed} km/h
+                            </span>
+                            <div className="w-px h-3 bg-white/20" />
+                            <span className="text-[10px] text-white/40 font-mono uppercase tracking-widest">Surabaya</span>
+                        </div>
+                    )}
                 </div>
                 {/* Clock */}
                 <div className="shrink-0 text-right">
@@ -446,7 +473,7 @@ const DekanPage: React.FC = () => {
             style={{ background: 'linear-gradient(160deg,#fdf4f7 0%,#fff8fa 50%,#f9f0f4 100%)' }}>
 
             {/* Header */}
-            <DekanHeader weather={weather} ongoingEvent={ongoingEvent} />
+            <DekanHeader weather={weather} />
 
             {/* Body */}
             <div className="flex-1 min-h-0 flex gap-3">
