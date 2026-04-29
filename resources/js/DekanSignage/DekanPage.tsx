@@ -44,7 +44,7 @@ interface WeatherData {
 }
 
 // ─── Timeline Config ──────────────────────────────────────────────────────────
-const HOUR_START  = 6;
+const HOUR_START  = 5;
 const HOUR_END    = 22;
 const TOTAL_HOURS = HOUR_END - HOUR_START;
 const PX_PER_HOUR = 80;
