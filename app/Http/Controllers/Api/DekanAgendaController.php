@@ -82,6 +82,7 @@ class DekanAgendaController extends Controller
                 'location'    => $event->location ?? null,
                 'date'        => $start->toDateString(),          // ← FIX: field date per event
                 'start_time'  => $isAllDay ? null : $start->format('H:i'),
+                'colorId'     => $event->googleEvent->getColorId(),
                 'end_time'    => $isAllDay ? null : $end->format('H:i'),
                 'is_all_day'  => $isAllDay,
                 'status'      => $this->resolveStatus($start, $end, $isAllDay),

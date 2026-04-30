@@ -238,7 +238,9 @@ class AsetFakultasController extends Controller
         ]);
 
         $ruangan      = Ruangan::findOrFail($request->ruangan_id);
-        $groupedAsets = $this->getGroupedAsets($ruangan->id);
+        $groupedAsets = $this->getGroupedAsets($ruangan->id)
+            ->sortBy('tahun_aset')
+            ->values();
         $tanggalTtd   = $request->tanggal_ttd ? \Carbon\Carbon::parse($request->tanggal_ttd) : now();
 
         $pdf = Pdf::loadView('admin.aset-fakultas.pdf.dir', [

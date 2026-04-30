@@ -22,6 +22,7 @@ interface DekanEvent {
     is_all_day: boolean;
     status: 'ongoing' | 'upcoming' | 'finished' | 'all_day';
     date: string;
+    color_id?: string | null; // colorId dari Google Calendar
 }
 
 interface RapatItem {
@@ -63,27 +64,37 @@ const durationToPx = (s: string, e: string) =>
     Math.max(((timeToMinutes(e) - timeToMinutes(s)) / 60) * PX_PER_HOUR, 24);
 
 // ─── Event Color Palette ──────────────────────────────────────────────────────
-// Palet harmonis berbasis tema #741847 — semua light & readable
-const EVENT_COLORS = [
-    { bg: '#fdf2f6', border: '#d4608a', title: '#7a1040', time: '#a03060' }, // Rose (brand)
-    { bg: '#f0f4ff', border: '#6b8dd6', title: '#2d4a8a', time: '#4a6ab0' }, // Periwinkle blue
-    { bg: '#f0fbf4', border: '#52a876', title: '#1d6b40', time: '#3a8a5a' }, // Sage green
-    { bg: '#fff8f0', border: '#d4874a', title: '#8a4010', time: '#b05830' }, // Warm coral
-    { bg: '#f5f0fb', border: '#9b72cc', title: '#4a2080', time: '#6b40a0' }, // Soft violet
-    { bg: '#f0fafc', border: '#40a8c0', title: '#1a6070', time: '#2a8090' }, // Teal
-    { bg: '#fffbf0', border: '#c8a030', title: '#705010', time: '#906820' }, // Amber
-    { bg: '#fdf0f8', border: '#c060a0', title: '#702060', time: '#902880' }, // Mauve
-];
+// Mapping colorId Google Calendar → pastel harmonis dengan tema #741847
+// colorId Google: https://developers.google.com/calendar/api/v3/reference/colors
+const GOOGLE_COLOR_MAP: Record<string, { bg: string; border: string; title: string; time: string }> = {
+    '1':  { bg: '#f0f2fd', border: '#6b7fd4', title: '#2d3a8a', time: '#4a56b0' }, // Lavender  → periwinkle pastel
+    '2':  { bg: '#eef8f2', border: '#3daa6a', title: '#1a6040', time: '#2e8055' }, // Sage      → sage green pastel
+    '3':  { bg: '#f7effe', border: '#a855c8', title: '#5b1a82', time: '#7a30a8' }, // Grape     → violet pastel
+    '4':  { bg: '#fef0ee', border: '#e0736a', title: '#8a2a22', time: '#b04038' }, // Flamingo  → coral pastel
+    '5':  { bg: '#fefae8', border: '#c8a020', title: '#705010', time: '#906820' }, // Banana    → amber pastel
+    '6':  { bg: '#fff2ec', border: '#e06830', title: '#8a3010', time: '#b05020' }, // Tangerine → orange pastel
+    '7':  { bg: '#eaf7fd', border: '#2ea8d8', title: '#0e5878', time: '#1a7898' }, // Peacock   → sky blue pastel
+    '8':  { bg: '#f2f2f2', border: '#808080', title: '#404040', time: '#606060' }, // Graphite  → abu netral
+    '9':  { bg: '#eef0fa', border: '#5060b8', title: '#202870', time: '#384090' }, // Blueberry → navy pastel
+    '10': { bg: '#eaf5ee', border: '#2a9050', title: '#0a5028', time: '#1a7038' }, // Basil     → forest green pastel
+    '11': { bg: '#fdecea', border: '#cc2020', title: '#7a0a0a', time: '#a01818' }, // Tomato    → merah pastel
+};
 
-// Warna untuk event finished — selalu abu-abu
+// Fallback: warna default kalender (null/undefined colorId) → brand color #741847
+const DEFAULT_COLOR = { bg: '#fdf2f6', border: '#d4608a', title: '#7a1040', time: '#a03060' };
+
+// Warna untuk event finished — selalu abu-abu regardless warna aslinya
 const FINISHED_COLOR = { bg: '#f5f5f5', border: '#c0c0c0', title: '#909090', time: '#b0b0b0' };
 
-// Assign warna berdasarkan hash ID event agar konsisten antar render
-const getEventColor = (id: string, status: string) => {
-    if (status === 'finished') return FINISHED_COLOR;
+// Resolve warna event: prioritas colorId dari Google → fallback hash → default brand
+const getEventColor = (ev: { id: string; status: string; color_id?: string | null }) => {
+    if (ev.status === 'finished') return FINISHED_COLOR;
+    if (ev.color_id && GOOGLE_COLOR_MAP[ev.color_id]) return GOOGLE_COLOR_MAP[ev.color_id];
+    // Fallback: hash dari ID (untuk event tanpa colorId atau colorId tidak dikenal)
     let hash = 0;
-    for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-    return EVENT_COLORS[hash % EVENT_COLORS.length];
+    for (let i = 0; i < ev.id.length; i++) hash = (hash * 31 + ev.id.charCodeAt(i)) >>> 0;
+    const fallbacks = Object.values(GOOGLE_COLOR_MAP);
+    return fallbacks[hash % fallbacks.length];
 };
 
 // ─── Collision Layout (Google Calendar style) ─────────────────────────────────
@@ -683,7 +694,7 @@ const DekanPage: React.FC = () => {
                                         {laid.map(ev => {
                                             const top    = timeToTop(ev.start_time!);
                                             const height = durationToPx(ev.start_time!, ev.end_time!);
-                                            const color  = getEventColor(ev.id, ev.status);
+                                            const color  = getEventColor(ev);
 
                                             // Each event takes its slot fraction of the day column
                                             // with a 2px gap between slots and 2px padding from column edge
