@@ -194,9 +194,7 @@ const ALLDAY_COLORS = [
 // ══════════════════════════════════════════════════════════════════════
 // HEADER
 // ══════════════════════════════════════════════════════════════════════
-const DekanHeader: React.FC<{
-    weather: WeatherData | null;
-}> = ({ weather }) => {
+const DekanHeader: React.FC<{ weather: WeatherData | null }> = ({ weather }) => {
     const [time, setTime] = useState(new Date());
     useEffect(() => {
         const iv = setInterval(() => setTime(new Date()), 1000);
@@ -220,16 +218,12 @@ const DekanHeader: React.FC<{
                 </div>
                 {/* Center */}
                 <div className="flex-1 min-w-0 flex flex-col items-center gap-1.5">
-                    
-                    {/* Title Pill */}
                     <div className="px-5 py-1.5 rounded-full"
                         style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}>
                         <span className="text-white/90 font-semibold text-sm tracking-wide">
                             Agenda Dekan • Fakultas Teknologi Maju dan Multidisiplin
                         </span>
                     </div>
-
-                    {/* Weather Pill (Sekarang sejajar di luar Title Pill) */}
                     {weather && wInfo && (
                         <div className="flex items-center gap-3 px-4 py-1.5 rounded-full"
                             style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.15)' }}>
@@ -361,13 +355,20 @@ const DekanPage: React.FC = () => {
         const d = new Date();
         return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
     });
+
+    const scrollToNow = useCallback(() => {
+        nowLineRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, []);
+
     useEffect(() => {
         const iv = setInterval(() => {
             const d = new Date();
             setNowStr(`${pad(d.getHours())}:${pad(d.getMinutes())}`);
+            // Auto-scroll ke garis jam terkini setiap menit (hanya saat lihat minggu ini)
+            if (weekOffset === 0) scrollToNow();
         }, 60_000);
         return () => clearInterval(iv);
-    }, []);
+    }, [weekOffset, scrollToNow]);
 
     const fetchDekan = useCallback(async () => {
         try {
@@ -433,7 +434,7 @@ const DekanPage: React.FC = () => {
 
     useEffect(() => {
         if (!loading && weekOffset === 0) {
-            setTimeout(() => nowLineRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+            setTimeout(() => scrollToNow(), 300);
         }
     }, [loading, weekOffset]);
 
