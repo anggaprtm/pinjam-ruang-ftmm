@@ -876,7 +876,7 @@
             }
         } else {
             // --- LOGIKA HARI KERJA ---
-            if ($checkIn && (!$checkOut || $checkOut == '-')) {
+            if ($checkIn && ($checkOut == $checkIn)) {
                 $absenText  = 'Masuk: ' . substr($checkIn, 0, 5);
                 $absenColor = $absensiHariIni->status == 'terlambat' ? '#ef4444' : '#10b981';
                 $absenIcon  = 'fas fa-sign-in-alt';
@@ -886,7 +886,7 @@
                     $absenColor = '#f59e0b'; // Warning
                     $absenIcon  = 'fas fa-door-open';
                 } else {
-                    $absenText  = 'Selesai: ' . substr($checkOut, 0, 5);
+                    $absenText  = 'Selesai: ' . substr($checkIn, 0, 5) . "-" . substr($checkOut, 0, 5);
                     $absenColor = '#3b82f6';
                     $absenIcon  = 'fas fa-user-check';
                 }
