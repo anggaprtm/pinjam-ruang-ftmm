@@ -239,7 +239,11 @@ class AsetFakultasController extends Controller
 
         $ruangan      = Ruangan::findOrFail($request->ruangan_id);
         $groupedAsets = $this->getGroupedAsets($ruangan->id)
-            ->sortBy('tahun_aset')
+            ->sortBy(function ($item) {
+                return is_numeric($item->tahun_aset)
+                    ? (int) $item->tahun_aset
+                    : 9999; // taruh yg aneh di bawah
+            })
             ->values();
         $tanggalTtd   = $request->tanggal_ttd ? \Carbon\Carbon::parse($request->tanggal_ttd) : now();
 
@@ -273,7 +277,13 @@ class AsetFakultasController extends Controller
         // Jika hanya 1 ruangan → langsung download PDF
         if (count($request->ruangan_ids) === 1) {
             $ruangan      = Ruangan::findOrFail($request->ruangan_ids[0]);
-            $groupedAsets = $this->getGroupedAsets($ruangan->id);
+            $groupedAsets = $this->getGroupedAsets($ruangan->id)
+                ->sortBy(function ($item) {
+                    return is_numeric($item->tahun_aset)
+                        ? (int) $item->tahun_aset
+                        : 9999; // taruh yg aneh di bawah
+                })
+                ->values();
             
             $pdf = Pdf::loadView('admin.aset-fakultas.pdf.dir', [
                 'ruangan'    => $ruangan, 
